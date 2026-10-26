@@ -316,6 +316,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 #app{touch-action:pan-y;overflow-x:clip}
 
 /* v2.00 · Amable Life = tus próximas acciones */
+.saludo{margin:18px 0 -14px;font-size:17px;font-weight:700;color:var(--oro)}
 .tit-acc{font-size:30px;font-weight:800;margin-top:22px;line-height:1.1}
 .prox-lista{display:flex;flex-direction:column;gap:10px;margin:16px -16px 0}
 .prox{display:flex;align-items:center;gap:14px;padding:20px 16px;border:0;width:100%;text-align:left;color:var(--tinta);
@@ -608,7 +609,7 @@ nav.abajo button{font-size:11px}
 
 <script>
 'use strict';
-const VERSION = 'v3.07';
+const VERSION = 'v3.08';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1022,7 +1023,8 @@ function vInicio(){
   }
   const pend = pendientes(), hs = hechasEstaSemana(), c = bloqueAhora();
   const actsAhora = c >= 0 ? actsDe(hoyK(), c) : [];
-  let h = `${bannerApp()}<h1 class="tit-acc">Enfócate en</h1>
+  const tuNombre = nombrePila();
+  let h = `${bannerApp()}${tuNombre ? `<p class="saludo">Hola, ${esc(tuNombre)}</p>` : ''}<h1 class="tit-acc">Enfócate en</h1>
     <p class="suave peq" style="margin:4px 0 0">${pend.length ? `${pend.length} ${pend.length === 1 ? 'pendiente' : 'pendientes'}` : 'Nada pendiente'}${hs ? ` · ${hs} ${hs === 1 ? 'hecha' : 'hechas'} esta semana` : ''}</p>
     ${seccionAhora()}
     ${listaSinAsignar()}
@@ -1033,6 +1035,12 @@ function vInicio(){
   return h;
 }
 const hoyK = () => claveDia(new Date());
+/* Tu nombre (lo pide la cuenta al empezar) para llamarte por él dentro de la app */
+function guardarNombre(n){ n = String(n || '').trim().slice(0, 40); if(!n || D.nombre === n) return; D.nombre = n; guardar(); }
+function nombrePila(){
+  const n = (D.nombre || (nube.usuario && nube.usuario.displayName) || '').trim();
+  return n.split(/\s+/)[0] || '';
+}
 /* Aro de tiempo del bloque: 0 al empezar (arriba) → 100 al acabar la hora y media */
 function progresoBloque(ini, fin){
   const d = new Date(), m = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
@@ -1986,6 +1994,7 @@ async function iniciarNube(){
       // Cada persona tiene su propio documento: usuarios/{uid}/equilibra/datos (las reglas solo dejan entrar a su dueño)
       nube.ref = u ? firebase.firestore().collection('usuarios').doc(u.uid).collection('equilibra').doc('datos') : null;
       if(u) await traerNube();
+      if(u && u.displayName && !D.nombre) guardarNombre(u.displayName);
       if(authInicial){
         authInicial = false;
         let saltada = false; try{ saltada = sessionStorage.getItem('equilibra.sinCuenta') === '1'; }catch(e){}
@@ -2025,6 +2034,7 @@ function fusionar(local, remoto){
   const [bGana, bPierde] = (br.mod || '') > (bl.mod || '') ? [br, bl] : [bl, br];
   r.bloques = nuevosBloques(bGana);
   r.bloques.days = Object.assign({}, bPierde.days || {}, bGana.days || {});
+  r.nombre = local.nombre || remoto.nombre || '';
   const al = local.appAndroid, ar = remoto.appAndroid;
   if(al || ar) r.appAndroid = (ar && (!al || (ar.visto || '') > (al.visto || ''))) ? ar : al;
   return r;
@@ -2154,6 +2164,7 @@ async function crearCuenta(){
     const c = await firebase.auth().createUserWithEmailAndPassword(email, SAL_PIN + pin);
     await c.user.updateProfile({displayName: nombre});
     nube.usuario = firebase.auth().currentUser;
+    guardarNombre(nombre);
     aviso(`¡Bienvenido, ${nombre}! Tu cuenta está lista ☁️`);
     ir('inicio');
   }catch(e){ aviso(errorCuenta(e)); }
