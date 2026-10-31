@@ -181,7 +181,7 @@ nav.abajo button{background:none;border:0;padding:9px 0 10px;display:flex;flex-d
 nav.abajo button span{font-size:20px;line-height:1.1;filter:grayscale(1);opacity:.6}
 nav.abajo button.act{color:var(--oro)}
 nav.abajo button.act span{filter:none;opacity:1}
-nav.abajo .nav-flor{width:24px;height:24px;margin-bottom:1px;color:var(--suave);opacity:.85}
+nav.abajo .nav-flor{width:22px;height:22px;color:var(--suave);opacity:.85}
 nav.abajo button.act .nav-flor{color:var(--oro);opacity:1}
 
 /* Sellos de Práctica Integral (Grow Panel\SELLO.md, colores adaptados al tema nocturno) */
@@ -364,7 +364,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .reloj-arena{flex:none;width:66px;height:104px}
 .cuenta-col{flex:1;display:flex;flex-direction:column}
 .cuenta-atras{font-size:40px;line-height:1.05;font-weight:800;color:var(--oro);font-variant-numeric:tabular-nums;min-width:74px}
-.cuenta-txt{flex:1;font-size:13px;color:var(--suave)}
+.cuenta-txt{font-size:13px;font-weight:700;color:var(--oro)}
 .tic-btn{flex:none;border:0;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800;background:rgba(255,255,255,.08);color:var(--suave)}
 .tic-btn.on{background:rgba(247,195,91,.22);color:var(--oro)}
 .check.cuadro{border-radius:12px}
@@ -597,8 +597,8 @@ nav.abajo button{font-size:11px}
 
 <nav class="abajo" id="nav">
   <div class="in">
-    <button data-v="inicio" onclick="ir('inicio')"><span>🎯</span>Focus</button>
     <button data-v="dia" onclick="ir('dia')"><svg class="nav-flor" viewBox="-12 -12 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path transform="rotate(0) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(45) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(90) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(135) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(180) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(225) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(270) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(315) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><circle r="3.6"/></svg>Tareas</button>
+    <button data-v="inicio" onclick="ir('inicio')"><span>🎯</span>Focus</button>
     <button data-v="salud" onclick="ir('salud')"><span>👣</span>Cuerpo</button>
     <button data-v="historial" onclick="ir('historial')"><span>📅</span>Historial</button>
     <button data-v="ajustes" onclick="ir('ajustes')"><span>⚙️</span>Ajustes</button>
@@ -609,7 +609,7 @@ nav.abajo button{font-size:11px}
 
 <script>
 'use strict';
-const VERSION = 'v3.08';
+const VERSION = 'v3.09';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -792,26 +792,27 @@ function petalo(L, W){
 }
 let idFlor = 0;
 function flor(niveles, opc = {}){
-  const mini = !!opc.mini, paso = 360/AREAS.length, L = 118, n = ++idFlor, vb = 150;
+  // mismo dibujo que el logotipo: centro dorado grande con semillas y pétalos alrededor
+  const mini = !!opc.mini, paso = 360/AREAS.length, R0 = mini ? 56 : 60, Lp = mini ? 88 : 86, base = R0 - 8, L = base + Lp, n = ++idFlor, vb = mini ? 140 : 160;
   let s = `<svg viewBox="${-vb} ${-vb} ${vb*2} ${vb*2}" class="flor${mini?' mini':''}" role="img" aria-label="Tu flor">
   <defs><filter id="brillo${n}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <radialGradient id="centro${n}"><stop offset="0" stop-color="#ffe59a"/><stop offset=".6" stop-color="#f7b733"/><stop offset="1" stop-color="#d9831f"/></radialGradient></defs>`;
+  <radialGradient id="centro${n}"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient>
+  <pattern id="semi${n}" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.4" fill="#7a4310" fill-opacity=".38"/></pattern></defs>`;
   AREAS.forEach((a,i) => {
     const nv = niveles && niveles[a.id];
-    const op = !nv ? .12 : nv === 'bien' ? .38 : nv === 'una' ? .78 : 1;
-    const extra = !nv ? `stroke="${a.color}" stroke-width="1.5" stroke-dasharray="4 4"` : (nv === 'mas' && !mini ? `filter="url(#brillo${n})" stroke="#fff" stroke-width="2.4"` : '');
-    s += `<g transform="rotate(${i*paso})"><path class="${mini?'':'petalo'}" style="animation-delay:${i*70}ms" d="${petalo(L, 32)}" fill="${a.color}" fill-opacity="${op}" ${extra}/>
-      <path d="M0 -14L0 ${-L*.82}" stroke="#fff" stroke-opacity=".22" stroke-width="1.4" stroke-linecap="round"/></g>`;
+    const op = !nv ? .18 : nv === 'bien' ? .42 : nv === 'una' ? .78 : 1;
+    const extra = !nv ? `stroke="${a.color}" stroke-width="1.5" stroke-dasharray="4 4"` : '';
+    s += `<g transform="rotate(${i*paso}) translate(0 ${-base})"><path class="${mini?'':'petalo'}" style="animation-delay:${i*70}ms" d="${petalo(Lp, 36)}" fill="${a.color}" fill-opacity="${op}" ${extra}/></g>`;
   });
-  s += `<g class="${mini?'':'centro'}"><circle r="${mini?22:28}" fill="url(#centro${n})"/>`;
+  s += `<g class="${mini?'':'centro'}"><circle r="${R0}" fill="url(#centro${n})"/><circle r="${R0}" fill="url(#semi${n})"/>`;
   if(!mini && opc.centro != null) s += `<text class="centro-num" y="-3" text-anchor="middle" dominant-baseline="central">${opc.centro}</text><text class="centro-txt" y="14" text-anchor="middle" dominant-baseline="central">${opc.centroTxt || ''}</text>`;
   s += '</g>';
   if(!mini){
     AREAS.forEach((a,i) => {
       const nv = niveles && niveles[a.id], ang = i*paso - 90;
-      const [xm,ym] = pt(70, ang), giro = (ang > 90 || ang < -90) ? ang + 180 : ang;
+      const [xm,ym] = pt(base + Lp*.54, ang), giro = (ang > 90 || ang < -90) ? ang + 180 : ang;
       s += `<text class="eti-nom" x="${xm.toFixed(1)}" y="${ym.toFixed(1)}" transform="rotate(${giro} ${xm.toFixed(1)} ${ym.toFixed(1)})" text-anchor="middle" dominant-baseline="central">${a.corto}</text>`;
-      const [xn,yn] = pt(L + 16, ang);
+      const [xn,yn] = pt(L + 9, ang);
       if(nv === 'mas' || nv === 'una'){
         const k = nv === 'mas' ? 2 : 1;
         for(let j = 0; j < k; j++) s += `<circle cx="${(xn + (j - (k-1)/2) * 11).toFixed(1)}" cy="${yn.toFixed(1)}" r="4.5" fill="${a.color}" stroke="#fff" stroke-width="1.6"/>`;
@@ -820,7 +821,7 @@ function flor(niveles, opc = {}){
       }
     });
   }
-  if(opc.clic) AREAS.forEach((a,i) => { s += `<path d="${petalo(L + 26, 44)}" transform="rotate(${i*paso})" fill="transparent" style="cursor:pointer" onclick="abrirPetalo('${a.id}')"/>`; });
+  if(opc.clic) AREAS.forEach((a,i) => { s += `<path d="${petalo(L + 20, 46)}" transform="rotate(${i*paso})" fill="transparent" style="cursor:pointer" onclick="abrirPetalo('${a.id}')"/>`; });
   return s + '</svg>';
 }
 const LEYENDA = `<div class="leyenda-niv"><span><i class="pt2"></i><i class="pt2"></i> Necesita más acción</span><span><i class="pt2"></i> Una acción a la semana</span><span><b>✓</b> Estoy bien</span></div>`;
@@ -1096,7 +1097,7 @@ function seccionAhora(){
   return `<section class="ahora-blk" data-drop="ahora">
     <div class="ah-cab"><b class="ah-tit">Bloque actual · ${hm(b.ini)} – ${hm(b.fin)}</b></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
-      <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">para acabar el bloque</span>
+      <div class="cuenta-col"><span class="cuenta-txt">min para acabar el bloque</span><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
       <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${acts.filter(hechaAct).length}/${acts.length}</b></span></div>
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
@@ -1934,9 +1935,9 @@ function iniciarSalud(){
 /* ---------- Historial: acciones hechas por semana y revisiones de la flor ---------- */
 function vHistorial(){
   let h = `<h2 style="margin-top:18px">Historial</h2>
-    <div class="seg"><button class="${histModo==='acciones'?'on':''}" onclick="histModo='acciones';render()">Acciones</button><button class="${histModo==='flores'?'on':''}" onclick="histModo='flores';render()">Flores</button></div>`;
+    <div class="seg"><button class="${histModo==='acciones'?'on':''}" onclick="histModo='acciones';render()">Acciones</button><button class="${histModo==='flores'?'on':''}" onclick="histModo='flores';render()">Revisiones</button></div>`;
   if(histModo === 'flores'){
-    if(!D.revisiones.length) return h + `<p class="suave">Aún no has revisado tu flor.</p><button class="btn prim" onclick="empezar()">Revisar mi flor</button>`;
+    if(!D.revisiones.length) return h + `<p class="suave">Aquí se guarda cada revisión de las 8 áreas de tu vida. Aún no has hecho ninguna.</p><button class="btn prim" onclick="empezar()">Revisar mi flor</button>`;
     return h + '<div class="jardin">' + D.revisiones.slice().reverse().map(r => `<button class="maceta" onclick="detalleId='${r.id}'; ir('detalle')">${flor(r.niveles, {mini:true})}
       <b>${fecha(r.fecha)}</b><span>${AREAS.filter(a => r.niveles[a.id] && r.niveles[a.id] !== 'bien').length} áreas piden acción</span></button>`).join('') + '</div>';
   }
@@ -2357,7 +2358,7 @@ function borrarTodo(){
 }
 
 /* ---------- Deslizar el dedo: pétalo siguiente/anterior, o pestaña siguiente/anterior ---------- */
-const PESTANAS = ['inicio', 'dia', 'salud', 'historial', 'ajustes'];
+const PESTANAS = ['dia', 'inicio', 'salud', 'historial', 'ajustes'];
 let toque = null;
 app.addEventListener('touchstart', e => {
   const t = e.target;
