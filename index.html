@@ -318,6 +318,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 #app{touch-action:pan-y;overflow-x:clip}
 
 /* v2.00 · Amable Life = tus próximas acciones */
+.hist-exp{margin:12px 0 10px;font-size:15px;line-height:1.4}
 .saludo{margin:18px 0 -14px;font-size:17px;font-weight:700;color:var(--oro)}
 .tit-acc{font-size:30px;font-weight:800;margin-top:22px;line-height:1.1}
 .prox-lista{display:flex;flex-direction:column;gap:10px;margin:16px -16px 0}
@@ -611,7 +612,7 @@ nav.abajo button{font-size:11px}
 
 <script>
 'use strict';
-const VERSION = 'v3.10';
+const VERSION = 'v3.11';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -844,6 +845,8 @@ function sellosHTML(){
 
 /* ---------- Navegación ---------- */
 let vista = 'inicio', E = null, P = null, detalleId = null, histModo = 'acciones', hojaAbierta = null;
+/* Pestaña de arranque: Tareas (sin datos todavía, la bienvenida) */
+const vistaInicial = () => tieneDatos() ? 'dia' : 'inicio';
 function ir(v){
   vista = v;
   if(v !== 'evaluar') E = null;
@@ -1398,7 +1401,7 @@ function vPlan(){
     <section class="tarjeta flor-sec">${flor(D.niveles, {centro: areas.length, centroTxt: areas.length === 1 ? 'área' : 'áreas'})}${LEYENDA}</section>`;
   if(!areas.length){
     return h + `<p style="text-align:center"><b>Todo en equilibrio.</b> No necesitas acciones nuevas.</p>
-      <button class="btn prim ancho" onclick="ir('inicio')">Ir a inicio</button>`;
+      <button class="btn prim ancho" onclick="ir('inicio')">Ir a Focus</button>`;
   }
   h += `<h2 style="margin-top:6px">Ahora, tus acciones</h2>
     <p class="suave peq" style="margin:4px 0 8px">Escribe pequeños pasos concretos para las áreas que lo necesitan.</p>`;
@@ -1939,7 +1942,8 @@ function vHistorial(){
   let h = `<h2 style="margin-top:18px">Historial</h2>
     <div class="seg"><button class="${histModo==='acciones'?'on':''}" onclick="histModo='acciones';render()">Acciones</button><button class="${histModo==='flores'?'on':''}" onclick="histModo='flores';render()">Revisiones</button></div>`;
   if(histModo === 'flores'){
-    if(!D.revisiones.length) return h + `<p class="suave">Aquí se guarda cada revisión de las 8 áreas de tu vida. Aún no has hecho ninguna.</p><button class="btn prim" onclick="empezar()">Revisar mi flor</button>`;
+    h += `<p class="suave hist-exp">Cada vez que revisas las 8 áreas de tu vida, aquí se guarda una copia con la fecha. Toca una para ver cómo estaba cada área ese día y comparar cómo has cambiado.</p>`;
+    if(!D.revisiones.length) return h + `<p class="suave">Aún no has hecho ninguna revisión.</p><button class="btn prim" onclick="empezar()">Revisar mi flor</button>`;
     return h + '<div class="jardin">' + D.revisiones.slice().reverse().map(r => `<button class="maceta" onclick="detalleId='${r.id}'; ir('detalle')">${flor(r.niveles, {mini:true})}
       <b>${fecha(r.fecha)}</b><span>${AREAS.filter(a => r.niveles[a.id] && r.niveles[a.id] !== 'bien').length} áreas piden acción</span></button>`).join('') + '</div>';
   }
@@ -1947,11 +1951,12 @@ function vHistorial(){
   const semanas = {};
   hechas.forEach(a => (semanas[claveSemana(a.hechaEn)] = semanas[claveSemana(a.hechaEn)] || []).push(a));
   const claves = Object.keys(semanas).sort().reverse();
-  h += `<div class="resumen-acc">
+  h += `<p class="suave hist-exp">Cuando marques acciones como hechas, aparecerán aquí, semana a semana.</p>
+    <div class="resumen-acc">
     <div class="cifra"><b>${hechas.length}</b><span>${hechas.length === 1 ? 'acción hecha' : 'acciones hechas'}</span></div>
     <div class="cifra"><b>${hechasEstaSemana()}</b><span>esta semana</span></div>
     <div class="cifra"><b>${pendientes().length}</b><span>pendientes</span></div></div>`;
-  if(!claves.length) return h + `<p class="suave">Cuando marques acciones como hechas, aparecerán aquí, semana a semana.</p>`;
+  if(!claves.length) return h;
   h += claves.map(k => `<div class="semana-acc" style="--c:#8b5cf6"><div class="sa-cab"><b>${textoSemana(k)}</b><span>${rangoSemana(k)} · ${semanas[k].length} ${semanas[k].length === 1 ? 'hecha' : 'hechas'}</span></div>
     <ul>${semanas[k].map(a => { const ar = areaDe(a.area); return `<li class="ok" style="--c:${ar.color}" onclick="alternarAccion('${a.id}')"><span class="caja">✓</span><span>${ico(ar)} ${esc(a.texto)}</span></li>`; }).join('')}</ul></div>`).join('');
   return h;
@@ -2001,9 +2006,9 @@ async function iniciarNube(){
       if(authInicial){
         authInicial = false;
         let saltada = false; try{ saltada = sessionStorage.getItem('equilibra.sinCuenta') === '1'; }catch(e){}
-        if(!u && !saltada && vista === 'inicio'){ cuentaAlInicio = true; cuentaModo = tieneDatos() ? 'entrar' : 'crear'; vista = 'cuenta'; }
+        if(!u && !saltada && ['inicio', 'dia'].includes(vista)){ cuentaAlInicio = true; cuentaModo = tieneDatos() ? 'entrar' : 'crear'; vista = 'cuenta'; }
       }
-      if(u && cuentaAlInicio){ cuentaAlInicio = false; if(vista === 'cuenta') vista = 'inicio'; }
+      if(u && cuentaAlInicio){ cuentaAlInicio = false; if(vista === 'cuenta') vista = vistaInicial(); }
       if(['inicio','dia','salud','historial','ajustes','cuenta'].includes(vista)) render();
     });
   }catch(e){ console.warn('Amable Life: nube no disponible', e); }
@@ -2104,7 +2109,7 @@ function cuentaHTML(){
    Firebase pide contraseñas de 6 caracteres como mínimo: la contraseña real es «equilibra-» + PIN. */
 const SAL_PIN = 'equilibra-';
 let authInicial = true, cuentaAlInicio = false;
-function ahoraNo(){ try{ sessionStorage.setItem('equilibra.sinCuenta', '1'); }catch(e){} cuentaAlInicio = false; ir('inicio'); }
+function ahoraNo(){ try{ sessionStorage.setItem('equilibra.sinCuenta', '1'); }catch(e){} cuentaAlInicio = false; ir(vistaInicial()); }
 const volverCuenta = () => cuentaAlInicio ? `<button class="link volver" onclick="ahoraNo()">Ahora no, entrar sin cuenta →</button>` : `<button class="link volver" onclick="ir('ajustes')">← Ajustes</button>`;
 let cuentaModo = 'entrar';
 function errorCuenta(e){
@@ -2169,7 +2174,7 @@ async function crearCuenta(){
     nube.usuario = firebase.auth().currentUser;
     guardarNombre(nombre);
     aviso(`¡Bienvenido, ${nombre}! Tu cuenta está lista ☁️`);
-    ir('inicio');
+    ir(vistaInicial());
   }catch(e){ aviso(errorCuenta(e)); }
 }
 async function entrarEmail(){
@@ -2179,7 +2184,7 @@ async function entrarEmail(){
   try{
     const c = await firebase.auth().signInWithEmailAndPassword(email, SAL_PIN + pin);
     aviso(`¡Hola${c.user.displayName ? ', ' + c.user.displayName : ''}! ☁️`);
-    ir('inicio');
+    ir(vistaInicial());
   }catch(e){ aviso(errorCuenta(e)); }
 }
 async function enviarRecuperar(){
@@ -2200,7 +2205,7 @@ async function cambiarPin(){
     const c = await firebase.auth().signInWithEmailAndPassword(email, clave);
     await c.user.updatePassword(SAL_PIN + pin);
     aviso('PIN nuevo guardado ✓');
-    cuentaModo = 'entrar'; ir('inicio');
+    cuentaModo = 'entrar'; ir(vistaInicial());
   }catch(e){ aviso(errorCuenta(e)); }
 }
 
@@ -2423,7 +2428,7 @@ function animarEntrada(dir){
 window.atrasNativo = () => {
   if($('#hoja')){ cerrarHoja(); return true; }
   if(vista === 'evaluar' && E){ atras(); return true; }
-  if(vista !== 'inicio'){ ir('inicio'); return true; }
+  if(vista !== vistaInicial()){ ir(vistaInicial()); return true; }
   return false;
 };
 
@@ -2461,7 +2466,9 @@ addEventListener('growpanel-listo', enviarResumen);
   window.scrollTo(0, 0); addEventListener('load', () => window.scrollTo(0, 0));
   $('#sellos-splash').innerHTML = sellosHTML();
   iconoSonido();
+  vista = vistaInicial();
   render();
+  if(vista === 'dia') centrarBloque();
   enviarResumen();
 
   // Portada: la flor abre sus pétalos con una nota por pétalo
