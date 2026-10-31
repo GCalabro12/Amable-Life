@@ -20,7 +20,9 @@
   --acento:#f08a24; --acento2:#e2456b; --oro:#f7c35b; --sube:#4ade80; --baja:#fb7185;
 }
 *{box-sizing:border-box}
-html,body{margin:0}
+html,body{margin:0;overscroll-behavior-y:contain}   /* el «deslizar para actualizar» es el nuestro: el del navegador no salta a la vez */
+#pullR{position:fixed;top:-44px;left:50%;margin-left:-22px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:#2a1f52;color:var(--oro);box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:0;pointer-events:none;z-index:40}
+#pullR.listo{background:var(--oro);color:#2a1f52}
 body{background:radial-gradient(120% 60% at 50% 0%,#2a1f52 0,var(--fondo) 60%) fixed,var(--fondo);color:var(--tinta);
   font-family:Nunito,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45;
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;min-height:100vh}
@@ -609,7 +611,7 @@ nav.abajo button{font-size:11px}
 
 <script>
 'use strict';
-const VERSION = 'v3.09';
+const VERSION = 'v3.10';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2378,6 +2380,27 @@ app.addEventListener('touchend', e => {
   if(Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.6 || dt > 800) return;
   deslizar(dx < 0 ? 1 : -1);
 }, {passive: true});
+/* ↻ Deslizar hacia abajo desde arriba del todo: recarga la app y se pone al día (como en las otras apps Amable) */
+const pullR = document.createElement('div'); pullR.id = 'pullR'; pullR.textContent = '↻'; pullR.setAttribute('aria-hidden', 'true'); document.body.append(pullR);
+let pr0 = null;
+const pullPon = k => { pullR.style.opacity = k; pullR.style.transform = `translateY(${k * 96}px) rotate(${k * 300}deg)`; pullR.classList.toggle('listo', k >= 1); };
+document.addEventListener('touchstart', e => {
+  pr0 = null;
+  if(e.touches.length !== 1 || window.scrollY > 0 || arrastre) return;
+  if(e.target.closest('input, textarea, .asa, .hoja, #hoja, #splash')) return;
+  pr0 = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+}, {passive: true});
+document.addEventListener('touchmove', e => {
+  if(!pr0) return;
+  const dy = e.touches[0].clientY - pr0.y, dx = e.touches[0].clientX - pr0.x;
+  if(e.touches.length !== 1 || window.scrollY > 0 || dy < 0 || Math.abs(dx) > dy){ pullPon(0); if(dy < -10 || Math.abs(dx) > 40) pr0 = null; return; }
+  pullPon(Math.min(1, dy / 120));
+}, {passive: true});
+document.addEventListener('touchend', () => {
+  if(!pr0) return; pr0 = null;
+  if(pullR.classList.contains('listo')){ pullR.textContent = '⏳'; aviso('↻ Actualizando…'); recargando = true; setTimeout(() => location.reload(), 250); }
+  else pullPon(0);
+});
 function deslizar(dir){
   if(vista === 'evaluar' && E){
     if(dir > 0){ if(E.i === AREAS.length-1) return; siguiente(); }   // el último pétalo se guarda con su botón
