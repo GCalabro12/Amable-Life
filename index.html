@@ -647,7 +647,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.19';
+const VERSION = 'v3.20';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -686,7 +686,7 @@ const NIVELES = {
 };
 /* Salud (venido de Amable PC): agua, movimiento y pasos */
 const SALUD_DEF = {aguaOn:true, aguaMin:45, aguaGoal:8, movOn:true, movMin:60, aguaNext:0, movNext:0, days:{},
-  meta:8000, voz:true, cada:500, bloqueOn:true, bloque:2000, caminarOn:true, caminarHecho:null, pasos:{}, mod:null};
+  meta:8000, pasosOn:true, voz:true, cada:500, bloqueOn:true, bloque:2000, caminarOn:true, caminarHecho:null, pasos:{}, mod:null};
 const nuevaSalud = (x = {}) => Object.assign({}, SALUD_DEF, {days:{}, pasos:{}}, x);
 /* Bloques de tiempo (venidos de Amable PC): días → bloque → hasta 3 actividades {t, d, acc} */
 const BLOQUES_DEF = {days:{}, startVoice:true, remindOn:true, remindMin:5, sleepOn:true, sleepDone:'', ultimo:null, mod:null};
@@ -1937,10 +1937,10 @@ function vSalud(){
   const meta = p.steps >= S.meta, aguaOk = h.agua >= S.aguaGoal;
   const faltaA = S.aguaGoal - h.agua;
   const estPasos = esApp && pcCuentaPasos() ? 'Los cuenta Amable PC' : meta ? `¡Meta cumplida! Has pasado de ${fmtN(S.meta)} pasos` : `Te faltan ${fmtN(S.meta - p.steps)} pasos para tu meta de ${fmtN(S.meta)}`;
-  const subPasos = esApp && !pcCuentaPasos() ? `${km} km · ${mins} min activos` : '';
+  const subPasos = !S.pasosOn ? 'Avisos desactivados' : esApp && !pcCuentaPasos() ? `${km} km · ${mins} min activos` : '';
   const estAgua = aguaOk ? `¡Meta cumplida! Ya llevas ${fmtVasos(h.agua)} vasos` : h.agua === 0 ? 'Aún no has bebido: empieza con medio vaso' : `Te ${faltaA <= 1 ? 'falta' : 'faltan'} ${fmtVasos(faltaA)} ${faltaA <= 1 ? 'vaso' : 'vasos'} para llegar a ${S.aguaGoal}`;
   const estMov = h.mov === 0 ? 'Haz tu primera pausa activa de hoy' : h.mov < 4 ? '¡Bien! Sigue moviéndote cada hora' : '¡Muy activo hoy! Sigue así';
-  const desliz = (clave, sig, min) => `<label class="desliz" onclick="event.stopPropagation()"><input type="checkbox" ${S[clave] ? 'checked' : ''} onchange="ajCheck('${clave}', this, '${sig}', '${min}')"><i></i><span>${S[clave] ? 'Activado' : 'Desactivado'}</span></label>`;
+  const desliz = (clave, sig, min) => `<label class="desliz" onclick="event.stopPropagation()"><input type="checkbox" ${S[clave] ? 'checked' : ''} onchange="ajCheck('${clave}', this${sig ? `, '${sig}', '${min}'` : ''})"><i></i><span>${S[clave] ? 'Activado' : 'Desactivado'}</span></label>`;
   const tile = (k, ico, valor, unidad, est, sub, c, sw) => `<div class="s-tile ${saludAbierta === k ? 'sel' : ''}" style="--c:${c}" role="button" tabindex="0" onclick="abrirSalud('${k}')" onkeydown="if(event.target === this && event.key === 'Enter')abrirSalud('${k}')" aria-expanded="${saludAbierta === k}">
     <span class="s-ico">${ico}</span><span class="s-num"><b>${valor}</b><small>${unidad}</small></span>
     <span class="s-txt"><span class="s-est">${est}</span>${sub ? `<small>${sub}</small>` : ''}${sw || ''}</span>${flecha(saludAbierta === k)}</div>`;
@@ -1979,7 +1979,7 @@ function vSalud(){
   </section>`};
   return `<h2 style="margin-top:18px">Tu cuerpo hoy</h2>${botonPausa('salud')}
   <div class="salud-tiles">
-    ${tile('pasos', '👣', fmtN(p.steps), 'pasos', estPasos, subPasos, '#f08a24')}${saludAbierta === 'pasos' ? secciones.pasos : ''}
+    ${tile('pasos', '👣', fmtN(p.steps), 'pasos', estPasos, subPasos, '#f08a24', desliz('pasosOn'))}${saludAbierta === 'pasos' ? secciones.pasos : ''}
     ${tile('agua', '💧', fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', 'vasos', estAgua, prox(S.aguaOn, S.aguaNext), '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}${saludAbierta === 'agua' ? secciones.agua : ''}
     ${tile('mov', '🤸', h.mov, h.mov === 1 ? 'pausa' : 'pausas', estMov, prox(S.movOn, S.movNext), '#22a35a', desliz('movOn', 'movNext', 'movMin'))}${saludAbierta === 'mov' ? secciones.mov : ''}
   </div>
@@ -2038,7 +2038,7 @@ function responderAviso(hecho){
 /* Recordatorio para caminar: 2.000 pasos a las 11, 4.000 a las 13, 6.000 a las 16 y 8.000 a las 18 */
 const CAMINAR = [[660, 2000], [780, 4000], [960, 6000], [1080, 8000]];
 function caminarTick(){
-  const S = S_(); if(!S.caminarOn || !esApp) return;
+  const S = S_(); if(!S.pasosOn || !S.caminarOn || !esApp) return;
   const k = claveDia(new Date()), m = minutosHoy();
   if(!S.caminarHecho || S.caminarHecho.k !== k) S.caminarHecho = {k, n: 0};
   let idx = -1; CAMINAR.forEach(([t], i) => { if(m >= t) idx = i; });
@@ -2067,7 +2067,7 @@ let pasosUlt = null, configUlt = '';
 function configNativa(){
   if(!esApp) return;
   const suena = sonidoOn && !pausa.salud;
-  const S = S_(), cfg = JSON.stringify({goal: S.meta, voice: S.voz && suena, every: S.cada, blockOn: S.bloqueOn && suena, block: S.bloque, sound: suena ? 'campana' : 'ninguno'});
+  const S = S_(), cfg = JSON.stringify({goal: S.meta, voice: S.pasosOn && S.voz && suena, every: S.cada, blockOn: S.pasosOn && S.bloqueOn && suena, block: S.bloque, sound: suena ? 'campana' : 'ninguno'});
   if(cfg === configUlt) return;
   configUlt = cfg;
   try{ AndroidEquilibra.setConfig(cfg); }catch(e){}
