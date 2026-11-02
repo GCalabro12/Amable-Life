@@ -390,7 +390,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .tic-btn.on{background:rgba(247,195,91,.22);color:var(--oro)}
 .check.cuadro{border-radius:12px}
 .prox.foco-1 .texto-p{font-size:26px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
-.prox.foco-1:not(.ok){background:linear-gradient(100deg,#d8283f,#a3172c 85%)}
+.prox.foco-1:not(.ok){background:linear-gradient(100deg,#1f9d57,#136b3a 85%)}
 .prox.foco-1:not(.ok) .area-p{color:rgba(255,255,255,.85)}
 .prox.foco-1:not(.ok) .check.cuadro{border-color:#fff}
 .prox.foco-1:not(.ok) .asa,.prox.foco-1:not(.ok) .del{color:rgba(255,255,255,.75)}
@@ -657,7 +657,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.26';
+const VERSION = 'v3.27';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -951,23 +951,26 @@ function dibujarArena(cv, dt){
   };
   vidrio(); g.fillStyle = 'rgba(255,255,255,.06)'; g.fill();
   g.save(); vidrio(); g.clip();
-  const oro = g.createLinearGradient(0, top, 0, bot); oro.addColorStop(0, '#ffe59a'); oro.addColorStop(.5, '#f7b733'); oro.addColorStop(1, '#d9831f');
-  g.fillStyle = oro;
+  // la arena de arriba, verde; desde que cae por el cuello, roja
+  const verde = g.createLinearGradient(0, top, 0, neck); verde.addColorStop(0, '#6ee7a0'); verde.addColorStop(1, '#22a35a');
+  const rojo = g.createLinearGradient(0, neck, 0, bot); rojo.addColorStop(0, '#f87171'); rojo.addColorStop(1, '#c81e2e');
+  g.fillStyle = verde;
   // arriba baja y abajo sube al mismo ritmo, para que se vea bien cómo pasa el tiempo
   const hMaxA = neck - top - 7, yA = neck - hMaxA * Math.max(0, 1 - p), hueco = p > 0 && p < 1 ? Math.min(7, (neck - yA) * .45) : 0;
   if(p < 1){ g.beginPath(); g.moveTo(0, yA); g.lineTo(cx - 12, yA); g.quadraticCurveTo(cx, yA + hueco * 2, cx + 12, yA); g.lineTo(W, yA); g.lineTo(W, neck + 1); g.lineTo(0, neck + 1); g.closePath(); g.fill(); }
   // abajo: el montón crece con p
   const hMaxB = bot - neck - 9, hB = hMaxB * Math.max(0, p), cima = bot - hB;
+  g.fillStyle = rojo;
   if(p > 0){ g.beginPath(); g.moveTo(0, bot); g.lineTo(0, bot - hB * .45); g.quadraticCurveTo(cx, cima - hB * .45, W, bot - hB * .45); g.lineTo(W, bot); g.closePath(); g.fill(); }
   // el chorrito y los granos que caen
   if(p > 0 && p < 1){
     const suelo = cima + 1;
-    g.fillStyle = 'rgba(247,183,51,.55)'; g.fillRect(cx - .5, neck, 1, suelo - neck);
+    g.fillStyle = 'rgba(248,113,113,.6)'; g.fillRect(cx - .5, neck, 1, suelo - neck);
     for(let k = 0; k < 2; k++) granos.push({x: cx + (Math.random() - .5) * 1.8, y: neck + Math.random() * 2, vy: .5 + Math.random() * .6, vx: (Math.random() - .5) * .08});
-    g.fillStyle = '#ffe59a';
+    g.fillStyle = '#f87171';
     granos = granos.filter(q => { q.vy += .14 * dt; q.y += q.vy * dt; q.x += q.vx * dt; if(q.y >= suelo + Math.abs(q.x - cx) * .4) return false; g.fillRect(q.x - .6, q.y - .6, 1.3, 1.3); return true; }).slice(-160);
     // algún grano rebota al llegar al montón
-    if(Math.random() < .25){ g.fillStyle = 'rgba(255,229,154,.8)'; g.fillRect(cx + (Math.random() - .5) * 10, suelo - Math.random() * 3, 1.2, 1.2); }
+    if(Math.random() < .25){ g.fillStyle = 'rgba(248,113,113,.8)'; g.fillRect(cx + (Math.random() - .5) * 10, suelo - Math.random() * 3, 1.2, 1.2); }
   } else granos = [];
   g.restore();
   // cristal y brillo
