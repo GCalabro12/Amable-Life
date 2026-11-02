@@ -657,7 +657,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.28';
+const VERSION = 'v3.29';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1195,6 +1195,7 @@ function segundero(){
   const els = document.querySelectorAll('.cuenta-atras');
   els.forEach(e => { e.textContent = fmtCuenta(+e.dataset.fin); });
   const av = $('#av-estado'); if(av) av.textContent = txtAvisos();
+  const prox = pausa.tareas ? null : proximoAviso(); if(prox !== null && prox <= Date.now()) bloquesTick();   // que salte justo en 0:00
   if(ticOn && vista === 'inicio' && els.length && !document.hidden && !pausa.tareas) sonarTic();
 }
 /* Debajo: desplegable con las tareas pendientes que aún no tienen bloque hoy */
@@ -1819,7 +1820,7 @@ function bloquesTick(){
   if(B.remindOn && c >= 0 && Date.now() - recordarDesde >= B.remindMin * 60000){
     recordarDesde = Date.now();
     const sig = actsDe(claveDia(new Date()), c).find(a => !hechaAct(a));
-    if(sig) hablar(`Recuerda: ahora estás con ${sig.t}.`, 'tareas');
+    if(sig){ hablar(`Recuerda: ahora estás con ${sig.t}.`, 'tareas'); if(!pausa.tareas) aviso(`Recuerda: ahora estás con ${sig.t}`, 6000); }
   }
   // a las 22:00, a dormir
   const k = claveDia(new Date());
@@ -2635,7 +2636,7 @@ window.atrasNativo = () => {
 
 /* ---------- Aviso flotante ---------- */
 let tToast;
-function aviso(t){ const el = $('#toast'); accionDeshacer = null; el.textContent = t; el.classList.remove('con-boton'); el.classList.add('ver'); clearTimeout(tToast); tToast = setTimeout(() => el.classList.remove('ver'), 2400); }
+function aviso(t, ms = 2400){ const el = $('#toast'); accionDeshacer = null; el.textContent = t; el.classList.remove('con-boton'); el.classList.add('ver'); clearTimeout(tToast); tToast = setTimeout(() => el.classList.remove('ver'), ms); }
 /* Aviso de 4 segundos con «Deshacer», por si se ha tocado sin querer */
 let accionDeshacer = null;
 function avisoDeshacer(t, fn){
