@@ -657,7 +657,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.32';
+const VERSION = 'v3.33';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1897,7 +1897,7 @@ function abrirAvisos(){
   const B = B_(), sw = (clave, txt) => `<label class="desliz"><input type="checkbox" ${B[clave] ? 'checked' : ''} onchange="ajBloque('${clave}', this)"><i></i><span>${txt}</span></label>`;
   mostrarHoja(`<div class="hoja-cab"><div><h2>Avisos de Focus</h2></div></div>
     <div class="av-lista">
-      <label class="desliz"><input type="checkbox" ${pausa.tareas ? '' : 'checked'} onchange="alternarPausa('tareas')"><i></i><span>Avisos ${pausa.tareas ? 'desactivados' : 'activados'}</span></label>
+      <label class="desliz"><input type="checkbox" ${pausa.tareas ? '' : 'checked'} onchange="alternarPausa('tareas')"><i></i><span>Avisos de Focus ${pausa.tareas ? 'desactivados' : 'activados'}</span></label>
       <div class="av-lista ${pausa.tareas ? 'av-dim' : ''}">
         ${sw('startVoice', 'Avisar con voz al empezar cada bloque')}
         <div class="av-cada">${sw('remindOn', 'Recordarme la tarea en la que estoy cada')}<input type="number" min="1" max="60" inputmode="numeric" aria-label="Minutos" value="${B.remindMin}" onchange="ajBloqueMin(this)"><span>min</span></div>
