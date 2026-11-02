@@ -222,6 +222,9 @@ nav.abajo button.act .nav-flor{color:var(--oro);opacity:1}
 #toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:#f4f0fb;color:#1d1636;font-weight:800;
   padding:10px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:30;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 #toast.ver{opacity:1;transform:translate(-50%,0)}
+#toast.con-boton{display:flex;align-items:center;gap:14px;white-space:nowrap;padding:8px 8px 8px 16px}
+#toast.ver.con-boton{pointer-events:auto}
+#toast button{border:0;border-radius:9px;padding:8px 12px;background:#6d28d9;color:#fff;font-weight:800;font-size:15px}
 
 /* v1.06 · Sin bordes (Gustavo): secciones e imágenes a todo lo ancho, como tarjetas sin marco */
 .tarjeta{border:0;border-radius:0;box-shadow:none;background:transparent;margin:0 -16px;padding:22px 16px}
@@ -632,7 +635,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.13';
+const VERSION = 'v3.14';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1190,7 +1193,7 @@ function filaTarea(x, hayBloque, ordenable){
   const a = areaDe(x.area);
   return `<div class="sa-fila" ${ordenable ? `data-ord="${x.id}"` : `data-mover="${x.id}"`} style="--c:${a.color}">
     <div class="sa-l1">${ASA}<button class="check" aria-label="Marcar como hecha" onclick="alternarAccion('${x.id}')">✓</button>
-      <span class="sa-t">${ICO_TAREA}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
+      <span class="sa-t">${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
     <div class="sa-l2">${tagArea(a)}${hayBloque ? `<button class="sa-ya" onclick="asignarAhora('${x.id}')">${vista === 'dia' ? '→ Al bloque' : '→ Ahora'}</button>` : ''}</div></div>`;
 }
 /* Quitar una tarea de los bloques de hoy (o del bloque elegido): al volver a tocar «✓ Con bloque» */
@@ -1289,8 +1292,8 @@ function alternarAccion(id){
   x.hecha = !x.hecha; x.hechaEn = x.hecha ? ahoraISO() : null; x.mod = ahoraISO();
   guardar();
   if(x.hecha){
-    if(!pendientes().length){ sonarFinal(); aviso('¡Todas hechas! Tu flor lo nota 🌸'); }
-    else { sonarHecho(); aviso('¡Hecha! 🌱'); }
+    if(!pendientes().length){ sonarFinal(); avisoDeshacer('¡Todas hechas!', () => alternarAccion(id)); }
+    else { sonarHecho(); avisoDeshacer('Tarea completada', () => alternarAccion(id)); }
   }
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
@@ -1299,15 +1302,32 @@ const ICO_LAPIZ = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" s
 const lapiz = onclick => `<button class="lapiz" type="button" aria-label="Editar o borrar la tarea" onclick="${onclick}">${ICO_LAPIZ}</button>`;
 /* Quita la tarea de todos los bloques (las ya hechas se quedan como recuerdo del día) */
 function quitarDeTodosBloques(id){
-  const dias = B_().days;
-  Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => { dias[k][i] = (dias[k][i] || []).filter(a => !(a && a.acc === id && !a.d)); }));
+  const dias = B_().days, fuera = [];
+  Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => {
+    (dias[k][i] || []).forEach((a, j) => { if(a && a.acc === id && !a.d) fuera.push({k, i, j, a}); });
+    dias[k][i] = (dias[k][i] || []).filter(a => !(a && a.acc === id && !a.d));
+  }));
+  return fuera;
 }
 function borrarAccion(id){
+  const x = D.acciones.find(a => a.id === id);
   D.acciones = D.acciones.filter(a => a.id !== id);
   D.borradas = (D.borradas || []).concat(id);
-  quitarDeTodosBloques(id); B_().mod = ahoraISO();
-  guardar(); aviso('Tarea borrada');
+  const fuera = quitarDeTodosBloques(id); B_().mod = ahoraISO();
+  guardar();
+  avisoDeshacer('Tarea eliminada', () => {
+    if(x){ x.mod = ahoraISO(); D.acciones.push(x); }
+    D.borradas = D.borradas.filter(b => b !== id);
+    fuera.forEach(f => actsDe(f.k, f.i, true).splice(f.j, 0, f.a));
+    guardarBloques(); rerenderDia();
+  });
   const y = window.scrollY; render(); window.scrollTo(0, y);
+}
+/* Quita una actividad de un bloque; las que no son de tus áreas desaparecen del todo */
+function quitarActividad(k, i, j){
+  const a = actsDe(k, i).splice(j, 1)[0]; if(!a) return;
+  guardarBloques();
+  avisoDeshacer(a.acc ? 'Tarea quitada del bloque' : 'Tarea eliminada', () => { actsDe(k, i, true).splice(j, 0, a); guardarBloques(); rerenderDia(); });
 }
 /* Editar: cambiar el nombre o borrar una tarea de tus áreas (id) o una actividad de un bloque (k, i, j) */
 let edicion = null;
@@ -1361,7 +1381,7 @@ function borrarEdicion(){
   const e = edicion; if(!e) return;
   if(!e.armado){ e.armado = true; const b = $('#ed-borrar'); if(b) b.textContent = '¿Seguro? Toca otra vez para borrarla'; return; }
   if(e.id) borrarAccion(e.id);
-  else { actsDe(e.k, e.i).splice(e.j, 1); B_().mod = ahoraISO(); guardar(); aviso('Tarea borrada'); }
+  else quitarActividad(e.k, e.i, e.j);
   salirEdicion();
 }
 function salirEdicion(){
@@ -1714,15 +1734,23 @@ function accionABloque(id){
   aviso(`Acción puesta a las ${hm(BLOQUES[bSel].ini)} 🌱`); rerenderDia();
 }
 function alternarAct(i){
-  const a = actsDe(claveDia(fechaBloques()), bSel)[i]; if(!a) return;
+  const k = claveDia(fechaBloques()), b = bSel, a = actsDe(k, b)[i]; if(!a) return;
   const nueva = !hechaAct(a);
   a.d = nueva;
   const x = a.acc && D.acciones.find(z => z.id === a.acc);
   if(x && x.hecha !== nueva){ x.hecha = nueva; x.hechaEn = nueva ? ahoraISO() : null; x.mod = ahoraISO(); }
-  guardarBloques(); if(nueva){ sonarHecho(); aviso('¡Hecha! 🌱'); }
+  guardarBloques();
+  if(nueva){
+    sonarHecho();
+    avisoDeshacer('Tarea completada', () => {
+      a.d = false;
+      if(x){ x.hecha = false; x.hechaEn = null; x.mod = ahoraISO(); }
+      guardarBloques(); rerenderDia();
+    });
+  }
   rerenderDia();
 }
-function borrarAct(i){ actsDe(claveDia(fechaBloques()), bSel).splice(i, 1); guardarBloques(); rerenderDia(); }
+function borrarAct(i){ quitarActividad(claveDia(fechaBloques()), bSel, i); rerenderDia(); }
 function ajBloque(clave, el){ B_()[clave] = el.checked; guardarBloques(); }
 function ajBloqueMin(el){ const v = Math.round(Number(el.value)); if(v >= 1 && v <= 60){ B_().remindMin = v; guardarBloques(); } else el.value = B_().remindMin; }
 /* Al pasar de bloque, lo que quedó sin hacer se pasa al bloque nuevo (hasta 3 por bloque) */
@@ -2548,7 +2576,20 @@ window.atrasNativo = () => {
 
 /* ---------- Aviso flotante ---------- */
 let tToast;
-function aviso(t){ const el = $('#toast'); el.textContent = t; el.classList.add('ver'); clearTimeout(tToast); tToast = setTimeout(() => el.classList.remove('ver'), 2400); }
+function aviso(t){ const el = $('#toast'); accionDeshacer = null; el.textContent = t; el.classList.remove('con-boton'); el.classList.add('ver'); clearTimeout(tToast); tToast = setTimeout(() => el.classList.remove('ver'), 2400); }
+/* Aviso de 4 segundos con «Deshacer», por si se ha tocado sin querer */
+let accionDeshacer = null;
+function avisoDeshacer(t, fn){
+  const el = $('#toast'); accionDeshacer = fn;
+  el.innerHTML = `<span>${esc(t)}</span><button type="button" onclick="deshacer()">Deshacer</button>`;
+  el.classList.add('ver', 'con-boton'); clearTimeout(tToast);
+  tToast = setTimeout(() => { accionDeshacer = null; el.classList.remove('ver'); }, 4000);
+}
+function deshacer(){
+  const fn = accionDeshacer; accionDeshacer = null;
+  clearTimeout(tToast); $('#toast').classList.remove('ver');
+  if(fn) fn();
+}
 
 /* ---------- Grow Panel: resumen de la app (Grow Panel\BOTON.md) ---------- */
 function enviarResumen(){
