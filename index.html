@@ -657,7 +657,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.35';
+const VERSION = 'v3.36';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -784,15 +784,7 @@ function textoSemana(clave){
   const hoy = claveSemana(new Date()), pasada = claveSemana(new Date(Date.now() - 7*864e5));
   return clave === hoy ? 'Esta semana' : clave === pasada ? 'La semana pasada' : `Semana del ${rangoSemana(clave)}`;
 }
-/* Tareas apuntadas directamente en un bloque, sin pétalo: al hacerlas también van al Historial */
-function hechasSinPetalo(){
-  const r = [], dias = B_().days;
-  Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => (dias[k][i] || []).forEach((a, j) => {
-    if(a && a.d && !a.acc) r.push({texto: a.t, hechaEn: a.hechaEn || k + 'T12:00:00', k, i, j}); })));
-  return r;
-}
-const todasHechas = () => [...D.acciones.filter(a => a.hecha && a.hechaEn), ...hechasSinPetalo()];
-const hechasEstaSemana = () => todasHechas().filter(a => claveSemana(a.hechaEn) === claveSemana(new Date())).length;
+const hechasEstaSemana = () => D.acciones.filter(a => a.hecha && a.hechaEn && claveSemana(a.hechaEn) === claveSemana(new Date())).length;
 
 let D = cargar();
 
@@ -1164,7 +1156,7 @@ function seccionAhora(){
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
-      <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${acts.filter(hechaAct).length}/${acts.length}</b></span></div>
+      <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${pend.length}</b></span></div>
     ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea (con los seis puntitos) o toca «→ Ahora».</p>`}
@@ -1329,9 +1321,11 @@ function hacerAccion(id){
 }
 function alternarAccion(id){
   const x = D.acciones.find(a => a.id === id); if(!x) return;
+  if(x.hecha && !x.area){ reabrirSinPetalo(x); return; }
   x.hecha = !x.hecha; x.hechaEn = x.hecha ? ahoraISO() : null; x.mod = ahoraISO();
   guardar();
   if(x.hecha){
+    programarArchivo();
     if(!pendientes().length){ sonarFinal(); avisoDeshacer('¡Todas hechas!', () => alternarAccion(id)); }
     else { sonarHecho(); avisoDeshacer('Tarea completada', () => alternarAccion(id)); }
   }
@@ -1672,7 +1666,7 @@ function vDia(){
     const acts = actsDe(k, i), pasado = bDia < 0 || (hoy && b.fin <= m);
     return `<button style="--p:${i === cur ? progresoBloque(b.ini, b.fin).toFixed(1) : 0}" data-ini="${b.ini}" data-fin="${b.fin}" class="blk ${i === cur ? 'ahora aro' : ''} ${pasado ? 'pasado' : ''} ${i === bSel ? 'sel' : ''}" data-i="${i}" onclick="elegirBloque(${i})">
       ${i === cur ? '<span class="blk-ya">AHORA</span>' : ''}<span class="blk-h">${hm(b.ini)}</span><span class="blk-f">a ${hm(b.fin)}</span>
-      <span class="blk-n">${acts.length ? `${acts.filter(hechaAct).length}/${acts.length} ✓` : '—'}</span></button>`;
+      <span class="blk-n">${acts.filter(a => !hechaAct(a)).length || '—'}</span></button>`;
   }).join('');
   const b = BLOQUES[bSel], acts = actsDe(k, bSel);
   let estado = '';
@@ -1782,7 +1776,7 @@ function alternarAct(i){
   if(x && x.hecha !== nueva){ x.hecha = nueva; x.hechaEn = nueva ? ahoraISO() : null; x.mod = ahoraISO(); }
   guardarBloques();
   if(nueva){
-    sonarHecho();
+    sonarHecho(); programarArchivo();
     avisoDeshacer('Tarea completada', () => {
       a.d = false; a.hechaEn = null;
       if(x){ x.hecha = false; x.hechaEn = null; x.mod = ahoraISO(); }
@@ -1792,7 +1786,35 @@ function alternarAct(i){
   rerenderDia();
 }
 function borrarAct(i){ quitarActividad(claveDia(fechaBloques()), bSel, i); rerenderDia(); }
-function reabrirAct(k, i, j){ const a = actsDe(k, i)[j]; if(!a) return; a.d = false; a.hechaEn = null; guardarBloques(); rerenderDia(); }
+/* Tachar es archivar: pasados los 4 s de deshacer, la tarea sale del bloque y queda en el Historial */
+let archivoT = null;
+function programarArchivo(){ clearTimeout(archivoT); archivoT = setTimeout(archivarHechas, 4200); }
+function archivarHechas(){
+  archivoT = null;
+  const dias = B_().days; let n = 0;
+  Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => {
+    const arr = actsDe(k, i);
+    for(let j = arr.length - 1; j >= 0; j--){ const a = arr[j]; if(!a || !hechaAct(a)) continue;
+      if(!a.acc) archivarSinPetalo(a, k, i);
+      arr.splice(j, 1); n++; }
+  }));
+  if(!n) return;
+  guardarBloques();
+  if(['inicio', 'dia'].includes(vista) && (document.activeElement || {}).id !== 'b-nueva') refrescarFocus();
+}
+/* Las apuntadas directamente en un bloque no tienen pétalo: se archivan como acción sin área */
+function archivarSinPetalo(a, k, i){
+  const h = [...a.t + (a.hechaEn || '')].reduce((n, c) => (n * 31 + c.charCodeAt(0)) | 0, 7);
+  const id = `b${k.replace(/-/g, '')}${i}x${Math.abs(h).toString(36)}`;   // el mismo id en todos tus aparatos
+  if(D.acciones.some(x => x.id === id) || (D.borradas || []).includes(id)) return;
+  const f = a.hechaEn || new Date(k + 'T12:00:00').toISOString();
+  D.acciones.push({id, area: null, texto: a.t, hecha: true, creada: f, hechaEn: f, mod: ahoraISO()});
+}
+function reabrirSinPetalo(x){
+  D.acciones = D.acciones.filter(a => a !== x); D.borradas = (D.borradas || []).concat(x.id);
+  actsDe(hoyK(), Math.max(bloqueAhora(), 0), true).unshift({t: x.texto, d: false});
+  guardarBloques(); aviso('Tarea devuelta al bloque'); rerenderDia();
+}
 function ajBloque(clave, el){ B_()[clave] = el.checked; guardarBloques(); }
 function ajBloqueMin(el){ const v = Math.round(Number(el.value)); if(v >= 1 && v <= 60){ B_().remindMin = v; guardarBloques(); } else el.value = B_().remindMin; }
 /* Al pasar de bloque, lo que quedó sin hacer se pasa al bloque nuevo (hasta 3 por bloque) */
@@ -1814,6 +1836,7 @@ let recordarDesde = Date.now();
 function refrescarFocus(){ const h = hojaAbierta; hojaAbierta = null; rerenderDia(); hojaAbierta = h; }
 function bloquesTick(){
   const c = bloqueAhora(), B = B_();
+  if(!archivoT) archivarHechas();
   if(c !== bUltimo){
     const primeraVez = bUltimo === null;
     recordarDesde = Date.now();
@@ -2161,7 +2184,7 @@ function vHistorial(){
     return h + '<div class="jardin">' + D.revisiones.slice().reverse().map(r => `<button class="maceta" onclick="detalleId='${r.id}'; ir('detalle')">${flor(r.niveles, {mini:true})}
       <b>${fecha(r.fecha)}</b><span>${AREAS.filter(a => r.niveles[a.id] && r.niveles[a.id] !== 'bien').length} áreas piden acción</span></button>`).join('') + '</div>';
   }
-  const hechas = todasHechas().sort((x,y) => new Date(y.hechaEn) - new Date(x.hechaEn));
+  const hechas = D.acciones.filter(a => a.hecha && a.hechaEn).sort((x,y) => x.hechaEn < y.hechaEn ? 1 : -1);
   const semanas = {};
   hechas.forEach(a => (semanas[claveSemana(a.hechaEn)] = semanas[claveSemana(a.hechaEn)] || []).push(a));
   const claves = Object.keys(semanas).sort().reverse();
@@ -2172,7 +2195,7 @@ function vHistorial(){
     <div class="cifra"><b>${pendientes().length}</b><span>pendientes</span></div></div>`;
   if(!claves.length) return h;
   h += claves.map(k => `<div class="semana-acc" style="--c:#8b5cf6"><div class="sa-cab"><b>${textoSemana(k)}</b><span>${rangoSemana(k)} · ${semanas[k].length} ${semanas[k].length === 1 ? 'hecha' : 'hechas'}</span></div>
-    <ul>${semanas[k].map(a => { const ar = areaDe(a.area); return `<li class="ok" style="--c:${ar ? ar.color : 'var(--oro)'}" onclick="${a.id ? `alternarAccion('${a.id}')` : `reabrirAct('${a.k}',${a.i},${a.j})`}"><span class="caja">✓</span><span class="t-col">${esc(a.texto)}${tagArea(ar)}</span></li>`; }).join('')}</ul></div>`).join('');
+    <ul>${semanas[k].map(a => { const ar = areaDe(a.area); return `<li class="ok" style="--c:${ar ? ar.color : 'var(--oro)'}" onclick="alternarAccion('${a.id}')"><span class="caja">✓</span><span class="t-col">${esc(a.texto)}${tagArea(ar)}</span></li>`; }).join('')}</ul></div>`).join('');
   return h;
 }
 function vDetalle(){
