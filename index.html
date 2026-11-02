@@ -648,7 +648,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.22';
+const VERSION = 'v3.23';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1143,7 +1143,7 @@ function seccionAhora(){
   return `<section class="ahora-blk" data-drop="ahora">
     <div class="ah-cab"><b class="ah-tit">Bloque actual · ${hm(b.ini)} – ${hm(b.fin)}</b></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
-      <div class="cuenta-col"><span class="cuenta-txt">min para acabar el bloque</span><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span>
+      <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
       <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${acts.filter(hechaAct).length}/${acts.length}</b></span></div>
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
