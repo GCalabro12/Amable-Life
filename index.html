@@ -638,7 +638,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.15';
+const VERSION = 'v3.16';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1446,9 +1446,9 @@ function abrirNueva(pre){
   hojaAbierta = () => abrirNueva(areaNueva);
   const a = areaDe(areaNueva), t = $('#h-nueva') ? $('#h-nueva').value : '';
   mostrarHoja(`<div class="hoja-cab"><div><h2>Nueva acción</h2></div></div>
-    <p class="eti" style="margin-top:12px">¿Para qué área?</p>
+    <div style="margin-top:12px">${campoNueva('h-nueva', 'Por ejemplo: ' + a.ejemplos[0])}</div>
+    <p class="eti" style="margin-top:14px">¿Para qué área?</p>
     <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === areaNueva ? 'sel' : ''}" style="--c:${x.color}" onclick="areaNueva='${x.id}'; abrirNueva('${x.id}')">${ico(x)} ${x.corto}</button>`).join('')}</div>
-    ${campoNueva('h-nueva', 'Por ejemplo: ' + a.ejemplos[0])}
     <button class="btn prim ancho" style="margin-top:10px" onclick="anadirNueva()">Añadir acción</button>`, a.color);
   if(t) $('#h-nueva').value = t;
 }
