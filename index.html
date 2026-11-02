@@ -390,6 +390,9 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .prox .del{background:none;border:0;color:var(--suave);font-size:16px;padding:6px;margin-left:-6px}
 .sin-asig{margin-top:14px}
 .sa-lista{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.rev-cal{display:flex;align-items:center;gap:12px;margin:10px 0;padding:12px 14px;border-radius:18px;background:rgba(247,195,91,.14);font-weight:700;line-height:1.3}
+.rev-cal span{flex:1;min-width:0}
+.rev-cal button{flex:none;border:0;border-radius:99px;padding:9px 14px;background:var(--oro);color:#1d1636;font-weight:800}
 .pet-tit{font-size:17px;font-weight:800;margin:0 0 8px}
 .aj-fila.pet-fila{padding:10px 14px;margin-top:6px;background:color-mix(in srgb,var(--c) 14%,transparent)}
 .aj-fila.pet-fila.sel{background:color-mix(in srgb,var(--c) 26%,transparent)}
@@ -635,7 +638,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.14';
+const VERSION = 'v3.15';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1619,6 +1622,12 @@ function tiraBloque(){
   else txt = `<b>${m >= 1320 ? 'Hora de descansar 🌙' : 'Tu día empieza a las 5:30'}</b><span>Planifica tus bloques de mañana</span>`;
   return `<button class="tira-bloque" onclick="ir('dia')"><span class="tb-ico">⏱</span><span class="tb-txt">${txt}</span><span class="flecha">›</span></button>`;
 }
+/* Una vez al día: pasar a los bloques lo que hay en el calendario */
+function avisoCalendario(){
+  if(D.calRevisado === hoyK()) return '';
+  return `<div class="rev-cal"><span>Revisa las tareas de tu día en tu calendario y colócalas en los bloques.</span><button type="button" onclick="calRevisado()">Hecho</button></div>`;
+}
+function calRevisado(){ D.calRevisado = hoyK(); guardar(); rerenderDia(); }
 function vDia(){
   const k = claveDia(fechaBloques()), hoy = bDia === 0, cur = hoy ? bloqueAhora() : -1, m = minutosHoy();
   if(bSel === null){ if(minutosHoy() >= 1320 && bDia === 0){ bDia = 1; return vDia(); } bSel = cur >= 0 ? cur : 0; }
@@ -1638,7 +1647,7 @@ function vDia(){
   const ya = new Set(acts.map(a => a.acc).filter(Boolean));
   const sugeridas = pendientes().filter(x => !ya.has(x.id)).slice(0, 4);
   const lleno = acts.length >= MAX_ACT;
-  return `<h1 class="tit-acc">Bloques de tareas</h1>${botonPausa('tareas')}
+  return `<h1 class="tit-acc">Bloques de tareas</h1>${avisoCalendario()}${botonPausa('tareas')}
     <div class="dia-cab"><button class="dia-flecha" onclick="moverDia(-1)" aria-label="Día anterior">‹</button>
       <div><h2>${bDia === 0 ? 'Hoy' : bDia === 1 ? 'Mañana' : bDia === -1 ? 'Ayer' : DIAS_SEM[d.getDay()]}</h2><span>${DIAS_SEM[d.getDay()]} ${d.getDate()} ${d.toLocaleDateString('es-ES', {month:'short'})}</span></div>
       <button class="dia-flecha" onclick="moverDia(1)" aria-label="Día siguiente">›</button></div>
@@ -2186,6 +2195,7 @@ function fusionar(local, remoto){
   r.bloques.days = Object.assign({}, bPierde.days || {}, bGana.days || {});
   r.nombre = local.nombre || remoto.nombre || '';
   const al = local.appAndroid, ar = remoto.appAndroid;
+  const cr = [local.calRevisado, remoto.calRevisado].filter(Boolean).sort().pop(); if(cr) r.calRevisado = cr;
   if(al || ar) r.appAndroid = (ar && (!al || (ar.visto || '') > (al.visto || ''))) ? ar : al;
   return r;
 }
