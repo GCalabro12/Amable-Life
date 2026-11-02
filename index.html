@@ -647,7 +647,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.20';
+const VERSION = 'v3.21';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1864,7 +1864,7 @@ function guardarSalud(subir){ S_().mod = ahoraISO(); try{ localStorage.setItem(C
 let pausa = {salud: false, tareas: false};
 try{ const v = localStorage.getItem('equilibra.pausa'); pausa = v === '1' ? {salud: true, tareas: true} : v && v !== '0' ? Object.assign(pausa, JSON.parse(v)) : pausa; }catch(e){}
 const TXT_PAUSA = {
-  salud: ['⏸ Pausar avisos del cuerpo', '▶ Avisos del cuerpo en pausa · toca para activarlos'],
+  salud: ['⏸ Pausar todos los avisos del cuerpo', '▶ Todos los avisos del cuerpo en pausa · toca para activarlos'],
   tareas: ['⏸ Pausar avisos de tareas', '▶ Avisos de tareas en pausa · toca para activarlos'],
   todo: ['⏸ Pausar todos los avisos', '▶ Todos los avisos en pausa · toca para activarlos']};
 function botonPausa(tipo){
