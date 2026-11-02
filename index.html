@@ -657,7 +657,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.33';
+const VERSION = 'v3.34';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -784,7 +784,15 @@ function textoSemana(clave){
   const hoy = claveSemana(new Date()), pasada = claveSemana(new Date(Date.now() - 7*864e5));
   return clave === hoy ? 'Esta semana' : clave === pasada ? 'La semana pasada' : `Semana del ${rangoSemana(clave)}`;
 }
-const hechasEstaSemana = () => D.acciones.filter(a => a.hecha && a.hechaEn && claveSemana(a.hechaEn) === claveSemana(new Date())).length;
+/* Tareas apuntadas directamente en un bloque, sin pétalo: al hacerlas también van al Historial */
+function hechasSinPetalo(){
+  const r = [], dias = B_().days;
+  Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => (dias[k][i] || []).forEach((a, j) => {
+    if(a && a.d && !a.acc) r.push({texto: a.t, hechaEn: a.hechaEn || k + 'T12:00:00', k, i, j}); })));
+  return r;
+}
+const todasHechas = () => [...D.acciones.filter(a => a.hecha && a.hechaEn), ...hechasSinPetalo()];
+const hechasEstaSemana = () => todasHechas().filter(a => claveSemana(a.hechaEn) === claveSemana(new Date())).length;
 
 let D = cargar();
 
@@ -1196,6 +1204,7 @@ function segundero(){
   els.forEach(e => { e.textContent = fmtCuenta(+e.dataset.fin); });
   const av = $('#av-estado'); if(av) av.textContent = txtAvisos();
   const prox = pausa.tareas ? null : proximoAviso(); if(prox !== null && prox <= Date.now()) bloquesTick();   // que salte justo en 0:00
+  if(bUltimo !== null && bloqueAhora() !== bUltimo) bloquesTick();   // el bloque cambia aunque los avisos estén en pausa
   if(ticOn && vista === 'inicio' && els.length && !document.hidden && !pausa.tareas) sonarTic();
 }
 /* Debajo: desplegable con las tareas pendientes que aún no tienen bloque hoy */
@@ -1768,14 +1777,14 @@ function accionABloque(id){
 function alternarAct(i){
   const k = claveDia(fechaBloques()), b = bSel, a = actsDe(k, b)[i]; if(!a) return;
   const nueva = !hechaAct(a);
-  a.d = nueva;
+  a.d = nueva; a.hechaEn = nueva ? ahoraISO() : null;
   const x = a.acc && D.acciones.find(z => z.id === a.acc);
   if(x && x.hecha !== nueva){ x.hecha = nueva; x.hechaEn = nueva ? ahoraISO() : null; x.mod = ahoraISO(); }
   guardarBloques();
   if(nueva){
     sonarHecho();
     avisoDeshacer('Tarea completada', () => {
-      a.d = false;
+      a.d = false; a.hechaEn = null;
       if(x){ x.hecha = false; x.hechaEn = null; x.mod = ahoraISO(); }
       guardarBloques(); rerenderDia();
     });
@@ -1783,6 +1792,7 @@ function alternarAct(i){
   rerenderDia();
 }
 function borrarAct(i){ quitarActividad(claveDia(fechaBloques()), bSel, i); rerenderDia(); }
+function reabrirAct(k, i, j){ const a = actsDe(k, i)[j]; if(!a) return; a.d = false; a.hechaEn = null; guardarBloques(); rerenderDia(); }
 function ajBloque(clave, el){ B_()[clave] = el.checked; guardarBloques(); }
 function ajBloqueMin(el){ const v = Math.round(Number(el.value)); if(v >= 1 && v <= 60){ B_().remindMin = v; guardarBloques(); } else el.value = B_().remindMin; }
 /* Al pasar de bloque, lo que quedó sin hacer se pasa al bloque nuevo (hasta 3 por bloque) */
@@ -1800,6 +1810,8 @@ function arrastrar(c){
   return n;
 }
 let recordarDesde = Date.now();
+/* Redibuja Focus sin tocar la hoja que esté abierta, para no perder lo que estés escribiendo */
+function refrescarFocus(){ const h = hojaAbierta; hojaAbierta = null; rerenderDia(); hojaAbierta = h; }
 function bloquesTick(){
   const c = bloqueAhora(), B = B_();
   if(c !== bUltimo){
@@ -1815,6 +1827,7 @@ function bloquesTick(){
     }
     if(vista === 'dia' && bDia === 0 && bSel === bUltimo && c >= 0) bSel = c;
     bUltimo = c;
+    if(vista === 'inicio' && (movidas || !primeraVez)) refrescarFocus();
   }
   // recordatorio de la actividad en curso
   if(B.remindOn && c >= 0 && Date.now() - recordarDesde >= B.remindMin * 60000){
@@ -2135,7 +2148,7 @@ function iniciarSalud(){
   // el sonido del segundero necesita un primer toque en la pantalla (norma de los navegadores)
   ['click', 'touchend'].forEach(ev => document.addEventListener(ev, () => { if(ticOn) ticPreparar(); }, {passive: true}));
   setTimeout(saludTick, 4000);
-  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible'){ leerPasos(); saludTick(); } });
+  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible'){ leerPasos(); saludTick(); bloquesTick(); } });
 }
 
 /* ---------- Historial: acciones hechas por semana y revisiones de la flor ---------- */
@@ -2148,18 +2161,18 @@ function vHistorial(){
     return h + '<div class="jardin">' + D.revisiones.slice().reverse().map(r => `<button class="maceta" onclick="detalleId='${r.id}'; ir('detalle')">${flor(r.niveles, {mini:true})}
       <b>${fecha(r.fecha)}</b><span>${AREAS.filter(a => r.niveles[a.id] && r.niveles[a.id] !== 'bien').length} áreas piden acción</span></button>`).join('') + '</div>';
   }
-  const hechas = D.acciones.filter(a => a.hecha && a.hechaEn).sort((x,y) => x.hechaEn < y.hechaEn ? 1 : -1);
+  const hechas = todasHechas().sort((x,y) => new Date(y.hechaEn) - new Date(x.hechaEn));
   const semanas = {};
   hechas.forEach(a => (semanas[claveSemana(a.hechaEn)] = semanas[claveSemana(a.hechaEn)] || []).push(a));
   const claves = Object.keys(semanas).sort().reverse();
-  h += `<p class="suave hist-exp">Cuando marques acciones como hechas, aparecerán aquí, semana a semana.</p>
+  h += `<p class="suave hist-exp">Las tareas que marques como hechas se guardan aquí solas, semana a semana. No hace falta borrarlas.</p>
     <div class="resumen-acc">
     <div class="cifra"><b>${hechas.length}</b><span>${hechas.length === 1 ? 'acción hecha' : 'acciones hechas'}</span></div>
     <div class="cifra"><b>${hechasEstaSemana()}</b><span>esta semana</span></div>
     <div class="cifra"><b>${pendientes().length}</b><span>pendientes</span></div></div>`;
   if(!claves.length) return h;
   h += claves.map(k => `<div class="semana-acc" style="--c:#8b5cf6"><div class="sa-cab"><b>${textoSemana(k)}</b><span>${rangoSemana(k)} · ${semanas[k].length} ${semanas[k].length === 1 ? 'hecha' : 'hechas'}</span></div>
-    <ul>${semanas[k].map(a => { const ar = areaDe(a.area); return `<li class="ok" style="--c:${ar.color}" onclick="alternarAccion('${a.id}')"><span class="caja">✓</span><span class="t-col">${esc(a.texto)}${tagArea(ar)}</span></li>`; }).join('')}</ul></div>`).join('');
+    <ul>${semanas[k].map(a => { const ar = areaDe(a.area); return `<li class="ok" style="--c:${ar ? ar.color : 'var(--oro)'}" onclick="${a.id ? `alternarAccion('${a.id}')` : `reabrirAct('${a.k}',${a.i},${a.j})`}"><span class="caja">✓</span><span class="t-col">${esc(a.texto)}${tagArea(ar)}</span></li>`; }).join('')}</ul></div>`).join('');
   return h;
 }
 function vDetalle(){
