@@ -657,7 +657,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.31';
+const VERSION = 'v3.32';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1895,7 +1895,7 @@ function txtAvisos(){
 function abrirAvisos(){
   hojaAbierta = abrirAvisos;
   const B = B_(), sw = (clave, txt) => `<label class="desliz"><input type="checkbox" ${B[clave] ? 'checked' : ''} onchange="ajBloque('${clave}', this)"><i></i><span>${txt}</span></label>`;
-  mostrarHoja(`<div class="hoja-cab"><div><h2>Avisos</h2></div></div>
+  mostrarHoja(`<div class="hoja-cab"><div><h2>Avisos de Focus</h2></div></div>
     <div class="av-lista">
       <label class="desliz"><input type="checkbox" ${pausa.tareas ? '' : 'checked'} onchange="alternarPausa('tareas')"><i></i><span>Avisos ${pausa.tareas ? 'desactivados' : 'activados'}</span></label>
       <div class="av-lista ${pausa.tareas ? 'av-dim' : ''}">
