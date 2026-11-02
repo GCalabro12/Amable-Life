@@ -455,6 +455,14 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .salud-tiles{display:flex;flex-direction:column;gap:8px;margin:12px 0 10px}
 .s-tile{border:0;border-radius:18px;padding:14px 14px;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--tinta);display:flex;align-items:center;gap:12px;text-align:left;width:100%;transition:background .2s}
 .s-tile.sel{background:color-mix(in srgb,var(--c) 42%,transparent)}
+.s-tile{cursor:pointer}
+.desliz{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;margin-top:5px;padding:3px 0;font-size:13px;font-weight:700;cursor:pointer}
+.desliz input{position:absolute;opacity:0;width:0;height:0}
+.desliz i{position:relative;width:44px;height:25px;flex:none;border-radius:99px;background:rgba(255,255,255,.2);transition:background .2s}
+.desliz i::after{content:'';position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:transform .2s}
+.desliz input:checked + i{background:var(--c)}
+.desliz input:checked + i::after{transform:translateX(19px)}
+.desliz input:focus-visible + i{outline:2px solid #fff;outline-offset:2px}
 .s-tile .s-ico{font-size:28px;line-height:1;flex:none}
 .s-tile .s-num{display:flex;flex-direction:column;align-items:center;flex:none;min-width:64px}
 .s-tile b{font-size:22px;font-weight:800;line-height:1.15}
@@ -639,7 +647,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.18';
+const VERSION = 'v3.19';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1932,9 +1940,10 @@ function vSalud(){
   const subPasos = esApp && !pcCuentaPasos() ? `${km} km · ${mins} min activos` : '';
   const estAgua = aguaOk ? `¡Meta cumplida! Ya llevas ${fmtVasos(h.agua)} vasos` : h.agua === 0 ? 'Aún no has bebido: empieza con medio vaso' : `Te ${faltaA <= 1 ? 'falta' : 'faltan'} ${fmtVasos(faltaA)} ${faltaA <= 1 ? 'vaso' : 'vasos'} para llegar a ${S.aguaGoal}`;
   const estMov = h.mov === 0 ? 'Haz tu primera pausa activa de hoy' : h.mov < 4 ? '¡Bien! Sigue moviéndote cada hora' : '¡Muy activo hoy! Sigue así';
-  const tile = (k, ico, valor, unidad, est, sub, c) => `<button class="s-tile ${saludAbierta === k ? 'sel' : ''}" style="--c:${c}" onclick="abrirSalud('${k}')" aria-expanded="${saludAbierta === k}">
+  const desliz = (clave, sig, min) => `<label class="desliz" onclick="event.stopPropagation()"><input type="checkbox" ${S[clave] ? 'checked' : ''} onchange="ajCheck('${clave}', this, '${sig}', '${min}')"><i></i><span>${S[clave] ? 'Activado' : 'Desactivado'}</span></label>`;
+  const tile = (k, ico, valor, unidad, est, sub, c, sw) => `<div class="s-tile ${saludAbierta === k ? 'sel' : ''}" style="--c:${c}" role="button" tabindex="0" onclick="abrirSalud('${k}')" onkeydown="if(event.target === this && event.key === 'Enter')abrirSalud('${k}')" aria-expanded="${saludAbierta === k}">
     <span class="s-ico">${ico}</span><span class="s-num"><b>${valor}</b><small>${unidad}</small></span>
-    <span class="s-txt"><span class="s-est">${est}</span>${sub ? `<small>${sub}</small>` : ''}</span>${flecha(saludAbierta === k)}</button>`;
+    <span class="s-txt"><span class="s-est">${est}</span>${sub ? `<small>${sub}</small>` : ''}${sw || ''}</span>${flecha(saludAbierta === k)}</div>`;
   const secciones = {pasos: `<section class="tarjeta salud-sec" id="sec-pasos">
     <h3>👣 Pasos</h3>
     <div class="anillo-caja">${anillo(p.steps, S.meta)}<div class="anillo-centro"><b>${fmtN(p.steps)}</b><span>de ${fmtN(S.meta)} pasos</span><small>${Math.round(Math.min(1, p.steps / S.meta) * 100)}%</small></div></div>
@@ -1971,8 +1980,8 @@ function vSalud(){
   return `<h2 style="margin-top:18px">Tu cuerpo hoy</h2>${botonPausa('salud')}
   <div class="salud-tiles">
     ${tile('pasos', '👣', fmtN(p.steps), 'pasos', estPasos, subPasos, '#f08a24')}${saludAbierta === 'pasos' ? secciones.pasos : ''}
-    ${tile('agua', '💧', fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', 'vasos', estAgua, prox(S.aguaOn, S.aguaNext), '#14a3a3')}${saludAbierta === 'agua' ? secciones.agua : ''}
-    ${tile('mov', '🤸', h.mov, h.mov === 1 ? 'pausa' : 'pausas', estMov, prox(S.movOn, S.movNext), '#22a35a')}${saludAbierta === 'mov' ? secciones.mov : ''}
+    ${tile('agua', '💧', fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', 'vasos', estAgua, prox(S.aguaOn, S.aguaNext), '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}${saludAbierta === 'agua' ? secciones.agua : ''}
+    ${tile('mov', '🤸', h.mov, h.mov === 1 ? 'pausa' : 'pausas', estMov, prox(S.movOn, S.movNext), '#22a35a', desliz('movOn', 'movNext', 'movMin'))}${saludAbierta === 'mov' ? secciones.mov : ''}
   </div>
   ${saludAbierta ? '' : '<p class="peq suave" style="text-align:center;margin:6px 0 14px">Toca una fila para ver el detalle.</p>'}
   <p class="peq suave" style="text-align:center">Los avisos de agua y movimiento suenan entre las 5:30 y las 22:00, con la app abierta.</p>`;
