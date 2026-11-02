@@ -291,9 +291,10 @@ img,svg{-webkit-user-drag:none}
 .hoja{position:fixed;inset:0;z-index:25;background:rgba(8,5,20,0);transition:background .3s;display:flex;align-items:flex-end;justify-content:center}
 .hoja.ver{background:rgba(8,5,20,.55)}
 .hoja-in{width:100%;max-width:520px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 22%,var(--tarjeta)),var(--tarjeta) 55%);
-  border-radius:24px 24px 0 0;padding:10px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .3s ease;max-height:82vh;overflow:auto}
+  border-radius:24px 24px 0 0;padding:16px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .3s ease;max-height:82vh;overflow:auto}
 .hoja.ver .hoja-in{transform:none}
-.hoja-asa{width:42px;height:5px;border-radius:9px;background:rgba(255,255,255,.25);margin:0 auto 12px}
+.hoja-x{position:sticky;top:0;float:right;z-index:2;width:38px;height:38px;display:grid;place-items:center;padding:0;margin:0 -6px 0 8px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff}
+.hoja-x:active{background:rgba(255,255,255,.26)}
 .hoja-cab{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .hoja-cab > div{display:flex;align-items:center;gap:10px}
 .hoja-cab h2{font-size:22px;font-weight:800}
@@ -326,8 +327,8 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
   background:linear-gradient(100deg,color-mix(in srgb,var(--c) 32%,transparent),color-mix(in srgb,var(--c) 6%,transparent) 85%);animation:entra .4s ease-out both}
 .prox .num{font-size:30px;font-weight:800;color:color-mix(in srgb,var(--c) 55%,#fff);width:28px;flex:none;text-align:center}
 .prox .cuerpo-p{flex:1;min-width:0}
-.prox .area-p{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:color-mix(in srgb,var(--c) 40%,#fff);display:flex;align-items:center;gap:6px}
-.prox .texto-p{font-size:22px;font-weight:800;line-height:1.25;margin-top:4px;overflow-wrap:anywhere}
+.prox .area-p{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:color-mix(in srgb,var(--c) 40%,#fff);display:flex;align-items:center;gap:6px;margin-top:3px}
+.prox .texto-p{font-size:22px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
 .prox.falta{background:linear-gradient(100deg,color-mix(in srgb,var(--c) 12%,transparent),transparent 85%)}
 .prox.falta .texto-p{font-size:17px;color:var(--suave);font-weight:700}
 .prox.saliendo{animation:sale .32s ease-in forwards}
@@ -385,15 +386,25 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .check.hecho{background:var(--c);color:#fff}
 .prox .del{background:none;border:0;color:var(--suave);font-size:16px;padding:6px;margin-left:-6px}
 .sin-asig{margin-top:14px}
-.sa-lista{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.sa-lista{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.pet-tit{font-size:17px;font-weight:800;margin:0 0 8px}
+.aj-fila.pet-fila{padding:10px 14px;margin-top:6px;background:color-mix(in srgb,var(--c) 14%,transparent)}
+.aj-fila.pet-fila.sel{background:color-mix(in srgb,var(--c) 26%,transparent)}
+.pet-fila .aj-t b{font-size:16px}
+.pet-n{flex:none;font-weight:800;color:var(--suave)}
+.pet-fila .s-flecha{flex:none;font-size:18px;color:var(--suave)}
+.pet-sin{display:flex;flex-wrap:wrap;gap:8px}
+.pet-sin button{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:99px;padding:8px 13px;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--tinta);font-weight:700;font-size:14px}
 .sa-fila{display:flex;flex-direction:column;gap:6px;padding:8px 10px 8px 12px;border-radius:14px;background:color-mix(in srgb,var(--c) 14%,transparent)}
 .sa-l1{display:flex;align-items:center;gap:10px;width:100%}
-.sa-l2{display:flex;justify-content:flex-end;width:100%}
+.sa-l2{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding-left:62px}
+.panel-area .sa-l2{padding-left:0}
+.t-area{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--suave);min-width:0}
+.t-col{display:flex;flex-direction:column;gap:2px;min-width:0}
 .sa-fila .check{width:34px;height:34px;border-width:2.5px;font-size:16px}
 .sa-fila .asa{margin:0 -4px 0 -6px;padding:6px 4px}
 .sa-t{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere;display:flex;align-items:center;gap:6px}
 .sa-ya{flex:none;border:0;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800;background:rgba(247,195,91,.2);color:var(--oro)}
-.sa-falta{border:0;border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.05);color:var(--suave);font-weight:700;text-align:left;display:flex;align-items:center;gap:6px}
 .arrastrando{pointer-events:none}
 .flor.girasol{width:calc(100% + 32px);max-width:480px;margin-left:-16px!important;margin-right:-16px!important;margin:10px auto 4px;overflow:visible}
 .girasol .g-hora{font-size:30px;font-weight:800;fill:#3a2208}
@@ -621,7 +632,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.12';
+const VERSION = 'v3.13';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1002,7 +1013,7 @@ function tarjetaAccion(x, i){
   const a = areaDe(x.area);
   return `<div class="prox" id="acc-${x.id}" data-ord="${x.id}" style="--c:${a.color};animation-delay:${i*70}ms">
     ${ASA}<span class="num">${i+1}</span>
-    <div class="cuerpo-p"><div class="area-p">${ico(a)} ${a.nombre}</div><div class="texto-p">${esc(x.texto)}</div></div>
+    <div class="cuerpo-p"><div class="texto-p">${esc(x.texto)}</div><div class="area-p">${ico(a)} ${a.nombre}</div></div>
     <button class="check" aria-label="Marcar como hecha" onclick="hacerAccion('${x.id}')">✓</button></div>`;
 }
 // En el navegador de un Android: ofrecer la app (suena al abrir, cuenta pasos y entra con Google)
@@ -1043,14 +1054,16 @@ function vInicio(){
   let h = `${bannerApp()}${tuNombre ? `<p class="saludo">Hola, ${esc(tuNombre)}</p>` : ''}<h1 class="tit-acc">Enfócate en</h1>
     <p class="suave peq" style="margin:4px 0 0">${pend.length ? `${pend.length} ${pend.length === 1 ? 'pendiente' : 'pendientes'}` : 'Nada pendiente'}${hs ? ` · ${hs} ${hs === 1 ? 'hecha' : 'hechas'} esta semana` : ''}</p>
     ${seccionAhora()}
-    ${listaSinAsignar()}
     <button class="btn sec ancho" style="margin-top:14px" onclick="abrirNueva()">＋ Nueva acción</button>
+    ${listaSinAsignar()}
     ${tiraSalud()}`;
   h += `
   <div class="sellos">${sellosHTML()}</div>`;
   return h;
 }
 const hoyK = () => claveDia(new Date());
+/* Debajo de cada tarea: el pétalo y el área a la que pertenece */
+const tagArea = a => `<span class="t-area">${a ? `${ico(a)} ${a.nombre}` : 'Sin asignar'}</span>`;
 /* Tu nombre (lo pide la cuenta al empezar) para llamarte por él dentro de la app */
 function guardarNombre(n){ n = String(n || '').trim().slice(0, 40); if(!n || D.nombre === n) return; D.nombre = n; guardar(); }
 function nombrePila(){
@@ -1102,7 +1115,7 @@ function seccionAhora(){
     const x = a.acc && D.acciones.find(z => z.id === a.acc), ar = x && areaDe(x.area), ok = hechaAct(a);
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
       ${ok ? '<span class="asa-hueco"></span>' : ASA}<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>
-      <div class="cuerpo-p">${ar && !ok ? `<div class="area-p">${ico(ar)} ${ar.nombre}</div>` : ''}<div class="texto-p">${esc(a.t)}</div></div>
+      <div class="cuerpo-p"><div class="texto-p">${esc(a.t)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}</div>
       ${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>`;
   };
   // arriba solo la tarea en la que estás (la primera sin hacer); debajo las demás pendientes; las hechas al final, tachadas
@@ -1153,14 +1166,24 @@ function segundero(){
   if(ticOn && vista === 'inicio' && els.length && !document.hidden && !pausa.tareas) sonarTic();
 }
 /* Debajo: desplegable con las tareas pendientes que aún no tienen bloque hoy */
-let sinAsigAbierto = true;
+let petaloAbierto = null;   // Focus: pétalos colapsados para que no distraigan
 function listaSinAsignar(){
-  const asig = idsEnBloquesHoy(), lista = pendientes().filter(x => !asig.has(x.id)), c = bloqueAhora(), falta = faltan();
-  let h = `<section class="sin-asig"><button class="aj-fila ${sinAsigAbierto ? 'sel' : ''}" aria-expanded="${sinAsigAbierto}" onclick="sinAsigAbierto = !sinAsigAbierto; const y = scrollY; render(); scrollTo(0, y)">
-    <span class="aj-ico">📋</span><span class="aj-t"><b>Tareas sin asignar</b><small>${lista.length ? `${lista.length} ${lista.length === 1 ? 'tarea' : 'tareas'}${c >= 0 ? ' · arrástralas al bloque de ahora' : ''}` : 'Todas tus tareas tienen bloque hoy'}</small></span><span class="s-flecha">${sinAsigAbierto ? '⌃' : '⌄'}</span></button>`;
-  if(sinAsigAbierto) h += `<div class="sa-lista">${lista.map(x => filaTarea(x, c >= 0, true)).join('')}
-    ${falta.slice(0, 2).map(f => `<button class="sa-falta" onclick="abrirNueva('${f.area.id}')">${ico(f.area)} Añade ${f.faltan === 1 ? 'una acción' : f.faltan + ' acciones'} para ${f.area.nombre}</button>`).join('')}</div>`;
-  return h + '</section>';
+  const asig = idsEnBloquesHoy(), lista = pendientes().filter(x => !asig.has(x.id)), c = bloqueAhora();
+  const grupos = AREAS.map(a => ({a, tareas: lista.filter(x => x.area === a.id)})).filter(g => g.tareas.length);
+  if(!grupos.length) return '';
+  return `<section class="sin-asig"><h2 class="pet-tit">Pétalos con tareas pendientes</h2>
+    ${grupos.map(({a, tareas}) => { const abierto = petaloAbierto === a.id;
+      return `<button class="aj-fila pet-fila ${abierto ? 'sel' : ''}" style="--c:${a.color}" aria-expanded="${abierto}" onclick="petaloAbierto = petaloAbierto === '${a.id}' ? null : '${a.id}'; const y = scrollY; render(); scrollTo(0, y)">
+        <span class="aj-ico">${ico(a)}</span><span class="aj-t"><b>${a.nombre}</b></span><span class="pet-n">${tareas.length}</span><span class="s-flecha">${abierto ? '⌃' : '⌄'}</span></button>
+      ${abierto ? `<div class="sa-lista">${tareas.map(x => filaTarea(x, c >= 0, true)).join('')}</div>` : ''}`; }).join('')}
+  </section>`;
+}
+/* Tareas: los pétalos que se han quedado sin ninguna tarea */
+function petalosSinTareas(){
+  const con = new Set(pendientes().map(x => x.area)), sin = AREAS.filter(a => !con.has(a.id));
+  if(!sin.length) return '';
+  return `<section class="tarjeta"><h2 class="pet-tit">Pétalos sin tareas</h2><div class="pet-sin">
+    ${sin.map(a => `<button style="--c:${a.color}" onclick="abrirNueva('${a.id}')">${ico(a)} ${a.nombre}</button>`).join('')}</div></section>`;
 }
 /* Fila de tarea arrastrable: con seis puntitos, casilla de hecha y «→ Ahora» */
 function filaTarea(x, hayBloque, ordenable){
@@ -1168,7 +1191,7 @@ function filaTarea(x, hayBloque, ordenable){
   return `<div class="sa-fila" ${ordenable ? `data-ord="${x.id}"` : `data-mover="${x.id}"`} style="--c:${a.color}">
     <div class="sa-l1">${ASA}<button class="check" aria-label="Marcar como hecha" onclick="alternarAccion('${x.id}')">✓</button>
       <span class="sa-t">${ICO_TAREA}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
-    ${hayBloque ? `<div class="sa-l2"><button class="sa-ya" onclick="asignarAhora('${x.id}')">${vista === 'dia' ? '→ Al bloque' : '→ Ahora'}</button></div>` : ''}</div>`;
+    <div class="sa-l2">${tagArea(a)}${hayBloque ? `<button class="sa-ya" onclick="asignarAhora('${x.id}')">${vista === 'dia' ? '→ Al bloque' : '→ Ahora'}</button>` : ''}</div></div>`;
 }
 /* Quitar una tarea de los bloques de hoy (o del bloque elegido): al volver a tocar «✓ Con bloque» */
 function quitarDeBloques(id, soloElegido){
@@ -1246,7 +1269,7 @@ function panelArea(){
     <div class="pa-cab">${ico(a, 'g')}<div><b>${a.nombre}</b><small>${nv ? NIVELES[nv].titulo : 'Sin revisar'} · <button class="link" onclick="abrirPetalo('${a.id}')">cambiar</button></small></div>
       <button class="del" aria-label="Cerrar" onclick="panelAbierto = null; const y = scrollY; render(); scrollTo(0, y)">✕</button></div>
     ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
-      <div class="sa-l2"><button class="sa-con" onclick="quitarDeBloques('${x.id}')" title="Toca para quitarla del bloque">✓ Con bloque · quitar</button></div></div>` : filaTarea(x, c >= 0, false)).join('')
+      <div class="sa-l2">${tagArea(a)}<button class="sa-con" onclick="quitarDeBloques('${x.id}')" title="Toca para quitarla del bloque">✓ Con bloque · quitar</button></div></div>` : filaTarea(x, c >= 0, false)).join('')
       : '<p class="suave" style="margin:6px 0">Este pétalo no tiene tareas pendientes.</p>'}
     <div class="campo-voz" style="margin-top:10px"><input type="text" id="pa-nueva" maxlength="120" placeholder="Nueva tarea para ${esc(a.corto)}" onkeydown="if(event.key==='Enter')nuevaEnPanel()">${botonMic()}</div>
     <button class="btn sec ancho" style="margin-top:8px" onclick="nuevaEnPanel()">＋ Añadir al área de ${esc(a.nombre)}</button>
@@ -1290,30 +1313,47 @@ function borrarAccion(id){
 let edicion = null;
 function editarTarea(id){
   const x = D.acciones.find(a => a.id === id); if(!x) return;
-  edicion = {id, volver: hojaAbierta, armado: false}; pintarEdicion(x.texto);
+  edicion = {id, area: x.area, volver: hojaAbierta, armado: false}; pintarEdicion(x.texto);
 }
 function editarBloque(k, i, j){
   const a = actsDe(k, i)[j]; if(!a) return;
   const x = a.acc && D.acciones.find(z => z.id === a.acc);
-  edicion = {id: x ? a.acc : null, k, i, j, volver: hojaAbierta, armado: false}; pintarEdicion(x ? x.texto : a.t);
+  edicion = {id: x ? a.acc : null, area: x ? x.area : null, k, i, j, volver: hojaAbierta, armado: false}; pintarEdicion(x ? x.texto : a.t);
 }
 function pintarEdicion(texto){
   hojaAbierta = null;
   mostrarHoja(`<div class="hoja-cab"><div><h2>Editar tarea</h2></div></div>
     <div class="campo-voz" style="margin-top:10px"><input type="text" id="ed-texto" maxlength="120" onkeydown="if(event.key==='Enter')guardarEdicion()">${botonMic()}</div>
+    <p class="eti" style="margin-top:12px">¿A qué pétalo pertenece?</p>
+    <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === edicion.area ? 'sel' : ''}" style="--c:${x.color}" onclick="edArea('${x.id}', this)">${ico(x)} ${x.corto}</button>`).join('')}</div>
     <button class="btn prim ancho" style="margin-top:10px" onclick="guardarEdicion()">Guardar</button>
     <button class="btn peligro ancho" id="ed-borrar" style="margin-top:8px" onclick="borrarEdicion()">Borrar tarea</button>
     <button class="btn sec ancho" style="margin-top:8px" onclick="salirEdicion()">Cancelar</button>`, '#8b5cf6');
   $('#ed-texto').value = texto;
 }
+function edArea(id, b){
+  edicion.area = id;
+  b.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === b));
+}
 function guardarEdicion(){
   const e = edicion, t = valor('ed-texto'); if(!e) return;
   if(!t){ aviso('Escribe el nombre de la tarea'); return; }
   if(e.id){
-    const x = D.acciones.find(a => a.id === e.id); if(x){ x.texto = t; x.mod = ahoraISO(); }
+    const x = D.acciones.find(a => a.id === e.id); if(x){ x.texto = t; x.area = e.area; x.mod = ahoraISO(); }
     const dias = B_().days;
     Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => (dias[k][i] || []).forEach(a => { if(a && a.acc === e.id) a.t = t; })));
-  } else { const a = actsDe(e.k, e.i)[e.j]; if(a) a.t = t; }
+  } else {
+    const a = actsDe(e.k, e.i)[e.j];
+    if(a){
+      a.t = t;
+      if(e.area){   // sin asignar → al elegir pétalo pasa a ser una acción de esa área
+        nuevaAccion(e.area, t);
+        const x = D.acciones[D.acciones.length - 1];
+        a.acc = x.id;
+        if(a.d){ x.hecha = true; x.hechaEn = ahoraISO(); }
+      }
+    }
+  }
   B_().mod = ahoraISO(); guardar(); aviso('Tarea cambiada');
   salirEdicion();
 }
@@ -1331,15 +1371,22 @@ function salirEdicion(){
 }
 
 /* ---------- Hojas (desde abajo): pétalo y nueva acción ---------- */
+const ICO_CRUZ = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function mostrarHoja(html, color){
   let hoja = $('#hoja');
-  if(!hoja){ hoja = document.createElement('div'); hoja.id = 'hoja'; hoja.className = 'hoja'; hoja.onclick = e => { if(e.target === hoja) cerrarHoja(); }; document.body.appendChild(hoja); }
+  if(!hoja){ hoja = document.createElement('div'); hoja.id = 'hoja'; hoja.className = 'hoja'; hoja.onclick = e => { if(e.target === hoja) cerrarHojaX(); }; document.body.appendChild(hoja); }
   const nueva = !hoja.classList.contains('ver');
-  hoja.innerHTML = `<div class="hoja-in accion" style="--c:${color}"><div class="hoja-asa"></div>${html}</div>`;
+  hoja.innerHTML = `<div class="hoja-in accion" style="--c:${color}"><button class="hoja-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button>${html}</div>`;
   if(nueva) requestAnimationFrame(() => hoja.classList.add('ver'));
 }
 function cerrarHoja(){ hojaAbierta = null; const h = $('#hoja'); if(h){ h.id = ''; h.classList.remove('ver'); setTimeout(() => h.remove(), 300); } }
 const cerrarPetalo = cerrarHoja;
+/* La cruz (y tocar fuera) cierra cada hoja como su propio botón de salir */
+function cerrarHojaX(){
+  if(edicion) salirEdicion();
+  else if(avisoSalud) responderAviso(false);
+  else cerrarHoja();
+}
 function opcionesNivel(actual, onclick, compacta){
   return `<div class="opciones${compacta ? ' compacta' : ''}">${Object.keys(NIVELES).map(k => { const N = NIVELES[k];
     return `<button class="opcion ${actual === k ? 'sel' : ''}" onclick="${onclick(k)}"><span class="marca">${N.marca}</span><span><b>${N.titulo}</b><small>${N.sub}</small></span></button>`; }).join('')}</div>`;
@@ -1586,7 +1633,7 @@ function vDia(){
     <section class="tarjeta bloque-sel" data-drop="bloque">
       <div class="bs-cab"><b>${hm(b.ini)} – ${hm(b.fin)}</b><span>${estado}</span></div>
       ${bSel === cur ? `<div class="mini-barra"><i style="width:${(m - b.ini) / 90 * 100}%"></i></div>` : ''}
-      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span>${esc(a.t)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
+      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span class="t-col">${esc(a.t)}${tagArea(a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area) : null)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
       ${lleno ? `<p class="peq suave" style="margin:8px 0 0">Bloque completo · ${MAX_ACT} actividades</p>` : `
         <p class="eti" style="margin:14px 0 0">Añadir nueva tarea</p>
         <div class="campo-voz" style="margin-top:8px"><input type="text" id="b-nueva" maxlength="120" placeholder="Escribe o dicta una actividad" onkeydown="if(event.key==='Enter')anadirAct()">${botonMic()}</div>
@@ -1595,6 +1642,7 @@ function vDia(){
           <span class="fb-t"><b>Añadir tarea de tus áreas</b><small>${pendientes().filter(x => !ya.has(x.id)).length} pendientes · toca para elegir</small></span><span class="fb-fl">›</span></button>` : ''}`}
       ${(cur >= 0 && (bDia !== 0 || bSel !== cur)) ? `<button class="link" style="display:block;margin:10px auto 0" onclick="bDia=0; bSel=bloqueAhora(); render(); centrarBloque()">↺ Volver al bloque de ahora</button>` : ''}
     </section>
+    ${petalosSinTareas()}
     <section class="tarjeta">
       <details class="ajustes-salud"><summary>Avisos de los bloques</summary>
         <label class="fila-aj"><span><input type="checkbox" ${B_().startVoice ? 'checked' : ''} onchange="ajBloque('startVoice', this)"> Avisar con voz al empezar cada bloque</span></label>
@@ -2024,7 +2072,7 @@ function vHistorial(){
     <div class="cifra"><b>${pendientes().length}</b><span>pendientes</span></div></div>`;
   if(!claves.length) return h;
   h += claves.map(k => `<div class="semana-acc" style="--c:#8b5cf6"><div class="sa-cab"><b>${textoSemana(k)}</b><span>${rangoSemana(k)} · ${semanas[k].length} ${semanas[k].length === 1 ? 'hecha' : 'hechas'}</span></div>
-    <ul>${semanas[k].map(a => { const ar = areaDe(a.area); return `<li class="ok" style="--c:${ar.color}" onclick="alternarAccion('${a.id}')"><span class="caja">✓</span><span>${ico(ar)} ${esc(a.texto)}</span></li>`; }).join('')}</ul></div>`).join('');
+    <ul>${semanas[k].map(a => { const ar = areaDe(a.area); return `<li class="ok" style="--c:${ar.color}" onclick="alternarAccion('${a.id}')"><span class="caja">✓</span><span class="t-col">${esc(a.texto)}${tagArea(ar)}</span></li>`; }).join('')}</ul></div>`).join('');
   return h;
 }
 function vDetalle(){
