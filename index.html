@@ -423,7 +423,11 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .hoja-caja{margin-top:14px;padding:14px;border-radius:18px;background:rgba(255,255,255,.06)}
 .hoja-caja h3{font-size:21px;font-weight:800;margin:0 0 10px}
 .ta-fila{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-.ta-t{width:100%;font-weight:700;overflow-wrap:anywhere}
+.ta-l1{display:flex;align-items:center;gap:8px;width:100%}
+.ta-t{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere}
+.lapiz{flex:none;width:34px;height:34px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:none;color:var(--suave)}
+.lapiz:active{background:rgba(255,255,255,.1)}
+.prox.foco-1:not(.ok) .lapiz{color:rgba(255,255,255,.8)}
 .ico-tarea{width:1.05em;height:1.05em;flex:none;vertical-align:-.15em;margin-right:.35em;color:color-mix(in srgb,var(--c,#f7c35b) 55%,#fff);opacity:.9}
 .sa-con{flex:none;border:0;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800;background:rgba(74,222,128,.16);color:#4ade80}
 .ta-btn{flex:none;border:0;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:800;background:var(--acento);color:#fff}
@@ -549,7 +553,12 @@ nav.abajo button{font-size:11px}
   background:conic-gradient(#fff calc(var(--p) * 1%), rgba(255,255,255,.16) 0);
   -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px))}
 .disco.aro::before{inset:-4px;-webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px))}
-.tira-blk{padding-top:8px!important;padding-bottom:10px!important}
+.tira-blk{position:relative;padding:8px calc(50% - 32px) 10px;scroll-snap-type:none}
+input.blk-barra{-webkit-appearance:none;appearance:none;display:block;width:100%;height:30px;margin:6px 0 0;padding:0;background:transparent;touch-action:none;cursor:pointer}
+input.blk-barra::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:rgba(255,255,255,.18)}
+input.blk-barra::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.18)}
+input.blk-barra::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border:0;border-radius:50%;background:var(--oro);box-shadow:0 1px 6px rgba(0,0,0,.5)}
+input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;background:var(--oro)}
 .disco{flex:none;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(122,67,16,.3) 1px,transparent 1.4px) 0 0/6px 6px,radial-gradient(circle,#ffe59a 0,#f7b733 55%,#c9741a 100%)}
 .flor-nav{position:relative;margin-top:4px}
 .flor-nav .flor.girasol{margin:0 auto}
@@ -612,7 +621,7 @@ nav.abajo button{font-size:11px}
 
 <script>
 'use strict';
-const VERSION = 'v3.11';
+const VERSION = 'v3.12';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -865,6 +874,7 @@ function render(){
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
   ponerVersiones();
   ajustarFoco();
+  if(vista === 'dia') centrarBloque();
 }
 /* La tarea en la que te enfocas, siempre en un solo renglón: se achica la letra hasta que quepa */
 function ajustarFoco(){
@@ -1093,7 +1103,7 @@ function seccionAhora(){
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
       ${ok ? '<span class="asa-hueco"></span>' : ASA}<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>
       <div class="cuerpo-p">${ar && !ok ? `<div class="area-p">${ico(ar)} ${ar.nombre}</div>` : ''}<div class="texto-p">${esc(a.t)}</div></div>
-      <button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>`;
+      ${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>`;
   };
   // arriba solo la tarea en la que estás (la primera sin hacer); debajo las demás pendientes; las hechas al final, tachadas
   const orden = acts.map((a, i) => ({a, i})), pend = orden.filter(o => !hechaAct(o.a)), hechas = orden.filter(o => hechaAct(o.a));
@@ -1157,7 +1167,7 @@ function filaTarea(x, hayBloque, ordenable){
   const a = areaDe(x.area);
   return `<div class="sa-fila" ${ordenable ? `data-ord="${x.id}"` : `data-mover="${x.id}"`} style="--c:${a.color}">
     <div class="sa-l1">${ASA}<button class="check" aria-label="Marcar como hecha" onclick="alternarAccion('${x.id}')">✓</button>
-      <span class="sa-t">${ICO_TAREA}${esc(x.texto)}</span></div>
+      <span class="sa-t">${ICO_TAREA}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
     ${hayBloque ? `<div class="sa-l2"><button class="sa-ya" onclick="asignarAhora('${x.id}')">${vista === 'dia' ? '→ Al bloque' : '→ Ahora'}</button></div>` : ''}</div>`;
 }
 /* Quitar una tarea de los bloques de hoy (o del bloque elegido): al volver a tocar «✓ Con bloque» */
@@ -1235,7 +1245,7 @@ function panelArea(){
   return `<section class="panel-area" id="panel-area" style="--c:${a.color}">
     <div class="pa-cab">${ico(a, 'g')}<div><b>${a.nombre}</b><small>${nv ? NIVELES[nv].titulo : 'Sin revisar'} · <button class="link" onclick="abrirPetalo('${a.id}')">cambiar</button></small></div>
       <button class="del" aria-label="Cerrar" onclick="panelAbierto = null; const y = scrollY; render(); scrollTo(0, y)">✕</button></div>
-    ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${esc(x.texto)}</span></div>
+    ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
       <div class="sa-l2"><button class="sa-con" onclick="quitarDeBloques('${x.id}')" title="Toca para quitarla del bloque">✓ Con bloque · quitar</button></div></div>` : filaTarea(x, c >= 0, false)).join('')
       : '<p class="suave" style="margin:6px 0">Este pétalo no tiene tareas pendientes.</p>'}
     <div class="campo-voz" style="margin-top:10px"><input type="text" id="pa-nueva" maxlength="120" placeholder="Nueva tarea para ${esc(a.corto)}" onkeydown="if(event.key==='Enter')nuevaEnPanel()">${botonMic()}</div>
@@ -1261,10 +1271,62 @@ function alternarAccion(id){
   }
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
+/* Lápiz de trazo limpio (sin emojis) */
+const ICO_LAPIZ = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19.2 8.8a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14.5 7.5l3 3"/></svg>';
+const lapiz = onclick => `<button class="lapiz" type="button" aria-label="Editar o borrar la tarea" onclick="${onclick}">${ICO_LAPIZ}</button>`;
+/* Quita la tarea de todos los bloques (las ya hechas se quedan como recuerdo del día) */
+function quitarDeTodosBloques(id){
+  const dias = B_().days;
+  Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => { dias[k][i] = (dias[k][i] || []).filter(a => !(a && a.acc === id && !a.d)); }));
+}
 function borrarAccion(id){
   D.acciones = D.acciones.filter(a => a.id !== id);
   D.borradas = (D.borradas || []).concat(id);
-  guardar(); aviso('Acción borrada');
+  quitarDeTodosBloques(id); B_().mod = ahoraISO();
+  guardar(); aviso('Tarea borrada');
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+}
+/* Editar: cambiar el nombre o borrar una tarea de tus áreas (id) o una actividad de un bloque (k, i, j) */
+let edicion = null;
+function editarTarea(id){
+  const x = D.acciones.find(a => a.id === id); if(!x) return;
+  edicion = {id, volver: hojaAbierta, armado: false}; pintarEdicion(x.texto);
+}
+function editarBloque(k, i, j){
+  const a = actsDe(k, i)[j]; if(!a) return;
+  const x = a.acc && D.acciones.find(z => z.id === a.acc);
+  edicion = {id: x ? a.acc : null, k, i, j, volver: hojaAbierta, armado: false}; pintarEdicion(x ? x.texto : a.t);
+}
+function pintarEdicion(texto){
+  hojaAbierta = null;
+  mostrarHoja(`<div class="hoja-cab"><div><h2>Editar tarea</h2></div></div>
+    <div class="campo-voz" style="margin-top:10px"><input type="text" id="ed-texto" maxlength="120" onkeydown="if(event.key==='Enter')guardarEdicion()">${botonMic()}</div>
+    <button class="btn prim ancho" style="margin-top:10px" onclick="guardarEdicion()">Guardar</button>
+    <button class="btn peligro ancho" id="ed-borrar" style="margin-top:8px" onclick="borrarEdicion()">Borrar tarea</button>
+    <button class="btn sec ancho" style="margin-top:8px" onclick="salirEdicion()">Cancelar</button>`, '#8b5cf6');
+  $('#ed-texto').value = texto;
+}
+function guardarEdicion(){
+  const e = edicion, t = valor('ed-texto'); if(!e) return;
+  if(!t){ aviso('Escribe el nombre de la tarea'); return; }
+  if(e.id){
+    const x = D.acciones.find(a => a.id === e.id); if(x){ x.texto = t; x.mod = ahoraISO(); }
+    const dias = B_().days;
+    Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => (dias[k][i] || []).forEach(a => { if(a && a.acc === e.id) a.t = t; })));
+  } else { const a = actsDe(e.k, e.i)[e.j]; if(a) a.t = t; }
+  B_().mod = ahoraISO(); guardar(); aviso('Tarea cambiada');
+  salirEdicion();
+}
+function borrarEdicion(){
+  const e = edicion; if(!e) return;
+  if(!e.armado){ e.armado = true; const b = $('#ed-borrar'); if(b) b.textContent = '¿Seguro? Toca otra vez para borrarla'; return; }
+  if(e.id) borrarAccion(e.id);
+  else { actsDe(e.k, e.i).splice(e.j, 1); B_().mod = ahoraISO(); guardar(); aviso('Tarea borrada'); }
+  salirEdicion();
+}
+function salirEdicion(){
+  const v = edicion && edicion.volver; edicion = null;
+  if(v) hojaAbierta = v; else cerrarHoja();
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
 
@@ -1293,7 +1355,7 @@ function abrirPetalo(id){
     <p class="eti" style="margin-top:14px">¿Cómo está?</p>
     ${opcionesNivel(nivel(id), k => `cambiarNivel('${id}','${k}')`, true)}
     <p class="eti" style="margin-top:16px">Acciones</p>
-    ${mias.length ? `<div class="tareas">${mias.map(x => `<div class="fila-acc"><button class="tarea ${x.hecha?'ok':''}" onclick="alternarAccion('${x.id}')"><span class="caja">✓</span><span>${esc(x.texto)}</span></button><button class="del" aria-label="Borrar" onclick="borrarAccion('${x.id}')">✕</button></div>`).join('')}</div>` : `<p class="suave peq" style="margin:6px 0 0">Sin acciones por ahora.</p>`}
+    ${mias.length ? `<div class="tareas">${mias.map(x => `<div class="fila-acc"><button class="tarea ${x.hecha?'ok':''}" onclick="alternarAccion('${x.id}')"><span class="caja">✓</span><span>${esc(x.texto)}</span></button>${lapiz(`editarTarea('${x.id}')`)}<button class="del" aria-label="Borrar" onclick="borrarAccion('${x.id}')">✕</button></div>`).join('')}</div>` : `<p class="suave peq" style="margin:6px 0 0">Sin acciones por ahora.</p>`}
     ${campoNueva('h-nueva', 'Nueva acción, p. ej. ' + a.ejemplos[0])}
     <button class="btn prim ancho" style="margin-top:10px" onclick="anadirDesdeHoja('${id}')">Añadir acción</button>`, a.color);
 }
@@ -1520,10 +1582,11 @@ function vDia(){
       <button class="fn-flecha" onclick="moverBloque(1)" aria-label="Bloque siguiente">›</button></div>
     ${panelArea()}
     <div class="tira-blk" id="tiraBlk">${tira}</div>
+    <input type="range" class="blk-barra" min="0" max="${BLOQUES.length - 1}" step="1" value="${bSel}" aria-label="Mover a otro bloque" oninput="verBloqueBarra(+this.value)" onchange="elegirBloque(+this.value)">
     <section class="tarjeta bloque-sel" data-drop="bloque">
       <div class="bs-cab"><b>${hm(b.ini)} – ${hm(b.fin)}</b><span>${estado}</span></div>
       ${bSel === cur ? `<div class="mini-barra"><i style="width:${(m - b.ini) / 90 * 100}%"></i></div>` : ''}
-      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span>${esc(a.t)}</span></button><button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
+      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span>${esc(a.t)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
       ${lleno ? `<p class="peq suave" style="margin:8px 0 0">Bloque completo · ${MAX_ACT} actividades</p>` : `
         <p class="eti" style="margin:14px 0 0">Añadir nueva tarea</p>
         <div class="campo-voz" style="margin-top:8px"><input type="text" id="b-nueva" maxlength="120" placeholder="Escribe o dicta una actividad" onkeydown="if(event.key==='Enter')anadirAct()">${botonMic()}</div>
@@ -1541,6 +1604,11 @@ function vDia(){
       </details>
     </section>`;
 }
+/* Barra con punto bajo los círculos: al mover el punto, la fila acompaña; al soltar, se elige ese bloque */
+function verBloqueBarra(i){
+  const t = $('#tiraBlk'), el = t && t.querySelector(`[data-i="${i}"]`);
+  if(el) t.scrollTo({left: el.offsetLeft - (t.clientWidth - el.offsetWidth) / 2});
+}
 function moverBloque(dir){
   let i = (bSel == null ? 0 : bSel) + dir;
   if(i >= BLOQUES.length){ bDia++; i = 0; } else if(i < 0){ bDia--; i = BLOQUES.length - 1; }
@@ -1549,15 +1617,13 @@ function moverBloque(dir){
   const c = document.querySelector('.girasol .g-hora'); if(c){ c.classList.remove('g-pasa'); void c.getBBox(); c.classList.add('g-pasa'); }
 }
 function centrarBloque(suave){
-  requestAnimationFrame(() => {
-    const t = $('#tiraBlk'), el = t && t.querySelector(`[data-i="${bSel}"]`);
-    if(!el) return;
-    t.scrollTo({left: el.offsetLeft - (t.clientWidth - el.offsetWidth) / 2, behavior: suave ? 'smooth' : 'auto'});
-  });
+  const t = $('#tiraBlk'), el = t && t.querySelector(`[data-i="${bSel}"]`);
+  if(!el) return;
+  t.scrollTo({left: el.offsetLeft - (t.clientWidth - el.offsetWidth) / 2, behavior: suave ? 'smooth' : 'auto'});
 }
-function elegirBloque(i){ bSel = i; const t = $('#tiraBlk'), x = t ? t.scrollLeft : 0, y = window.scrollY; render(); const t2 = $('#tiraBlk'); if(t2) t2.scrollLeft = x; window.scrollTo(0, y); centrarBloque(true); }
+function elegirBloque(i){ bSel = i; rerenderDia(); }
 function moverDia(n){ bDia += n; bSel = bDia === 0 && bloqueAhora() >= 0 ? bloqueAhora() : 0; render(); centrarBloque(); }
-function rerenderDia(){ const t = $('#tiraBlk'), x = t ? t.scrollLeft : 0, y = window.scrollY; render(); const t2 = $('#tiraBlk'); if(t2) t2.scrollLeft = x; window.scrollTo(0, y); }
+function rerenderDia(){ const y = window.scrollY; render(); window.scrollTo(0, y); }
 function anadirAct(){
   const t = valor('b-nueva'); if(!t){ aviso('Escribe la actividad'); return; }
   const acts = actsDe(claveDia(fechaBloques()), bSel, true);
@@ -1578,7 +1644,7 @@ function abrirTareasAreas(){
     <button class="btn prim ancho" style="margin-top:8px" onclick="anadirEnHoja()">Añadir al bloque</button>`}</section>
     <section class="hoja-caja"><h3>Añadir tareas de tus áreas</h3>
     ${grupos.length ? grupos.map(g => `<p class="eti" style="margin:12px 0 4px">${ico(g.a)} ${g.a.nombre}</p>
-      ${g.lista.map(x => `<div class="ta-fila"><span class="ta-t">${ICO_TAREA}${esc(x.texto)}</span>${ya.has(x.id)
+      ${g.lista.map(x => `<div class="ta-fila"><div class="ta-l1"><span class="ta-t">${ICO_TAREA}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>${ya.has(x.id)
         ? `<button class="sa-con" onclick="quitarDeBloques('${x.id}', true)">✓ En este bloque · quitar</button>`
         : `<button class="ta-btn" ${lleno ? 'disabled' : ''} onclick="accionABloque('${x.id}')">＋ Añadir a este bloque</button>`}</div>`).join('')}`).join('')
       : '<p class="suave">No tienes acciones pendientes en tus áreas.</p>'}</section>
@@ -1655,7 +1721,7 @@ function bloquesTick(){
     if(!$('#hoja')) mostrarHoja(`<div class="aviso-salud"><div class="aviso-ico">🌙</div><h2>Hora de descansar</h2><p>Son las 22:00. Apaga las pantallas y vete a dormir. ¡Buenas noches!</p><button class="btn prim ancho" onclick="cerrarHoja()">Buenas noches</button></div>`, '#8b5cf6');
     setTimeout(() => hablar('Son las diez de la noche. Es hora de apagar las pantallas e ir a dormir. ¡Buenas noches!', 'tareas'), 900);
   }
-  if(vista === 'dia' && !$('#hoja') && !(document.activeElement && document.activeElement.id === 'b-nueva')) rerenderDia();
+  if(vista === 'dia' && !$('#hoja') && !(document.activeElement && (document.activeElement.id === 'b-nueva' || document.activeElement.classList.contains('blk-barra')))) rerenderDia();
 }
 
 /* ---------- Salud: pasos, agua y movimiento (venido de Amable PC) ---------- */
