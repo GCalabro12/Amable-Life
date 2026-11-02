@@ -638,7 +638,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.16';
+const VERSION = 'v3.17';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -740,7 +740,7 @@ function faltan(){
     .filter(x => x.faltan > 0).sort((x,y) => pesoArea(y.area.id) - pesoArea(x.area.id));
 }
 function nuevaAccion(area, texto){
-  const orden = Math.max(-1, ...pendientes().map(a => a.orden)) + 1;
+  const orden = Math.min(1, ...pendientes().map(a => a.orden)) - 1;   // las nuevas, siempre arriba
   D.acciones.push({id: uid(), area, texto, hecha:false, creada: ahoraISO(), hechaEn:null, mod: ahoraISO(), orden});
 }
 function moverAcciones(ids){
@@ -1175,7 +1175,8 @@ function segundero(){
 let petaloAbierto = null;   // Focus: pétalos colapsados para que no distraigan
 function listaSinAsignar(){
   const asig = idsEnBloquesHoy(), lista = pendientes().filter(x => !asig.has(x.id)), c = bloqueAhora();
-  const grupos = AREAS.map(a => ({a, tareas: lista.filter(x => x.area === a.id)})).filter(g => g.tareas.length);
+  const grupos = [];   // primero el pétalo de la tarea más arriba
+  lista.forEach(x => { let g = grupos.find(z => z.a.id === x.area); if(!g){ g = {a: areaDe(x.area), tareas: []}; grupos.push(g); } g.tareas.push(x); });
   if(!grupos.length) return '';
   return `<section class="sin-asig"><h2 class="pet-tit">Pétalos con tareas pendientes</h2>
     ${grupos.map(({a, tareas}) => { const abierto = petaloAbierto === a.id;
@@ -1455,7 +1456,7 @@ function abrirNueva(pre){
 function anadirNueva(){
   const t = valor('h-nueva'); if(!t){ aviso('Escribe la acción'); return; }
   nuevaAccion(areaNueva, t); guardar(); sonarHecho(); aviso('Acción añadida 🌱');
-  cerrarHoja(); render();
+  petaloAbierto = areaNueva; cerrarHoja(); render();
 }
 
 /* ---------- Revisar la flor: 3 botones por área ---------- */
@@ -1705,7 +1706,7 @@ function anadirAct(){
   const t = valor('b-nueva'); if(!t){ aviso('Escribe la actividad'); return; }
   const acts = actsDe(claveDia(fechaBloques()), bSel, true);
   if(acts.length >= MAX_ACT){ aviso('Bloque completo'); return; }
-  acts.push({t, d:false}); guardarBloques(); sonarHecho(); rerenderDia();
+  acts.unshift({t, d:false}); guardarBloques(); sonarHecho(); rerenderDia();
 }
 /* Hoja con todas las acciones pendientes de tus áreas, para ponerlas en el bloque elegido */
 function abrirTareasAreas(){
@@ -1732,7 +1733,7 @@ function anadirEnHoja(){
   const t = valor('h-blq-nueva'); if(!t){ aviso('Escribe la tarea'); return; }
   const acts = actsDe(claveDia(fechaBloques()), bSel, true);
   if(acts.length >= MAX_ACT){ aviso('Bloque completo'); return; }
-  acts.push({t, d: false}); guardarBloques(); sonarHecho(); aviso('Añadida al bloque 🌱');
+  acts.unshift({t, d: false}); guardarBloques(); sonarHecho(); aviso('Añadida al bloque 🌱');
   $('#h-blq-nueva').value = ''; rerenderDia();
 }
 function accionABloque(id){
