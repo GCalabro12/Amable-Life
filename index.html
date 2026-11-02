@@ -37,7 +37,6 @@ header.cab{position:sticky;top:0;z-index:5;background:rgba(20,15,38,.82);backdro
 .cab-in .marca svg{width:30px;height:30px;overflow:visible}
 .cab-in .ver{font-size:11px;font-weight:700;color:var(--suave);border:1px solid var(--linea);border-radius:999px;padding:1px 7px}
 .cab-in .der{margin-left:auto;display:flex;align-items:center;gap:8px}
-.btn-son{width:34px;height:34px;border-radius:50%;border:1px solid var(--linea);background:transparent;font-size:15px;display:grid;place-items:center;padding:0}
 #grow-panel-boton .gp-boton{border-color:var(--linea)}
 
 /* Tarjetas y botones */
@@ -245,7 +244,6 @@ textarea,input[type=text]{border:0;background:rgba(255,255,255,.08)}
 textarea:focus,input[type=text]:focus{outline:2px solid var(--acento);outline-offset:0}
 .btn.sec{border:0;background:rgba(255,255,255,.09)}
 .btn.peligro{border:0;background:rgba(251,113,133,.12)}
-.btn-son{border:0;background:rgba(255,255,255,.08)}
 header.cab{border-bottom:0}
 nav.abajo{border-top:0}
 #grow-panel-boton .gp-boton{border-color:transparent}
@@ -376,7 +374,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .ah-tit{font-size:19px;color:var(--oro);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .disco.grande{width:72px;height:72px;display:grid;place-items:center;margin-right:6px}
 .disco.grande b{font-size:15px;font-weight:800;color:#1d1636;background:rgba(255,255,255,.88);border-radius:999px;padding:1px 7px}
-.disco.grande.aro{width:86px;height:86px;background:conic-gradient(#e0323a calc(var(--p,0)*1%),#22a35a 0)}
+.disco.grande.aro{width:86px;height:86px;background:conic-gradient(#22a35a calc((100 - var(--p,0))*1%),#e0323a 0)}
 .disco.grande.aro::before{display:none}
 .cuenta-col .tic-btn{align-self:flex-start;margin-top:6px}
 .prox .asa-hueco{width:12px;flex:none}
@@ -637,7 +635,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   <div class="cab-in">
     <div class="marca"><svg id="logo-cab"></svg>Amable Life</div>
     <span class="ver" id="ver"></span>
-    <div class="der"><button class="btn-son" id="btn-son" onclick="alternarSonido()" aria-label="Sonido"></button><span id="grow-panel-boton"></span></div>
+    <div class="der"><span id="grow-panel-boton"></span></div>
   </div>
 </header>
 
@@ -657,7 +655,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.24';
+const VERSION = 'v3.25';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -821,11 +819,9 @@ function sonarFinal(){ [0,2,4,5,7,9].forEach((n,k) => nota(ESCALA[n], k*.09, .16
 function sonarPortada(){ AREAS.forEach((a,i) => nota(ESCALA[i], .12 + i*.11, .14, 1.3, i === 0)); nota(ESCALA[9], 1.15, .12, 2.2, false); }
 const musica = new Audio('sonido/inicio.mp3'); musica.preload = 'auto'; musica.volume = .9;
 function sonarHecho(){ nota(ESCALA[5], 0, .15, .6, false); nota(ESCALA[7], .1, .15, .9, false); }
-function iconoSonido(){ const b = $('#btn-son'); if(b){ b.textContent = sonidoOn ? '🔊' : '🔇'; b.setAttribute('aria-label', sonidoOn ? 'Silenciar sonidos' : 'Activar sonidos'); } }
 function alternarSonido(){
   sonidoOn = !sonidoOn;
   try{ localStorage.setItem(CLAVE_SONIDO, sonidoOn ? 'si' : 'no'); }catch(e){}
-  iconoSonido();
   if(sonidoOn) sonarHecho(); else musica.pause();
   if(typeof configNativa === 'function') configNativa();
   if(vista === 'ajustes') render();
@@ -2663,7 +2659,6 @@ addEventListener('growpanel-listo', enviarResumen);
   try{ if('scrollRestoration' in history) history.scrollRestoration = 'manual'; }catch(e){}
   window.scrollTo(0, 0); addEventListener('load', () => window.scrollTo(0, 0));
   $('#sellos-splash').innerHTML = sellosHTML();
-  iconoSonido();
   vista = vistaInicial();
   render();
   if(vista === 'dia') centrarBloque();
