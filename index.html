@@ -325,6 +325,19 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .hist-exp{margin:12px 0 10px;font-size:15px;line-height:1.4}
 .saludo{margin:18px 0 -14px;font-size:17px;font-weight:700;color:var(--oro)}
 .tit-acc{font-size:30px;font-weight:800;margin-top:22px;line-height:1.1}
+.foco-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:22px}
+.foco-cab .tit-acc{margin-top:0}
+.avisos-btn{flex:none;display:inline-flex;align-items:center;gap:8px;padding:6px 0 6px 6px;border:0;background:none;color:var(--tinta);font-size:14px;font-weight:800}
+.avisos-btn svg{width:28px;height:28px}
+.avisos-btn .on{color:#4ade80}
+.avisos-btn .off{color:#f87171}
+.av-lista{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.av-lista .av-lista{margin-top:0}
+.av-lista .desliz{font-size:15px;margin:0;align-self:stretch}
+.av-dim{opacity:.45}
+.av-cada{display:flex;align-items:center;gap:8px}
+.av-cada .desliz{flex:1;min-width:0}
+.av-cada input[type=number]{flex:none;width:58px;padding:6px;border:0;border-radius:10px;background:rgba(255,255,255,.1);color:var(--tinta);font:inherit;text-align:center}
 .prox-lista{display:flex;flex-direction:column;gap:10px;margin:16px -16px 0}
 .prox{display:flex;align-items:center;gap:14px;padding:20px 16px;border:0;width:100%;text-align:left;color:var(--tinta);
   background:linear-gradient(100deg,color-mix(in srgb,var(--c) 32%,transparent),color-mix(in srgb,var(--c) 6%,transparent) 85%);animation:entra .4s ease-out both}
@@ -565,10 +578,6 @@ nav.abajo button{font-size:11px}
 .tira-bloque .tb-txt b{font-size:14px;color:var(--oro)}
 .tira-bloque .tb-txt span{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tira-bloque .flecha{font-size:24px;color:var(--suave)}
-.dia-cab{display:flex;align-items:center;justify-content:space-between;margin-top:16px;text-align:center}
-.dia-cab h2{font-size:24px}
-.dia-cab span{font-size:13px;color:var(--suave);text-transform:capitalize}
-.dia-flecha{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.08);font-size:24px;color:var(--tinta);padding:0}
 .tira-blk{display:flex;gap:8px;overflow-x:auto;margin:14px -16px 0;padding:4px 16px 8px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tira-blk::-webkit-scrollbar{display:none}
 .blk{flex:none;width:96px;height:96px;border:0;border-radius:50%;padding:6px;color:#3a2208;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;scroll-snap-align:center;
@@ -648,7 +657,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.23';
+const VERSION = 'v3.24';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1067,7 +1076,7 @@ function vInicio(){
   const pend = pendientes(), hs = hechasEstaSemana(), c = bloqueAhora();
   const actsAhora = c >= 0 ? actsDe(hoyK(), c) : [];
   const tuNombre = nombrePila();
-  let h = `${bannerApp()}${tuNombre ? `<p class="saludo">Hola, ${esc(tuNombre)}</p>` : ''}<h1 class="tit-acc">Enfócate en</h1>
+  let h = `${bannerApp()}${tuNombre ? `<p class="saludo">Hola, ${esc(tuNombre)}</p>` : ''}<div class="foco-cab"><h1 class="tit-acc">Enfócate en</h1><button class="avisos-btn" type="button" aria-label="Ajustes de los avisos" onclick="abrirAvisos()"><span class="${pausa.tareas ? 'off' : 'on'}">Avisos ${pausa.tareas ? 'off' : 'on'}</span>${ICO_RUEDA}</button></div>
     <p class="suave peq" style="margin:4px 0 0">${pend.length ? `${pend.length} ${pend.length === 1 ? 'pendiente' : 'pendientes'}` : 'Nada pendiente'}${hs ? ` · ${hs} ${hs === 1 ? 'hecha' : 'hechas'} esta semana` : ''}</p>
     ${seccionAhora()}
     <button class="btn sec ancho" style="margin-top:14px" onclick="abrirNueva()">＋ Nueva acción</button>
@@ -1148,6 +1157,7 @@ function seccionAhora(){
       <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${acts.filter(hechaAct).length}/${acts.length}</b></span></div>
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea (con los seis puntitos) o toca «→ Ahora».</p>`}
+    ${avisoCalendario()}
   </section>`;
 }
 /* Reordenar las tareas del bloque de ahora (seis puntitos en Focus) */
@@ -1643,8 +1653,7 @@ function avisoCalendario(){
 function calRevisado(){ D.calRevisado = hoyK(); guardar(); rerenderDia(); }
 function vDia(){
   const k = claveDia(fechaBloques()), hoy = bDia === 0, cur = hoy ? bloqueAhora() : -1, m = minutosHoy();
-  if(bSel === null){ if(minutosHoy() >= 1320 && bDia === 0){ bDia = 1; return vDia(); } bSel = cur >= 0 ? cur : 0; }
-  const d = fechaBloques();
+  if(bSel === null) bSel = cur >= 0 ? cur : 0;
   const tira = BLOQUES.map((b, i) => {
     const acts = actsDe(k, i), pasado = bDia < 0 || (hoy && b.fin <= m);
     return `<button style="--p:${i === cur ? progresoBloque(b.ini, b.fin).toFixed(1) : 0}" data-ini="${b.ini}" data-fin="${b.fin}" class="blk ${i === cur ? 'ahora aro' : ''} ${pasado ? 'pasado' : ''} ${i === bSel ? 'sel' : ''}" data-i="${i}" onclick="elegirBloque(${i})">
@@ -1660,10 +1669,7 @@ function vDia(){
   const ya = new Set(acts.map(a => a.acc).filter(Boolean));
   const sugeridas = pendientes().filter(x => !ya.has(x.id)).slice(0, 4);
   const lleno = acts.length >= MAX_ACT;
-  return `<h1 class="tit-acc">Bloques de tareas</h1>${avisoCalendario()}${botonPausa('tareas')}
-    <div class="dia-cab"><button class="dia-flecha" onclick="moverDia(-1)" aria-label="Día anterior">‹</button>
-      <div><h2>${bDia === 0 ? 'Hoy' : bDia === 1 ? 'Mañana' : bDia === -1 ? 'Ayer' : DIAS_SEM[d.getDay()]}</h2><span>${DIAS_SEM[d.getDay()]} ${d.getDate()} ${d.toLocaleDateString('es-ES', {month:'short'})}</span></div>
-      <button class="dia-flecha" onclick="moverDia(1)" aria-label="Día siguiente">›</button></div>
+  return `<h1 class="tit-acc">Bloques de tareas</h1>${botonPausa('tareas')}
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0)}</div>
     <div class="fn-fila"><button class="fn-flecha" onclick="moverBloque(-1)" aria-label="Bloque anterior">‹</button>
@@ -1701,7 +1707,7 @@ function verBloqueBarra(i){
 }
 function moverBloque(dir){
   let i = (bSel == null ? 0 : bSel) + dir;
-  if(i >= BLOQUES.length){ bDia++; i = 0; } else if(i < 0){ bDia--; i = BLOQUES.length - 1; }
+  if(i >= BLOQUES.length || i < 0) return;
   bSel = i;
   const y = window.scrollY; render(); window.scrollTo(0, y); centrarBloque(true);
   const c = document.querySelector('.girasol .g-hora'); if(c){ c.classList.remove('g-pasa'); void c.getBBox(); c.classList.add('g-pasa'); }
@@ -1712,7 +1718,6 @@ function centrarBloque(suave){
   t.scrollTo({left: el.offsetLeft - (t.clientWidth - el.offsetWidth) / 2, behavior: suave ? 'smooth' : 'auto'});
 }
 function elegirBloque(i){ bSel = i; rerenderDia(); }
-function moverDia(n){ bDia += n; bSel = bDia === 0 && bloqueAhora() >= 0 ? bloqueAhora() : 0; render(); centrarBloque(); }
 function rerenderDia(){ const y = window.scrollY; render(); window.scrollTo(0, y); }
 function anadirAct(){
   const t = valor('b-nueva'); if(!t){ aviso('Escribe la actividad'); return; }
@@ -1868,6 +1873,21 @@ const TXT_PAUSA = {
   salud: ['⏸ Pausar todos los avisos del cuerpo', '▶ Todos los avisos del cuerpo en pausa · toca para activarlos'],
   tareas: ['⏸ Pausar avisos de tareas', '▶ Avisos de tareas en pausa · toca para activarlos'],
   todo: ['⏸ Pausar todos los avisos', '▶ Todos los avisos en pausa · toca para activarlos']};
+/* Rueda dentada de Focus: los avisos de tareas y bloques, sin pasar por Ajustes */
+const ICO_RUEDA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>';
+function abrirAvisos(){
+  hojaAbierta = abrirAvisos;
+  const B = B_(), sw = (clave, txt) => `<label class="desliz"><input type="checkbox" ${B[clave] ? 'checked' : ''} onchange="ajBloque('${clave}', this)"><i></i><span>${txt}</span></label>`;
+  mostrarHoja(`<div class="hoja-cab"><div><h2>Avisos</h2></div></div>
+    <div class="av-lista">
+      <label class="desliz"><input type="checkbox" ${pausa.tareas ? '' : 'checked'} onchange="alternarPausa('tareas')"><i></i><span>Avisos ${pausa.tareas ? 'desactivados' : 'activados'}</span></label>
+      <div class="av-lista ${pausa.tareas ? 'av-dim' : ''}">
+        ${sw('startVoice', 'Avisar con voz al empezar cada bloque')}
+        <div class="av-cada">${sw('remindOn', 'Recordarme la tarea en la que estoy cada')}<input type="number" min="1" max="60" inputmode="numeric" aria-label="Minutos" value="${B.remindMin}" onchange="ajBloqueMin(this)"><span>min</span></div>
+        ${sw('sleepOn', 'A las 22:00, recordarme ir a dormir')}
+      </div>
+    </div>`, '#8b5cf6');
+}
 function botonPausa(tipo){
   const on = tipo === 'todo' ? pausa.salud && pausa.tareas : pausa[tipo];
   return `<div class="pausa-fila"><button class="quiet-btn ${on ? 'on' : ''}" aria-pressed="${on}" onclick="alternarPausa('${tipo}')">${TXT_PAUSA[tipo][on ? 1 : 0]}</button></div>`;
