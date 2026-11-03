@@ -325,6 +325,14 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .tit-acc{font-size:30px;font-weight:800;margin-top:22px;line-height:1.1}
 .avisos-btn{display:flex;align-items:center;gap:8px;margin-top:4px;padding:6px 0;border:0;background:none;color:var(--suave);font-size:14px;font-weight:800;text-align:left;font-variant-numeric:tabular-nums}
 .avisos-btn .on{color:#4ade80}
+.av-fila{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.btn-flot{flex:none;margin-top:4px;padding:7px 14px;border:0;border-radius:999px;background:#f7c35b;color:#1d1636;font-size:13px;font-weight:800}
+.btn-flot:active{filter:brightness(.92)}
+/* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
+body.pip{padding:10px;overflow:auto}
+body.pip .ahora-blk{margin:0}
+body.pip .btn,body.pip .link,body.pip .rev-cal,body.pip .tic-btn,body.pip .lapiz,body.pip .del,body.pip .asa,body.pip .asa-hueco,body.pip .ah-vacio{display:none}
+body.pip #toast{bottom:16px}
 .avisos-btn .off{color:#f87171}
 .av-lista{display:flex;flex-direction:column;gap:14px;margin-top:14px}
 .av-lista .av-lista{margin-top:0}
@@ -657,7 +665,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.37';
+const VERSION = 'v3.38';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -909,15 +917,55 @@ function render(){
   ponerVersiones();
   ajustarFoco();
   if(vista === 'dia') centrarBloque();
+  pintarFlotante();
 }
 /* La tarea en la que te enfocas, siempre en un solo renglón: se achica la letra hasta que quepa */
-function ajustarFoco(){
-  document.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => {
+function ajustarFoco(doc = document){
+  doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => {
     let fs = 26; el.style.fontSize = fs + 'px';
     while(el.scrollWidth > el.clientWidth + 1 && fs > 15){ fs--; el.style.fontSize = fs + 'px'; }
   });
 }
 addEventListener('resize', () => ajustarFoco());
+/* ---------- Ventana flotante (navegador de PC): solo Focus, siempre delante de todo ---------- */
+let pipWin = null, pipToast = null;
+const hayFlotante = () => 'documentPictureInPicture' in window && !esApp;
+async function abrirFlotante(){
+  if(pipWin){ try{ pipWin.focus(); }catch(e){} return; }
+  try{ pipWin = await documentPictureInPicture.requestWindow({width: 400, height: 560}); }
+  catch(e){ pipWin = null; aviso('No se pudo abrir la ventana flotante'); return; }
+  const d = pipWin.document;
+  document.querySelectorAll('style, link[rel="stylesheet"]').forEach(x => d.head.appendChild(x.cloneNode(true)));
+  d.title = 'Amable Life · Focus'; d.body.className = 'pip';
+  // los botones llaman a las funciones de la ventana principal
+  d.addEventListener('click', e => { const el = e.target.closest('[data-onclick]'); if(el) Function('event', el.dataset.onclick).call(el, e); });
+  pipWin.addEventListener('pagehide', () => { pipWin = null; });
+  if(!pipToast){ pipToast = new MutationObserver(copiarToast); pipToast.observe($('#toast'), {attributes: true, childList: true, subtree: true, characterData: true}); }
+  pipWin.setInterval(tickFlotante, 1000);
+  pintarFlotante(); animarArenaPip();
+}
+function pintarFlotante(){
+  if(!pipWin) return;
+  const d = pipWin.document;
+  d.body.innerHTML = (seccionAhora() + '<div id="toast"></div>').replace(/ onclick=/g, ' data-onclick=');
+  ajustarFoco(d); copiarToast();
+}
+function copiarToast(){
+  const t = pipWin && pipWin.document.getElementById('toast'), m = $('#toast'); if(!t || !m) return;
+  t.className = m.className; t.innerHTML = m.innerHTML.replace(/ onclick=/g, ' data-onclick=');
+}
+function tickFlotante(){
+  if(!pipWin) return;
+  const d = pipWin.document;
+  d.querySelectorAll('.cuenta-atras').forEach(e => { e.textContent = fmtCuenta(+e.dataset.fin); });
+  d.querySelectorAll('.aro[data-ini]').forEach(e => e.style.setProperty('--p', progresoBloque(+e.dataset.ini, +e.dataset.fin).toFixed(1)));
+  if(document.hidden) segundero();   // con la ventana principal minimizada, sus relojes van lentos: manda la flotante
+}
+function animarArenaPip(){
+  if(!pipWin) return;
+  const cv = pipWin.document.querySelector('canvas.reloj-arena'); if(cv) dibujarArena(cv, 1);
+  pipWin.requestAnimationFrame(animarArenaPip);
+}
 /* Arriba, junto al nombre: las dos versiones (web 3.x · app 2.x) */
 function ponerVersiones(){
   const el = $('#ver'); if(!el) return;
@@ -925,7 +973,7 @@ function ponerVersiones(){
   el.textContent = 'web ' + VERSION.replace(/^v/, '') + (app && app !== '?' ? ' · app ' + app : '');
 }
 /* ---------- Reloj de arena: dura la hora y media del bloque; la arena cae grano a grano ---------- */
-let arenaRAF = null, granos = [], arenaUlt = 0;
+let arenaRAF = null, arenaUlt = 0;
 function iniciarArena(){ if(!arenaRAF) arenaRAF = requestAnimationFrame(animarArena); }
 function animarArena(ts){
   const cv = document.querySelector('canvas.reloj-arena');
@@ -939,6 +987,7 @@ function dibujarArena(cv, dt){
   const dpr = window.devicePixelRatio || 1, W = 66, H = 104;
   if(cv.width !== Math.round(W * dpr)){ cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
   const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  let granos = cv._granos || [];
   const p = progresoBloque(+cv.dataset.ini, +cv.dataset.fin) / 100;
   const cx = W / 2, top = 10, neck = H / 2, bot = H - 10, half = 25, nw = 2.4;
   const vidrio = () => {
@@ -972,6 +1021,7 @@ function dibujarArena(cv, dt){
     // algún grano rebota al llegar al montón
     if(Math.random() < .25){ g.fillStyle = 'rgba(248,113,113,.8)'; g.fillRect(cx + (Math.random() - .5) * 10, suelo - Math.random() * 3, 1.2, 1.2); }
   } else granos = [];
+  cv._granos = granos;
   g.restore();
   // cristal y brillo
   vidrio(); g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 1.4; g.stroke();
@@ -1079,7 +1129,8 @@ function vInicio(){
   const tuNombre = nombrePila();
   let h = `${bannerApp()}${tuNombre ? `<p class="saludo">Hola, ${esc(tuNombre)}</p>` : ''}
     <p class="suave peq" style="margin:${tuNombre ? 4 : 18}px 0 0">${pend.length ? `${pend.length} ${pend.length === 1 ? 'pendiente' : 'pendientes'}` : 'Nada pendiente'}${hs ? ` · ${hs} ${hs === 1 ? 'hecha' : 'hechas'} esta semana` : ''}</p>
-    <button class="avisos-btn" type="button" aria-label="Cambiar los avisos" onclick="abrirAvisos()"><span id="av-estado" class="${pausa.tareas ? 'off' : 'on'}">${txtAvisos()}</span>${ICO_LAPIZ}</button>
+    <div class="av-fila"><button class="avisos-btn" type="button" aria-label="Cambiar los avisos" onclick="abrirAvisos()"><span id="av-estado" class="${pausa.tareas ? 'off' : 'on'}">${txtAvisos()}</span>${ICO_LAPIZ}</button>
+      ${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
     ${seccionAhora()}
     <button class="btn sec ancho" style="margin-top:14px" onclick="abrirNueva()">＋ Nueva tarea</button>
     ${listaSinAsignar()}
@@ -1152,7 +1203,7 @@ function seccionAhora(){
   const lista = pend.map((o, k) => fila(o.a, o.i, k === 0)).join('') + hechas.map(o => fila(o.a, o.i, false)).join('');
   const p = progresoBloque(b.ini, b.fin).toFixed(1);
   return `<section class="ahora-blk" data-drop="ahora">
-    <div class="ah-cab"><b class="ah-tit">Bloque actual · ${hm(b.ini)} – ${hm(b.fin)}</b></div>
+    <div class="ah-cab"><b class="ah-tit">FOCUS · bloque actual · ${hm(b.ini)} – ${hm(b.fin)}</b></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
@@ -1805,6 +1856,7 @@ function archivarHechas(){
   if(!n) return;
   guardarBloques();
   if(['inicio', 'dia'].includes(vista) && (document.activeElement || {}).id !== 'b-nueva') refrescarFocus();
+  pintarFlotante();
 }
 /* Las apuntadas directamente en un bloque no tienen pétalo: se archivan como acción sin área */
 function archivarSinPetalo(a, k, i){
@@ -1855,6 +1907,7 @@ function bloquesTick(){
     if(vista === 'dia' && bDia === 0 && bSel === bUltimo && c >= 0) bSel = c;
     bUltimo = c;
     if(vista === 'inicio' && (movidas || !primeraVez)) refrescarFocus();
+    pintarFlotante();
   }
   // recordatorio de la actividad en curso
   if(B.remindOn && c >= 0 && Date.now() - recordarDesde >= B.remindMin * 60000){
