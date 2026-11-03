@@ -332,8 +332,10 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 /* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
 body.pip{padding:6px;overflow-x:hidden;overflow-y:auto}
 body.pip .ahora-blk{margin:0;zoom:.72}
-body.pip .foco-tit,body.pip .area-p{display:none}
-.pip-nueva{display:flex;gap:6px;margin-top:8px}
+body.pip .foco-tit{display:none}
+.pip-petalos{display:flex;gap:6px;overflow-x:auto;margin-top:5px;padding-bottom:3px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.pip-petalos .chip{flex:none;scroll-snap-align:start;font-size:12px;padding:5px 10px}
+.pip-nueva{display:flex;gap:6px;margin-top:6px}
 .pip-nueva input{flex:1;min-width:0;padding:8px 10px;border:2px solid #e0323a;border-radius:10px;background:rgba(255,255,255,.06);color:#f4f0fb;font:inherit;font-size:13px;outline:none}
 .pip-nueva input::placeholder{color:rgba(244,240,251,.55)}
 .pip-nueva button{flex:none;width:38px;border:0;border-radius:10px;background:#f7c35b;color:#1d1636;font-size:20px;font-weight:800}
@@ -671,7 +673,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.42';
+const VERSION = 'v3.43';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -934,7 +936,7 @@ function ajustarFoco(doc = document){
 }
 addEventListener('resize', () => ajustarFoco());
 /* ---------- Ventana flotante (navegador de PC): solo Focus, siempre delante de todo ---------- */
-let pipWin = null, pipToast = null;
+let pipWin = null, pipToast = null, pipArea = 'trabajo';
 const flotanteNativo = () => { try{ return esApp && typeof AndroidEquilibra.abrirFlotante === 'function'; }catch(e){ return false; } };
 const hayFlotante = () => ('documentPictureInPicture' in window && !esApp) || flotanteNativo();
 /* En el móvil la dibuja la app: se le manda el bloque de ahora y sus tareas cada vez que cambian */
@@ -954,7 +956,7 @@ async function abrirFlotante(){
     return;
   }
   if(pipWin){ try{ pipWin.focus(); }catch(e){} return; }
-  try{ pipWin = await documentPictureInPicture.requestWindow({width: 270, height: 400}); }
+  try{ pipWin = await documentPictureInPicture.requestWindow({width: 270, height: 410}); }
   catch(e){ pipWin = null; aviso('No se pudo abrir la ventana flotante'); return; }
   const d = pipWin.document;
   document.querySelectorAll('style, link[rel="stylesheet"]').forEach(x => d.head.appendChild(x.cloneNode(true)));
@@ -973,9 +975,13 @@ function pintarFlotante(){
   const d = pipWin.document, c = bloqueAhora(), cabe = c >= 0 && actsDe(hoyK(), c).length < MAX_ACT;
   // lo que estés escribiendo no se pierde al redibujar
   const viejo = d.getElementById('pip-nueva'), escrito = viejo ? viejo.value : '', conFoco = !!viejo && d.activeElement === viejo;
-  d.body.innerHTML = (seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div>` : '')
+  const fila = d.querySelector('.pip-petalos'), desliz = fila ? fila.scrollLeft : 0;
+  const petalos = [...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo'))
+    .map(x => `<button class="chip ${x.id === pipArea ? 'sel' : ''}" style="--c:${x.color}" onclick="pipArea='${x.id}'; pintarFlotante()">${ico(x)} ${x.corto}</button>`).join('');
+  d.body.innerHTML = (seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div><div class="pip-petalos">${petalos}</div>` : '')
     + '<div id="toast"></div>').replace(/ onclick=/g, ' data-onclick=');
   const nuevo = d.getElementById('pip-nueva'); if(nuevo){ nuevo.value = escrito; if(conFoco) nuevo.focus(); }
+  const filaN = d.querySelector('.pip-petalos'); if(filaN) filaN.scrollLeft = desliz;
   ajustarFoco(d); copiarToast();
 }
 function copiarToast(){
@@ -1595,12 +1601,12 @@ function anadirNueva(alBloque){
   else { aviso('El bloque ya está completo: la tarea queda en su pétalo'); petaloAbierto = areaNueva; }
   sonarHecho(); cerrarHoja(); render();
 }
-/* Ventana flotante del PC: escribir una tarea y que entre en el bloque (en Trabajo; se cambia luego con el lápiz) */
+/* Ventana flotante del PC: escribir una tarea y que entre en el bloque, en el pétalo elegido debajo (Trabajo de entrada) */
 function anadirDesdeFlotante(){
   const el = pipWin && pipWin.document.getElementById('pip-nueva'), t = el ? el.value.trim() : '';
   if(!t) return;
   el.value = '';
-  aviso(nuevaTareaBloque(t, 'trabajo') ? 'Tarea añadida al bloque 🌱' : 'El bloque ya está completo: la tarea queda en Trabajo');
+  aviso(nuevaTareaBloque(t, pipArea) ? 'Tarea añadida al bloque 🌱' : `El bloque ya está completo: la tarea queda en ${areaDe(pipArea).corto}`);
   sonarHecho(); rerenderDia();
 }
 
