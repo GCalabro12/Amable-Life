@@ -328,6 +328,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .av-fila{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .btn-flot{flex:none;margin-top:4px;padding:7px 14px;border:0;border-radius:999px;background:#f7c35b;color:#1d1636;font-size:13px;font-weight:800}
 .btn-flot:active{filter:brightness(.92)}
+.btn.sec.btn-bloque{border:2px solid #e0323a}
 /* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
 body.pip{padding:10px;overflow:auto}
 body.pip .ahora-blk{margin:0}
@@ -665,7 +666,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.39';
+const VERSION = 'v3.40';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -936,7 +937,7 @@ let flotUlt = '';
 function enviarFlotante(forzar){
   const c = bloqueAhora(), b = BLOQUES[c], acts = c >= 0 ? actsDe(hoyK(), c) : [];
   const orden = acts.map((a, i) => ({t: a.t, i, ok: hechaAct(a)}));
-  const est = JSON.stringify({tit: c >= 0 ? `FOCUS · bloque actual · ${hm(b.ini)} – ${hm(b.fin)}` : 'FOCUS · fuera de horario', fin: c >= 0 ? b.fin : -1,
+  const est = JSON.stringify({tit: c >= 0 ? `FOCUS · bloque · ${hm(b.ini)} – ${hm(b.fin)}` : 'FOCUS · fuera de horario', fin: c >= 0 ? b.fin : -1,
     tareas: [...orden.filter(o => !o.ok), ...orden.filter(o => o.ok)]});
   if(est === flotUlt && !forzar) return;
   flotUlt = est; try{ AndroidEquilibra.flotante(est); }catch(e){}
@@ -1239,7 +1240,7 @@ function seccionAhora(){
   const lista = pend.map((o, k) => fila(o.a, o.i, k === 0)).join('') + hechas.map(o => fila(o.a, o.i, false)).join('');
   const p = progresoBloque(b.ini, b.fin).toFixed(1);
   return `<section class="ahora-blk" data-drop="ahora">
-    <div class="ah-cab"><b class="ah-tit">FOCUS · bloque actual · ${hm(b.ini)} – ${hm(b.fin)}</b></div>
+    <div class="ah-cab"><b class="ah-tit">FOCUS · bloque · ${hm(b.ini)} – ${hm(b.fin)}</b></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
@@ -1247,7 +1248,7 @@ function seccionAhora(){
     ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea (con los seis puntitos)</p>`}
-    ${acts.length < MAX_ACT ? `<button class="btn sec ancho" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
+    ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
     ${avisoCalendario()}
   </section>`;
 }
