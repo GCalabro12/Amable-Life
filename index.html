@@ -333,6 +333,10 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 body.pip{padding:6px;overflow-x:hidden;overflow-y:auto}
 body.pip .ahora-blk{margin:0;zoom:.72}
 body.pip .foco-tit,body.pip .area-p{display:none}
+.pip-nueva{display:flex;gap:6px;margin-top:8px}
+.pip-nueva input{flex:1;min-width:0;padding:8px 10px;border:2px solid #e0323a;border-radius:10px;background:rgba(255,255,255,.06);color:#f4f0fb;font:inherit;font-size:13px;outline:none}
+.pip-nueva input::placeholder{color:rgba(244,240,251,.55)}
+.pip-nueva button{flex:none;width:38px;border:0;border-radius:10px;background:#f7c35b;color:#1d1636;font-size:20px;font-weight:800}
 body.pip .btn,body.pip .link,body.pip .rev-cal,body.pip .tic-btn,body.pip .lapiz,body.pip .del,body.pip .asa,body.pip .asa-hueco,body.pip .ah-vacio{display:none}
 body.pip #toast{bottom:16px}
 .avisos-btn .off{color:#f87171}
@@ -667,7 +671,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.41';
+const VERSION = 'v3.42';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -957,6 +961,7 @@ async function abrirFlotante(){
   d.title = 'Amable Life · Focus'; d.body.className = 'pip';
   // los botones llaman a las funciones de la ventana principal
   d.addEventListener('click', e => { const el = e.target.closest('[data-onclick]'); if(el) Function('event', el.dataset.onclick).call(el, e); });
+  d.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'pip-nueva') anadirDesdeFlotante(); });
   pipWin.addEventListener('pagehide', () => { pipWin = null; });
   if(!pipToast){ pipToast = new MutationObserver(copiarToast); pipToast.observe($('#toast'), {attributes: true, childList: true, subtree: true, characterData: true}); }
   pipWin.setInterval(tickFlotante, 1000);
@@ -965,8 +970,12 @@ async function abrirFlotante(){
 function pintarFlotante(){
   if(flotanteNativo()) enviarFlotante();
   if(!pipWin) return;
-  const d = pipWin.document;
-  d.body.innerHTML = (seccionAhora() + '<div id="toast"></div>').replace(/ onclick=/g, ' data-onclick=');
+  const d = pipWin.document, c = bloqueAhora(), cabe = c >= 0 && actsDe(hoyK(), c).length < MAX_ACT;
+  // lo que estés escribiendo no se pierde al redibujar
+  const viejo = d.getElementById('pip-nueva'), escrito = viejo ? viejo.value : '', conFoco = !!viejo && d.activeElement === viejo;
+  d.body.innerHTML = (seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div>` : '')
+    + '<div id="toast"></div>').replace(/ onclick=/g, ' data-onclick=');
+  const nuevo = d.getElementById('pip-nueva'); if(nuevo){ nuevo.value = escrito; if(conFoco) nuevo.focus(); }
   ajustarFoco(d); copiarToast();
 }
 function copiarToast(){
@@ -1572,13 +1581,27 @@ function abrirNueva(pre, alBloque){
     <button class="btn prim ancho" style="margin-top:10px" onclick="anadirNueva(${!!alBloque})">${alBloque ? 'Añadir al bloque' : 'Añadir tarea'}</button>`, a.color);
   if(t) $('#h-nueva').value = t;
 }
+/* Crea la tarea en su pétalo y, si cabe, la pone arriba del bloque de ahora */
+function nuevaTareaBloque(t, area){
+  nuevaAccion(area, t);
+  const x = D.acciones[D.acciones.length - 1], c = bloqueAhora(), acts = c >= 0 ? actsDe(hoyK(), c, true) : null;
+  if(acts && acts.length < MAX_ACT){ acts.unshift({t, d: false, acc: x.id}); guardarBloques(); return true; }
+  guardar(); return false;
+}
 function anadirNueva(alBloque){
   const t = valor('h-nueva'); if(!t){ aviso('Escribe la tarea'); return; }
-  nuevaAccion(areaNueva, t);
-  const x = D.acciones[D.acciones.length - 1], c = bloqueAhora(), acts = c >= 0 ? actsDe(hoyK(), c, true) : null;
-  if(alBloque && acts && acts.length < MAX_ACT){ acts.unshift({t, d: false, acc: x.id}); guardarBloques(); aviso('Tarea añadida al bloque 🌱'); }
-  else { guardar(); aviso(alBloque ? 'El bloque ya está completo: la tarea queda en su pétalo' : 'Tarea añadida 🌱'); petaloAbierto = areaNueva; }
+  if(!alBloque){ nuevaAccion(areaNueva, t); guardar(); aviso('Tarea añadida 🌱'); petaloAbierto = areaNueva; }
+  else if(nuevaTareaBloque(t, areaNueva)) aviso('Tarea añadida al bloque 🌱');
+  else { aviso('El bloque ya está completo: la tarea queda en su pétalo'); petaloAbierto = areaNueva; }
   sonarHecho(); cerrarHoja(); render();
+}
+/* Ventana flotante del PC: escribir una tarea y que entre en el bloque (en Trabajo; se cambia luego con el lápiz) */
+function anadirDesdeFlotante(){
+  const el = pipWin && pipWin.document.getElementById('pip-nueva'), t = el ? el.value.trim() : '';
+  if(!t) return;
+  el.value = '';
+  aviso(nuevaTareaBloque(t, 'trabajo') ? 'Tarea añadida al bloque 🌱' : 'El bloque ya está completo: la tarea queda en Trabajo');
+  sonarHecho(); rerenderDia();
 }
 
 /* ---------- Revisar la flor: 3 botones por área ---------- */
