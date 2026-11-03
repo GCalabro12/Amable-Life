@@ -657,7 +657,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.36';
+const VERSION = 'v3.37';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1081,7 +1081,7 @@ function vInicio(){
     <p class="suave peq" style="margin:${tuNombre ? 4 : 18}px 0 0">${pend.length ? `${pend.length} ${pend.length === 1 ? 'pendiente' : 'pendientes'}` : 'Nada pendiente'}${hs ? ` · ${hs} ${hs === 1 ? 'hecha' : 'hechas'} esta semana` : ''}</p>
     <button class="avisos-btn" type="button" aria-label="Cambiar los avisos" onclick="abrirAvisos()"><span id="av-estado" class="${pausa.tareas ? 'off' : 'on'}">${txtAvisos()}</span>${ICO_LAPIZ}</button>
     ${seccionAhora()}
-    <button class="btn sec ancho" style="margin-top:14px" onclick="abrirNueva()">＋ Nueva acción</button>
+    <button class="btn sec ancho" style="margin-top:14px" onclick="abrirNueva()">＋ Nueva tarea</button>
     ${listaSinAsignar()}
     ${tiraSalud()}`;
   h += `
@@ -1159,7 +1159,8 @@ function seccionAhora(){
       <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${pend.length}</b></span></div>
     ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
-      : `<p class="ah-vacio">Arrastra aquí una tarea (con los seis puntitos) o toca «→ Ahora».</p>`}
+      : `<p class="ah-vacio">Arrastra aquí una tarea (con los seis puntitos)</p>`}
+    ${acts.length < MAX_ACT ? `<button class="btn sec ancho" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
     ${avisoCalendario()}
   </section>`;
 }
@@ -1457,8 +1458,8 @@ function abrirPetalo(id){
     ${opcionesNivel(nivel(id), k => `cambiarNivel('${id}','${k}')`, true)}
     <p class="eti" style="margin-top:16px">Acciones</p>
     ${mias.length ? `<div class="tareas">${mias.map(x => `<div class="fila-acc"><button class="tarea ${x.hecha?'ok':''}" onclick="alternarAccion('${x.id}')"><span class="caja">✓</span><span>${esc(x.texto)}</span></button>${lapiz(`editarTarea('${x.id}')`)}<button class="del" aria-label="Borrar" onclick="borrarAccion('${x.id}')">✕</button></div>`).join('')}</div>` : `<p class="suave peq" style="margin:6px 0 0">Sin acciones por ahora.</p>`}
-    ${campoNueva('h-nueva', 'Nueva acción, p. ej. ' + a.ejemplos[0])}
-    <button class="btn prim ancho" style="margin-top:10px" onclick="anadirDesdeHoja('${id}')">Añadir acción</button>`, a.color);
+    ${campoNueva('h-nueva', 'Nueva tarea, p. ej. ' + a.ejemplos[0])}
+    <button class="btn prim ancho" style="margin-top:10px" onclick="anadirDesdeHoja('${id}')">Añadir tarea</button>`, a.color);
 }
 function cambiarNivel(id, k){
   D.niveles[id] = k; D.nivelesMod = ahoraISO();
@@ -1466,27 +1467,30 @@ function cambiarNivel(id, k){
   render();
 }
 function anadirDesdeHoja(id){
-  const t = valor('h-nueva'); if(!t){ aviso('Escribe la acción'); return; }
-  nuevaAccion(id, t); guardar(); sonarHecho(); aviso('Acción añadida 🌱');
+  const t = valor('h-nueva'); if(!t){ aviso('Escribe la tarea'); return; }
+  nuevaAccion(id, t); guardar(); sonarHecho(); aviso('Tarea añadida 🌱');
   render();
 }
 let areaNueva = null;
-function abrirNueva(pre){
+function abrirNueva(pre, alBloque){
   const f = faltan();
   areaNueva = pre || areaNueva || (f[0] && f[0].area.id) || AREAS[0].id;
-  hojaAbierta = () => abrirNueva(areaNueva);
+  hojaAbierta = () => abrirNueva(areaNueva, alBloque);
   const a = areaDe(areaNueva), t = $('#h-nueva') ? $('#h-nueva').value : '';
-  mostrarHoja(`<div class="hoja-cab"><div><h2>Nueva acción</h2></div></div>
+  mostrarHoja(`<div class="hoja-cab"><div><h2>${alBloque ? 'Nueva tarea para este bloque' : 'Nueva tarea'}</h2></div></div>
     <div style="margin-top:12px">${campoNueva('h-nueva', 'Por ejemplo: ' + a.ejemplos[0])}</div>
     <p class="eti" style="margin-top:14px">¿Para qué área?</p>
-    <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === areaNueva ? 'sel' : ''}" style="--c:${x.color}" onclick="areaNueva='${x.id}'; abrirNueva('${x.id}')">${ico(x)} ${x.corto}</button>`).join('')}</div>
-    <button class="btn prim ancho" style="margin-top:10px" onclick="anadirNueva()">Añadir acción</button>`, a.color);
+    <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === areaNueva ? 'sel' : ''}" style="--c:${x.color}" onclick="areaNueva='${x.id}'; abrirNueva('${x.id}', ${!!alBloque})">${ico(x)} ${x.corto}</button>`).join('')}</div>
+    <button class="btn prim ancho" style="margin-top:10px" onclick="anadirNueva(${!!alBloque})">${alBloque ? 'Añadir al bloque' : 'Añadir tarea'}</button>`, a.color);
   if(t) $('#h-nueva').value = t;
 }
-function anadirNueva(){
-  const t = valor('h-nueva'); if(!t){ aviso('Escribe la acción'); return; }
-  nuevaAccion(areaNueva, t); guardar(); sonarHecho(); aviso('Acción añadida 🌱');
-  petaloAbierto = areaNueva; cerrarHoja(); render();
+function anadirNueva(alBloque){
+  const t = valor('h-nueva'); if(!t){ aviso('Escribe la tarea'); return; }
+  nuevaAccion(areaNueva, t);
+  const x = D.acciones[D.acciones.length - 1], c = bloqueAhora(), acts = c >= 0 ? actsDe(hoyK(), c, true) : null;
+  if(alBloque && acts && acts.length < MAX_ACT){ acts.unshift({t, d: false, acc: x.id}); guardarBloques(); aviso('Tarea añadida al bloque 🌱'); }
+  else { guardar(); aviso(alBloque ? 'El bloque ya está completo: la tarea queda en su pétalo' : 'Tarea añadida 🌱'); petaloAbierto = areaNueva; }
+  sonarHecho(); cerrarHoja(); render();
 }
 
 /* ---------- Revisar la flor: 3 botones por área ---------- */
