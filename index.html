@@ -330,8 +330,9 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .btn-flot:active{filter:brightness(.92)}
 .btn.sec.btn-bloque{border:2px solid #e0323a}
 /* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
-body.pip{padding:10px;overflow:auto}
-body.pip .ahora-blk{margin:0}
+body.pip{padding:6px;overflow-x:hidden;overflow-y:auto}
+body.pip .ahora-blk{margin:0;zoom:.72}
+body.pip .foco-tit,body.pip .area-p{display:none}
 body.pip .btn,body.pip .link,body.pip .rev-cal,body.pip .tic-btn,body.pip .lapiz,body.pip .del,body.pip .asa,body.pip .asa-hueco,body.pip .ah-vacio{display:none}
 body.pip #toast{bottom:16px}
 .avisos-btn .off{color:#f87171}
@@ -666,7 +667,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.40';
+const VERSION = 'v3.41';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -923,8 +924,8 @@ function render(){
 /* La tarea en la que te enfocas, siempre en un solo renglón: se achica la letra hasta que quepa */
 function ajustarFoco(doc = document){
   doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => {
-    let fs = 26; el.style.fontSize = fs + 'px';
-    while(el.scrollWidth > el.clientWidth + 1 && fs > 15){ fs--; el.style.fontSize = fs + 'px'; }
+    let fs = doc === document ? 26 : 19; el.style.fontSize = fs + 'px';
+    while(el.scrollWidth > el.clientWidth + 1 && fs > (doc === document ? 15 : 13)){ fs--; el.style.fontSize = fs + 'px'; }
   });
 }
 addEventListener('resize', () => ajustarFoco());
@@ -949,7 +950,7 @@ async function abrirFlotante(){
     return;
   }
   if(pipWin){ try{ pipWin.focus(); }catch(e){} return; }
-  try{ pipWin = await documentPictureInPicture.requestWindow({width: 400, height: 560}); }
+  try{ pipWin = await documentPictureInPicture.requestWindow({width: 270, height: 400}); }
   catch(e){ pipWin = null; aviso('No se pudo abrir la ventana flotante'); return; }
   const d = pipWin.document;
   document.querySelectorAll('style, link[rel="stylesheet"]').forEach(x => d.head.appendChild(x.cloneNode(true)));
