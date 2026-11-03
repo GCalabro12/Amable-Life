@@ -665,7 +665,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.38';
+const VERSION = 'v3.39';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -929,8 +929,24 @@ function ajustarFoco(doc = document){
 addEventListener('resize', () => ajustarFoco());
 /* ---------- Ventana flotante (navegador de PC): solo Focus, siempre delante de todo ---------- */
 let pipWin = null, pipToast = null;
-const hayFlotante = () => 'documentPictureInPicture' in window && !esApp;
+const flotanteNativo = () => { try{ return esApp && typeof AndroidEquilibra.abrirFlotante === 'function'; }catch(e){ return false; } };
+const hayFlotante = () => ('documentPictureInPicture' in window && !esApp) || flotanteNativo();
+/* En el móvil la dibuja la app: se le manda el bloque de ahora y sus tareas cada vez que cambian */
+let flotUlt = '';
+function enviarFlotante(forzar){
+  const c = bloqueAhora(), b = BLOQUES[c], acts = c >= 0 ? actsDe(hoyK(), c) : [];
+  const orden = acts.map((a, i) => ({t: a.t, i, ok: hechaAct(a)}));
+  const est = JSON.stringify({tit: c >= 0 ? `FOCUS · bloque actual · ${hm(b.ini)} – ${hm(b.fin)}` : 'FOCUS · fuera de horario', fin: c >= 0 ? b.fin : -1,
+    tareas: [...orden.filter(o => !o.ok), ...orden.filter(o => o.ok)]});
+  if(est === flotUlt && !forzar) return;
+  flotUlt = est; try{ AndroidEquilibra.flotante(est); }catch(e){}
+}
 async function abrirFlotante(){
+  if(flotanteNativo()){
+    enviarFlotante(true);
+    if(!AndroidEquilibra.abrirFlotante()) aviso('Activa «Mostrar sobre otras aplicaciones» para Amable Life y vuelve aquí', 6000);
+    return;
+  }
   if(pipWin){ try{ pipWin.focus(); }catch(e){} return; }
   try{ pipWin = await documentPictureInPicture.requestWindow({width: 400, height: 560}); }
   catch(e){ pipWin = null; aviso('No se pudo abrir la ventana flotante'); return; }
@@ -945,6 +961,7 @@ async function abrirFlotante(){
   pintarFlotante(); animarArenaPip();
 }
 function pintarFlotante(){
+  if(flotanteNativo()) enviarFlotante();
   if(!pipWin) return;
   const d = pipWin.document;
   d.body.innerHTML = (seccionAhora() + '<div id="toast"></div>').replace(/ onclick=/g, ' data-onclick=');
@@ -973,6 +990,21 @@ function ponerVersiones(){
   el.textContent = 'web ' + VERSION.replace(/^v/, '') + (app && app !== '?' ? ' · app ' + app : '');
 }
 /* ---------- Reloj de arena: dura la hora y media del bloque; la arena cae grano a grano ---------- */
+/* El cristal se estrecha hacia el cuello: para que la arena guarde la proporción del tiempo se calcula por área, no por altura */
+let arenaTabla = null;
+function tablaArena(cx, top, neck, half, nw){
+  if(arenaTabla) return arenaTabla;
+  const pts = [];
+  for(let k = 0; k <= 80; k++){ const t = k / 80, u = 1 - t;
+    const x = u*u*u*(cx + half) + 3*u*u*t*(cx + half) + 3*u*t*t*(cx + nw + 3) + t*t*t*(cx + nw);
+    const y = u*u*u*top + 3*u*u*t*(top + 24) + 3*u*t*t*(neck - 11) + t*t*t*neck;
+    pts.push({d: neck - y, a: x - cx}); }   // d: distancia al cuello · a: medio ancho del cristal
+  pts.sort((m, n) => m.d - n.d);
+  const acc = [{d: pts[0].d, s: 0}];   // área desde el cuello hacia fuera (la mitad de abajo es igual)
+  for(let k = 1; k < pts.length; k++) acc.push({d: pts[k].d, s: acc[k - 1].s + (pts[k].a + pts[k - 1].a) * (pts[k].d - pts[k - 1].d)});
+  return arenaTabla = acc;
+}
+const interpArena = (tab, de, a, v) => { for(let k = 1; k < tab.length; k++) if(tab[k][de] >= v){ const f = (v - tab[k - 1][de]) / ((tab[k][de] - tab[k - 1][de]) || 1); return tab[k - 1][a] + f * (tab[k][a] - tab[k - 1][a]); } return tab[tab.length - 1][a]; };
 let arenaRAF = null, arenaUlt = 0;
 function iniciarArena(){ if(!arenaRAF) arenaRAF = requestAnimationFrame(animarArena); }
 function animarArena(ts){
@@ -1005,12 +1037,16 @@ function dibujarArena(cv, dt){
   const rojo = g.createLinearGradient(0, neck, 0, bot); rojo.addColorStop(0, '#f87171'); rojo.addColorStop(1, '#c81e2e');
   g.fillStyle = verde;
   // arriba baja y abajo sube al mismo ritmo, para que se vea bien cómo pasa el tiempo
-  const hMaxA = neck - top - 7, yA = neck - hMaxA * Math.max(0, 1 - p), hueco = p > 0 && p < 1 ? Math.min(7, (neck - yA) * .45) : 0;
+  const tab = tablaArena(cx, top, neck, half, nw), areaD = d => interpArena(tab, 'd', 's', d), distA = a => interpArena(tab, 's', 'd', a);
+  // abajo solo cuenta lo que se ve por encima de la tapa; arriba se suma lo que quita el hoyito del centro
+  const pp = Math.min(1, Math.max(0, p)), total = areaD(bot - neck - 2), K = Math.min(areaD(neck - top - 7), total - areaD(9));
+  const y0 = neck - distA((1 - pp) * K), hueco = p > 0 && p < 1 ? Math.min(4, (neck - y0) * .3) : 0;
+  const yA = neck - distA((1 - pp) * K + 16 * hueco);
   if(p < 1){ g.beginPath(); g.moveTo(0, yA); g.lineTo(cx - 12, yA); g.quadraticCurveTo(cx, yA + hueco * 2, cx + 12, yA); g.lineTo(W, yA); g.lineTo(W, neck + 1); g.lineTo(0, neck + 1); g.closePath(); g.fill(); }
   // abajo: el montón crece con p
-  const hMaxB = bot - neck - 9, hB = hMaxB * Math.max(0, p), cima = bot - hB;
+  const yB = neck + distA(total - pp * K * .92), m = Math.min(4, (bot - yB) * .35), cima = yB - m;
   g.fillStyle = rojo;
-  if(p > 0){ g.beginPath(); g.moveTo(0, bot); g.lineTo(0, bot - hB * .45); g.quadraticCurveTo(cx, cima - hB * .45, W, bot - hB * .45); g.lineTo(W, bot); g.closePath(); g.fill(); }
+  if(p > 0){ g.beginPath(); g.moveTo(0, bot); g.lineTo(0, yB + m); g.quadraticCurveTo(cx, yB - 3 * m, W, yB + m); g.lineTo(W, bot); g.closePath(); g.fill(); }
   // el chorrito y los granos que caen
   if(p > 0 && p < 1){
     const suelo = cima + 1;
@@ -1524,14 +1560,13 @@ function anadirDesdeHoja(id){
 }
 let areaNueva = null;
 function abrirNueva(pre, alBloque){
-  const f = faltan();
-  areaNueva = pre || areaNueva || (f[0] && f[0].area.id) || AREAS[0].id;
+  areaNueva = pre || 'trabajo';   // casi todo lo de Focus es trabajo
   hojaAbierta = () => abrirNueva(areaNueva, alBloque);
   const a = areaDe(areaNueva), t = $('#h-nueva') ? $('#h-nueva').value : '';
   mostrarHoja(`<div class="hoja-cab"><div><h2>${alBloque ? 'Nueva tarea para este bloque' : 'Nueva tarea'}</h2></div></div>
     <div style="margin-top:12px">${campoNueva('h-nueva', 'Por ejemplo: ' + a.ejemplos[0])}</div>
     <p class="eti" style="margin-top:14px">¿Para qué área?</p>
-    <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === areaNueva ? 'sel' : ''}" style="--c:${x.color}" onclick="areaNueva='${x.id}'; abrirNueva('${x.id}', ${!!alBloque})">${ico(x)} ${x.corto}</button>`).join('')}</div>
+    <div class="chips" style="justify-content:flex-start;margin:8px 0">${[...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo')).map(x => `<button class="chip ${x.id === areaNueva ? 'sel' : ''}" style="--c:${x.color}" onclick="areaNueva='${x.id}'; abrirNueva('${x.id}', ${!!alBloque})">${ico(x)} ${x.corto}</button>`).join('')}</div>
     <button class="btn prim ancho" style="margin-top:10px" onclick="anadirNueva(${!!alBloque})">${alBloque ? 'Añadir al bloque' : 'Añadir tarea'}</button>`, a.color);
   if(t) $('#h-nueva').value = t;
 }
@@ -1932,7 +1967,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Equilibra/main/Amable-Life.apk' : 'Amable-Life.apk';
-const APK_ULTIMA = '2.36';   // última app Android publicada
+const APK_ULTIMA = '2.37';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
