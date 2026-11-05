@@ -329,6 +329,38 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .btn-flot{flex:none;margin-top:4px;padding:7px 14px;border:0;border-radius:999px;background:#f7c35b;color:#1d1636;font-size:13px;font-weight:800}
 .btn-flot:active{filter:brightness(.92)}
 .btn.sec.btn-bloque{border:2px solid #e0323a}
+/* Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» + firma */
+.btn.sec.btn-compro{margin-top:12px;border:2px solid #f59e0b;color:#fcd34d;display:flex;align-items:center;justify-content:center;gap:8px}
+.pact-box{margin-top:4px;background:#fffbeb;border:3px solid #f59e0b;border-radius:22px;padding:22px 16px;color:#1e293b;text-align:center;font-family:Georgia,'Times New Roman',serif}
+.pact-head{font-family:system-ui,sans-serif;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:#b45309;margin-bottom:10px}
+.pact-text{font-size:24px;line-height:1.3;font-weight:700;margin:6px 0 16px;overflow-wrap:anywhere}
+.pact-text b{color:#b45309}
+.pact-mins{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 16px}
+.pact-mins button{border:1px solid #d97706;background:#fff;color:#92400e;border-radius:999px;padding:6px 12px;font:700 13px system-ui,sans-serif}
+.pact-mins button.sel{background:#f59e0b;color:#1e293b;border-color:#f59e0b}
+.pact-name{width:100%;box-sizing:border-box;margin:0 0 12px;padding:10px;border-radius:12px;border:1px solid #d97706;background:#fff;color:#1e293b;font:16px system-ui,sans-serif;text-align:center}
+.pact-name.oculto{display:none}
+.pact-sign{margin:0 6px 18px}
+.pact-line{min-height:44px;border-bottom:2px dotted #92400e;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-family:'Brush Script MT','Segoe Script',cursive;font-size:26px;color:#166534}
+.pact-time{font-family:'Brush Script MT','Segoe Script',cursive;font-size:26px;color:#166534;min-height:1.3em;margin-top:2px}
+.pact-lbl{font:12px system-ui,sans-serif;color:#92400e;margin-top:4px}
+.pact-lbl.falta{color:#b91c1c;font-weight:800;font-size:15px}
+.pact-hold{position:relative;width:100%;overflow:hidden;background:#facc15;color:#1e293b;font:800 17px system-ui,sans-serif;border:0;border-radius:14px;padding:16px;touch-action:none;-webkit-user-select:none;user-select:none}
+.pact-fill{position:absolute;top:0;bottom:0;left:0;width:0;background:#f59e0b}
+.pact-holdtxt{position:relative}
+.pact-box.signed .pact-line{animation:pactTinta .6s ease}
+@keyframes pactTinta{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.f-pact{margin-top:12px;padding:12px;border-radius:14px;border:1px solid rgba(245,158,11,.6);background:rgba(245,158,11,.08);text-align:center}
+.f-pact.vencido{border-color:rgba(248,113,113,.7);background:rgba(248,113,113,.08)}
+.f-pact-title{font-weight:800;color:#fcd34d;font-size:15px}
+.f-pact.vencido .f-pact-title{color:#fca5a5}
+.f-pact-text{color:#e2e8f0;font-size:15px;line-height:1.35;margin:4px 0}
+.f-pact-text b{color:#fcd34d}
+.f-pact-sign{font-family:'Brush Script MT','Segoe Script',cursive;color:#86efac;font-size:20px}
+.pact-cuenta{font-weight:800;color:#fcd34d;font-variant-numeric:tabular-nums;margin-top:4px}
+.f-pact .btn{margin-top:8px}
+body.pip .f-pact-text,body.pip .f-pact-sign{display:none}
+body.pip .f-pact{margin-top:6px;padding:6px}
 /* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
 body.pip{padding:6px;overflow-x:hidden;overflow-y:auto}
 body.pip .ahora-blk{margin:0;zoom:.72}
@@ -673,7 +705,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.43';
+const VERSION = 'v3.44';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -992,6 +1024,7 @@ function tickFlotante(){
   if(!pipWin) return;
   const d = pipWin.document;
   d.querySelectorAll('.cuenta-atras').forEach(e => { e.textContent = fmtCuenta(+e.dataset.fin); });
+  d.querySelectorAll('.pact-cuenta').forEach(e => { e.textContent = txtCompromiso(+e.dataset.hasta); });
   d.querySelectorAll('.aro[data-ini]').forEach(e => e.style.setProperty('--p', progresoBloque(+e.dataset.ini, +e.dataset.fin).toFixed(1)));
   if(document.hidden) segundero();   // con la ventana principal minimizada, sus relojes van lentos: manda la flotante
 }
@@ -1264,9 +1297,123 @@ function seccionAhora(){
     ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea (con los seis puntitos)</p>`}
+    ${compromisoHTML(pend)}
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
     ${avisoCalendario()}
   </section>`;
+}
+/* ---------- Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» y se firma
+   manteniendo pulsado el botón amarillo: se escribe tu nombre poco a poco, sale la hora y suena un acorde ---------- */
+const ICO_FIRMA = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20c2.5 0 3.5-3 5-3s1.5 2 3 2 2.5-2 4-2"/><path d="M14 3.5l3.5 3.5L10 14.5H6.5V11z"/></svg>';
+const PACT_MS = 2600;
+let pact = null, pactRaf = 0;
+const pactHora = ts => { const d = new Date(ts || Date.now()); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const compCasa = (a, c) => !!(a && c && ((c.acc && a.acc === c.acc) || (!c.acc && a.t === c.t)));
+const txtCompromiso = hasta => { const q = Math.max(0, Math.round((hasta - Date.now()) / 1000)); return `Te quedan ${Math.floor(q / 60)}:${String(q % 60).padStart(2, '0')}`; };
+/* El compromiso sigue mientras su tarea esté sin hacer en el bloque de ahora */
+function compVigente(){
+  const c = D.compromiso, b = bloqueAhora();
+  if(!c || c.dia !== hoyK() || c.estado === 'cumplido' || b < 0) return null;
+  return actsDe(hoyK(), b).some(a => a && !hechaAct(a) && compCasa(a, c)) ? c : null;
+}
+function pactFrase(t, min){
+  const x = t && !/^[A-ZÁÉÍÓÚÑ0-9]{2,}/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t;   // «Preparar…» -> «preparar…»
+  return x ? `Me comprometo a <b>${esc(x)}</b> en menos de ${min} minutos.` : `Me comprometo a concentrarme durante ${min} minutos.`;
+}
+function compromisoHTML(pend){
+  const c = compVigente();
+  if(c && c.estado === 'activo') return `<div class="f-pact"><div class="f-pact-title">Estás comprometido</div><div class="f-pact-text">${pactFrase(c.t, c.min)}</div>
+    <div class="f-pact-sign">Firmado: ${esc(c.nombre)} · a las ${pactHora(c.at)}</div><div class="pact-cuenta" data-hasta="${c.hasta}">${txtCompromiso(c.hasta)}</div>
+    <button class="btn sec ancho" onclick="verCompromiso()">Ver contrato</button></div>`;
+  if(c) return `<div class="f-pact vencido"><div class="f-pact-title">Se acabó el tiempo del compromiso</div><div class="f-pact-text">${pactFrase(c.t, c.min)}</div>
+    <button class="btn sec ancho btn-compro" onclick="abrirCompromiso()">${ICO_FIRMA} Volver a comprometerme</button></div>`;
+  return pend.length ? `<button class="btn sec ancho btn-compro" onclick="abrirCompromiso()">${ICO_FIRMA} Me comprometo con esta tarea</button>` : '';
+}
+/* Botón: la primera tarea sin hacer del bloque, en menos de 15 / 25 / 45 min o hasta el final del bloque */
+function abrirCompromiso(){
+  const b = bloqueAhora(); if(b < 0) return;
+  const a = actsDe(hoyK(), b).find(x => x && !hechaAct(x)); if(!a) return;
+  const d = new Date(), queda = Math.max(5, Math.floor((BLOQUES[b].fin * 60 - (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds())) / 60));
+  const opciones = [...new Set([15, 25, 45].filter(m => m < queda).concat(queda))];
+  pact = {t: a.t, acc: a.acc || null, min: Math.min(25, queda), queda, opciones, prog: 0, letras: 0, sujeto: false, auto: false, firmado: false};
+  pintarCompromiso();
+}
+/* Ver el contrato ya firmado */
+function verCompromiso(){
+  const c = D.compromiso; if(!c) return;
+  pact = {t: c.t, min: c.min, nombre: c.nombre, at: c.at, firmado: true};
+  pintarCompromiso();
+}
+function pintarCompromiso(){
+  const P = pact, nombre = (D.nombre || '').trim();
+  hojaAbierta = null;
+  mostrarHoja(`<div class="pact-box ${P.firmado ? 'signed' : ''}" id="pactBox">
+    <div class="pact-head">Mi compromiso</div>
+    <div class="pact-text" id="pactText">${pactFrase(P.t, P.min)}</div>
+    ${P.firmado ? '' : `<div class="pact-mins">${P.opciones.map(m => `<button type="button" class="${m === P.min ? 'sel' : ''}" onclick="elegirMinPact(${m}, this)">${m === P.queda ? `Hasta el final del bloque · ${m} min` : m + ' min'}</button>`).join('')}</div>
+    <input class="pact-name ${nombre ? 'oculto' : ''}" id="pactName" type="text" maxlength="40" placeholder="Tu nombre y apellido" autocomplete="name" value="${esc(nombre)}">`}
+    <div class="pact-sign"><div class="pact-line"><span id="pactSig">${P.firmado ? esc(P.nombre) : ''}</span></div><div class="pact-time" id="pactTime">${P.firmado ? 'a las ' + pactHora(P.at) : ''}</div><div class="pact-lbl" id="pactLbl">${P.firmado ? 'Firmado' : 'Firma'}</div></div>
+    ${P.firmado ? '' : `<button type="button" class="pact-hold" id="pactHold"><span class="pact-fill" id="pactFill"></span><span class="pact-holdtxt" id="pactHoldTxt">Mantén pulsado para firmar</span></button>`}
+  </div>`, '#f59e0b');
+  const h = $('#pactHold'); if(!h) return;
+  h.addEventListener('pointerdown', e => { if(e.pointerType === 'touch') return; try{ h.setPointerCapture(e.pointerId); }catch(x){} pactDown(e); });
+  h.addEventListener('pointerup', e => { if(e.pointerType !== 'touch') pactUp(); });
+  h.addEventListener('pointercancel', e => { if(e.pointerType !== 'touch') pactUp(); });
+  h.addEventListener('touchstart', e => pactDown(e), {passive: false});
+  h.addEventListener('touchend', e => { if(e.cancelable) e.preventDefault(); pactUp(); }, {passive: false});
+}
+function elegirMinPact(m, el){
+  if(!pact || pact.firmado || pact.sujeto) return;
+  pact.min = m; $('#pactText').innerHTML = pactFrase(pact.t, m);
+  el.parentNode.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b === el));
+}
+function pactFaltaNombre(){
+  const lbl = $('#pactLbl'), inp = $('#pactName');
+  lbl.textContent = 'Escribe tu nombre arriba para poder firmar'; lbl.classList.add('falta');
+  inp.classList.remove('oculto'); inp.style.borderColor = '#dc2626'; inp.focus();
+  setTimeout(() => { inp.style.borderColor = ''; }, 2500);
+}
+function pactDown(e){
+  if(e && e.cancelable) e.preventDefault();
+  const P = pact; if(!P || P.firmado || P.sujeto || P.auto) return;
+  const nombre = valor('pactName'); if(!nombre){ pactFaltaNombre(); return; }
+  $('#pactLbl').classList.remove('falta'); $('#pactLbl').textContent = 'Firma';
+  P.nombre = nombre; P.abajo = performance.now(); P.sujeto = true; P.desde = P.abajo - P.prog * PACT_MS;
+  cancelAnimationFrame(pactRaf); pactRaf = requestAnimationFrame(pactBucle);
+}
+function pactUp(){
+  const P = pact; if(!P || P.auto || !P.nombre) return;   // sin nombre no se empezó a firmar
+  if(P.sujeto && performance.now() - P.abajo < 350 && P.prog < .2){ P.auto = true; return; }   // un toque corto: la firma se escribe sola
+  P.sujeto = false;
+  if(!P.firmado){ cancelAnimationFrame(pactRaf); pactRaf = requestAnimationFrame(pactBucle); }   // si se suelta antes, la firma se borra
+}
+function pactBucle(){
+  const P = pact; if(!P || P.firmado || !$('#pactHold')) return;
+  P.prog = P.sujeto ? Math.min(1, (performance.now() - P.desde) / PACT_MS) : Math.max(0, P.prog - .05);
+  $('#pactFill').style.width = (P.prog * 100) + '%';
+  const cuando = 'a las ' + pactHora(), n = Math.max(0, Math.ceil(P.prog * (P.nombre.length + cuando.length)));
+  $('#pactSig').textContent = P.nombre.slice(0, n);
+  $('#pactTime').textContent = cuando.slice(0, Math.max(0, n - P.nombre.length));
+  if(n > P.letras) nota(1500, 0, .03, .05, false);   // tic suave por cada letra
+  P.letras = n;
+  if(P.prog >= 1){ pactFirmado(); return; }
+  if(P.sujeto || P.prog > 0) pactRaf = requestAnimationFrame(pactBucle);
+}
+function pactFirmado(){
+  const P = pact; P.firmado = true; P.sujeto = P.auto = false; P.at = Date.now();
+  sonarFinal(); guardarNombre(P.nombre);
+  D.compromiso = {t: P.t, acc: P.acc, min: P.min, nombre: P.nombre, at: P.at, hasta: P.at + P.min * 60000, dia: hoyK(), estado: 'activo', mod: ahoraISO()};
+  guardar();
+  $('#pactSig').textContent = P.nombre; $('#pactTime').textContent = 'a las ' + pactHora(P.at);
+  $('#pactLbl').textContent = 'Firmado'; $('#pactHoldTxt').textContent = '✓ Firmado';
+  $('#pactBox').classList.add('signed');
+  setTimeout(() => { if(pact === P){ pact = null; cerrarHoja(); } rerenderDia(); }, 1600);
+}
+/* Al hacer la tarea del compromiso: cumplido. Devuelve cómo deshacerlo (por el «Deshacer» de 4 s) */
+function cumplirCompromiso(a){
+  const c = D.compromiso; if(!c || c.estado === 'cumplido' || c.dia !== hoyK() || !compCasa(a, c)) return null;
+  const antes = c.estado; c.estado = 'cumplido'; c.cumplidoEn = ahoraISO(); c.mod = ahoraISO();
+  return () => { c.estado = antes; c.mod = ahoraISO(); };
 }
 /* Reordenar las tareas del bloque de ahora (seis puntitos en Focus) */
 function moverActsAhora(orden){
@@ -1300,6 +1447,9 @@ function segundero(){
   const els = document.querySelectorAll('.cuenta-atras');
   els.forEach(e => { e.textContent = fmtCuenta(+e.dataset.fin); });
   const av = $('#av-estado'); if(av) av.textContent = txtAvisos();
+  document.querySelectorAll('.pact-cuenta').forEach(e => { e.textContent = txtCompromiso(+e.dataset.hasta); });
+  const cp = D.compromiso;
+  if(cp && cp.estado === 'activo' && Date.now() >= cp.hasta){ cp.estado = 'vencido'; cp.mod = ahoraISO(); guardar(); if(vista === 'inicio') refrescarFocus(); else pintarFlotante(); }
   const prox = pausa.tareas ? null : proximoAviso(); if(prox !== null && prox <= Date.now()) bloquesTick();   // que salte justo en 0:00
   if(bUltimo !== null && bloqueAhora() !== bUltimo) bloquesTick();   // el bloque cambia aunque los avisos estén en pausa
   if(ticOn && vista === 'inicio' && els.length && !document.hidden && !pausa.tareas) sonarTic();
@@ -1428,11 +1578,14 @@ function alternarAccion(id){
   const x = D.acciones.find(a => a.id === id); if(!x) return;
   if(x.hecha && !x.area){ reabrirSinPetalo(x); return; }
   x.hecha = !x.hecha; x.hechaEn = x.hecha ? ahoraISO() : null; x.mod = ahoraISO();
+  const volverCompro = x.hecha ? cumplirCompromiso({acc: id, t: x.texto}) : null;
   guardar();
   if(x.hecha){
     programarArchivo();
-    if(!pendientes().length){ sonarFinal(); avisoDeshacer('¡Todas hechas!', () => alternarAccion(id)); }
-    else { sonarHecho(); avisoDeshacer('Tarea completada', () => alternarAccion(id)); }
+    const deshacerla = () => { if(volverCompro) volverCompro(); alternarAccion(id); };
+    if(volverCompro){ sonarFinal(); avisoDeshacer('¡Compromiso cumplido!', deshacerla); }
+    else if(!pendientes().length){ sonarFinal(); avisoDeshacer('¡Todas hechas!', deshacerla); }
+    else { sonarHecho(); avisoDeshacer('Tarea completada', deshacerla); }
   }
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
@@ -1895,12 +2048,15 @@ function alternarAct(i){
   a.d = nueva; a.hechaEn = nueva ? ahoraISO() : null;
   const x = a.acc && D.acciones.find(z => z.id === a.acc);
   if(x && x.hecha !== nueva){ x.hecha = nueva; x.hechaEn = nueva ? ahoraISO() : null; x.mod = ahoraISO(); }
+  const volverCompro = nueva ? cumplirCompromiso(a) : null;
   guardarBloques();
   if(nueva){
-    sonarHecho(); programarArchivo();
-    avisoDeshacer('Tarea completada', () => {
+    if(volverCompro) sonarFinal(); else sonarHecho();
+    programarArchivo();
+    avisoDeshacer(volverCompro ? '¡Compromiso cumplido!' : 'Tarea completada', () => {
       a.d = false; a.hechaEn = null;
       if(x){ x.hecha = false; x.hechaEn = null; x.mod = ahoraISO(); }
+      if(volverCompro) volverCompro();
       guardarBloques(); rerenderDia();
     });
   }
@@ -2405,6 +2561,8 @@ function fusionar(local, remoto){
   r.nombre = local.nombre || remoto.nombre || '';
   const al = local.appAndroid, ar = remoto.appAndroid;
   const cr = [local.calRevisado, remoto.calRevisado].filter(Boolean).sort().pop(); if(cr) r.calRevisado = cr;
+  const cl = local.compromiso, cm = remoto.compromiso;
+  if(cl || cm) r.compromiso = (cm && (!cl || (cm.mod || '') > (cl.mod || ''))) ? cm : cl;
   if(al || ar) r.appAndroid = (ar && (!al || (ar.visto || '') > (al.visto || ''))) ? ar : al;
   return r;
 }
