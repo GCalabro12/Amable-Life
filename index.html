@@ -384,6 +384,7 @@ body.pip .ahora-blk{margin:0;zoom:.72}
 body.pip .foco-tit,body.pip .btn.sec.btn-compro{display:none}
 .pip-cab{display:flex;align-items:center;gap:8px;margin:0 0 6px 2px;font-weight:800;font-size:16px;color:#f4f0fb}
 .pip-cab svg{width:24px;height:24px;flex:none}
+.pip-ver{margin-left:auto;margin-right:4px;font-size:11px;font-weight:600;color:#a99cc4}
 .pip-petalos{display:flex;gap:6px;overflow-x:auto;margin-top:5px;padding-bottom:3px;scroll-snap-type:x proximity;scrollbar-width:thin}
 .pip-petalos .chip{flex:none;scroll-snap-align:start;font-size:12px;padding:5px 10px}
 .pip-nueva{display:flex;gap:6px;margin-top:6px}
@@ -724,7 +725,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.56';
+const VERSION = 'v3.57';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1029,7 +1030,7 @@ function pintarFlotante(){
   const fila = d.querySelector('.pip-petalos'), desliz = fila ? fila.scrollLeft : 0;
   const petalos = [...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo'))
     .map(x => `<button class="chip ${x.id === pipArea ? 'sel' : ''}" style="--c:${x.color}" onclick="pipArea='${x.id}'; pintarFlotante()">${ico(x)} ${x.corto}</button>`).join('');
-  d.body.innerHTML = (`<div class="pip-cab">${logoSVG()}<b>Amable Life</b></div>` + seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div><div class="pip-petalos">${petalos}</div>` : '')
+  d.body.innerHTML = (`<div class="pip-cab">${logoSVG()}<b>Amable Life</b><span class="pip-ver">web ${VERSION.replace(/^v/, '')}</span></div>` + seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div><div class="pip-petalos">${petalos}</div>` : '')
     + '<div id="toast"></div>').replace(/ onclick=/g, ' data-onclick=');
   const nuevo = d.getElementById('pip-nueva'); if(nuevo){ nuevo.value = escrito; if(conFoco) nuevo.focus(); }
   const filaN = d.querySelector('.pip-petalos'); if(filaN) filaN.scrollLeft = desliz;
