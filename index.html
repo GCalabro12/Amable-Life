@@ -725,7 +725,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.57';
+const VERSION = 'v3.58';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2995,14 +2995,6 @@ function vAjustes(){
         ${vieja ? `<a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar la app ${APK_ULTIMA}</a>` : ''}</div>
         ${!mia && enAndroidWeb() ? `<p class="suave" style="margin-top:12px">Instala la app de Android para que suene la música al abrir y cuente tus pasos.</p>${pasosInstalar}<div class="bots"><a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar Amable Life ${APK_ULTIMA}</a></div>` : ''}`;
       }},
-    {k: 'pc', ico: '⏱', t: 'Bloques de Amable PC',
-      sub: 'Los mismos bloques y tareas que usabas allí',
-      html: () => `<p class="suave">Si usabas los bloques de tiempo en Amable PC, tráelos aquí: son los mismos bloques y las mismas tareas.</p>
-        <div class="bots">
-          <button class="btn sec" onclick="traerBloquesAuto()">⬇️ Traer mis bloques de Amable PC</button>
-          <div class="campo-voz area"><textarea id="pegar-bloques" placeholder="Si estás en la app Android: en Amable PC toca «Copiar mis bloques para Amable Life» y pega aquí el texto"></textarea></div>
-          <button class="btn sec" onclick="traerBloques(valor('pegar-bloques'))">Traer el texto pegado</button>
-        </div>`},
     {k: 'registro', ico: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', t: 'Resumen diario para Grow Panel',
       sub: regCfg().on ? 'Activado · solo números, una vez al día' : 'Desactivado',
       html: () => registroHTML()},  // no se ve hasta que exista el servidor del registro
@@ -3027,41 +3019,6 @@ function vAjustes(){
   </div>
   <p class="peq suave" style="text-align:center;margin-top:18px">Amable Life · web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''} · ${n} ${n===1?'acción hecha':'acciones hechas'}</p>
   <div class="sellos">${sellosHTML()}</div>`;
-}
-/* Traer los bloques y tareas de Amable PC (mismos 11 bloques, mismas tareas con su casilla) */
-function leerBloquesPC(){
-  // En el navegador, las dos webs comparten almacenamiento (mismo sitio): se leen directamente
-  try{ const d = JSON.parse(localStorage.getItem('pasos_app_v1')); if(d && d.bloques && d.bloques.days) return d.bloques; }catch(e){}
-  return null;
-}
-function traerBloques(origen){
-  let b = origen;
-  if(typeof b === 'string'){ try{ b = JSON.parse(b); }catch(e){ b = null; } if(b && b.bloques) b = b.bloques; }
-  if(!b || typeof b.days !== 'object'){ aviso('No he encontrado bloques en ese texto'); return; }
-  let nuevas = 0, dias = 0;
-  Object.keys(b.days).forEach(k => {
-    const dia = b.days[k]; let tocado = false;
-    Object.keys(dia).forEach(i => {
-      if(!BLOQUES[i]) return;
-      const destino = actsDe(k, i, true);
-      (dia[i] || []).forEach(a => {
-        const o = typeof a === 'string' ? {t: a, d: false} : a;
-        if(!o || !o.t || destino.some(x => x.t === o.t) || destino.length >= MAX_ACT) return;
-        destino.push({t: o.t, d: !!o.d}); nuevas++; tocado = true;
-      });
-    });
-    if(tocado) dias++;
-  });
-  ['startVoice', 'remindOn', 'remindMin', 'sleepOn'].forEach(c => { if(b[c] !== undefined && !B_().traidos) B_()[c] = b[c]; });
-  B_().traidos = true;
-  guardarBloques();
-  aviso(nuevas ? `${nuevas} ${nuevas === 1 ? 'actividad traída' : 'actividades traídas'} de ${dias} ${dias === 1 ? 'día' : 'días'} ✓` : 'No había nada nuevo que traer');
-  render();
-}
-function traerBloquesAuto(){
-  const b = leerBloquesPC();
-  if(!b){ aviso('No encuentro Amable PC en este navegador: pega el texto de abajo'); return; }
-  traerBloques(b);
 }
 function exportar(){
   const blob = new Blob([JSON.stringify(D, null, 2)], {type:'application/json'});
