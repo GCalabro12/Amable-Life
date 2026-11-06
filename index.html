@@ -529,6 +529,9 @@ nav.abajo button{font-size:11px}
 .rj-blk{position:absolute;left:0;right:0;background:rgba(247,195,91,.07);pointer-events:none}
 .rj-ev{position:absolute;margin-left:1px;border:0;border-radius:8px;padding:3px 6px;background:color-mix(in srgb,var(--c) 30%,#221a40);border-left:3px solid var(--c);color:var(--tinta);text-align:left;overflow:hidden;font-size:13px;line-height:1.2;display:flex;flex-direction:column;gap:1px;z-index:1}
 .bandera{vertical-align:-2px;flex:none}
+.campanita{flex:none;vertical-align:-1px;margin-right:2px;color:var(--oro)}
+.rj.sem .campanita,.rj-todo .campanita{width:9px;height:9px}
+.dur-t{display:inline-flex;align-items:center;gap:3px;margin-left:4px;font-size:12px;font-weight:700;color:var(--suave);white-space:nowrap;vertical-align:1px}
 .ag-fab{position:fixed;right:max(18px,calc(50% - 242px));bottom:calc(80px + env(safe-area-inset-bottom));width:60px;height:60px;border-radius:50%;border:0;display:grid;place-items:center;
   background:linear-gradient(135deg,var(--acento),var(--acento2));color:#fff;box-shadow:0 8px 24px rgba(226,69,107,.45);z-index:5}
 .ag-fab:active{transform:scale(.96)}
@@ -841,7 +844,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.66';
+const VERSION = 'v3.67';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1315,7 +1318,7 @@ function tarjetaAccion(x, i){
   const a = areaDe(x.area);
   return `<div class="prox" id="acc-${x.id}" data-ord="${x.id}" style="--c:${a.color};animation-delay:${i*70}ms">
     ${ASA}<span class="num">${i+1}</span>
-    <div class="cuerpo-p"><div class="texto-p">${bandX(x)}${esc(x.texto)}</div><div class="area-p">${ico(a)} ${a.nombre}</div></div>
+    <div class="cuerpo-p"><div class="texto-p">${bandX(x)}${esc(x.texto)}${durX(x)}</div><div class="area-p">${ico(a)} ${a.nombre}</div></div>
     <button class="check" aria-label="Marcar como hecha" onclick="hacerAccion('${x.id}')">✓</button></div>`;
 }
 // En el navegador de un Android: ofrecer la app (suena al abrir, cuenta pasos y entra con Google)
@@ -1421,7 +1424,7 @@ function seccionAhora(){
     const x = a.acc && D.acciones.find(z => z.id === a.acc), ar = x && areaDe(x.area), ok = hechaAct(a);
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
       ${ok ? '<span class="asa-hueco"></span>' : ASA}<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>
-      <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
+      <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}${durAct(a)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
         ${!ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">${ICO_FIRMA} Me quiero comprometer</button>` : ''}</div>
       ${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>`;
   };
@@ -1844,7 +1847,7 @@ function filaTarea(x, hayBloque, ordenable){
   const a = areaDe(x.area);
   return `<div class="sa-fila" ${ordenable ? `data-ord="${x.id}"` : `data-mover="${x.id}"`} style="--c:${a.color}">
     <div class="sa-l1">${ASA}<button class="check" aria-label="Marcar como hecha" onclick="alternarAccion('${x.id}')">✓</button>
-      <span class="sa-t">${bandX(x)}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
+      <span class="sa-t">${bandX(x)}${esc(x.texto)}${durX(x)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
     <div class="sa-l2">${tagArea(a)}${hayBloque ? `<button class="sa-ya" onclick="asignarAhora('${x.id}')">${vista === 'dia' ? '→ Al bloque' : '→ Ahora'}</button>` : ''}</div></div>`;
 }
 /* Quitar una tarea de los bloques de hoy (o del bloque elegido): al volver a tocar «✓ Con bloque» */
@@ -1922,7 +1925,7 @@ function panelArea(){
   return `<section class="panel-area" id="panel-area" style="--c:${a.color}">
     <div class="pa-cab">${ico(a, 'g')}<div><b>${a.nombre}</b><small>${nv ? NIVELES[nv].titulo : 'Sin revisar'} · <button class="link" onclick="abrirPetalo('${a.id}')">cambiar</button></small></div>
       <button class="del" aria-label="Cerrar" onclick="panelAbierto = null; const y = scrollY; render(); scrollTo(0, y)">✕</button></div>
-    ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${bandX(x)}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
+    ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${bandX(x)}${esc(x.texto)}${durX(x)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
       <div class="sa-l2">${tagArea(a)}<button class="sa-con" onclick="quitarDeBloques('${x.id}')" title="Toca para quitarla del bloque">✓ Con bloque · quitar</button></div></div>` : filaTarea(x, c >= 0, false)).join('')
       : '<p class="suave" style="margin:6px 0">Este pétalo no tiene tareas pendientes.</p>'}
     <div class="campo-voz" style="margin-top:10px"><input type="text" id="pa-nueva" maxlength="120" placeholder="Nueva tarea para ${esc(a.corto)}" onkeydown="if(event.key==='Enter')nuevaEnPanel()">${botonMic()}</div>
@@ -1989,12 +1992,12 @@ function quitarActividad(k, i, j){
 let edicion = null;
 function editarTarea(id){
   const x = D.acciones.find(a => a.id === id); if(!x) return;
-  edicion = {id, area: x.area, prio: x.prio || 0, volver: hojaAbierta, armado: false}; pintarEdicion(x.texto);
+  edicion = {id, area: x.area, prio: x.prio || 0, dur: x.dur || 0, volver: hojaAbierta, armado: false}; pintarEdicion(x.texto);
 }
 function editarBloque(k, i, j){
   const a = actsDe(k, i)[j]; if(!a) return;
   const x = a.acc && D.acciones.find(z => z.id === a.acc);
-  edicion = {id: x ? a.acc : null, area: x ? x.area : null, prio: (x ? x.prio : a.prio) || 0, k, i, j, volver: hojaAbierta, armado: false}; pintarEdicion(x ? x.texto : a.t);
+  edicion = {id: x ? a.acc : null, area: x ? x.area : null, prio: (x ? x.prio : a.prio) || 0, dur: (x ? x.dur : a.dur) || 0, k, i, j, volver: hojaAbierta, armado: false}; pintarEdicion(x ? x.texto : a.t);
 }
 function pintarEdicion(texto){
   hojaAbierta = null;
@@ -2004,6 +2007,8 @@ function pintarEdicion(texto){
     <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === edicion.area ? 'sel' : ''}" style="--c:${x.color}" onclick="edArea('${x.id}', this)">${ico(x)} ${x.corto}</button>`).join('')}</div>
     <p class="eti" style="margin-top:12px">Prioridad</p>
     ${chipsPrio('edicion.prio', edicion.prio)}
+    <p class="eti" style="margin-top:6px">Duración</p>
+    ${chipsDur('edicion.dur', edicion.dur)}
     <div class="ed-bots"><button class="btn prim" onclick="guardarEdicion()">Guardar</button><button class="btn peligro" id="ed-borrar" onclick="borrarEdicion()">Borrar</button><button class="btn sec" onclick="salirEdicion()">Cancelar</button></div>
     <button type="button" class="compro-link ed-compro" onclick="comprometerEdicion()">${ICO_FIRMA} Me quiero comprometer</button>
     <button type="button" class="compro-link ed-compro" onclick="tareaAlCalendario()">${ICO_CAL} Poner en el calendario</button>`, '#8b5cf6');
@@ -2017,17 +2022,17 @@ function guardarEdicion(){
   const e = edicion, t = valor('ed-texto'); if(!e) return;
   if(!t){ aviso('Escribe el nombre de la tarea'); return; }
   if(e.id){
-    const x = D.acciones.find(a => a.id === e.id); if(x){ x.texto = t; x.area = e.area; x.prio = e.prio || 0; x.mod = ahoraISO(); }
+    const x = D.acciones.find(a => a.id === e.id); if(x){ x.texto = t; x.area = e.area; x.prio = e.prio || 0; x.dur = e.dur || 0; x.mod = ahoraISO(); }
     const dias = B_().days;
     Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => (dias[k][i] || []).forEach(a => { if(a && a.acc === e.id) a.t = t; })));
   } else {
     const a = actsDe(e.k, e.i)[e.j];
     if(a){
-      a.t = t; a.prio = e.prio || 0;
+      a.t = t; a.prio = e.prio || 0; a.dur = e.dur || 0;
       if(e.area){   // sin asignar → al elegir pétalo pasa a ser una acción de esa área
         nuevaAccion(e.area, t);
         const x = D.acciones[D.acciones.length - 1];
-        a.acc = x.id; x.prio = e.prio || 0;
+        a.acc = x.id; x.prio = e.prio || 0; x.dur = e.dur || 0;
         if(a.d){ x.hecha = true; x.hechaEn = ahoraISO(); }
       }
     }
@@ -2081,7 +2086,7 @@ function abrirPetalo(id){
     <p class="eti" style="margin-top:14px">¿Cómo está?</p>
     ${opcionesNivel(nivel(id), k => `cambiarNivel('${id}','${k}')`, true)}
     <p class="eti" style="margin-top:16px">Acciones</p>
-    ${mias.length ? `<div class="tareas">${mias.map(x => `<div class="fila-acc"><button class="tarea ${x.hecha?'ok':''}" onclick="alternarAccion('${x.id}')"><span class="caja">✓</span><span>${bandX(x)}${esc(x.texto)}</span></button>${lapiz(`editarTarea('${x.id}')`)}<button class="del" aria-label="Borrar" onclick="borrarAccion('${x.id}')">✕</button></div>`).join('')}</div>` : `<p class="suave peq" style="margin:6px 0 0">Sin acciones por ahora.</p>`}
+    ${mias.length ? `<div class="tareas">${mias.map(x => `<div class="fila-acc"><button class="tarea ${x.hecha?'ok':''}" onclick="alternarAccion('${x.id}')"><span class="caja">✓</span><span>${bandX(x)}${esc(x.texto)}${durX(x)}</span></button>${lapiz(`editarTarea('${x.id}')`)}<button class="del" aria-label="Borrar" onclick="borrarAccion('${x.id}')">✕</button></div>`).join('')}</div>` : `<p class="suave peq" style="margin:6px 0 0">Sin acciones por ahora.</p>`}
     ${campoNueva('h-nueva', 'Nueva tarea, p. ej. ' + a.ejemplos[0])}
     <button class="btn prim ancho" style="margin-top:10px" onclick="anadirDesdeHoja('${id}')">Añadir tarea</button>`, a.color);
 }
@@ -2095,7 +2100,7 @@ function anadirDesdeHoja(id){
   nuevaAccion(id, t); guardar(); sonarHecho(); aviso('Tarea añadida 🌱');
   render();
 }
-let areaNueva = null, prioNueva = 0;
+let areaNueva = null, prioNueva = 0, durNueva = 0;
 function abrirNueva(pre, alBloque){
   areaNueva = pre || 'trabajo';   // casi todo lo de Focus es trabajo
   hojaAbierta = () => abrirNueva(areaNueva, alBloque);
@@ -2106,6 +2111,8 @@ function abrirNueva(pre, alBloque){
     <div class="chips" style="justify-content:flex-start;margin:8px 0">${[...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo')).map(x => `<button class="chip ${x.id === areaNueva ? 'sel' : ''}" style="--c:${x.color}" onclick="areaNueva='${x.id}'; abrirNueva('${x.id}', ${!!alBloque})">${ico(x)} ${x.corto}</button>`).join('')}</div>
     <p class="eti" style="margin-top:6px">Prioridad</p>
     ${chipsPrio('prioNueva', prioNueva)}
+    <p class="eti" style="margin-top:6px">Duración</p>
+    ${chipsDur('durNueva', durNueva)}
     <button class="btn prim ancho" style="margin-top:10px" onclick="anadirNueva(${!!alBloque})">${alBloque ? 'Añadir al bloque' : 'Añadir tarea'}</button>`, a.color);
   if(t) $('#h-nueva').value = t;
 }
@@ -2121,8 +2128,8 @@ function anadirNueva(alBloque){
   if(!alBloque){ nuevaAccion(areaNueva, t); guardar(); aviso('Tarea añadida 🌱'); petaloAbierto = areaNueva; }
   else if(nuevaTareaBloque(t, areaNueva)) aviso('Tarea añadida al bloque 🌱');
   else { aviso('El bloque ya está completo: la tarea queda en su pétalo'); petaloAbierto = areaNueva; }
-  if(prioNueva){ D.acciones[D.acciones.length - 1].prio = prioNueva; guardar(); }
-  prioNueva = 0;
+  if(prioNueva || durNueva){ const n = D.acciones[D.acciones.length - 1]; n.prio = prioNueva; n.dur = durNueva; guardar(); }
+  prioNueva = 0; durNueva = 0;
   sonarHecho(); cerrarHoja(); render();
 }
 /* Ventana flotante del PC: escribir una tarea y que entre en el bloque, en el pétalo elegido debajo (Trabajo de entrada) */
@@ -2277,6 +2284,8 @@ function dictar(btn){
    saltar:[días quitados], hechos:[días hechos], acc (tarea de Life de la que sale), creada, mod}.
    Viajan por la nube por id (gana mod; borrar = id en D.borradas). Los recordatorios suenan con la app abierta. */
 const ICO_CAL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
+const ICO_CAMPANITA = '<svg class="campanita" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Con recordatorio"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>';
+const campEv = e => e && e.avisos && e.avisos.length ? ICO_CAMPANITA : '';
 const ICO_REP = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
 const AG_ = () => { if(!D.agenda) D.agenda = {eventos: []}; return D.agenda; };
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -2325,12 +2334,12 @@ function agendaDia(k){
 /* Lo del calendario que cae dentro de un bloque (en Tareas y en Focus) */
 function evsBloqueHTML(k, b){
   const es = eventosDe(k).filter(e => !e.todo && e.ini < b.fin && e.fin > b.ini); if(!es.length) return '';
-  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}" style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${k}')">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${esc(e.t)}</span></button>`).join('')}</div>`;
+  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}" style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${k}')">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${campEv(e)}${esc(e.t)}</span></button>`).join('')}</div>`;
 }
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
     <button class="check ${ok ? 'hecho' : ''}" ${e.prio ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
-    <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
+    <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null;
 function vAgenda(){
   if(!agK) agK = hoyK();
@@ -2347,7 +2356,7 @@ function vAgenda(){
     conHoy = hoy >= l && hoy <= dom;
     const todos = dias.map(k => eventosDe(k).filter(e => e.todo));
     cuerpo = `<div class="rj-cab"><span></span>${dias.map((k, n) => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b>${DIAS_CORTO[n]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`
-      + (todos.some(x => x.length) ? `<div class="rj-todo"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${dias[n]}')">${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
+      + (todos.some(x => x.length) ? `<div class="rj-todo"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${dias[n]}')">${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else {
     tit = MESES[d0.getMonth()].replace(/^./, c => c.toUpperCase()) + ' ' + d0.getFullYear();
@@ -2399,7 +2408,7 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(eventosDe(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" onclick="editarEvento('${e.id}','${k}')"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${esc(e.t)}</b>${!sem && alto > 34 ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" onclick="editarEvento('${e.id}','${k}')"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</b>${!sem && alto > 34 ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
     return `<div class="rj-col" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   return `<div class="rj ${sem ? 'sem' : ''}"><div class="rj-cuerpo" style="height:${(h1 - h0) * AG_PX}px">${lineas}<div class="rj-cols" style="grid-template-columns:repeat(${dias.length},1fr)">${cols}</div></div></div>`;
@@ -2426,8 +2435,8 @@ let evEd = null;
 function nuevoEvento(k, ini, pre){
   const dia = k || agK || hoyK(), m = minutosHoy();
   const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
-  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: 0, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], avisos: [], acc: (pre && pre.acc) || null};
-  pintarEvento({t: (pre && pre.t) || '', dia, todo: false, ini: base, fin: Math.min(base + 60, 1439)});
+  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 0, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], avisos: [], acc: (pre && pre.acc) || null};
+  pintarEvento({t: (pre && pre.t) || '', dia, todo: false, ini: base, fin: Math.min(base + ((pre && pre.dur) || 60), 1439)});
 }
 function editarEvento(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
@@ -2443,13 +2452,16 @@ function opcionesRep(){
   return [{k: 'no', t: 'No se repite'}, {k: 'dia', t: 'Cada día'}, {k: 'semana', t: `Cada semana, el ${DIAS_LARGO[diaSem(k)]}`}, {k: 'mes', t: `Cada mes, el día ${d.getDate()}`},
     {k: 'anio', t: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`}, {k: 'lab', t: 'De lunes a viernes'}];
 }
+const durEv = () => { const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin')); return i != null && f != null && f > i ? f - i : 0; };
 function despOpciones(id){
+  if(id === 'dur') return DURS.map(m => ({k: m, t: fmtDur(m), sel: durEv() === m}));
   if(id === 'rep') return opcionesRep().map(o => ({k: o.k, t: o.t, sel: (evEd.rep || 'no') === o.k}));
   if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked);
     return [{k: 'no', t: 'Sin recordatorio', sel: !evEd.avisos.length}, ...(todo ? RECORD_DIA : RECORD_HORA).map(r => ({k: r.k, t: r.t, sel: evEd.avisos.includes(r.k)}))]; }
   return [{k: 'no', t: 'Sin área', sel: !evEd.areas.length}, ...AREAS.map(a => ({k: a.id, t: `${ico(a)} ${a.nombre}`, sel: evEd.areas.includes(a.id)}))];
 }
 function despValor(id){
+  if(id === 'dur'){ const d = durEv(); return d ? fmtDur(d) : '—'; }
   if(id === 'rep') return (opcionesRep().find(o => o.k === (evEd.rep || 'no')) || {t: 'No se repite'}).t;
   if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked), l = (todo ? RECORD_DIA : RECORD_HORA).filter(r => evEd.avisos.includes(r.k)).map(r => r.t);
     return l.length ? l.join(', ') : 'Sin recordatorio'; }
@@ -2468,6 +2480,7 @@ function despTocar(id){
 }
 function despElegir(id, k){
   if(id === 'rep'){ evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
+  if(id === 'dur'){ const i = minDeHora(valor('ev-ini')); if(i != null) $('#ev-fin').value = hhmm(Math.min(i + +k, 1439)); pintarDesp(id); despTocar(id); return; }
   const lista = id === 'rec' ? 'avisos' : 'areas';
   if(id === 'rec' && k !== 'no') k = +k;
   evEd[lista] = k === 'no' ? [] : evEd[lista].includes(k) ? evEd[lista].filter(x => x !== k) : [...evEd[lista], k];   // varias a la vez
@@ -2488,7 +2501,8 @@ function pintarEvento(e){
     </div>
     <div class="ev-fila"><label><span id="ev-dia-t">${hab ? 'Empieza el' : 'Día'}</span><input type="date" id="ev-dia" value="${e.dia}" onchange="pintarDesp('rep')"></label></div>
     <label class="desliz" style="--c:#f7c35b;margin-top:12px"><input type="checkbox" id="ev-todo" ${todo ? 'checked' : ''} onchange="evTodo(this.checked)"><i></i>Todo el día</label>
-    <div class="ev-fila" id="ev-horas" ${todo ? 'hidden' : ''}><label>Empieza<input type="time" id="ev-ini" value="${hhmm(e.ini != null ? e.ini : 540)}" onchange="evIniCambia()"></label><label>Termina<input type="time" id="ev-fin" value="${hhmm(e.fin != null ? e.fin : 600)}"></label></div>
+    <div class="ev-fila" id="ev-horas" ${todo ? 'hidden' : ''}><label>Empieza<input type="time" id="ev-ini" value="${hhmm(e.ini != null ? e.ini : 540)}" onfocus="evDurAntes = durEv()" onchange="evIniCambia()"></label><label>Termina<input type="time" id="ev-fin" value="${hhmm(e.fin != null ? e.fin : 600)}" onchange="pintarDesp('dur')"></label></div>
+    <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
       <div id="ev-rep-c" ${hab ? 'hidden' : ''}>${despHTML('rep', 'Repetir', ICO_REP)}</div>
       ${despHTML('rec', 'Recordatorio', ICO_CAMPANA)}
@@ -2506,6 +2520,13 @@ const ICO_PETALO = '<svg viewBox="-12 -12 24 24" width="18" height="18" fill="no
 /* Prioridad como TickTick (sin, baja azul, media amarilla, alta roja): chips; `donde` es la variable que guarda la elegida */
 const chipsPrio = (donde, actual) => `<div class="chips" style="justify-content:flex-start;margin:8px 0">${PRIO.map(x => `<button type="button" class="chip ${x.k === (actual || 0) ? 'sel' : ''}" style="--c:${x.c}" onclick="${donde} = ${x.k}; this.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === this))">${ICO_BANDERA(x.c)} ${x.t}</button>`).join('')}</div>`;
 const bandX = x => x && x.prio ? ICO_BANDERA(prioDe(x).c) + ' ' : '';
+/* Duración (Gustavo): de 15 min a 3 h; en las tareas de Life y en el calendario */
+const DURS = [15, 30, 45, 60, 90, 120, 180];
+const fmtDur = m => m < 60 ? `${m} min` : m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`;
+const durX = x => x && x.dur ? ` <span class="dur-t">${ICO_RELOJ} ${fmtDur(x.dur)}</span>` : '';
+const durAct = a => { const x = a && a.acc && D.acciones.find(z => z.id === a.acc); return durX(x || a); };
+const ICO_RELOJ = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const chipsDur = (donde, actual) => `<div class="chips" style="justify-content:flex-start;margin:8px 0">${[0, ...DURS].map(m => `<button type="button" class="chip ${m === (actual || 0) ? 'sel' : ''}" style="--c:#8b5cf6" onclick="${donde} = ${m}; this.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === this))">${m ? fmtDur(m) : 'Sin duración'}</button>`).join('')}</div>`;
 const bandAct = a => { const x = a && a.acc && D.acciones.find(z => z.id === a.acc); return bandX(x || a); };
 function evTipo(t){
   evEd.tipo = t; const hab = t === 'habito';
@@ -2523,10 +2544,12 @@ function evDia(i){
   const d = evEd.dias; evEd.dias = d.includes(i) ? d.filter(x => x !== i) : [...d, i].sort();
   pintarDias();
 }
-function evTodo(on){ $('#ev-horas').hidden = on; evEd.avisos = []; pintarDesp('rec'); }
+function evTodo(on){ $('#ev-horas').hidden = on; $('#ev-dur-c').hidden = on; evEd.avisos = []; pintarDesp('rec'); }
+let evDurAntes = 60;
 function evIniCambia(){
-  const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin'));
-  if(i != null && (f == null || f <= i)) $('#ev-fin').value = hhmm(Math.min(i + 60, 1439));
+  const i = minDeHora(valor('ev-ini'));
+  if(i != null) $('#ev-fin').value = hhmm(Math.min(i + (evDurAntes || 60), 1439));
+  pintarDesp('dur');
 }
 function guardarEvento(){
   const e0 = evEd; if(!e0) return;
@@ -2578,7 +2601,7 @@ function tareaAlCalendario(){
   const e = edicion; if(!e) return;
   const t = valor('ed-texto'); if(!t){ aviso('Escribe el nombre de la tarea'); return; }
   edicion = null;
-  nuevoEvento(hoyK(), null, {t, area: e.area, acc: e.id || null});
+  nuevoEvento(hoyK(), null, {t, area: e.area, acc: e.id || null, dur: e.dur || 0, prio: e.prio || 0});
 }
 /* Con la app Android 2.38 o más nueva, los recordatorios también llegan con la app cerrada: se le manda la lista de
    los próximos 8 días ({id, at, tit, txt}) y el teléfono los deja programados (notificación con sonido). Solo si cambia. */
@@ -2692,7 +2715,7 @@ function vDia(){
       <div class="bs-cab"><b>${hm(b.ini)} – ${hm(b.fin)}</b><span>${estado}</span></div>
       ${bSel === cur ? `<div class="mini-barra"><i style="width:${(m - b.ini) / 90 * 100}%"></i></div>` : ''}
       ${evsBloqueHTML(k, b)}
-      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span class="t-col">${bandAct(a)}${esc(a.t)}${tagArea(a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area) : null)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
+      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span class="t-col">${bandAct(a)}${esc(a.t)}${durAct(a)}${tagArea(a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area) : null)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
       ${lleno ? `<p class="peq suave" style="margin:8px 0 0">Bloque completo · ${MAX_ACT} actividades</p>` : `
         <p class="eti" style="margin:14px 0 0">Añadir nueva tarea</p>
         <div class="campo-voz" style="margin-top:8px"><input type="text" id="b-nueva" maxlength="120" placeholder="Escribe o dicta una actividad" onkeydown="if(event.key==='Enter')anadirAct()">${botonMic()}</div>
@@ -2750,7 +2773,7 @@ function abrirTareasAreas(){
     <button class="btn prim ancho" style="margin-top:8px" onclick="anadirEnHoja()">Añadir al bloque</button>`}</section>
     <section class="hoja-caja"><h3>Añadir tareas de tus áreas</h3>
     ${grupos.length ? grupos.map(g => `<p class="eti" style="margin:12px 0 4px">${ico(g.a)} ${g.a.nombre}</p>
-      ${g.lista.map(x => `<div class="ta-fila"><div class="ta-l1"><span class="ta-t">${ICO_TAREA}${bandX(x)}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>${ya.has(x.id)
+      ${g.lista.map(x => `<div class="ta-fila"><div class="ta-l1"><span class="ta-t">${ICO_TAREA}${bandX(x)}${esc(x.texto)}${durX(x)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>${ya.has(x.id)
         ? `<button class="sa-con" onclick="quitarDeBloques('${x.id}', true)">✓ En este bloque · quitar</button>`
         : `<button class="ta-btn" ${lleno ? 'disabled' : ''} onclick="accionABloque('${x.id}')">＋ Añadir a este bloque</button>`}</div>`).join('')}`).join('')
       : '<p class="suave">No tienes acciones pendientes en tus áreas.</p>'}</section>
