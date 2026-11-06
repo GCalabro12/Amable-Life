@@ -724,7 +724,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.55';
+const VERSION = 'v3.56';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1363,20 +1363,56 @@ function resumenDia(k){
   return {bloques_con_tareas: conTareas.size, bloques_total: BLOQUES.length, tareas_hechas: hechas + sinArchivar,
     tareas_total: hechas + sinArchivar + pendientesDia, pasos: p ? Math.round(p.steps || 0) : 0};
 }
+/* Pide algo al registro con la cuenta de Google (token de Firebase) y, si no vale (401) o no hay, con la clave de Grow Panel */
+async function fetchRegistro(ruta, opts){
+  const clave = claveReg(regCfg()), o = opts || {};
+  const ir = cred => fetch(REGISTRO_URL.replace(/\/+$/, '') + ruta, Object.assign({}, o, {headers: Object.assign({'Authorization': 'Bearer ' + cred}, o.headers || {})}));
+  let r = null;
+  if(cuentaGoogle()){ try{ r = await ir(await firebase.auth().currentUser.getIdToken()); }catch(e){ r = null; } }
+  if((!r || r.status === 401) && clave) r = await ir(clave);
+  return r;
+}
+/* Hora del resumen: la que la persona eligió en Grow Panel (GET /ajustes → {"hora_resumen":"21:30"}).
+   Mientras no se sepa: la copia local de Grow Panel (GrowPanel.horaResumen(), mismo dominio) y, si no, las 20:00 */
+const horaValida = h => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h);
+const minHora = h => +h.slice(0, 2) * 60 + +h.slice(3, 5);
+function horaResumen(){
+  const c = regCfg(); if(horaValida(c.hora)) return c.hora;
+  try{ const h = window.GrowPanel && GrowPanel.horaResumen && GrowPanel.horaResumen(); if(horaValida(h)) return h; }catch(e){}
+  return '20:00';
+}
+let regHoraVista = 0, regHoraPidiendo = null;
+function actualizarHoraResumen(pronto){   // como mucho una vez cada 30 min (al abrir o volver a la app, cada minuto)
+  if(!REGISTRO_URL || !puedeEnviarReg(regCfg())) return Promise.resolve(horaResumen());
+  if(regHoraPidiendo) return regHoraPidiendo;
+  if(Date.now() - regHoraVista < (pronto ? 60000 : 30 * 60000)) return Promise.resolve(horaResumen());
+  regHoraVista = Date.now();
+  return regHoraPidiendo = (async () => {
+    try{
+      const r = await fetchRegistro('/ajustes', {method: 'GET', cache: 'no-store'});
+      if(r && r.ok){
+        const j = await r.json(), c = regCfg(), antes = c.hora;
+        if(horaValida(j && j.hora_resumen)) c.hora = j.hora_resumen; else delete c.hora;
+        regGuardar(c);
+        if(antes !== c.hora && vista === 'ajustes' && ajAbierto === 'registro') rerenderDia();
+      }   // si falla (red, 404 hasta que esté el Worker nuevo, 401) se queda la hora que hubiera: Grow Panel local o 20:00
+    }catch(e){}
+    regHoraPidiendo = null;
+    return horaResumen();
+  })();
+}
 let regUltimoIntento = 0;
+const regEnCurso = new Set();
 async function enviarRegistro(fecha, aMano){
   const c = regCfg();
   if(!REGISTRO_URL){ if(aMano) aviso('Aún no está el servidor del registro diario'); return false; }
-  const clave = claveReg(c);
   if(!c.on || !puedeEnviarReg(c)) return false;   // sin cuenta de Google ni Grow Panel no se envía nada y no se avisa
+  if(regEnCurso.has(fecha)) return false;          // ya se está enviando ese día
+  regEnCurso.add(fecha);
   regUltimoIntento = Date.now();
   try{
-    const cuerpo = JSON.stringify({fecha, app: 'amable-life', datos: resumenDia(fecha)});
-    const mandar = cred => fetch(REGISTRO_URL.replace(/\/+$/, '') + '/registro', {method: 'POST',
-      headers: {'Authorization': 'Bearer ' + cred, 'Content-Type': 'application/json'}, body: cuerpo});
-    let r = null;
-    if(cuentaGoogle()){ try{ r = await mandar(await firebase.auth().currentUser.getIdToken()); }catch(e){ r = null; } }
-    if((!r || r.status === 401) && clave) r = await mandar(clave);   // si el token no vale, la clave de Grow Panel
+    const r = await fetchRegistro('/registro', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({fecha, app: 'amable-life', datos: resumenDia(fecha)})});
     if(!r) throw new Error('sin cuenta');
     if(!r.ok) throw new Error(r.status);
     const c2 = regCfg(); if(fecha > (c2.enviado || '')) c2.enviado = fecha; c2.ultimo = ahoraISO(); regGuardar(c2);
@@ -1384,14 +1420,16 @@ async function enviarRegistro(fecha, aMano){
     if(vista === 'ajustes' && ajAbierto === 'registro') rerenderDia();
     return true;
   }catch(e){ if(aMano) aviso('No se pudo enviar el resumen (' + e.message + ')'); return false; }
+  finally{ regEnCurso.delete(fecha); }
 }
-/* Entre las 20:00 y las 20:25, y al abrir la app: si ayer o hoy (pasadas las 20:00) no se envió */
-function revisarRegistro(alAbrir){
+/* Desde la hora elegida en Grow Panel (20:00 si no se sabe), con la app abierta o al abrirla; al abrir, también ayer si no salió */
+async function revisarRegistro(alAbrir){
   const c = regCfg(); if(!REGISTRO_URL || !c.on || !puedeEnviarReg(c)) return;
   if(Date.now() - regUltimoIntento < 5 * 60000) return;   // si falla, no insistir más de una vez cada 5 min
-  const hoy = hoyK(), ayer = claveDia(Date.now() - 864e5), m = minutosHoy();
+  const hoy = hoyK(), ayer = claveDia(Date.now() - 864e5);
   if(alAbrir && (c.enviado || '') < ayer && (c.desde || '') <= ayer) enviarRegistro(ayer);
-  if(m >= 1200 && c.enviado !== hoy) enviarRegistro(hoy);   // desde las 20:00, con la app abierta o al abrirla
+  const hora = await actualizarHoraResumen(alAbrir);
+  if(minutosHoy() >= minHora(hora) && (regCfg().enviado || '') < hoy) enviarRegistro(hoy);
 }
 function alternarRegistro(el){
   const c = regCfg(); c.on = el.checked; if(c.on && !c.desde) c.desde = hoyK(); regGuardar(c);
@@ -1403,13 +1441,15 @@ document.addEventListener('visibilitychange', () => { if(document.visibilityStat
 function txtEnvioRegistro(c){
   const hoy = hoyK(), h = c.ultimo ? pactHora(new Date(c.ultimo).getTime()) : '';
   if(c.enviado === hoy) return `Enviado hoy${h ? ' a las ' + h : ''}`;
-  if(minutosHoy() < 1200) return 'Se enviará hoy a las 20:00';
+  const hr = horaResumen();
+  if(minutosHoy() < minHora(hr)) return 'Se enviará hoy a las ' + hr;
   return 'Se enviará en unos minutos';
 }
 function registroHTML(){
   const c = regCfg(), r = resumenDia(hoyK());
+  if(c.on) setTimeout(() => actualizarHoraResumen(), 0);   // si cambió en Grow Panel, se redibuja con la hora nueva
   return `<label class="desliz" style="--c:#22a35a"><input type="checkbox" ${c.on ? 'checked' : ''} onchange="alternarRegistro(this)"><i></i><span>Compartir mi resumen diario ${c.on ? 'activado' : 'desactivado'}</span></label>
-    <p class="peq suave" style="margin:8px 0 0">Una vez al día, a las 20:00, Amable Life envía a tu Grow Panel <b>solo números</b>: bloques con tareas, tareas hechas y totales, y pasos. Nunca el texto de tus tareas.</p>
+    <p class="peq suave" style="margin:8px 0 0">Una vez al día, a las ${horaResumen()} (la hora la eliges en tu Grow Panel), Amable Life envía a tu Grow Panel <b>solo números</b>: bloques con tareas, tareas hechas y totales, y pasos. Nunca el texto de tus tareas.</p>
     ${c.on ? `
     <p class="peq suave" style="margin:10px 0 0">Hoy, hasta ahora: ${r.bloques_con_tareas} de ${r.bloques_total} bloques con tareas · ${r.tareas_hechas} de ${r.tareas_total} tareas hechas · ${fmtN(r.pasos)} pasos</p>
     <p class="peq suave" style="margin:4px 0 0">${txtEnvioRegistro(c)}</p>
