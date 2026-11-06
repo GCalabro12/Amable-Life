@@ -724,7 +724,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.53';
+const VERSION = 'v3.54';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1329,9 +1329,16 @@ function seccionAhora(){
 const REGISTRO_URL = 'https://registro-diario.proud-hill-016b.workers.dev';   // dirección del Worker «registro-diario» (p. ej. https://registro-diario.xxx.workers.dev): falta que Gustavo lo publique
 const CLAVE_REGISTRO = 'equilibra.registro';
 const claveRegValida = c => /^[A-Za-z0-9_-]{32,128}$/.test(c || '');
-const claveGrowPanel = () => { try{ const k = window.GrowPanel && GrowPanel.clave && GrowPanel.clave(); return claveRegValida(k) ? k : ''; }catch(e){ return ''; } };
-const claveReg = c => claveRegValida(c.clave) ? c.clave : claveGrowPanel();
-function regCfg(){ try{ return Object.assign({on: false, clave: '', enviado: '', desde: ''}, JSON.parse(localStorage.getItem(CLAVE_REGISTRO)) || {}); }catch(e){ return {on: false, clave: '', enviado: '', desde: ''}; } }
+/* Grow Panel es el padre: su clave está en la misma memoria (misma dirección) o la da su botón (también llega por «#gpclave=»).
+   Se lee en el momento de enviar, nunca al arrancar (el botón de Grow Panel carga después). El usuario no la ve nunca. */
+const claveGrowPanel = () => {
+  try{ const k = localStorage.getItem('growpanel.clave'); if(claveRegValida(k)) return k; }catch(e){}
+  try{ const k = window.GrowPanel && GrowPanel.clave && GrowPanel.clave(); if(claveRegValida(k)) return k; }catch(e){}
+  return '';
+};
+const claveReg = c => claveGrowPanel() || (claveRegValida(c.clave) ? c.clave : '');
+// activado de serie para todos (Gustavo); se puede apagar en Ajustes
+function regCfg(){ try{ return Object.assign({on: true, clave: '', enviado: '', desde: ''}, JSON.parse(localStorage.getItem(CLAVE_REGISTRO)) || {}); }catch(e){ return {on: true, clave: '', enviado: '', desde: ''}; } }
 function regGuardar(c){ try{ localStorage.setItem(CLAVE_REGISTRO, JSON.stringify(c)); }catch(e){} }
 /* Los bloques que han tenido tareas hoy (las tachadas salen del bloque a los 4 s, así que se van apuntando durante el día) */
 function apuntarBloquesConTareas(){
@@ -1358,7 +1365,7 @@ async function enviarRegistro(fecha, aMano){
   const c = regCfg();
   if(!REGISTRO_URL){ if(aMano) aviso('Aún no está el servidor del registro diario'); return false; }
   const clave = claveReg(c);
-  if(!c.on || !clave){ if(aMano) aviso('Activa el resumen y pega tu clave de Grow Panel'); return false; }
+  if(!c.on || !clave) return false;   // sin Grow Panel no se envía nada y no se avisa
   regUltimoIntento = Date.now();
   try{
     const r = await fetch(REGISTRO_URL.replace(/\/+$/, '') + '/registro', {method: 'POST',
@@ -1377,29 +1384,28 @@ function revisarRegistro(alAbrir){
   if(Date.now() - regUltimoIntento < 5 * 60000) return;   // si falla, no insistir más de una vez cada 5 min
   const hoy = hoyK(), ayer = claveDia(Date.now() - 864e5), m = minutosHoy();
   if(alAbrir && (c.enviado || '') < ayer && (c.desde || '') <= ayer) enviarRegistro(ayer);
-  else if((alAbrir ? m >= 1200 : m >= 1200 && m < 1225) && c.enviado !== hoy) enviarRegistro(hoy);
+  if(m >= 1200 && c.enviado !== hoy) enviarRegistro(hoy);   // desde las 20:00, con la app abierta o al abrirla
 }
 function alternarRegistro(el){
   const c = regCfg(); c.on = el.checked; if(c.on && !c.desde) c.desde = hoyK(); regGuardar(c);
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
-function guardarClaveRegistro(){
-  const v = valor('reg-clave');
-  if(!claveRegValida(v)){ aviso('La clave de Grow Panel tiene al menos 32 letras y números'); return; }
-  const c = regCfg(); c.clave = v; regGuardar(c); aviso('Clave guardada');
-  const y = window.scrollY; render(); window.scrollTo(0, y);
+// la clave puede llegar después (al cargar el botón de Grow Panel o al volver a la app): se vuelve a mirar
+addEventListener('growpanel-listo', () => revisarRegistro(true));
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') revisarRegistro(true); });
+function txtEnvioRegistro(c){
+  const hoy = hoyK(), h = c.ultimo ? pactHora(new Date(c.ultimo).getTime()) : '';
+  if(c.enviado === hoy) return `Enviado hoy${h ? ' a las ' + h : ''}`;
+  if(minutosHoy() < 1200) return 'Se enviará hoy a las 20:00';
+  return 'Se enviará en unos minutos';
 }
-function quitarClaveRegistro(){ const c = regCfg(); c.clave = ''; regGuardar(c); const y = window.scrollY; render(); window.scrollTo(0, y); }
 function registroHTML(){
   const c = regCfg(), r = resumenDia(hoyK());
   return `<label class="desliz" style="--c:#22a35a"><input type="checkbox" ${c.on ? 'checked' : ''} onchange="alternarRegistro(this)"><i></i><span>Compartir mi resumen diario ${c.on ? 'activado' : 'desactivado'}</span></label>
-    <p class="peq suave" style="margin:8px 0 0">Una vez al día, a las 20:00, Amable Life envía a tu Grow Panel <b>solo números</b>: bloques con tareas, tareas hechas y totales, y pasos. Nunca el texto de tus tareas. La clave se queda en este dispositivo.</p>
-    ${c.on ? `${claveRegValida(c.clave) ? `<p class="peq" style="margin:10px 0 0">✓ Clave de Grow Panel guardada · <button class="link" onclick="quitarClaveRegistro()">cambiarla</button></p>`
-      : claveGrowPanel() ? `<p class="peq" style="margin:10px 0 0">✓ Se usa la clave de tu Grow Panel en este navegador</p>`
-      : `<div class="campo-voz" style="margin-top:10px"><input type="text" id="reg-clave" maxlength="128" autocomplete="off" spellcheck="false" placeholder="Pega tu clave de Grow Panel"></div>
-      <button class="btn sec ancho" style="margin-top:8px" onclick="guardarClaveRegistro()">Guardar la clave</button>`}
+    <p class="peq suave" style="margin:8px 0 0">Una vez al día, a las 20:00, Amable Life envía a tu Grow Panel <b>solo números</b>: bloques con tareas, tareas hechas y totales, y pasos. Nunca el texto de tus tareas.</p>
+    ${c.on ? `
     <p class="peq suave" style="margin:10px 0 0">Hoy, hasta ahora: ${r.bloques_con_tareas} de ${r.bloques_total} bloques con tareas · ${r.tareas_hechas} de ${r.tareas_total} tareas hechas · ${fmtN(r.pasos)} pasos</p>
-    <p class="peq suave" style="margin:4px 0 0">${!REGISTRO_URL ? 'Falta poner en marcha el servidor del registro: todavía no se envía nada.' : c.enviado ? `Último envío: ${fecha(c.enviado)}` : 'Aún no se ha enviado ninguno.'}</p>
+    <p class="peq suave" style="margin:4px 0 0">${txtEnvioRegistro(c)}</p>
     ${REGISTRO_URL && claveReg(c) ? `<button class="btn sec ancho" style="margin-top:8px" onclick="enviarRegistro(hoyK(), true)">Enviar ahora el resumen de hoy</button>` : ''}` : ''}`;
 }
 /* ---------- Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» y se firma
@@ -2949,7 +2955,7 @@ function vAjustes(){
           <button class="btn sec" onclick="traerBloques(valor('pegar-bloques'))">Traer el texto pegado</button>
         </div>`},
     {k: 'registro', ico: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', t: 'Resumen diario para Grow Panel',
-      sub: regCfg().on ? (claveReg(regCfg()) ? 'Activado · solo números, una vez al día' : 'Activado · falta tu clave de Grow Panel') : 'Desactivado',
+      sub: regCfg().on ? 'Activado · solo números, una vez al día' : 'Desactivado',
       html: () => registroHTML()},  // no se ve hasta que exista el servidor del registro
     {k: 'datos', ico: '💾', t: 'Tus datos',
       sub: u ? 'En este móvil y en la nube' : 'Solo en este móvil',
