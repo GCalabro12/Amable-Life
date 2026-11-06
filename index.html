@@ -529,6 +529,26 @@ nav.abajo button{font-size:11px}
 .rj-blk{position:absolute;left:0;right:0;background:rgba(247,195,91,.07);pointer-events:none}
 .rj-ev{position:absolute;margin-left:1px;border:0;border-radius:8px;padding:3px 6px;background:color-mix(in srgb,var(--c) 30%,#221a40);border-left:3px solid var(--c);color:var(--tinta);text-align:left;overflow:hidden;font-size:13px;line-height:1.2;display:flex;flex-direction:column;gap:1px;z-index:1}
 .bandera{vertical-align:-2px;flex:none}
+.ag-fab{position:fixed;right:max(18px,calc(50% - 242px));bottom:calc(80px + env(safe-area-inset-bottom));width:60px;height:60px;border-radius:50%;border:0;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--acento),var(--acento2));color:#fff;box-shadow:0 8px 24px rgba(226,69,107,.45);z-index:5}
+.ag-fab:active{transform:scale(.96)}
+.desps{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.desps > div[hidden]{display:none}
+.desp{position:relative}
+.desp-btn{width:100%;display:flex;align-items:center;gap:10px;border:0;border-radius:14px;padding:13px 14px;background:rgba(255,255,255,.08);color:var(--tinta);font:inherit;font-weight:800;font-size:15px;text-align:left}
+.desp-btn > svg:first-child{flex:none;color:var(--oro)}
+.desp-t{flex:none}
+.desp-v{flex:1;min-width:0;text-align:right;font-weight:600;font-size:13px;color:var(--suave);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desp-v .ico{width:13px;height:13px;vertical-align:-2px}
+.desp-f{flex:none;color:var(--suave);transition:transform .2s}
+.desp-btn.abierto{background:rgba(255,255,255,.13)}
+.desp-btn.abierto .desp-f{transform:rotate(180deg)}
+.desp-lista{display:flex;flex-direction:column;margin:6px 0 0 auto;width:min(78%,300px);background:#2c2252;border-radius:14px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.desp-lista[hidden]{display:none}
+.desp-op{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--tinta);font:inherit;font-size:15px;font-weight:700;padding:11px 10px;border-radius:10px;text-align:left}
+.desp-op span{flex:1;display:flex;align-items:center;gap:8px}
+.desp-op i{font-style:normal;color:var(--oro);font-weight:900;width:16px;text-align:center}
+.desp-op.sel{background:rgba(247,195,91,.13)}
 .rj-ev .bandera{width:11px;height:11px;margin-right:2px;vertical-align:-1px}
 .rj-todo .bandera{width:9px;height:9px;margin-right:2px}
 .rj-ev b{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
@@ -821,7 +841,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.65';
+const VERSION = 'v3.66';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1295,7 +1315,7 @@ function tarjetaAccion(x, i){
   const a = areaDe(x.area);
   return `<div class="prox" id="acc-${x.id}" data-ord="${x.id}" style="--c:${a.color};animation-delay:${i*70}ms">
     ${ASA}<span class="num">${i+1}</span>
-    <div class="cuerpo-p"><div class="texto-p">${esc(x.texto)}</div><div class="area-p">${ico(a)} ${a.nombre}</div></div>
+    <div class="cuerpo-p"><div class="texto-p">${bandX(x)}${esc(x.texto)}</div><div class="area-p">${ico(a)} ${a.nombre}</div></div>
     <button class="check" aria-label="Marcar como hecha" onclick="hacerAccion('${x.id}')">✓</button></div>`;
 }
 // En el navegador de un Android: ofrecer la app (suena al abrir, cuenta pasos y entra con Google)
@@ -1401,7 +1421,7 @@ function seccionAhora(){
     const x = a.acc && D.acciones.find(z => z.id === a.acc), ar = x && areaDe(x.area), ok = hechaAct(a);
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
       ${ok ? '<span class="asa-hueco"></span>' : ASA}<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>
-      <div class="cuerpo-p"><div class="texto-p">${esc(a.t)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
+      <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
         ${!ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">${ICO_FIRMA} Me quiero comprometer</button>` : ''}</div>
       ${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>`;
   };
@@ -1824,7 +1844,7 @@ function filaTarea(x, hayBloque, ordenable){
   const a = areaDe(x.area);
   return `<div class="sa-fila" ${ordenable ? `data-ord="${x.id}"` : `data-mover="${x.id}"`} style="--c:${a.color}">
     <div class="sa-l1">${ASA}<button class="check" aria-label="Marcar como hecha" onclick="alternarAccion('${x.id}')">✓</button>
-      <span class="sa-t">${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
+      <span class="sa-t">${bandX(x)}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
     <div class="sa-l2">${tagArea(a)}${hayBloque ? `<button class="sa-ya" onclick="asignarAhora('${x.id}')">${vista === 'dia' ? '→ Al bloque' : '→ Ahora'}</button>` : ''}</div></div>`;
 }
 /* Quitar una tarea de los bloques de hoy (o del bloque elegido): al volver a tocar «✓ Con bloque» */
@@ -1902,7 +1922,7 @@ function panelArea(){
   return `<section class="panel-area" id="panel-area" style="--c:${a.color}">
     <div class="pa-cab">${ico(a, 'g')}<div><b>${a.nombre}</b><small>${nv ? NIVELES[nv].titulo : 'Sin revisar'} · <button class="link" onclick="abrirPetalo('${a.id}')">cambiar</button></small></div>
       <button class="del" aria-label="Cerrar" onclick="panelAbierto = null; const y = scrollY; render(); scrollTo(0, y)">✕</button></div>
-    ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
+    ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${bandX(x)}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
       <div class="sa-l2">${tagArea(a)}<button class="sa-con" onclick="quitarDeBloques('${x.id}')" title="Toca para quitarla del bloque">✓ Con bloque · quitar</button></div></div>` : filaTarea(x, c >= 0, false)).join('')
       : '<p class="suave" style="margin:6px 0">Este pétalo no tiene tareas pendientes.</p>'}
     <div class="campo-voz" style="margin-top:10px"><input type="text" id="pa-nueva" maxlength="120" placeholder="Nueva tarea para ${esc(a.corto)}" onkeydown="if(event.key==='Enter')nuevaEnPanel()">${botonMic()}</div>
@@ -1969,12 +1989,12 @@ function quitarActividad(k, i, j){
 let edicion = null;
 function editarTarea(id){
   const x = D.acciones.find(a => a.id === id); if(!x) return;
-  edicion = {id, area: x.area, volver: hojaAbierta, armado: false}; pintarEdicion(x.texto);
+  edicion = {id, area: x.area, prio: x.prio || 0, volver: hojaAbierta, armado: false}; pintarEdicion(x.texto);
 }
 function editarBloque(k, i, j){
   const a = actsDe(k, i)[j]; if(!a) return;
   const x = a.acc && D.acciones.find(z => z.id === a.acc);
-  edicion = {id: x ? a.acc : null, area: x ? x.area : null, k, i, j, volver: hojaAbierta, armado: false}; pintarEdicion(x ? x.texto : a.t);
+  edicion = {id: x ? a.acc : null, area: x ? x.area : null, prio: (x ? x.prio : a.prio) || 0, k, i, j, volver: hojaAbierta, armado: false}; pintarEdicion(x ? x.texto : a.t);
 }
 function pintarEdicion(texto){
   hojaAbierta = null;
@@ -1982,6 +2002,8 @@ function pintarEdicion(texto){
     <div class="campo-voz" style="margin-top:10px"><input type="text" id="ed-texto" maxlength="120" onkeydown="if(event.key==='Enter')guardarEdicion()">${botonMic()}</div>
     <p class="eti" style="margin-top:12px">¿A qué pétalo pertenece?</p>
     <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === edicion.area ? 'sel' : ''}" style="--c:${x.color}" onclick="edArea('${x.id}', this)">${ico(x)} ${x.corto}</button>`).join('')}</div>
+    <p class="eti" style="margin-top:12px">Prioridad</p>
+    ${chipsPrio('edicion.prio', edicion.prio)}
     <div class="ed-bots"><button class="btn prim" onclick="guardarEdicion()">Guardar</button><button class="btn peligro" id="ed-borrar" onclick="borrarEdicion()">Borrar</button><button class="btn sec" onclick="salirEdicion()">Cancelar</button></div>
     <button type="button" class="compro-link ed-compro" onclick="comprometerEdicion()">${ICO_FIRMA} Me quiero comprometer</button>
     <button type="button" class="compro-link ed-compro" onclick="tareaAlCalendario()">${ICO_CAL} Poner en el calendario</button>`, '#8b5cf6');
@@ -1995,17 +2017,17 @@ function guardarEdicion(){
   const e = edicion, t = valor('ed-texto'); if(!e) return;
   if(!t){ aviso('Escribe el nombre de la tarea'); return; }
   if(e.id){
-    const x = D.acciones.find(a => a.id === e.id); if(x){ x.texto = t; x.area = e.area; x.mod = ahoraISO(); }
+    const x = D.acciones.find(a => a.id === e.id); if(x){ x.texto = t; x.area = e.area; x.prio = e.prio || 0; x.mod = ahoraISO(); }
     const dias = B_().days;
     Object.keys(dias).forEach(k => Object.keys(dias[k]).forEach(i => (dias[k][i] || []).forEach(a => { if(a && a.acc === e.id) a.t = t; })));
   } else {
     const a = actsDe(e.k, e.i)[e.j];
     if(a){
-      a.t = t;
+      a.t = t; a.prio = e.prio || 0;
       if(e.area){   // sin asignar → al elegir pétalo pasa a ser una acción de esa área
         nuevaAccion(e.area, t);
         const x = D.acciones[D.acciones.length - 1];
-        a.acc = x.id;
+        a.acc = x.id; x.prio = e.prio || 0;
         if(a.d){ x.hecha = true; x.hechaEn = ahoraISO(); }
       }
     }
@@ -2059,7 +2081,7 @@ function abrirPetalo(id){
     <p class="eti" style="margin-top:14px">¿Cómo está?</p>
     ${opcionesNivel(nivel(id), k => `cambiarNivel('${id}','${k}')`, true)}
     <p class="eti" style="margin-top:16px">Acciones</p>
-    ${mias.length ? `<div class="tareas">${mias.map(x => `<div class="fila-acc"><button class="tarea ${x.hecha?'ok':''}" onclick="alternarAccion('${x.id}')"><span class="caja">✓</span><span>${esc(x.texto)}</span></button>${lapiz(`editarTarea('${x.id}')`)}<button class="del" aria-label="Borrar" onclick="borrarAccion('${x.id}')">✕</button></div>`).join('')}</div>` : `<p class="suave peq" style="margin:6px 0 0">Sin acciones por ahora.</p>`}
+    ${mias.length ? `<div class="tareas">${mias.map(x => `<div class="fila-acc"><button class="tarea ${x.hecha?'ok':''}" onclick="alternarAccion('${x.id}')"><span class="caja">✓</span><span>${bandX(x)}${esc(x.texto)}</span></button>${lapiz(`editarTarea('${x.id}')`)}<button class="del" aria-label="Borrar" onclick="borrarAccion('${x.id}')">✕</button></div>`).join('')}</div>` : `<p class="suave peq" style="margin:6px 0 0">Sin acciones por ahora.</p>`}
     ${campoNueva('h-nueva', 'Nueva tarea, p. ej. ' + a.ejemplos[0])}
     <button class="btn prim ancho" style="margin-top:10px" onclick="anadirDesdeHoja('${id}')">Añadir tarea</button>`, a.color);
 }
@@ -2073,7 +2095,7 @@ function anadirDesdeHoja(id){
   nuevaAccion(id, t); guardar(); sonarHecho(); aviso('Tarea añadida 🌱');
   render();
 }
-let areaNueva = null;
+let areaNueva = null, prioNueva = 0;
 function abrirNueva(pre, alBloque){
   areaNueva = pre || 'trabajo';   // casi todo lo de Focus es trabajo
   hojaAbierta = () => abrirNueva(areaNueva, alBloque);
@@ -2082,6 +2104,8 @@ function abrirNueva(pre, alBloque){
     <div style="margin-top:12px">${campoNueva('h-nueva', 'Por ejemplo: ' + a.ejemplos[0])}</div>
     <p class="eti" style="margin-top:14px">¿Para qué área?</p>
     <div class="chips" style="justify-content:flex-start;margin:8px 0">${[...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo')).map(x => `<button class="chip ${x.id === areaNueva ? 'sel' : ''}" style="--c:${x.color}" onclick="areaNueva='${x.id}'; abrirNueva('${x.id}', ${!!alBloque})">${ico(x)} ${x.corto}</button>`).join('')}</div>
+    <p class="eti" style="margin-top:6px">Prioridad</p>
+    ${chipsPrio('prioNueva', prioNueva)}
     <button class="btn prim ancho" style="margin-top:10px" onclick="anadirNueva(${!!alBloque})">${alBloque ? 'Añadir al bloque' : 'Añadir tarea'}</button>`, a.color);
   if(t) $('#h-nueva').value = t;
 }
@@ -2097,6 +2121,8 @@ function anadirNueva(alBloque){
   if(!alBloque){ nuevaAccion(areaNueva, t); guardar(); aviso('Tarea añadida 🌱'); petaloAbierto = areaNueva; }
   else if(nuevaTareaBloque(t, areaNueva)) aviso('Tarea añadida al bloque 🌱');
   else { aviso('El bloque ya está completo: la tarea queda en su pétalo'); petaloAbierto = areaNueva; }
+  if(prioNueva){ D.acciones[D.acciones.length - 1].prio = prioNueva; guardar(); }
+  prioNueva = 0;
   sonarHecho(); cerrarHoja(); render();
 }
 /* Ventana flotante del PC: escribir una tarea y que entre en el bloque, en el pétalo elegido debajo (Trabajo de entrada) */
@@ -2270,14 +2296,22 @@ const lunesDe = k => sumarDias(k, -diaSem(k));
 const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 const minDeHora = v => { const r = /^(\d{1,2}):(\d{2})/.exec(v || ''); return r ? +r[1] * 60 + +r[2] : null; };
 const fechaLarga = k => { const d = fechaDe(k); return `${DIAS_SEM[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}`; };
+const repite = e => e.tipo === 'habito' || (e.rep && e.rep !== 'no');
 function tocaEv(e, k){
   if(!e || k < e.dia || (e.saltar || []).includes(k)) return false;
   if(e.tipo === 'habito') return (e.dias || []).includes(diaSem(k));
+  const r = e.rep || 'no';
+  if(r === 'dia') return true;
+  if(r === 'lab') return diaSem(k) < 5;
+  if(r === 'semana') return diaSem(k) === diaSem(e.dia);
+  if(r === 'mes') return fechaDe(k).getDate() === fechaDe(e.dia).getDate();
+  if(r === 'anio') return k.slice(5) === e.dia.slice(5);
   return k === e.dia;
 }
 const eventosDe = k => AG_().eventos.filter(e => tocaEv(e, k)).sort((a, b) => (b.todo - a.todo) || ((a.ini || 0) - (b.ini || 0)) || (a.t < b.t ? -1 : 1));
-const hechoEv = (e, k) => (e.hechos || []).includes(k) || !!(e.acc && e.tipo !== 'habito' && (D.acciones.find(x => x.id === e.acc) || {}).hecha);
+const hechoEv = (e, k) => (e.hechos || []).includes(k) || !!(e.acc && !repite(e) && (D.acciones.find(x => x.id === e.acc) || {}).hecha);
 const pasadoEv = (e, k) => !e.todo && (k < hoyK() || (k === hoyK() && e.fin <= minutosHoy()));
+const areasEv = e => (e.areas && e.areas.length ? e.areas : e.area ? [e.area] : []).map(areaDe).filter(Boolean);
 const colorEv = e => (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
 const horaEv = e => e.todo ? 'Todo el día' : `${hm(e.ini)} – ${hm(e.fin)}`;
 const txtHabito = e => { const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length === 5 && d.join() === '0,1,2,3,4' ? 'De lunes a viernes' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana`; };
@@ -2296,7 +2330,7 @@ function evsBloqueHTML(k, b){
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
     <button class="check ${ok ? 'hecho' : ''}" ${e.prio ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
-    <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${ar ? `<span class="ev-a">${ico(ar)} ${ar.corto}</span>` : ''}</button></div>`; };
+    <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null;
 function vAgenda(){
   if(!agK) agK = hoyK();
@@ -2329,8 +2363,9 @@ function vAgenda(){
   return `<h1 class="tit-acc">Calendario</h1>
     <div class="ag-modos">${[['dia', 'Día'], ['semana', 'Semana'], ['mes', 'Mes']].map(([k, t]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${t}</button>`).join('')}</div>
     <div class="ag-nav"><button class="fn-flecha" onclick="agMover(-1)" aria-label="Anterior">‹</button><b>${tit}</b><button class="fn-flecha" onclick="agMover(1)" aria-label="Siguiente">›</button></div>
-    <div class="ag-acc">${conHoy ? '' : '<button class="link" onclick="agHoy()">Volver a hoy</button>'}<button class="btn prim" onclick="nuevoEvento()">＋ Nuevo</button></div>
-    ${cuerpo}`;
+    ${conHoy ? '' : '<div class="ag-acc"><button class="link" onclick="agHoy()">Volver a hoy</button></div>'}
+    ${cuerpo}<div style="height:76px"></div>
+    <button class="ag-fab" aria-label="Añadir al calendario" onclick="nuevoEvento()"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
 }
 /* Rejilla de horas: de 5:00 a 23:00 (o más, si hay algo antes o después), 52 px por hora.
    Lo que se solapa se pone lado a lado; la raya roja es la hora de ahora y la franja suave, el bloque de Life de ahora. */
@@ -2391,20 +2426,59 @@ let evEd = null;
 function nuevoEvento(k, ini, pre){
   const dia = k || agK || hoyK(), m = minutosHoy();
   const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
-  evEd = {id: null, k: dia, tipo: 'tarea', prio: 0, area: (pre && pre.area) || null, dias: [diaSem(dia)], avisos: [], acc: (pre && pre.acc) || null};
+  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: 0, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], avisos: [], acc: (pre && pre.acc) || null};
   pintarEvento({t: (pre && pre.t) || '', dia, todo: false, ini: base, fin: Math.min(base + 60, 1439)});
 }
 function editarEvento(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
-  evEd = {id, k, tipo: e.tipo || 'tarea', prio: e.prio || 0, area: e.area || null, dias: (e.dias || [diaSem(e.dia)]).slice(), avisos: (e.avisos || []).slice(), acc: e.acc || null, armado: false};
+  evEd = {id, k, tipo: e.tipo || 'tarea', rep: e.rep || 'no', prio: e.prio || 0, areas: areasEv(e).map(a => a.id), dias: (e.dias || [diaSem(e.dia)]).slice(),
+    avisos: (e.avisos || []).slice(), acc: e.acc || null, armado: false};
   pintarEvento(e);
+}
+const FLECHA_ABAJO = '<svg class="desp-f" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+/* Botón alargado que, al tocarlo, despliega sus opciones en vertical a la derecha (Repetir, Recordatorio, Área) */
+const despHTML = (id, titulo, ico) => `<div class="desp" id="dc-${id}"><button type="button" class="desp-btn" onclick="despTocar('${id}')">${ico}<span class="desp-t">${titulo}</span><span class="desp-v" id="dv-${id}">${despValor(id)}</span>${FLECHA_ABAJO}</button><div class="desp-lista" id="dl-${id}" hidden></div></div>`;
+function opcionesRep(){
+  const k = valor('ev-dia') || evEd.k, d = fechaDe(k);
+  return [{k: 'no', t: 'No se repite'}, {k: 'dia', t: 'Cada día'}, {k: 'semana', t: `Cada semana, el ${DIAS_LARGO[diaSem(k)]}`}, {k: 'mes', t: `Cada mes, el día ${d.getDate()}`},
+    {k: 'anio', t: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`}, {k: 'lab', t: 'De lunes a viernes'}];
+}
+function despOpciones(id){
+  if(id === 'rep') return opcionesRep().map(o => ({k: o.k, t: o.t, sel: (evEd.rep || 'no') === o.k}));
+  if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked);
+    return [{k: 'no', t: 'Sin recordatorio', sel: !evEd.avisos.length}, ...(todo ? RECORD_DIA : RECORD_HORA).map(r => ({k: r.k, t: r.t, sel: evEd.avisos.includes(r.k)}))]; }
+  return [{k: 'no', t: 'Sin área', sel: !evEd.areas.length}, ...AREAS.map(a => ({k: a.id, t: `${ico(a)} ${a.nombre}`, sel: evEd.areas.includes(a.id)}))];
+}
+function despValor(id){
+  if(id === 'rep') return (opcionesRep().find(o => o.k === (evEd.rep || 'no')) || {t: 'No se repite'}).t;
+  if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked), l = (todo ? RECORD_DIA : RECORD_HORA).filter(r => evEd.avisos.includes(r.k)).map(r => r.t);
+    return l.length ? l.join(', ') : 'Sin recordatorio'; }
+  return evEd.areas.length ? evEd.areas.map(a => `${ico(areaDe(a))} ${areaDe(a).corto}`).join(' ') : 'Sin área';
+}
+function pintarDesp(id){
+  const l = $('#dl-' + id), v = $('#dv-' + id); if(!l) return;
+  l.innerHTML = despOpciones(id).map(o => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${id}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`).join('');
+  if(v) v.innerHTML = despValor(id);
+}
+function despTocar(id){
+  const l = $('#dl-' + id), abrir = l.hidden;
+  document.querySelectorAll('#hoja .desp-lista').forEach(x => x.hidden = true);
+  document.querySelectorAll('#hoja .desp-btn').forEach(b => b.classList.remove('abierto'));
+  if(abrir){ pintarDesp(id); l.hidden = false; l.previousElementSibling.classList.add('abierto'); }
+}
+function despElegir(id, k){
+  if(id === 'rep'){ evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
+  const lista = id === 'rec' ? 'avisos' : 'areas';
+  if(id === 'rec' && k !== 'no') k = +k;
+  evEd[lista] = k === 'no' ? [] : evEd[lista].includes(k) ? evEd[lista].filter(x => x !== k) : [...evEd[lista], k];   // varias a la vez
+  pintarDesp(id);
 }
 function pintarEvento(e){
   hojaAbierta = null;
   const hab = evEd.tipo === 'habito', todo = !!e.todo;
   mostrarHoja(`<div class="hoja-cab"><div><h2>${evEd.id ? (hab ? 'Editar hábito' : 'Editar tarea del calendario') : 'Nuevo en el calendario'}</h2></div></div>
     <p class="eti" style="margin-top:12px">¿Es una tarea o un hábito?</p>
-    <div class="ev-tipo"><button class="${hab ? '' : 'sel'}" onclick="evTipo('tarea')">Tarea<small>un día</small></button><button class="${hab ? 'sel' : ''}" onclick="evTipo('habito')">Hábito<small>se repite cada semana</small></button></div>
+    <div class="ev-tipo"><button class="${hab ? '' : 'sel'}" onclick="evTipo('tarea')">Tarea<small>un día o que se repite</small></button><button class="${hab ? 'sel' : ''}" onclick="evTipo('habito')">Hábito<small>unas veces a la semana</small></button></div>
     <div class="campo-voz" style="margin-top:12px"><input type="text" id="ev-t" maxlength="120" placeholder="${hab ? 'Por ejemplo: Caminar 20 minutos' : 'Por ejemplo: Dentista'}">${botonMic()}</div>
     <div id="ev-hab" ${hab ? '' : 'hidden'}>
       <p class="eti" style="margin-top:14px">¿Cuántas veces a la semana?</p>
@@ -2412,25 +2486,31 @@ function pintarEvento(e){
       <p class="eti" style="margin-top:10px">¿Qué días?</p>
       <div class="ev-dias">${DIAS_CORTO.map((x, i) => `<button data-d="${i}" class="${evEd.dias.includes(i) ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evDia(${i})">${x}</button>`).join('')}</div>
     </div>
-    <div class="ev-fila"><label><span id="ev-dia-t">${hab ? 'Empieza el' : 'Día'}</span><input type="date" id="ev-dia" value="${e.dia}"></label></div>
+    <div class="ev-fila"><label><span id="ev-dia-t">${hab ? 'Empieza el' : 'Día'}</span><input type="date" id="ev-dia" value="${e.dia}" onchange="pintarDesp('rep')"></label></div>
     <label class="desliz" style="--c:#f7c35b;margin-top:12px"><input type="checkbox" id="ev-todo" ${todo ? 'checked' : ''} onchange="evTodo(this.checked)"><i></i>Todo el día</label>
     <div class="ev-fila" id="ev-horas" ${todo ? 'hidden' : ''}><label>Empieza<input type="time" id="ev-ini" value="${hhmm(e.ini != null ? e.ini : 540)}" onchange="evIniCambia()"></label><label>Termina<input type="time" id="ev-fin" value="${hhmm(e.fin != null ? e.fin : 600)}"></label></div>
-    <p class="eti" style="margin-top:14px">Recordatorios</p>
-    <div class="chips" id="ev-record" style="justify-content:flex-start;margin:8px 0">${chipsRecord(todo)}</div>
-    <p class="eti">Prioridad</p>
-    <div class="chips" style="justify-content:flex-start;margin:8px 0">${PRIO.map(x => `<button class="chip ${x.k === evEd.prio ? 'sel' : ''}" style="--c:${x.c}" onclick="evPrio(${x.k}, this)">${ICO_BANDERA(x.c)} ${x.t}</button>`).join('')}</div>
-    <p class="eti">Área (si quieres)</p>
-    <div class="chips" style="justify-content:flex-start;margin:8px 0"><button class="chip ${!evEd.area ? 'sel' : ''}" style="--c:#f7c35b" onclick="evArea(null, this)">Sin área</button>${AREAS.map(x => `<button class="chip ${x.id === evEd.area ? 'sel' : ''}" style="--c:${x.color}" onclick="evArea('${x.id}', this)">${ico(x)} ${x.corto}</button>`).join('')}</div>
+    <div class="desps">
+      <div id="ev-rep-c" ${hab ? 'hidden' : ''}>${despHTML('rep', 'Repetir', ICO_REP)}</div>
+      ${despHTML('rec', 'Recordatorio', ICO_CAMPANA)}
+      ${despHTML('area', 'Área', ICO_PETALO)}
+    </div>
+    <p class="eti" style="margin-top:12px">Prioridad</p>
+    ${chipsPrio('evEd.prio', evEd.prio)}
     ${evEd.id ? `<button class="btn sec ancho" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
     <div class="ed-bots"><button class="btn prim" onclick="guardarEvento()">Guardar</button>${evEd.id ? '<button class="btn peligro" id="ev-borrar" onclick="borrarEvento()">Borrar</button>' : ''}<button class="btn sec" onclick="salirEvento()">Cancelar</button></div>
-    <div id="ev-borrar-rep"></div>`, colorEv({area: evEd.area}));
+    <div id="ev-borrar-rep"></div>`, evEd.areas.length ? areaDe(evEd.areas[0]).color : '#f7c35b');
   $('#ev-t').value = e.t || '';
 }
-const chipsRecord = todo => (todo ? RECORD_DIA : RECORD_HORA).map(r => `<button class="chip ${evEd.avisos.includes(r.k) ? 'sel' : ''}" style="--c:#8b5cf6" onclick="evRecord(${r.k}, this)">${r.t}</button>`).join('');
+const ICO_CAMPANA = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>';
+const ICO_PETALO = '<svg viewBox="-12 -12 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M0 -10C5 -5 5 5 0 10C-5 5 -5 -5 0 -10z"/></svg>';
+/* Prioridad como TickTick (sin, baja azul, media amarilla, alta roja): chips; `donde` es la variable que guarda la elegida */
+const chipsPrio = (donde, actual) => `<div class="chips" style="justify-content:flex-start;margin:8px 0">${PRIO.map(x => `<button type="button" class="chip ${x.k === (actual || 0) ? 'sel' : ''}" style="--c:${x.c}" onclick="${donde} = ${x.k}; this.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === this))">${ICO_BANDERA(x.c)} ${x.t}</button>`).join('')}</div>`;
+const bandX = x => x && x.prio ? ICO_BANDERA(prioDe(x).c) + ' ' : '';
+const bandAct = a => { const x = a && a.acc && D.acciones.find(z => z.id === a.acc); return bandX(x || a); };
 function evTipo(t){
   evEd.tipo = t; const hab = t === 'habito';
   document.querySelectorAll('.ev-tipo button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
-  $('#ev-hab').hidden = !hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
+  $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
   $('#ev-t').placeholder = hab ? 'Por ejemplo: Caminar 20 minutos' : 'Por ejemplo: Dentista';
   const h2 = $('.hoja-cab h2'); if(h2 && evEd.id) h2.textContent = hab ? 'Editar hábito' : 'Editar tarea del calendario';
 }
@@ -2443,10 +2523,7 @@ function evDia(i){
   const d = evEd.dias; evEd.dias = d.includes(i) ? d.filter(x => x !== i) : [...d, i].sort();
   pintarDias();
 }
-function evTodo(on){ $('#ev-horas').hidden = on; evEd.avisos = []; $('#ev-record').innerHTML = chipsRecord(on); }
-function evRecord(k, b){ const a = evEd.avisos; evEd.avisos = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; b.classList.toggle('sel', evEd.avisos.includes(k)); }
-function evPrio(k, b){ evEd.prio = k; b.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === b)); }
-function evArea(id, b){ evEd.area = id; b.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === b)); }
+function evTodo(on){ $('#ev-horas').hidden = on; evEd.avisos = []; pintarDesp('rec'); }
 function evIniCambia(){
   const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin'));
   if(i != null && (f == null || f <= i)) $('#ev-fin').value = hhmm(Math.min(i + 60, 1439));
@@ -2461,9 +2538,9 @@ function guardarEvento(){
   const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.area || null, prio: e0.prio || 0, avisos: e0.avisos.slice().sort((a, b) => a - b), acc: e0.acc || null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.prio || 0, avisos: e0.avisos.slice().sort((a, b) => a - b), acc: e0.acc || null, mod: ahoraISO()});
   guardar(); sonarHecho();
-  aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
+  aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
   if(vista === 'agenda' && !e0.id) agK = dia;
   rerenderDia();
@@ -2471,8 +2548,9 @@ function guardarEvento(){
 function borrarEvento(){
   const e0 = evEd; if(!e0 || !e0.id) return;
   const e = AG_().eventos.find(x => x.id === e0.id); if(!e) return;
-  if(e.tipo === 'habito'){
-    $('#ev-borrar-rep').innerHTML = `<p class="peq" style="margin:14px 0 6px">Es un hábito. ¿Qué quieres borrar?</p><div class="ed-bots"><button class="btn peligro" onclick="borrarEvento2(false)">Solo el ${fechaDe(e0.k).getDate()} de ${MESES[fechaDe(e0.k).getMonth()]}</button><button class="btn peligro" onclick="borrarEvento2(true)">Todo el hábito</button></div>`;
+  if(repite(e)){
+    const hab = e.tipo === 'habito';
+    $('#ev-borrar-rep').innerHTML = `<p class="peq" style="margin:14px 0 6px">${hab ? 'Es un hábito' : 'Se repite'}. ¿Qué quieres borrar?</p><div class="ed-bots"><button class="btn peligro" onclick="borrarEvento2(false)">Solo el ${fechaDe(e0.k).getDate()} de ${MESES[fechaDe(e0.k).getMonth()]}</button><button class="btn peligro" onclick="borrarEvento2(true)">${hab ? 'Todo el hábito' : 'Todas las veces'}</button></div>`;
     return;
   }
   if(!e0.armado){ e0.armado = true; const b = $('#ev-borrar'); if(b) b.textContent = '¿Seguro?'; return; }
@@ -2490,7 +2568,7 @@ function alternarEv(id, k, desdeHoja){
   const ya = hechoEv(e, k);
   e.hechos = (e.hechos || []).filter(d => d !== k && d >= sumarDias(hoyK(), -120));
   if(!ya) e.hechos.push(k);
-  if(e.acc && e.tipo !== 'habito'){ const x = D.acciones.find(z => z.id === e.acc); if(x){ x.hecha = !ya; x.hechaEn = ya ? null : ahoraISO(); x.mod = ahoraISO(); } }
+  if(e.acc && !repite(e)){ const x = D.acciones.find(z => z.id === e.acc); if(x){ x.hecha = !ya; x.hechaEn = ya ? null : ahoraISO(); x.mod = ahoraISO(); } }
   e.mod = ahoraISO(); guardar(); if(!ya) sonarHecho();
   if(desdeHoja){ evEd = null; cerrarHoja(); }
   rerenderDia();
@@ -2614,7 +2692,7 @@ function vDia(){
       <div class="bs-cab"><b>${hm(b.ini)} – ${hm(b.fin)}</b><span>${estado}</span></div>
       ${bSel === cur ? `<div class="mini-barra"><i style="width:${(m - b.ini) / 90 * 100}%"></i></div>` : ''}
       ${evsBloqueHTML(k, b)}
-      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span class="t-col">${esc(a.t)}${tagArea(a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area) : null)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
+      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span class="t-col">${bandAct(a)}${esc(a.t)}${tagArea(a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area) : null)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
       ${lleno ? `<p class="peq suave" style="margin:8px 0 0">Bloque completo · ${MAX_ACT} actividades</p>` : `
         <p class="eti" style="margin:14px 0 0">Añadir nueva tarea</p>
         <div class="campo-voz" style="margin-top:8px"><input type="text" id="b-nueva" maxlength="120" placeholder="Escribe o dicta una actividad" onkeydown="if(event.key==='Enter')anadirAct()">${botonMic()}</div>
@@ -2672,7 +2750,7 @@ function abrirTareasAreas(){
     <button class="btn prim ancho" style="margin-top:8px" onclick="anadirEnHoja()">Añadir al bloque</button>`}</section>
     <section class="hoja-caja"><h3>Añadir tareas de tus áreas</h3>
     ${grupos.length ? grupos.map(g => `<p class="eti" style="margin:12px 0 4px">${ico(g.a)} ${g.a.nombre}</p>
-      ${g.lista.map(x => `<div class="ta-fila"><div class="ta-l1"><span class="ta-t">${ICO_TAREA}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>${ya.has(x.id)
+      ${g.lista.map(x => `<div class="ta-fila"><div class="ta-l1"><span class="ta-t">${ICO_TAREA}${bandX(x)}${esc(x.texto)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>${ya.has(x.id)
         ? `<button class="sa-con" onclick="quitarDeBloques('${x.id}', true)">✓ En este bloque · quitar</button>`
         : `<button class="ta-btn" ${lleno ? 'disabled' : ''} onclick="accionABloque('${x.id}')">＋ Añadir a este bloque</button>`}</div>`).join('')}`).join('')
       : '<p class="suave">No tienes acciones pendientes en tus áreas.</p>'}</section>
