@@ -724,7 +724,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.54';
+const VERSION = 'v3.55';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1337,6 +1337,9 @@ const claveGrowPanel = () => {
   return '';
 };
 const claveReg = c => claveGrowPanel() || (claveRegValida(c.clave) ? c.clave : '');
+/* Cuenta Amable (Grow Panel, «camino 2»): quien entró con Google envía con su token de Firebase; el registro lo guarda bajo su cuenta */
+const cuentaGoogle = () => { try{ const u = nube.usuario; return !!(u && (u.providerData || []).some(x => x && x.providerId === 'google.com')); }catch(e){ return false; } };
+const puedeEnviarReg = c => cuentaGoogle() || !!claveReg(c);
 // activado de serie para todos (Gustavo); se puede apagar en Ajustes
 function regCfg(){ try{ return Object.assign({on: true, clave: '', enviado: '', desde: ''}, JSON.parse(localStorage.getItem(CLAVE_REGISTRO)) || {}); }catch(e){ return {on: true, clave: '', enviado: '', desde: ''}; } }
 function regGuardar(c){ try{ localStorage.setItem(CLAVE_REGISTRO, JSON.stringify(c)); }catch(e){} }
@@ -1365,12 +1368,16 @@ async function enviarRegistro(fecha, aMano){
   const c = regCfg();
   if(!REGISTRO_URL){ if(aMano) aviso('Aún no está el servidor del registro diario'); return false; }
   const clave = claveReg(c);
-  if(!c.on || !clave) return false;   // sin Grow Panel no se envía nada y no se avisa
+  if(!c.on || !puedeEnviarReg(c)) return false;   // sin cuenta de Google ni Grow Panel no se envía nada y no se avisa
   regUltimoIntento = Date.now();
   try{
-    const r = await fetch(REGISTRO_URL.replace(/\/+$/, '') + '/registro', {method: 'POST',
-      headers: {'Authorization': 'Bearer ' + clave, 'Content-Type': 'application/json'},
-      body: JSON.stringify({fecha, app: 'amable-life', datos: resumenDia(fecha)})});
+    const cuerpo = JSON.stringify({fecha, app: 'amable-life', datos: resumenDia(fecha)});
+    const mandar = cred => fetch(REGISTRO_URL.replace(/\/+$/, '') + '/registro', {method: 'POST',
+      headers: {'Authorization': 'Bearer ' + cred, 'Content-Type': 'application/json'}, body: cuerpo});
+    let r = null;
+    if(cuentaGoogle()){ try{ r = await mandar(await firebase.auth().currentUser.getIdToken()); }catch(e){ r = null; } }
+    if((!r || r.status === 401) && clave) r = await mandar(clave);   // si el token no vale, la clave de Grow Panel
+    if(!r) throw new Error('sin cuenta');
     if(!r.ok) throw new Error(r.status);
     const c2 = regCfg(); if(fecha > (c2.enviado || '')) c2.enviado = fecha; c2.ultimo = ahoraISO(); regGuardar(c2);
     if(aMano) aviso('Resumen del día enviado');
@@ -1380,7 +1387,7 @@ async function enviarRegistro(fecha, aMano){
 }
 /* Entre las 20:00 y las 20:25, y al abrir la app: si ayer o hoy (pasadas las 20:00) no se envió */
 function revisarRegistro(alAbrir){
-  const c = regCfg(); if(!REGISTRO_URL || !c.on || !claveReg(c)) return;
+  const c = regCfg(); if(!REGISTRO_URL || !c.on || !puedeEnviarReg(c)) return;
   if(Date.now() - regUltimoIntento < 5 * 60000) return;   // si falla, no insistir más de una vez cada 5 min
   const hoy = hoyK(), ayer = claveDia(Date.now() - 864e5), m = minutosHoy();
   if(alAbrir && (c.enviado || '') < ayer && (c.desde || '') <= ayer) enviarRegistro(ayer);
@@ -1406,7 +1413,7 @@ function registroHTML(){
     ${c.on ? `
     <p class="peq suave" style="margin:10px 0 0">Hoy, hasta ahora: ${r.bloques_con_tareas} de ${r.bloques_total} bloques con tareas · ${r.tareas_hechas} de ${r.tareas_total} tareas hechas · ${fmtN(r.pasos)} pasos</p>
     <p class="peq suave" style="margin:4px 0 0">${txtEnvioRegistro(c)}</p>
-    ${REGISTRO_URL && claveReg(c) ? `<button class="btn sec ancho" style="margin-top:8px" onclick="enviarRegistro(hoyK(), true)">Enviar ahora el resumen de hoy</button>` : ''}` : ''}`;
+    ${REGISTRO_URL && puedeEnviarReg(c) ? `<button class="btn sec ancho" style="margin-top:8px" onclick="enviarRegistro(hoyK(), true)">Enviar ahora el resumen de hoy</button>` : ''}` : ''}`;
 }
 /* ---------- Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» y se firma
    manteniendo pulsado el botón amarillo: se escribe tu nombre poco a poco, sale la hora y suena un acorde ---------- */
@@ -2677,6 +2684,7 @@ async function iniciarNube(){
       nube.ref = u ? firebase.firestore().collection('usuarios').doc(u.uid).collection('equilibra').doc('datos') : null;
       if(u) await traerNube();
       if(u && u.displayName && !D.nombre) guardarNombre(u.displayName);
+      if(u) setTimeout(() => revisarRegistro(true), 1000);   // con la cuenta ya lista, el resumen diario puede salir
       if(authInicial){
         authInicial = false;
         let saltada = false; try{ saltada = sessionStorage.getItem('equilibra.sinCuenta') === '1'; }catch(e){}
