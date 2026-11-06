@@ -177,7 +177,7 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--acento)}
 
 /* Navegación inferior */
 nav.abajo{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(20,15,38,.94);backdrop-filter:blur(10px);border-top:1px solid var(--linea);padding-bottom:env(safe-area-inset-bottom)}
-nav.abajo .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+nav.abajo .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr)}
 nav.abajo button{background:none;border:0;padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px;font-weight:700;color:var(--suave)}
 nav.abajo button span{font-size:20px;line-height:1.1;filter:grayscale(1);opacity:.6}
 nav.abajo button.act{color:var(--oro)}
@@ -477,6 +477,70 @@ body.pip #toast{bottom:16px}
 .unir-g{margin:10px 0 14px;padding:14px 16px;border-radius:18px;background:rgba(247,195,91,.14);line-height:1.4}
 .unir-g p{margin:0 0 12px}
 .unir-bots{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+/* Calendario */
+nav.abajo button{font-size:11px}
+.ag-modos{display:flex;gap:4px;background:rgba(255,255,255,.06);border-radius:14px;padding:4px;margin:6px 0 10px}
+.ag-modos button{flex:1;border:0;background:none;color:var(--suave);font-weight:800;font-size:14px;padding:9px 0;border-radius:10px}
+.ag-modos button.sel{background:var(--oro);color:#2a1d05}
+.ag-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0}
+.ag-nav b{font-size:17px;text-align:center;flex:1}
+.ag-acc{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:6px 0 14px}
+.ag-grupo,.ag-blk{margin:0 0 8px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.04)}
+.ag-blk.vacio{padding:4px 12px;background:transparent}
+.ag-blk.ahora{background:rgba(247,195,91,.12);box-shadow:inset 0 0 0 1.5px rgba(247,195,91,.5)}
+.ag-bh{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--suave)}
+.ag-bh b{color:var(--tinta);font-size:14px}
+.ag-ya{font-size:11px;font-weight:800;color:var(--oro)}
+.ag-mas{margin-left:auto;border:0;background:rgba(255,255,255,.08);color:var(--tinta);width:32px;height:32px;border-radius:50%;font-size:18px;line-height:1;flex:none}
+.ag-gt{margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--suave)}
+.ag-vacio{margin:0 0 12px}
+.ev{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.06);border-left:4px solid var(--c)}
+.ev .check{width:34px;height:34px;font-size:15px;border-width:2px}
+.ev.ok .ev-t{text-decoration:line-through;opacity:.6}
+.ev.pasado:not(.ok){opacity:.75}
+.ev-cuerpo{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:none;border:0;color:inherit;text-align:left;padding:0}
+.ev-h{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--c)}
+.ev-t{font-size:15px;font-weight:700;line-height:1.25}
+.ev-a{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--suave)}
+.ag-sem{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--linea)}
+.ag-sd{flex:none;width:52px;height:52px;border:0;border-radius:14px;background:rgba(255,255,255,.06);color:var(--tinta);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.ag-sd b{font-size:12px}
+.ag-sd span{font-size:18px;font-weight:800}
+.ag-sem.hoy .ag-sd{background:var(--oro);color:#2a1d05}
+.ag-se{flex:1;min-width:0}
+.ag-se .ev:first-child{margin-top:0}
+.ag-libre{border:0;background:none;color:var(--suave);font-weight:700;font-size:13px;padding:16px 0}
+.ag-mes{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.ag-ds{text-align:center;font-size:12px;font-weight:800;color:var(--suave);padding:4px 0}
+.ag-dia{aspect-ratio:1/1.05;border:0;border-radius:12px;background:rgba(255,255,255,.05);color:var(--tinta);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:700;font-size:15px;padding:0}
+.ag-dia.fuera{opacity:.35}
+.ag-dia.hoy{color:var(--oro);box-shadow:inset 0 0 0 1.5px var(--oro)}
+.ag-dia.sel{background:var(--oro);color:#2a1d05}
+.ag-dia i{display:flex;gap:3px;height:6px}
+.ag-dia em{width:6px;height:6px;border-radius:50%}
+.ag-lista{margin-top:14px}
+.ev-fila{display:flex;gap:10px;margin-top:12px}
+.ev-fila[hidden]{display:none}
+.ev-fila label{flex:1;display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--suave)}
+.hoja input[type=date],.hoja input[type=time]{width:100%;font:inherit;font-size:16px;border:0;border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.08);color:var(--tinta);color-scheme:dark}
+.ev-tipo{display:flex;gap:8px;margin-top:12px}
+.ev-tipo button{flex:1;border:0;border-radius:14px;padding:12px 8px;background:rgba(255,255,255,.07);color:var(--tinta);font-weight:800;font-size:15px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.ev-tipo button small{font-weight:600;font-size:12px;color:var(--suave)}
+.ev-tipo button.sel{background:var(--oro);color:#2a1d05}
+.ev-tipo button.sel small{color:#5b4210}
+.ev-dias{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:8px 0}
+.ev-dias button{aspect-ratio:1;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:var(--tinta);font-weight:800;font-size:15px}
+.ev-dias button.sel{background:#8b5cf6;color:#fff}
+.ev-veces{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.ev-veces button{min-width:40px;height:40px;border:0;border-radius:12px;background:rgba(255,255,255,.08);color:var(--tinta);font-weight:800;font-size:15px}
+.ev-veces button.sel{background:#8b5cf6;color:#fff}
+.ev-blk{display:flex;flex-direction:column;gap:6px;margin:10px 0 4px}
+.ev-mini{display:flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:8px 10px;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--tinta);text-align:left;font-size:14px}
+.ev-mini svg{flex:none;color:var(--c)}
+.ev-mini b{flex:none;font-size:13px;color:var(--c)}
+.ev-mini span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev-mini.ok span{text-decoration:line-through;opacity:.6}
+body.pip .ev-mini{pointer-events:none}
 .rev-cal button{flex:none;border:0;border-radius:99px;padding:9px 14px;background:var(--oro);color:#1d1636;font-weight:800}
 .pet-tit{font-size:17px;font-weight:800;margin:0 0 8px}
 .aj-fila.pet-fila{padding:10px 14px;margin-top:6px;background:color-mix(in srgb,var(--c) 14%,transparent)}
@@ -718,8 +782,9 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   <div class="in">
     <button data-v="dia" onclick="ir('dia')"><svg class="nav-flor" viewBox="-12 -12 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path transform="rotate(0) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(45) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(90) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(135) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(180) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(225) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(270) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(315) translate(0 -3.6)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><circle r="3.6"/></svg>Tareas</button>
     <button data-v="inicio" onclick="ir('inicio')"><span>🎯</span>Focus</button>
+    <button data-v="agenda" onclick="ir('agenda')"><svg class="nav-flor" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="8.5" cy="14.5" r=".9" fill="currentColor"/><circle cx="12" cy="14.5" r=".9" fill="currentColor"/></svg>Calendario</button>
     <button data-v="salud" onclick="ir('salud')"><span>👣</span>Cuerpo</button>
-    <button data-v="historial" onclick="ir('historial')"><span>📅</span>Historial</button>
+    <button data-v="historial" onclick="ir('historial')"><svg class="nav-flor" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16.5v-5M12 16.5V7M17 16.5v-3"/></svg>Historial</button>
     <button data-v="ajustes" onclick="ir('ajustes')"><span>⚙️</span>Ajustes</button>
   </div>
 </nav>
@@ -728,7 +793,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.63';
+const VERSION = 'v3.64';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -772,7 +837,7 @@ const nuevaSalud = (x = {}) => Object.assign({}, SALUD_DEF, {days:{}, pasos:{}},
 /* Bloques de tiempo (venidos de Amable PC): días → bloque → hasta 3 actividades {t, d, acc} */
 const BLOQUES_DEF = {days:{}, startVoice:true, remindOn:true, remindMin:5, sleepOn:true, sleepDone:'', ultimo:null, mod:null};
 const nuevosBloques = (x = {}) => Object.assign({}, BLOQUES_DEF, {days:{}}, x);
-const vacio = () => ({v:2, niveles:{}, detalle:{}, comentarios:{}, nivelesMod:null, revisiones:[], acciones:[], borradas:[], salud: nuevaSalud(), bloques: nuevosBloques()});
+const vacio = () => ({v:2, niveles:{}, detalle:{}, comentarios:{}, nivelesMod:null, revisiones:[], acciones:[], borradas:[], salud: nuevaSalud(), bloques: nuevosBloques(), agenda: {eventos: []}});
 const nivelDeNota = n => n <= 4 ? 'mas' : n <= 7 ? 'una' : 'bien';
 /* Pasa los datos de v1 (notas del 1 al 10 y acciones por semana) al formato nuevo */
 function migrar(d){
@@ -793,6 +858,7 @@ function normalizar(d){
   const r = d.v !== 2 ? migrar(d) : Object.assign(vacio(), d);
   r.salud = nuevaSalud(r.salud || {});
   r.bloques = nuevosBloques(r.bloques || {});
+  r.agenda = {eventos: Array.isArray((r.agenda || {}).eventos) ? r.agenda.eventos : []};
   return r;
 }
 function cargar(){
@@ -965,14 +1031,15 @@ function ir(v){
   vista = v;
   if(v !== 'evaluar') E = null;
   if(v === 'dia'){ bDia = 0; bSel = null; }
+  if(v === 'agenda') agK = hoyK();
   render();
   window.scrollTo(0, 0);
   if(v === 'dia') centrarBloque();
 }
 function render(){
-  const vistas = {inicio:vInicio, dia:vDia, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta};
+  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta};
   app.innerHTML = (vistas[vista] || vInicio)();
-  const conNav = ['inicio','dia','salud','historial','detalle','ajustes'].includes(vista);
+  const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes'].includes(vista);
   $('#nav').style.display = conNav ? '' : 'none';
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
@@ -1318,6 +1385,7 @@ function seccionAhora(){
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
       <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${pend.length}</b></span></div>
+    ${evsBloqueHTML(hoyK(), b)}
     ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}
@@ -1424,7 +1492,7 @@ function resumenDia(k){
   Object.keys(dia).forEach(i => { if((dia[i] || []).some(Boolean)) conTareas.add(+i); });
   const p = (S_().pasos || {})[k];
   return {bloques_con_tareas: conTareas.size, bloques_total: BLOQUES.length, tareas_hechas: hechas + sinArchivar,
-    tareas_total: hechas + sinArchivar + pendientesDia, pasos: p ? Math.round(p.steps || 0) : 0};
+    tareas_total: hechas + sinArchivar + pendientesDia, pasos: p ? Math.round(p.steps || 0) : 0, ...agendaDia(k)};
 }
 /* Pide algo al registro con la cuenta de Google (token de Firebase) y, si no vale (401) o no hay, con la clave de Grow Panel */
 async function fetchRegistro(ruta, opts){
@@ -1453,8 +1521,8 @@ function actualizarAjustesReg(pronto){
   })();
 }
 /* «Firma» de los números de un día: si no cambia, no hace falta volver a mandarlos (los pasos cuentan de 100 en 100) */
-const firmaReg = (k, r) => [k, r.bloques_con_tareas, r.tareas_hechas, r.tareas_total, Math.floor((r.pasos || 0) / 100)].join('|');
-const todoCero = r => !r.bloques_con_tareas && !r.tareas_hechas && !r.tareas_total && !r.pasos;
+const firmaReg = (k, r) => [k, r.bloques_con_tareas, r.tareas_hechas, r.tareas_total, Math.floor((r.pasos || 0) / 100), r.eventos_hoy, r.horas_agenda_hoy, r.eventos_hechos].join('|');
+const todoCero = r => !r.bloques_con_tareas && !r.tareas_hechas && !r.tareas_total && !r.pasos && !r.eventos_hoy;
 let regUltimoIntento = 0;
 const regEnCurso = new Set();
 async function enviarRegistro(fecha, aMano, alIrse){
@@ -1885,7 +1953,8 @@ function pintarEdicion(texto){
     <p class="eti" style="margin-top:12px">¿A qué pétalo pertenece?</p>
     <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === edicion.area ? 'sel' : ''}" style="--c:${x.color}" onclick="edArea('${x.id}', this)">${ico(x)} ${x.corto}</button>`).join('')}</div>
     <div class="ed-bots"><button class="btn prim" onclick="guardarEdicion()">Guardar</button><button class="btn peligro" id="ed-borrar" onclick="borrarEdicion()">Borrar</button><button class="btn sec" onclick="salirEdicion()">Cancelar</button></div>
-    <button type="button" class="compro-link ed-compro" onclick="comprometerEdicion()">${ICO_FIRMA} Me quiero comprometer</button>`, '#8b5cf6');
+    <button type="button" class="compro-link ed-compro" onclick="comprometerEdicion()">${ICO_FIRMA} Me quiero comprometer</button>
+    <button type="button" class="compro-link ed-compro" onclick="tareaAlCalendario()">${ICO_CAL} Poner en el calendario</button>`, '#8b5cf6');
   $('#ed-texto').value = texto;
 }
 function edArea(id, b){
@@ -1941,6 +2010,7 @@ const cerrarPetalo = cerrarHoja;
 /* La cruz (y tocar fuera) cierra cada hoja como su propio botón de salir */
 function cerrarHojaX(){
   if(edicion) salirEdicion();
+  else if(evEd) salirEvento();
   else if(avisoSalud) responderAviso(false);
   else cerrarHoja();
 }
@@ -2144,6 +2214,240 @@ function dictar(btn){
   try{ r.start(); }catch(e){ btn.classList.remove('escuchando'); reconocimiento = null; }
 }
 
+/* ---------- Calendario propio (web 3.64; idea de Grow Panel, fase 1 aprobada por Gustavo) ----------
+   Cada cosa del calendario es una TAREA (un día) o un HÁBITO (se repite N veces a la semana, los días elegidos), como en TickTick.
+   D.agenda.eventos: {id, t, tipo:'tarea'|'habito', dia:'AAAA-MM-DD' (el día, o desde cuándo), dias:[0..6] (0 = lunes, hábitos),
+   todo (todo el día), ini, fin (minutos desde las 0:00), area|null, avisos:[min antes] (todo el día: antes de las 9:00 de ese día),
+   saltar:[días quitados], hechos:[días hechos], acc (tarea de Life de la que sale), creada, mod}.
+   Viajan por la nube por id (gana mod; borrar = id en D.borradas). Los recordatorios suenan con la app abierta. */
+const ICO_CAL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
+const ICO_REP = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
+const AG_ = () => { if(!D.agenda) D.agenda = {eventos: []}; return D.agenda; };
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS_CORTO = ['L','M','X','J','V','S','D'];
+const DIAS_LARGO = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
+const DIAS_VECES = {1:[0], 2:[0,3], 3:[0,2,4], 4:[0,1,3,4], 5:[0,1,2,3,4], 6:[0,1,2,3,4,5], 7:[0,1,2,3,4,5,6]};
+// recordatorios, los mismos que TickTick
+const RECORD_HORA = [{k:0, t:'A la hora'}, {k:5, t:'5 min antes'}, {k:30, t:'30 min antes'}, {k:60, t:'1 hora antes'}, {k:1440, t:'1 día antes'}];
+const RECORD_DIA = [{k:0, t:'El mismo día (9:00)'}, {k:1440, t:'1 día antes (9:00)'}, {k:2880, t:'2 días antes (9:00)'}, {k:10080, t:'1 semana antes (9:00)'}];
+const fechaDe = k => { const [a, m, d] = k.split('-').map(Number); return new Date(a, m - 1, d); };
+const sumarDias = (k, n) => { const d = fechaDe(k); d.setDate(d.getDate() + n); return claveDia(d); };
+const diaSem = k => (fechaDe(k).getDay() + 6) % 7;   // 0 = lunes
+const lunesDe = k => sumarDias(k, -diaSem(k));
+const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const minDeHora = v => { const r = /^(\d{1,2}):(\d{2})/.exec(v || ''); return r ? +r[1] * 60 + +r[2] : null; };
+const fechaLarga = k => { const d = fechaDe(k); return `${DIAS_SEM[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}`; };
+function tocaEv(e, k){
+  if(!e || k < e.dia || (e.saltar || []).includes(k)) return false;
+  if(e.tipo === 'habito') return (e.dias || []).includes(diaSem(k));
+  return k === e.dia;
+}
+const eventosDe = k => AG_().eventos.filter(e => tocaEv(e, k)).sort((a, b) => (b.todo - a.todo) || ((a.ini || 0) - (b.ini || 0)) || (a.t < b.t ? -1 : 1));
+const hechoEv = (e, k) => (e.hechos || []).includes(k) || !!(e.acc && e.tipo !== 'habito' && (D.acciones.find(x => x.id === e.acc) || {}).hecha);
+const pasadoEv = (e, k) => !e.todo && (k < hoyK() || (k === hoyK() && e.fin <= minutosHoy()));
+const colorEv = e => (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
+const horaEv = e => e.todo ? 'Todo el día' : `${hm(e.ini)} – ${hm(e.fin)}`;
+const txtHabito = e => { const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length === 5 && d.join() === '0,1,2,3,4' ? 'De lunes a viernes' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana`; };
+/* Números del día para Grow Panel: cuántos hay hoy, horas ocupadas (sin contar dos veces lo que se solapa) y hechos o ya pasados */
+function agendaDia(k){
+  const evs = eventosDe(k), tramos = evs.filter(e => !e.todo).map(e => [e.ini, e.fin]).sort((a, b) => a[0] - b[0]);
+  let min = 0, fin = -1;
+  tramos.forEach(([a, b]) => { if(b <= fin) return; min += b - Math.max(a, fin); fin = b; });
+  return {eventos_hoy: evs.length, horas_agenda_hoy: Math.round(min / 60 * 100) / 100, eventos_hechos: evs.filter(e => hechoEv(e, k) || pasadoEv(e, k)).length};
+}
+/* Lo del calendario que cae dentro de un bloque (en Tareas y en Focus) */
+function evsBloqueHTML(k, b){
+  const es = eventosDe(k).filter(e => !e.todo && e.ini < b.fin && e.fin > b.ini); if(!es.length) return '';
+  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}" style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${k}')">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${esc(e.t)}</span></button>`).join('')}</div>`;
+}
+const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
+  return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
+    <button class="check ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
+    <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : ''}</span><span class="ev-t">${esc(e.t)}</span>${ar ? `<span class="ev-a">${ico(ar)} ${ar.corto}</span>` : ''}</button></div>`; };
+let agModo = 'dia', agK = null;
+function vAgenda(){
+  if(!agK) agK = hoyK();
+  const hoy = hoyK(), d0 = fechaDe(agK);
+  let tit, cuerpo, conHoy;
+  if(agModo === 'dia'){
+    tit = fechaLarga(agK) + (agK === hoy ? ' · hoy' : ''); conHoy = agK === hoy;
+    const evs = eventosDe(agK), todo = evs.filter(e => e.todo), conHora = evs.filter(e => !e.todo), cur = agK === hoy ? bloqueAhora() : -1;
+    const grupo = (t, es) => es.length ? `<div class="ag-grupo"><p class="ag-gt">${t}</p>${es.map(e => filaEv(e, agK)).join('')}</div>` : '';
+    cuerpo = (evs.length ? '' : `<p class="peq suave ag-vacio">Nada en tu calendario este día. Toca ＋ en un bloque para añadir algo a esa hora.</p>`)
+      + grupo('Todo el día', todo) + grupo('Antes de las 5:30', conHora.filter(e => e.ini < BLOQUES[0].ini))
+      + BLOQUES.map((b, i) => { const es = conHora.filter(e => e.ini >= b.ini && e.ini < b.fin), nT = actsDe(agK, i).filter(a => !hechaAct(a)).length;
+          return `<div class="ag-blk ${i === cur ? 'ahora' : ''} ${es.length ? '' : 'vacio'}"><div class="ag-bh"><b>${hm(b.ini)} – ${hm(b.fin)}</b>${i === cur ? '<span class="ag-ya">AHORA</span>' : ''}${nT ? `<span>${nT} ${nT === 1 ? 'tarea' : 'tareas'} del bloque</span>` : ''}<button class="ag-mas" aria-label="Añadir a las ${hm(b.ini)}" onclick="nuevoEvento('${agK}', ${b.ini})">＋</button></div>${es.map(e => filaEv(e, agK)).join('')}</div>`; }).join('')
+      + grupo('Después de las 22:00', conHora.filter(e => e.ini >= BLOQUES[BLOQUES.length - 1].fin));
+  } else if(agModo === 'semana'){
+    const l = lunesDe(agK), dom = sumarDias(l, 6), dl = fechaDe(l), dd = fechaDe(dom);
+    tit = dl.getMonth() === dd.getMonth() ? `${dl.getDate()} – ${dd.getDate()} de ${MESES[dd.getMonth()]}` : `${dl.getDate()} de ${MESES[dl.getMonth()]} – ${dd.getDate()} de ${MESES[dd.getMonth()]}`;
+    conHoy = hoy >= l && hoy <= dom;
+    cuerpo = [0, 1, 2, 3, 4, 5, 6].map(n => { const k = sumarDias(l, n), d = fechaDe(k), es = eventosDe(k);
+      return `<div class="ag-sem ${k === hoy ? 'hoy' : ''}"><button class="ag-sd" onclick="agIrDia('${k}')"><b>${DIAS_CORTO[n]}</b><span>${d.getDate()}</span></button>
+        <div class="ag-se">${es.length ? es.map(e => filaEv(e, k)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${k}')">Libre · ＋ añadir</button>`}</div></div>`; }).join('');
+  } else {
+    tit = MESES[d0.getMonth()].replace(/^./, c => c.toUpperCase()) + ' ' + d0.getFullYear();
+    const primero = claveDia(new Date(d0.getFullYear(), d0.getMonth(), 1)), ini = lunesDe(primero), nDias = new Date(d0.getFullYear(), d0.getMonth() + 1, 0).getDate();
+    conHoy = hoy.slice(0, 7) === agK.slice(0, 7);
+    const celdas = Math.ceil((diaSem(primero) + nDias) / 7) * 7;
+    let g = DIAS_CORTO.map(x => `<span class="ag-ds">${x}</span>`).join('');
+    for(let n = 0; n < celdas; n++){ const k = sumarDias(ini, n), es = eventosDe(k);
+      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i></button>`; }
+    const evs = eventosDe(agK);
+    cuerpo = `<div class="ag-mes">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
+  }
+  return `<h1 class="tit-acc">Calendario</h1>
+    <div class="ag-modos">${[['dia', 'Día'], ['semana', 'Semana'], ['mes', 'Mes']].map(([k, t]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${t}</button>`).join('')}</div>
+    <div class="ag-nav"><button class="fn-flecha" onclick="agMover(-1)" aria-label="Anterior">‹</button><b>${tit}</b><button class="fn-flecha" onclick="agMover(1)" aria-label="Siguiente">›</button></div>
+    <div class="ag-acc">${conHoy ? '' : '<button class="link" onclick="agHoy()">Volver a hoy</button>'}<button class="btn prim" onclick="nuevoEvento()">＋ Nuevo</button></div>
+    ${cuerpo}`;
+}
+function agVer(m){ agModo = m; render(); }
+function agMover(dir){
+  if(agModo === 'dia') agK = sumarDias(agK, dir);
+  else if(agModo === 'semana') agK = sumarDias(agK, 7 * dir);
+  else { const d = fechaDe(agK); agK = claveDia(new Date(d.getFullYear(), d.getMonth() + dir, 1)); }
+  render();
+}
+function agHoy(){ agK = hoyK(); render(); }
+function agIrDia(k){ agK = k; agModo = 'dia'; render(); window.scrollTo(0, 0); }
+function agElegir(k){ agK = k; render(); }
+/* ---- Hoja: nueva tarea o hábito del calendario ---- */
+let evEd = null;
+function nuevoEvento(k, ini, pre){
+  const dia = k || agK || hoyK(), m = minutosHoy();
+  const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
+  evEd = {id: null, k: dia, tipo: 'tarea', area: (pre && pre.area) || null, dias: [diaSem(dia)], avisos: [], acc: (pre && pre.acc) || null};
+  pintarEvento({t: (pre && pre.t) || '', dia, todo: false, ini: base, fin: Math.min(base + 60, 1439)});
+}
+function editarEvento(id, k){
+  const e = AG_().eventos.find(x => x.id === id); if(!e) return;
+  evEd = {id, k, tipo: e.tipo || 'tarea', area: e.area || null, dias: (e.dias || [diaSem(e.dia)]).slice(), avisos: (e.avisos || []).slice(), acc: e.acc || null, armado: false};
+  pintarEvento(e);
+}
+function pintarEvento(e){
+  hojaAbierta = null;
+  const hab = evEd.tipo === 'habito', todo = !!e.todo;
+  mostrarHoja(`<div class="hoja-cab"><div><h2>${evEd.id ? (hab ? 'Editar hábito' : 'Editar tarea del calendario') : 'Nuevo en el calendario'}</h2></div></div>
+    <p class="eti" style="margin-top:12px">¿Es una tarea o un hábito?</p>
+    <div class="ev-tipo"><button class="${hab ? '' : 'sel'}" onclick="evTipo('tarea')">Tarea<small>un día</small></button><button class="${hab ? 'sel' : ''}" onclick="evTipo('habito')">Hábito<small>se repite cada semana</small></button></div>
+    <div class="campo-voz" style="margin-top:12px"><input type="text" id="ev-t" maxlength="120" placeholder="${hab ? 'Por ejemplo: Caminar 20 minutos' : 'Por ejemplo: Dentista'}">${botonMic()}</div>
+    <div id="ev-hab" ${hab ? '' : 'hidden'}>
+      <p class="eti" style="margin-top:14px">¿Cuántas veces a la semana?</p>
+      <div class="ev-veces">${[1, 2, 3, 4, 5, 6, 7].map(n => `<button data-n="${n}" class="${evEd.dias.length === n ? 'sel' : ''}" onclick="evVeces(${n})">${n}</button>`).join('')}</div>
+      <p class="eti" style="margin-top:10px">¿Qué días?</p>
+      <div class="ev-dias">${DIAS_CORTO.map((x, i) => `<button data-d="${i}" class="${evEd.dias.includes(i) ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evDia(${i})">${x}</button>`).join('')}</div>
+    </div>
+    <div class="ev-fila"><label><span id="ev-dia-t">${hab ? 'Empieza el' : 'Día'}</span><input type="date" id="ev-dia" value="${e.dia}"></label></div>
+    <label class="desliz" style="--c:#f7c35b;margin-top:12px"><input type="checkbox" id="ev-todo" ${todo ? 'checked' : ''} onchange="evTodo(this.checked)"><i></i>Todo el día</label>
+    <div class="ev-fila" id="ev-horas" ${todo ? 'hidden' : ''}><label>Empieza<input type="time" id="ev-ini" value="${hhmm(e.ini != null ? e.ini : 540)}" onchange="evIniCambia()"></label><label>Termina<input type="time" id="ev-fin" value="${hhmm(e.fin != null ? e.fin : 600)}"></label></div>
+    <p class="eti" style="margin-top:14px">Recordatorios</p>
+    <div class="chips" id="ev-record" style="justify-content:flex-start;margin:8px 0">${chipsRecord(todo)}</div>
+    <p class="eti">Área (si quieres)</p>
+    <div class="chips" style="justify-content:flex-start;margin:8px 0"><button class="chip ${!evEd.area ? 'sel' : ''}" style="--c:#f7c35b" onclick="evArea(null, this)">Sin área</button>${AREAS.map(x => `<button class="chip ${x.id === evEd.area ? 'sel' : ''}" style="--c:${x.color}" onclick="evArea('${x.id}', this)">${ico(x)} ${x.corto}</button>`).join('')}</div>
+    ${evEd.id ? `<button class="btn sec ancho" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
+    <div class="ed-bots"><button class="btn prim" onclick="guardarEvento()">Guardar</button>${evEd.id ? '<button class="btn peligro" id="ev-borrar" onclick="borrarEvento()">Borrar</button>' : ''}<button class="btn sec" onclick="salirEvento()">Cancelar</button></div>
+    <div id="ev-borrar-rep"></div>`, colorEv({area: evEd.area}));
+  $('#ev-t').value = e.t || '';
+}
+const chipsRecord = todo => (todo ? RECORD_DIA : RECORD_HORA).map(r => `<button class="chip ${evEd.avisos.includes(r.k) ? 'sel' : ''}" style="--c:#8b5cf6" onclick="evRecord(${r.k}, this)">${r.t}</button>`).join('');
+function evTipo(t){
+  evEd.tipo = t; const hab = t === 'habito';
+  document.querySelectorAll('.ev-tipo button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
+  $('#ev-hab').hidden = !hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
+  $('#ev-t').placeholder = hab ? 'Por ejemplo: Caminar 20 minutos' : 'Por ejemplo: Dentista';
+  const h2 = $('.hoja-cab h2'); if(h2 && evEd.id) h2.textContent = hab ? 'Editar hábito' : 'Editar tarea del calendario';
+}
+function pintarDias(){
+  document.querySelectorAll('.ev-dias button').forEach(b => b.classList.toggle('sel', evEd.dias.includes(+b.dataset.d)));
+  document.querySelectorAll('.ev-veces button').forEach(b => b.classList.toggle('sel', +b.dataset.n === evEd.dias.length));
+}
+function evVeces(n){ evEd.dias = DIAS_VECES[n].slice(); pintarDias(); }
+function evDia(i){
+  const d = evEd.dias; evEd.dias = d.includes(i) ? d.filter(x => x !== i) : [...d, i].sort();
+  pintarDias();
+}
+function evTodo(on){ $('#ev-horas').hidden = on; evEd.avisos = []; $('#ev-record').innerHTML = chipsRecord(on); }
+function evRecord(k, b){ const a = evEd.avisos; evEd.avisos = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; b.classList.toggle('sel', evEd.avisos.includes(k)); }
+function evArea(id, b){ evEd.area = id; b.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === b)); }
+function evIniCambia(){
+  const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin'));
+  if(i != null && (f == null || f <= i)) $('#ev-fin').value = hhmm(Math.min(i + 60, 1439));
+}
+function guardarEvento(){
+  const e0 = evEd; if(!e0) return;
+  const t = valor('ev-t'); if(!t){ aviso('Escribe qué es'); return; }
+  if(e0.tipo === 'habito' && !e0.dias.length){ aviso('Elige qué días'); return; }
+  const dia = valor('ev-dia') || e0.k, todo = $('#ev-todo').checked;
+  let ini = minDeHora(valor('ev-ini')), fin = minDeHora(valor('ev-fin'));
+  if(!todo){ if(ini == null){ aviso('Pon la hora de empezar'); return; } if(fin == null || fin <= ini) fin = Math.min(ini + 60, 1439); }
+  const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
+  if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
+  Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], todo, ini: todo ? null : ini, fin: todo ? null : fin,
+    area: e0.area || null, avisos: e0.avisos.slice().sort((a, b) => a - b), acc: e0.acc || null, mod: ahoraISO()});
+  guardar(); sonarHecho();
+  aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
+  evEd = null; cerrarHoja();
+  if(vista === 'agenda' && !e0.id) agK = dia;
+  rerenderDia();
+}
+function borrarEvento(){
+  const e0 = evEd; if(!e0 || !e0.id) return;
+  const e = AG_().eventos.find(x => x.id === e0.id); if(!e) return;
+  if(e.tipo === 'habito'){
+    $('#ev-borrar-rep').innerHTML = `<p class="peq" style="margin:14px 0 6px">Es un hábito. ¿Qué quieres borrar?</p><div class="ed-bots"><button class="btn peligro" onclick="borrarEvento2(false)">Solo el ${fechaDe(e0.k).getDate()} de ${MESES[fechaDe(e0.k).getMonth()]}</button><button class="btn peligro" onclick="borrarEvento2(true)">Todo el hábito</button></div>`;
+    return;
+  }
+  if(!e0.armado){ e0.armado = true; const b = $('#ev-borrar'); if(b) b.textContent = '¿Seguro?'; return; }
+  borrarEvento2(true);
+}
+function borrarEvento2(todo){
+  const e0 = evEd, A = AG_(), e = e0 && A.eventos.find(x => x.id === e0.id); if(!e) return;
+  if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas.push(e.id); aviso('Borrado del calendario'); }
+  else { e.saltar = [...new Set([...(e.saltar || []), e0.k])]; e.mod = ahoraISO(); aviso('Quitado ese día'); }
+  guardar(); evEd = null; cerrarHoja(); rerenderDia();
+}
+function salirEvento(){ evEd = null; cerrarHoja(); }
+function alternarEv(id, k, desdeHoja){
+  const e = AG_().eventos.find(x => x.id === id); if(!e) return;
+  const ya = hechoEv(e, k);
+  e.hechos = (e.hechos || []).filter(d => d !== k && d >= sumarDias(hoyK(), -120));
+  if(!ya) e.hechos.push(k);
+  if(e.acc && e.tipo !== 'habito'){ const x = D.acciones.find(z => z.id === e.acc); if(x){ x.hecha = !ya; x.hechaEn = ya ? null : ahoraISO(); x.mod = ahoraISO(); } }
+  e.mod = ahoraISO(); guardar(); if(!ya) sonarHecho();
+  if(desdeHoja){ evEd = null; cerrarHoja(); }
+  rerenderDia();
+}
+/* «Editar tarea» → «Poner en el calendario»: la misma tarea, con su pétalo, ligada a la del calendario */
+function tareaAlCalendario(){
+  const e = edicion; if(!e) return;
+  const t = valor('ed-texto'); if(!t){ aviso('Escribe el nombre de la tarea'); return; }
+  edicion = null;
+  nuevoEvento(hoyK(), null, {t, area: e.area, acc: e.id || null});
+}
+/* Recordatorios (con la app abierta), como en TickTick: varios por cosa; los de «todo el día», a las 9:00 */
+function avisarEventos(){
+  const ahora = Date.now(), hoy = hoyK();
+  let vistos; try{ vistos = JSON.parse(localStorage.getItem('equilibra.recordados')) || []; }catch(e){ vistos = []; }
+  let cambio = false;
+  for(let n = 0; n <= 7; n++){
+    const k = sumarDias(hoy, n);
+    eventosDe(k).forEach(e => (e.avisos || []).forEach(a => {
+      const base = fechaDe(k).getTime() + (e.todo ? 540 : e.ini) * 60000, cuando = base - a * 60000, clave = `${e.id}|${k}|${a}`;
+      if(ahora < cuando || ahora > cuando + 10 * 60000 || vistos.includes(clave) || hechoEv(e, k)) return;
+      vistos.push(clave); cambio = true;
+      if(pausa.tareas) return;
+      const txt = e.todo ? (a === 0 ? `Hoy: ${e.t}` : `${a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : 'Dentro de una semana'}: ${e.t}`)
+        : a === 0 ? `Ahora: ${e.t}` : a === 1440 ? `Mañana a las ${hm(e.ini)}: ${e.t}`
+        : (falta => `A las ${hm(e.ini)} (${falta >= 55 ? 'en 1 hora' : `en ${falta} min`}): ${e.t}`)(Math.max(1, Math.round((base - ahora) / 60000)));   // lo que falta de verdad
+      nota(ESCALA[5], 0, .15, .8, false); nota(ESCALA[7], .12, .15, .9, false);
+      aviso(txt, 9000);
+      setTimeout(() => hablar(txt.replace(/\(en (\d+) min\)/, 'dentro de $1 minutos').replace('(en 1 hora)', 'dentro de una hora') + '.', 'tareas'), 700);
+    }));
+  }
+  if(cambio){ try{ localStorage.setItem('equilibra.recordados', JSON.stringify(vistos.filter(c => c.split('|')[1] >= sumarDias(hoy, -2)).slice(-300))); }catch(e){} }
+}
+
 /* ---------- Día: bloques de tiempo de 5:30 a 22:00 (venidos de Amable PC) ---------- */
 const BLOQUES = []; for(let m = 330; m < 1320; m += 90) BLOQUES.push({ini: m, fin: m + 90});
 const MAX_ACT = 3;
@@ -2208,6 +2512,7 @@ function vDia(){
     <section class="tarjeta bloque-sel" data-drop="bloque">
       <div class="bs-cab"><b>${hm(b.ini)} – ${hm(b.fin)}</b><span>${estado}</span></div>
       ${bSel === cur ? `<div class="mini-barra"><i style="width:${(m - b.ini) / 90 * 100}%"></i></div>` : ''}
+      ${evsBloqueHTML(k, b)}
       ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span class="t-col">${esc(a.t)}${tagArea(a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area) : null)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
       ${lleno ? `<p class="peq suave" style="margin:8px 0 0">Bloque completo · ${MAX_ACT} actividades</p>` : `
         <p class="eti" style="margin:14px 0 0">Añadir nueva tarea</p>
@@ -2359,6 +2664,7 @@ let recordarDesde = Date.now(), bloquesTickAbrir = true;   // la primera vuelta 
 function refrescarFocus(){ const h = hojaAbierta; hojaAbierta = null; rerenderDia(); hojaAbierta = h; }
 function bloquesTick(){
   const c = bloqueAhora(), B = B_();
+  avisarEventos();
   if(apuntarBloquesConTareas()) guardar();
   revisarRegistro(bloquesTickAbrir); bloquesTickAbrir = false;
   if(!archivoT) archivarHechas();
@@ -2806,6 +3112,7 @@ function fusionar(local, remoto){
   const [bGana, bPierde] = (br.mod || '') > (bl.mod || '') ? [br, bl] : [bl, br];
   r.bloques = nuevosBloques(bGana);
   r.bloques.days = Object.assign({}, bPierde.days || {}, bGana.days || {});
+  r.agenda = {eventos: unir((local.agenda || {}).eventos || [], (remoto.agenda || {}).eventos || [], 'mod')};   // calendario: por evento, gana el cambiado más tarde
   r.nombre = local.nombre || remoto.nombre || '';
   const al = local.appAndroid, ar = remoto.appAndroid;
   const cr = [local.calRevisado, remoto.calRevisado].filter(Boolean).sort().pop(); if(cr) r.calRevisado = cr;
@@ -3100,7 +3407,7 @@ function borrarTodo(){
 }
 
 /* ---------- Deslizar el dedo: pétalo siguiente/anterior, o pestaña siguiente/anterior ---------- */
-const PESTANAS = ['dia', 'inicio', 'salud', 'historial', 'ajustes'];
+const PESTANAS = ['dia', 'inicio', 'agenda', 'salud', 'historial', 'ajustes'];
 let toque = null;
 app.addEventListener('touchstart', e => {
   const t = e.target;
@@ -3142,6 +3449,7 @@ document.addEventListener('touchend', () => {
   else pullPon(0);
 });
 function deslizar(dir){
+  if(vista === 'agenda'){ agMover(dir); return; }   // en el calendario, deslizar pasa de día, semana o mes
   if(vista === 'evaluar' && E){
     if(dir > 0){ if(E.i === AREAS.length-1) return; siguiente(); }   // el último pétalo se guarda con su botón
     else { if(E.i === 0) return; atras(); }
