@@ -330,6 +330,13 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .btn-flot:active{filter:brightness(.92)}
 .btn.sec.btn-bloque{border:2px solid #e0323a}
 /* Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» + firma */
+.compro-link{display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:2px 0;border:0;background:none;color:#fcd34d;font:inherit;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.compro-link svg{width:15px;height:15px}
+.prox.foco-1:not(.ok) .compro-link{color:#fff3c4}
+.ed-compro{display:flex;margin:14px auto 0;font-size:15px}
+.ed-bots{display:flex;gap:8px;margin-top:12px}
+.ed-bots .btn{flex:1;min-width:0;padding-left:8px;padding-right:8px}
+body.pip .compro-link{display:none}
 .btn.sec.btn-compro{margin-top:12px;border:2px solid #f59e0b;color:#fcd34d;display:flex;align-items:center;justify-content:center;gap:8px}
 .pact-box{position:relative;clear:both;margin-top:8px;background:#fffbeb;border:3px solid #f59e0b;border-radius:22px;padding:22px 16px;color:#1e293b;text-align:center;font-family:Georgia,'Times New Roman',serif}
 .pact-head{font-family:system-ui,sans-serif;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:#b45309;margin-bottom:10px}
@@ -717,7 +724,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.51';
+const VERSION = 'v3.52';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1288,12 +1295,13 @@ function seccionAhora(){
   const c = bloqueAhora(), m = minutosHoy();
   if(c < 0) return `<section class="ahora-blk fuera"><div class="ah-cab"><span class="ah-reloj">${m >= 1320 ? '🌙' : '🌅'}</span><div><b>${m >= 1320 ? 'Hora de descansar' : 'Tu día empieza a las 5:30'}</b><small>Los bloques van de 5:30 a 22:00</small></div></div>
     <button class="link" onclick="ir('dia')">Planificar los bloques →</button></section>`;
-  const b = BLOQUES[c], acts = actsDe(hoyK(), c);
+  const b = BLOQUES[c], acts = actsDe(hoyK(), c), comp = compVigente();
   const fila = (a, i, grande) => {
     const x = a.acc && D.acciones.find(z => z.id === a.acc), ar = x && areaDe(x.area), ok = hechaAct(a);
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
       ${ok ? '<span class="asa-hueco"></span>' : ASA}<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>
-      <div class="cuerpo-p"><div class="texto-p">${esc(a.t)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}</div>
+      <div class="cuerpo-p"><div class="texto-p">${esc(a.t)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
+        ${!ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">${ICO_FIRMA} Me quiero comprometer</button>` : ''}</div>
       ${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>`;
   };
   // arriba solo la tarea en la que estás (la primera sin hacer); debajo las demás pendientes; las hechas al final, tachadas
@@ -1449,7 +1457,7 @@ function compromisoHTML(pend){
     <div class="f-pact-pie"><span class="pact-cuenta" data-hasta="${c.hasta}">${txtCompromiso(c.hasta)}</span><button type="button" class="pact-ver" onclick="verCompromiso()">Ver contrato</button></div></div>`;
   if(c) return `<div class="f-pact vencido"><div class="f-pact-title">Se acabó el tiempo del compromiso</div><div class="f-pact-text">${pactFrase(c.t, c.min)}</div>
     <button class="btn sec ancho btn-compro" onclick="abrirCompromiso()">${ICO_FIRMA} Volver a comprometerme</button></div>`;
-  return pend.length ? `<button class="btn sec ancho btn-compro" onclick="abrirCompromiso()">${ICO_FIRMA} Me comprometo con esta tarea</button>` : '';
+  return '';
 }
 /* Botón: la primera tarea sin hacer del bloque, en menos de 15 / 25 / 45 min o hasta el final del bloque */
 function abrirCompromiso(previo){
@@ -1460,6 +1468,14 @@ function abrirCompromiso(previo){
   const opciones = [...new Set([15, 25, 45].filter(m => m < queda).concat(ini, queda))].sort((x, y) => x - y);
   pact = {t: a.t, acc: a.acc || null, min: ini, queda, opciones, prog: 0, letras: 0, sujeto: false, auto: false, firmado: false};
   pintarCompromiso();
+}
+/* «Me quiero comprometer» de una tarea del bloque de ahora, o desde «Editar tarea» */
+function comprometerAct(i){ const b = bloqueAhora(), a = b >= 0 && actsDe(hoyK(), b)[i]; if(a) abrirCompromiso({t: a.t, acc: a.acc || null}); }
+function comprometerEdicion(){
+  const e = edicion; if(!e) return;
+  const x = e.id && D.acciones.find(z => z.id === e.id), a = !e.id && actsDe(e.k, e.i)[e.j];
+  const t = x ? x.texto : a ? a.t : ''; if(!t) return;
+  edicion = null; abrirCompromiso({t, acc: x ? x.id : (a.acc || null)});
 }
 /* El lápiz del contrato: se cambian los minutos y hay que volver a firmarlo */
 function editarCompromiso(){ const c = D.compromiso; if(c) abrirCompromiso({t: c.t, acc: c.acc, min: c.min}); }
@@ -1531,6 +1547,11 @@ function pactFirmado(){
   const P = pact; P.firmado = true; P.sujeto = P.auto = false; P.at = Date.now();
   sonarLacre(); guardarNombre(P.nombre);
   D.compromiso = {t: P.t, acc: P.acc, min: P.min, nombre: P.nombre, at: P.at, hasta: P.at + P.min * 60000, dia: hoyK(), estado: 'activo', mod: ahoraISO()};
+  const bl = bloqueAhora();
+  if(bl >= 0){ const acts = actsDe(hoyK(), bl, true);
+    if(!acts.some(a => a && !hechaAct(a) && compCasa(a, D.compromiso))){
+      if(acts.length < MAX_ACT){ const n = {t: P.t, d: false}; if(P.acc) n.acc = P.acc; acts.unshift(n); apuntarBloquesConTareas(); B_().mod = ahoraISO(); }
+      else aviso('El bloque está completo: haz sitio para ver el compromiso en Focus', 5000); } }
   guardar();
   $('#pactSig').textContent = P.nombre; $('#pactTime').textContent = 'a las ' + pactHora(P.at);
   $('#pactLbl').textContent = 'Firmado'; $('#pactHoldTxt').textContent = '✓ Firmado';
@@ -1768,9 +1789,8 @@ function pintarEdicion(texto){
     <div class="campo-voz" style="margin-top:10px"><input type="text" id="ed-texto" maxlength="120" onkeydown="if(event.key==='Enter')guardarEdicion()">${botonMic()}</div>
     <p class="eti" style="margin-top:12px">¿A qué pétalo pertenece?</p>
     <div class="chips" style="justify-content:flex-start;margin:8px 0">${AREAS.map(x => `<button class="chip ${x.id === edicion.area ? 'sel' : ''}" style="--c:${x.color}" onclick="edArea('${x.id}', this)">${ico(x)} ${x.corto}</button>`).join('')}</div>
-    <button class="btn prim ancho" style="margin-top:10px" onclick="guardarEdicion()">Guardar</button>
-    <button class="btn peligro ancho" id="ed-borrar" style="margin-top:8px" onclick="borrarEdicion()">Borrar tarea</button>
-    <button class="btn sec ancho" style="margin-top:8px" onclick="salirEdicion()">Cancelar</button>`, '#8b5cf6');
+    <div class="ed-bots"><button class="btn prim" onclick="guardarEdicion()">Guardar</button><button class="btn peligro" id="ed-borrar" onclick="borrarEdicion()">Borrar</button><button class="btn sec" onclick="salirEdicion()">Cancelar</button></div>
+    <button type="button" class="compro-link ed-compro" onclick="comprometerEdicion()">${ICO_FIRMA} Me quiero comprometer</button>`, '#8b5cf6');
   $('#ed-texto').value = texto;
 }
 function edArea(id, b){
@@ -1801,7 +1821,7 @@ function guardarEdicion(){
 }
 function borrarEdicion(){
   const e = edicion; if(!e) return;
-  if(!e.armado){ e.armado = true; const b = $('#ed-borrar'); if(b) b.textContent = '¿Seguro? Toca otra vez para borrarla'; return; }
+  if(!e.armado){ e.armado = true; const b = $('#ed-borrar'); if(b) b.textContent = '¿Seguro?'; return; }
   if(e.id) borrarAccion(e.id);
   else quitarActividad(e.k, e.i, e.j);
   salirEdicion();
