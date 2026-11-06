@@ -728,7 +728,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.62';
+const VERSION = 'v3.63';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1431,8 +1431,9 @@ async function fetchRegistro(ruta, opts){
   const clave = claveReg(regCfg()), o = opts || {};
   const ir = cred => fetch(REGISTRO_URL.replace(/\/+$/, '') + ruta, Object.assign({}, o, {headers: Object.assign({'Authorization': 'Bearer ' + cred}, o.headers || {})}));
   let r = null;
-  if(cuentaGoogle()){ try{ r = await ir(await firebase.auth().currentUser.getIdToken()); }catch(e){ r = null; } }
-  if((!r || r.status === 401) && clave) r = await ir(clave);
+  // solo credenciales con formato válido: un token de Firebase (tres partes con puntos) o la clave de Grow Panel; si no, no se manda nada
+  if(cuentaGoogle()){ try{ const t = String(await firebase.auth().currentUser.getIdToken() || '').trim(); if(/^[\w-]+\.[\w-]+\.[\w-]+$/.test(t)) r = await ir(t); }catch(e){ r = null; } }
+  if((!r || r.status === 401) && claveRegValida(clave)) r = await ir(clave);
   return r;
 }
 /* ¿Comparte la persona sus números? Lo decide en Grow Panel (GET /ajustes → "compartir": true|false; también llega en la
