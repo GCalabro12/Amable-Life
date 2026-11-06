@@ -717,7 +717,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.50';
+const VERSION = 'v3.51';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1321,6 +1321,8 @@ function seccionAhora(){
 const REGISTRO_URL = '';   // dirección del Worker «registro-diario» (p. ej. https://registro-diario.xxx.workers.dev): falta que Gustavo lo publique
 const CLAVE_REGISTRO = 'equilibra.registro';
 const claveRegValida = c => /^[A-Za-z0-9_-]{32,128}$/.test(c || '');
+const claveGrowPanel = () => { try{ const k = window.GrowPanel && GrowPanel.clave && GrowPanel.clave(); return claveRegValida(k) ? k : ''; }catch(e){ return ''; } };
+const claveReg = c => claveRegValida(c.clave) ? c.clave : claveGrowPanel();
 function regCfg(){ try{ return Object.assign({on: false, clave: '', enviado: '', desde: ''}, JSON.parse(localStorage.getItem(CLAVE_REGISTRO)) || {}); }catch(e){ return {on: false, clave: '', enviado: '', desde: ''}; } }
 function regGuardar(c){ try{ localStorage.setItem(CLAVE_REGISTRO, JSON.stringify(c)); }catch(e){} }
 /* Los bloques que han tenido tareas hoy (las tachadas salen del bloque a los 4 s, así que se van apuntando durante el día) */
@@ -1347,11 +1349,12 @@ let regUltimoIntento = 0;
 async function enviarRegistro(fecha, aMano){
   const c = regCfg();
   if(!REGISTRO_URL){ if(aMano) aviso('Aún no está el servidor del registro diario'); return false; }
-  if(!c.on || !claveRegValida(c.clave)){ if(aMano) aviso('Activa el resumen y pega tu clave de Grow Panel'); return false; }
+  const clave = claveReg(c);
+  if(!c.on || !clave){ if(aMano) aviso('Activa el resumen y pega tu clave de Grow Panel'); return false; }
   regUltimoIntento = Date.now();
   try{
     const r = await fetch(REGISTRO_URL.replace(/\/+$/, '') + '/registro', {method: 'POST',
-      headers: {'Authorization': 'Bearer ' + c.clave, 'Content-Type': 'application/json'},
+      headers: {'Authorization': 'Bearer ' + clave, 'Content-Type': 'application/json'},
       body: JSON.stringify({fecha, app: 'amable-life', datos: resumenDia(fecha)})});
     if(!r.ok) throw new Error(r.status);
     const c2 = regCfg(); if(fecha > (c2.enviado || '')) c2.enviado = fecha; c2.ultimo = ahoraISO(); regGuardar(c2);
@@ -1362,7 +1365,7 @@ async function enviarRegistro(fecha, aMano){
 }
 /* Entre las 20:00 y las 20:25, y al abrir la app: si ayer o hoy (pasadas las 20:00) no se envió */
 function revisarRegistro(alAbrir){
-  const c = regCfg(); if(!REGISTRO_URL || !c.on || !claveRegValida(c.clave)) return;
+  const c = regCfg(); if(!REGISTRO_URL || !c.on || !claveReg(c)) return;
   if(Date.now() - regUltimoIntento < 5 * 60000) return;   // si falla, no insistir más de una vez cada 5 min
   const hoy = hoyK(), ayer = claveDia(Date.now() - 864e5), m = minutosHoy();
   if(alAbrir && (c.enviado || '') < ayer && (c.desde || '') <= ayer) enviarRegistro(ayer);
@@ -1384,11 +1387,12 @@ function registroHTML(){
   return `<label class="desliz" style="--c:#22a35a"><input type="checkbox" ${c.on ? 'checked' : ''} onchange="alternarRegistro(this)"><i></i><span>Compartir mi resumen diario ${c.on ? 'activado' : 'desactivado'}</span></label>
     <p class="peq suave" style="margin:8px 0 0">Una vez al día, a las 20:00, Amable Life envía a tu Grow Panel <b>solo números</b>: bloques con tareas, tareas hechas y totales, y pasos. Nunca el texto de tus tareas. La clave se queda en este dispositivo.</p>
     ${c.on ? `${claveRegValida(c.clave) ? `<p class="peq" style="margin:10px 0 0">✓ Clave de Grow Panel guardada · <button class="link" onclick="quitarClaveRegistro()">cambiarla</button></p>`
+      : claveGrowPanel() ? `<p class="peq" style="margin:10px 0 0">✓ Se usa la clave de tu Grow Panel en este navegador</p>`
       : `<div class="campo-voz" style="margin-top:10px"><input type="text" id="reg-clave" maxlength="128" autocomplete="off" spellcheck="false" placeholder="Pega tu clave de Grow Panel"></div>
       <button class="btn sec ancho" style="margin-top:8px" onclick="guardarClaveRegistro()">Guardar la clave</button>`}
     <p class="peq suave" style="margin:10px 0 0">Hoy, hasta ahora: ${r.bloques_con_tareas} de ${r.bloques_total} bloques con tareas · ${r.tareas_hechas} de ${r.tareas_total} tareas hechas · ${fmtN(r.pasos)} pasos</p>
     <p class="peq suave" style="margin:4px 0 0">${!REGISTRO_URL ? 'Falta poner en marcha el servidor del registro: todavía no se envía nada.' : c.enviado ? `Último envío: ${fecha(c.enviado)}` : 'Aún no se ha enviado ninguno.'}</p>
-    ${REGISTRO_URL && claveRegValida(c.clave) ? `<button class="btn sec ancho" style="margin-top:8px" onclick="enviarRegistro(hoyK(), true)">Enviar ahora el resumen de hoy</button>` : ''}` : ''}`;
+    ${REGISTRO_URL && claveReg(c) ? `<button class="btn sec ancho" style="margin-top:8px" onclick="enviarRegistro(hoyK(), true)">Enviar ahora el resumen de hoy</button>` : ''}` : ''}`;
 }
 /* ---------- Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» y se firma
    manteniendo pulsado el botón amarillo: se escribe tu nombre poco a poco, sale la hora y suena un acorde ---------- */
@@ -2925,7 +2929,7 @@ function vAjustes(){
           <button class="btn sec" onclick="traerBloques(valor('pegar-bloques'))">Traer el texto pegado</button>
         </div>`},
     {k: 'registro', ico: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', t: 'Resumen diario para Grow Panel',
-      sub: regCfg().on ? (claveRegValida(regCfg().clave) ? 'Activado · solo números, una vez al día' : 'Activado · falta tu clave de Grow Panel') : 'Desactivado',
+      sub: regCfg().on ? (claveReg(regCfg()) ? 'Activado · solo números, una vez al día' : 'Activado · falta tu clave de Grow Panel') : 'Desactivado',
       html: () => registroHTML()},  // no se ve hasta que exista el servidor del registro
     {k: 'datos', ico: '💾', t: 'Tus datos',
       sub: u ? 'En este móvil y en la nube' : 'Solo en este móvil',
