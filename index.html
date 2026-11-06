@@ -725,7 +725,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.59';
+const VERSION = 'v3.60';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1341,7 +1341,7 @@ const claveReg = c => claveGrowPanel() || (claveRegValida(c.clave) ? c.clave : '
 /* Cuenta Amable (Grow Panel, «camino 2»): quien entró con Google envía con su token de Firebase; el registro lo guarda bajo su cuenta */
 const cuentaGoogle = () => { try{ const u = nube.usuario; return !!(u && (u.providerData || []).some(x => x && x.providerId === 'google.com')); }catch(e){ return false; } };
 const puedeEnviarReg = c => cuentaGoogle() || !!claveReg(c);
-// activado de serie para todos (Gustavo); se puede apagar en Ajustes
+// siempre activado: el único interruptor está en Grow Panel → Ajustes → «Tus datos» (se lee en GET /ajustes → compartir)
 function regCfg(){ try{ return Object.assign({on: true, clave: '', enviado: '', desde: ''}, JSON.parse(localStorage.getItem(CLAVE_REGISTRO)) || {}); }catch(e){ return {on: true, clave: '', enviado: '', desde: ''}; } }
 function regGuardar(c){ try{ localStorage.setItem(CLAVE_REGISTRO, JSON.stringify(c)); }catch(e){} }
 /* Los bloques que han tenido tareas hoy (las tachadas salen del bloque a los 4 s, así que se van apuntando durante el día) */
@@ -1373,33 +1373,20 @@ async function fetchRegistro(ruta, opts){
   if((!r || r.status === 401) && clave) r = await ir(clave);
   return r;
 }
-/* Hora del resumen: la que la persona eligió en Grow Panel (GET /ajustes → {"hora_resumen":"21:30"}).
-   Mientras no se sepa: la copia local de Grow Panel (GrowPanel.horaResumen(), mismo dominio) y, si no, las 20:00 */
-const horaValida = h => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h);
-const minHora = h => +h.slice(0, 2) * 60 + +h.slice(3, 5);
-function horaResumen(){
-  const c = regCfg(); if(horaValida(c.hora)) return c.hora;
-  try{ const h = window.GrowPanel && GrowPanel.horaResumen && GrowPanel.horaResumen(); if(horaValida(h)) return h; }catch(e){}
-  return '20:00';
-}
-let regHoraVista = 0, regHoraPidiendo = null;
-function actualizarHoraResumen(pronto){   // como mucho una vez cada 30 min (al abrir o volver a la app, cada minuto)
-  if(!REGISTRO_URL || !puedeEnviarReg(regCfg())) return Promise.resolve(horaResumen());
-  if(regHoraPidiendo) return regHoraPidiendo;
-  if(Date.now() - regHoraVista < (pronto ? 60000 : 30 * 60000)) return Promise.resolve(horaResumen());
-  regHoraVista = Date.now();
-  return regHoraPidiendo = (async () => {
+/* ¿Comparte la persona sus números? Lo decide en Grow Panel (GET /ajustes → "compartir": true|false; también llega en la
+   respuesta del envío). Si no lo comparte, el Worker ignora los envíos; aquí además dejamos de mandarlos.
+   Se mira como mucho una vez cada 30 min (al abrir o volver a la app, cada minuto). */
+let regAjVisto = 0, regAjPidiendo = null;
+function actualizarAjustesReg(pronto){
+  if(!REGISTRO_URL || !puedeEnviarReg(regCfg()) || regAjPidiendo) return;
+  if(Date.now() - regAjVisto < (pronto ? 60000 : 30 * 60000)) return;
+  regAjVisto = Date.now();
+  regAjPidiendo = (async () => {
     try{
       const r = await fetchRegistro('/ajustes', {method: 'GET', cache: 'no-store'});
-      if(r && r.ok){
-        const j = await r.json(), c = regCfg(), antes = c.hora;
-        if(horaValida(j && j.hora_resumen)) c.hora = j.hora_resumen; else delete c.hora;
-        regGuardar(c);
-        if(antes !== c.hora && vista === 'ajustes' && ajAbierto === 'registro') rerenderDia();
-      }   // si falla (red, 404 hasta que esté el Worker nuevo, 401) se queda la hora que hubiera: Grow Panel local o 20:00
-    }catch(e){}
-    regHoraPidiendo = null;
-    return horaResumen();
+      if(r && r.ok){ const j = await r.json(); if(j && typeof j.compartir === 'boolean'){ const c = regCfg(); c.compartir = j.compartir; regGuardar(c); } }
+    }catch(e){}   // si falla, se queda lo que hubiera (de entrada, compartir)
+    regAjPidiendo = null;
   })();
 }
 /* «Firma» de los números de un día: si no cambia, no hace falta volver a mandarlos (los pasos cuentan de 100 en 100) */
@@ -1410,7 +1397,7 @@ const regEnCurso = new Set();
 async function enviarRegistro(fecha, aMano, alIrse){
   const c = regCfg();
   if(!REGISTRO_URL){ if(aMano) aviso('Aún no está el servidor del registro diario'); return false; }
-  if(!c.on || !puedeEnviarReg(c)) return false;   // sin cuenta de Google ni Grow Panel no se envía nada y no se avisa
+  if(c.compartir === false || !puedeEnviarReg(c)) return false;   // apagado en Grow Panel, o sin cuenta de Google ni Grow Panel
   const datos = resumenDia(fecha), firma = firmaReg(fecha, datos);
   if(!aMano && todoCero(datos) && (c.enviado || '') >= fecha) return false;   // todo a 0 y ese día ya se mandaron números
   if(regEnCurso.has(fecha)) return false;          // ya se está enviando ese día
@@ -1421,20 +1408,22 @@ async function enviarRegistro(fecha, aMano, alIrse){
       body: JSON.stringify({fecha, app: 'amable-life', datos})});
     if(!r) throw new Error('sin cuenta');
     if(!r.ok) throw new Error(r.status);
+    let j = null; try{ j = await r.json(); }catch(e){}
     const c2 = regCfg(); if(fecha > (c2.enviado || '')) c2.enviado = fecha; c2.ultimo = ahoraISO();
     if(fecha >= (c2.firma || '').split('|')[0]) c2.firma = firma;
+    if(j && typeof j.compartir === 'boolean') c2.compartir = j.compartir;
     regGuardar(c2);
     if(aMano) aviso('Resumen del día enviado');
-    if(vista === 'ajustes' && ajAbierto === 'registro') rerenderDia();
     return true;
   }catch(e){ if(aMano) aviso('No se pudo enviar el resumen (' + e.message + ')'); return false; }
   finally{ regEnCurso.delete(fecha); }
 }
 /* Buzón común: los números se mandan en cuanto cambian (una tarea hecha o añadida, un bloque con tareas, +100 pasos),
    como mucho una vez cada 5 min (se mira cada 30 s en bloquesTick); y al abrir la app, al volver a ella y al irse.
-   La hora de Grow Panel (GET /ajustes) es la hora a la que se cierra el día: solo se enseña en Ajustes. */
-function revisarRegistro(alAbrir, alIrse){
-  const c = regCfg(); if(!REGISTRO_URL || !c.on || !puedeEnviarReg(c)) return;
+   Sin nada visible: compartir o no (y borrar los números) se decide solo en Grow Panel → Ajustes. */
+async function revisarRegistro(alAbrir, alIrse){
+  if(!alIrse){ actualizarAjustesReg(alAbrir); if(regAjPidiendo) await regAjPidiendo; }   // primero, si se comparte
+  const c = regCfg(); if(!REGISTRO_URL || c.compartir === false || !puedeEnviarReg(c)) return;
   if(Date.now() - regUltimoIntento < (alAbrir || alIrse ? 30000 : 5 * 60000)) return;   // agrupar; y si falla, no insistir
   const hoy = hoyK(), ayer = claveDia(Date.now() - 864e5), dFirma = (c.firma || '').split('|')[0];
   // ayer: si no salió nada, o cambió después del último envío
@@ -1442,27 +1431,9 @@ function revisarRegistro(alAbrir, alIrse){
   const cambio = firmaReg(hoy, resumenDia(hoy)) !== c.firma;
   if(cambio || alAbrir) enviarRegistro(hoy, false, alIrse);
 }
-function alternarRegistro(el){
-  const c = regCfg(); c.on = el.checked; if(c.on && !c.desde) c.desde = hoyK(); regGuardar(c);
-  const y = window.scrollY; render(); window.scrollTo(0, y);
-}
 // la clave puede llegar después (al cargar el botón de Grow Panel o al volver a la app): se vuelve a mirar
 addEventListener('growpanel-listo', () => revisarRegistro(true));
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') revisarRegistro(true); else revisarRegistro(false, true); });
-function txtEnvioRegistro(c){
-  const hoy = hoyK(), h = c.ultimo ? pactHora(new Date(c.ultimo).getTime()) : '';
-  return (c.enviado === hoy ? `Último envío: hoy${h ? ' a las ' + h : ''}` : 'Se enviará en cuanto cambie algo') + ` · Tu día se cierra a las ${horaResumen()}`;
-}
-function registroHTML(){
-  const c = regCfg(), r = resumenDia(hoyK());
-  if(c.on) setTimeout(() => actualizarHoraResumen(), 0);   // si cambió en Grow Panel, se redibuja con la hora nueva
-  return `<label class="desliz" style="--c:#22a35a"><input type="checkbox" ${c.on ? 'checked' : ''} onchange="alternarRegistro(this)"><i></i><span>Compartir mi resumen diario ${c.on ? 'activado' : 'desactivado'}</span></label>
-    <p class="peq suave" style="margin:8px 0 0">Cada vez que cambian (como mucho cada 5 minutos), Amable Life deja en tu Grow Panel <b>solo números</b>: bloques con tareas, tareas hechas y totales, y pasos. Nunca el texto de tus tareas. La hora a la que se cierra tu día la eliges en tu Grow Panel.</p>
-    ${c.on ? `
-    <p class="peq suave" style="margin:10px 0 0">Hoy, hasta ahora: ${r.bloques_con_tareas} de ${r.bloques_total} bloques con tareas · ${r.tareas_hechas} de ${r.tareas_total} tareas hechas · ${fmtN(r.pasos)} pasos</p>
-    <p class="peq suave" style="margin:4px 0 0">${txtEnvioRegistro(c)}</p>
-    ${REGISTRO_URL && puedeEnviarReg(c) ? `<button class="btn sec ancho" style="margin-top:8px" onclick="enviarRegistro(hoyK(), true)">Enviar ahora el resumen de hoy</button>` : ''}` : ''}`;
-}
 /* ---------- Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» y se firma
    manteniendo pulsado el botón amarillo: se escribe tu nombre poco a poco, sale la hora y suena un acorde ---------- */
 const ICO_FIRMA = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20c2.5 0 3.5-3 5-3s1.5 2 3 2 2.5-2 4-2"/><path d="M14 3.5l3.5 3.5L10 14.5H6.5V11z"/></svg>';
@@ -3002,9 +2973,6 @@ function vAjustes(){
         ${vieja ? `<a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar la app ${APK_ULTIMA}</a>` : ''}</div>
         ${!mia && enAndroidWeb() ? `<p class="suave" style="margin-top:12px">Instala la app de Android para que suene la música al abrir y cuente tus pasos.</p>${pasosInstalar}<div class="bots"><a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar Amable Life ${APK_ULTIMA}</a></div>` : ''}`;
       }},
-    {k: 'registro', ico: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', t: 'Resumen diario para Grow Panel',
-      sub: regCfg().on ? 'Activado · solo números, cuando cambian' : 'Desactivado',
-      html: () => registroHTML()},  // no se ve hasta que exista el servidor del registro
     {k: 'datos', ico: '💾', t: 'Tus datos',
       sub: u ? 'En este móvil y en la nube' : 'Solo en este móvil',
       html: () => `<p class="suave">${u ? 'Se guardan en este dispositivo y en tu cuenta.' : 'Ahora se guardan solo en este dispositivo. Entra con Google para tenerlas también en la nube.'} También puedes guardar una copia en un archivo.</p>
@@ -3018,7 +2986,7 @@ function vAjustes(){
       sub: 'Tus próximas acciones y la flor',
       html: () => `<p>Lo principal son <b>tus próximas acciones</b>: siempre las tienes en grande en la pantalla de inicio. Cuando haces una, la marcas y sube la siguiente. Con los seis puntitos las ordenas.</p>
         <p class="suave">La flor te dice dónde poner energía: en cada área eliges <b>Estoy bien</b>, <b>Una acción a la semana</b> o <b>Necesita más acción</b>. Revísala cuando sientas que algo ha cambiado (te lo recordamos cada mes).</p>`}
-  ].filter(T => T.k !== 'registro' || REGISTRO_URL);
+  ];
   return `<h2 style="margin-top:18px">Ajustes</h2>
   <div class="aj-lista">${temas.map(T => `<button class="aj-fila ${ajAbierto === T.k ? 'sel' : ''}" onclick="abrirAj('${T.k}')" aria-expanded="${ajAbierto === T.k}">
       <span class="aj-ico">${T.ico}</span><span class="aj-t"><b>${T.t}</b><small>${T.sub}</small></span>${flecha(ajAbierto === T.k)}</button>
