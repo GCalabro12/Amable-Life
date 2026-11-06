@@ -331,7 +331,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .btn.sec.btn-bloque{border:2px solid #e0323a}
 /* Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» + firma */
 .btn.sec.btn-compro{margin-top:12px;border:2px solid #f59e0b;color:#fcd34d;display:flex;align-items:center;justify-content:center;gap:8px}
-.pact-box{clear:both;margin-top:8px;background:#fffbeb;border:3px solid #f59e0b;border-radius:22px;padding:22px 16px;color:#1e293b;text-align:center;font-family:Georgia,'Times New Roman',serif}
+.pact-box{position:relative;clear:both;margin-top:8px;background:#fffbeb;border:3px solid #f59e0b;border-radius:22px;padding:22px 16px;color:#1e293b;text-align:center;font-family:Georgia,'Times New Roman',serif}
 .pact-head{font-family:system-ui,sans-serif;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:#b45309;margin-bottom:10px}
 .pact-text{font-size:24px;line-height:1.3;font-weight:700;margin:6px 0 16px;overflow-wrap:anywhere}
 .pact-text b{color:#b45309}
@@ -341,10 +341,11 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .pact-name{width:100%;box-sizing:border-box;margin:0 0 12px;padding:10px;border-radius:12px;border:1px solid #d97706;background:#fff;color:#1e293b;font:16px system-ui,sans-serif;text-align:center}
 .pact-name.oculto{display:none}
 .pact-sign{margin:0 6px 18px}
-.pact-line{min-height:44px;border-bottom:2px dotted #92400e;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-family:'Brush Script MT','Segoe Script',cursive;font-size:26px;color:#166534}
-.pact-time{font-family:'Brush Script MT','Segoe Script',cursive;font-size:26px;color:#166534;min-height:1.3em;margin-top:2px}
-.pact-lbl{font:12px system-ui,sans-serif;color:#92400e;margin-top:4px}
-.pact-lbl.falta{color:#b91c1c;font-weight:800;font-size:15px}
+.pact-line{min-height:44px;border-bottom:2px dotted #92400e;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;column-gap:8px;padding-bottom:4px;text-align:left;font-family:'Brush Script MT','Segoe Script',cursive;font-size:24px;color:#166534}
+.pact-lbl{font:13px system-ui,sans-serif;color:#92400e}
+.pact-aviso{min-height:1em;margin-top:6px;font:800 15px system-ui,sans-serif;color:#b91c1c}
+.pact-lapiz{position:absolute;right:8px;bottom:8px;width:38px;height:38px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(180,83,9,.12);color:#92400e}
+.pact-lapiz:active{background:rgba(180,83,9,.25)}
 .pact-hold{position:relative;width:100%;overflow:hidden;background:#facc15;color:#1e293b;font:800 17px system-ui,sans-serif;border:0;border-radius:14px;padding:16px;touch-action:none;-webkit-user-select:none;user-select:none}
 .pact-fill{position:absolute;top:0;bottom:0;left:0;width:0;background:#f59e0b}
 .pact-holdtxt{position:relative}
@@ -357,9 +358,12 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .f-pact-text{color:#e2e8f0;font-size:15px;line-height:1.35;margin:4px 0}
 .f-pact-text b{color:#fcd34d}
 .f-pact-sign{font-family:'Brush Script MT','Segoe Script',cursive;color:#86efac;font-size:20px}
-.pact-cuenta{font-weight:800;color:#fcd34d;font-variant-numeric:tabular-nums;margin-top:4px}
+.pact-cuenta{font-weight:800;color:#fcd34d;font-variant-numeric:tabular-nums}
+.f-pact-pie{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+.pact-ver{flex:none;border:0;border-radius:999px;padding:4px 12px;background:rgba(255,255,255,.12);color:#fcd34d;font:inherit;font-weight:800}
+.pact-ver:active{background:rgba(255,255,255,.22)}
 .f-pact .btn{margin-top:8px}
-body.pip .f-pact-text,body.pip .f-pact-sign{display:none}
+body.pip .f-pact-text,body.pip .f-pact-sign,body.pip .pact-ver{display:none}
 body.pip .f-pact{margin-top:6px;padding:6px}
 /* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
 body.pip{padding:6px;overflow-x:hidden;overflow-y:auto}
@@ -705,7 +709,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.47';
+const VERSION = 'v3.48';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1398,26 +1402,29 @@ function pactFrase(t, min){
 }
 function compromisoHTML(pend){
   const c = compVigente();
-  if(c && c.estado === 'activo') return `<div class="f-pact"><div class="f-pact-title">Estás comprometido</div><div class="f-pact-text">${pactFrase(c.t, c.min)}</div>
-    <div class="f-pact-sign">Firmado: ${esc(c.nombre)} · a las ${pactHora(c.at)}</div><div class="pact-cuenta" data-hasta="${c.hasta}">${txtCompromiso(c.hasta)}</div>
-    <button class="btn sec ancho" onclick="verCompromiso()">Ver contrato</button></div>`;
+  if(c && c.estado === 'activo') return `<div class="f-pact"><div class="f-pact-text">${pactFrase(c.t, c.min)}</div>
+    <div class="f-pact-sign">Firmado: ${esc(c.nombre)} · a las ${pactHora(c.at)}</div>
+    <div class="f-pact-pie"><span class="pact-cuenta" data-hasta="${c.hasta}">${txtCompromiso(c.hasta)}</span><button type="button" class="pact-ver" onclick="verCompromiso()">Ver contrato</button></div></div>`;
   if(c) return `<div class="f-pact vencido"><div class="f-pact-title">Se acabó el tiempo del compromiso</div><div class="f-pact-text">${pactFrase(c.t, c.min)}</div>
     <button class="btn sec ancho btn-compro" onclick="abrirCompromiso()">${ICO_FIRMA} Volver a comprometerme</button></div>`;
   return pend.length ? `<button class="btn sec ancho btn-compro" onclick="abrirCompromiso()">${ICO_FIRMA} Me comprometo con esta tarea</button>` : '';
 }
 /* Botón: la primera tarea sin hacer del bloque, en menos de 15 / 25 / 45 min o hasta el final del bloque */
-function abrirCompromiso(){
-  const b = bloqueAhora(); if(b < 0) return;
-  const a = actsDe(hoyK(), b).find(x => x && !hechaAct(x)); if(!a) return;
-  const d = new Date(), queda = Math.max(5, Math.floor((BLOQUES[b].fin * 60 - (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds())) / 60));
-  const opciones = [...new Set([15, 25, 45].filter(m => m < queda).concat(queda))];
-  pact = {t: a.t, acc: a.acc || null, min: Math.min(25, queda), queda, opciones, prog: 0, letras: 0, sujeto: false, auto: false, firmado: false};
+function abrirCompromiso(previo){
+  const b = bloqueAhora(), a = previo || (b >= 0 && actsDe(hoyK(), b).find(x => x && !hechaAct(x))); if(!a) return;
+  const d = new Date(), queda = b < 0 ? Math.max(5, (previo && previo.min) || 25)
+    : Math.max(5, Math.floor((BLOQUES[b].fin * 60 - (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds())) / 60));
+  const ini = previo && previo.min ? Math.min(previo.min, queda) : Math.min(25, queda);
+  const opciones = [...new Set([15, 25, 45].filter(m => m < queda).concat(ini, queda))].sort((x, y) => x - y);
+  pact = {t: a.t, acc: a.acc || null, min: ini, queda, opciones, prog: 0, letras: 0, sujeto: false, auto: false, firmado: false};
   pintarCompromiso();
 }
+/* El lápiz del contrato: se cambian los minutos y hay que volver a firmarlo */
+function editarCompromiso(){ const c = D.compromiso; if(c) abrirCompromiso({t: c.t, acc: c.acc, min: c.min}); }
 /* Ver el contrato ya firmado */
 function verCompromiso(){
   const c = D.compromiso; if(!c) return;
-  pact = {t: c.t, min: c.min, nombre: c.nombre, at: c.at, firmado: true};
+  pact = {t: c.t, min: c.min, nombre: c.nombre, at: c.at, firmado: true, ver: true};
   pintarCompromiso();
 }
 function pintarCompromiso(){
@@ -1428,8 +1435,10 @@ function pintarCompromiso(){
     <div class="pact-text" id="pactText">${pactFrase(P.t, P.min)}</div>
     ${P.firmado ? '' : `<div class="pact-mins">${P.opciones.map(m => `<button type="button" class="${m === P.min ? 'sel' : ''}" onclick="elegirMinPact(${m}, this)">${m === P.queda ? `Hasta el final del bloque · ${m} min` : m + ' min'}</button>`).join('')}</div>
     <input class="pact-name ${nombre ? 'oculto' : ''}" id="pactName" type="text" maxlength="40" placeholder="Tu nombre y apellido" autocomplete="name" value="${esc(nombre)}">`}
-    <div class="pact-sign"><div class="pact-line"><span id="pactSig">${P.firmado ? esc(P.nombre) : ''}</span></div><div class="pact-time" id="pactTime">${P.firmado ? 'a las ' + pactHora(P.at) : ''}</div><div class="pact-lbl" id="pactLbl">${P.firmado ? 'Firmado' : 'Firma'}</div></div>
-    ${P.firmado ? '' : `<button type="button" class="pact-hold" id="pactHold"><span class="pact-fill" id="pactFill"></span><span class="pact-holdtxt" id="pactHoldTxt">Mantén pulsado para firmar</span></button>`}
+    <div class="pact-sign"><div class="pact-line"><span class="pact-lbl" id="pactLbl">${P.firmado ? 'Firmado' : 'Firma'}</span><span id="pactSig">${P.firmado ? esc(P.nombre) : ''}</span><span id="pactTime">${P.firmado ? 'a las ' + pactHora(P.at) : ''}</span></div>
+      <div class="pact-aviso" id="pactAviso"></div></div>
+    ${P.firmado ? (P.ver ? `<button type="button" class="pact-lapiz" aria-label="Cambiar el compromiso" onclick="editarCompromiso()">${ICO_LAPIZ}</button>` : '')
+      : `<button type="button" class="pact-hold" id="pactHold"><span class="pact-fill" id="pactFill"></span><span class="pact-holdtxt" id="pactHoldTxt">Mantén pulsado para firmar</span></button>`}
   </div>`, '#f59e0b');
   const h = $('#pactHold'); if(!h) return;
   h.addEventListener('pointerdown', e => { if(e.pointerType === 'touch') return; try{ h.setPointerCapture(e.pointerId); }catch(x){} pactDown(e); });
@@ -1444,8 +1453,8 @@ function elegirMinPact(m, el){
   el.parentNode.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b === el));
 }
 function pactFaltaNombre(){
-  const lbl = $('#pactLbl'), inp = $('#pactName');
-  lbl.textContent = 'Escribe tu nombre arriba para poder firmar'; lbl.classList.add('falta');
+  const inp = $('#pactName');
+  $('#pactAviso').textContent = 'Escribe tu nombre arriba para poder firmar';
   inp.classList.remove('oculto'); inp.style.borderColor = '#dc2626'; inp.focus();
   setTimeout(() => { inp.style.borderColor = ''; }, 2500);
 }
@@ -1453,7 +1462,7 @@ function pactDown(e){
   if(e && e.cancelable) e.preventDefault();
   const P = pact; if(!P || P.firmado || P.sujeto || P.auto) return;
   const nombre = valor('pactName'); if(!nombre){ pactFaltaNombre(); return; }
-  $('#pactLbl').classList.remove('falta'); $('#pactLbl').textContent = 'Firma';
+  $('#pactAviso').textContent = '';
   P.nombre = nombre; P.abajo = performance.now(); P.sujeto = true; P.desde = P.abajo - P.prog * PACT_MS;
   cancelAnimationFrame(pactRaf); pactRaf = requestAnimationFrame(pactBucle);
 }
