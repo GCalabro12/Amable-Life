@@ -343,6 +343,12 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .pact-sign{margin:0 6px 18px}
 .pact-line{min-height:44px;border-bottom:2px dotted #92400e;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;column-gap:8px;padding-bottom:4px;text-align:left;font-family:'Brush Script MT','Segoe Script',cursive;font-size:24px;color:#166534}
 .pact-lbl{font:13px system-ui,sans-serif;color:#92400e}
+.pact-sign{position:relative}
+.pact-line{padding-right:66px}
+.pact-sello{position:absolute;right:-8px;top:-32px;width:70px;height:84px;opacity:0;pointer-events:none}
+.pact-sello.fijo{opacity:1;transform:rotate(-8deg)}
+.pact-sello.puesto{animation:selloCae .45s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes selloCae{from{opacity:0;transform:scale(1.9) rotate(-24deg)}to{opacity:1;transform:scale(1) rotate(-8deg)}}
 .pact-aviso{min-height:1em;margin-top:6px;font:800 15px system-ui,sans-serif;color:#b91c1c}
 .pact-lapiz{position:absolute;right:8px;bottom:8px;width:38px;height:38px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(180,83,9,.12);color:#92400e}
 .pact-lapiz:active{background:rgba(180,83,9,.25)}
@@ -709,7 +715,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.48';
+const VERSION = 'v3.49';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1396,6 +1402,36 @@ function compVigente(){
   if(!c || c.dia !== hoyK() || c.estado === 'cumplido' || b < 0) return null;
   return actsDe(hoyK(), b).some(a => a && !hechaAct(a) && compCasa(a, c)) ? c : null;
 }
+/* Sello de lacre rojo con las iniciales y dos cintas rojas por debajo */
+const iniciales = n => String(n || '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+const BORDE_LACRE = (() => { let d = ''; for(let k = 0; k <= 48; k++){ const a = k / 48 * Math.PI * 2, r = 25 + 1.8 * Math.sin(a * 7) + 1.1 * Math.sin(a * 13 + 1) + .7 * Math.sin(a * 5 + 2);
+  d += (k ? 'L' : 'M') + (40 + r * Math.cos(a)).toFixed(1) + ' ' + (32 + r * Math.sin(a)).toFixed(1); } return d + 'Z'; })();
+function selloSVG(nombre){
+  const ini = esc(iniciales(nombre) || '✓');
+  return `<svg viewBox="0 0 80 96" width="100%" height="100%" aria-label="Sello de ${ini}"><defs>
+    <radialGradient id="lacre" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ef4444"/><stop offset=".55" stop-color="#b91c1c"/><stop offset="1" stop-color="#6b1010"/></radialGradient></defs>
+    <path d="M33 40h12v50l-6-7-6 7z" fill="#991b1b" transform="rotate(16 39 40)"/><path d="M33 40h12v50l-6-7-6 7z" fill="#c42626" transform="rotate(-14 39 40)"/>
+    <path d="${BORDE_LACRE}" fill="url(#lacre)"/>
+    <circle cx="40" cy="32" r="17.5" fill="none" stroke="#5b0d0d" stroke-opacity=".45" stroke-width="2.2"/>
+    <circle cx="40" cy="32" r="17.5" fill="none" stroke="#fca5a5" stroke-opacity=".35" stroke-width="1" transform="translate(.6 .8)"/>
+    <ellipse cx="31" cy="21" rx="7" ry="4" fill="#fff" fill-opacity=".22" transform="rotate(-30 31 21)"/>
+    <text x="40.6" y="38.6" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="${ini.length > 1 ? 16 : 20}" fill="#fca5a5" fill-opacity=".45">${ini}</text>
+    <text x="40" y="37.8" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="${ini.length > 1 ? 16 : 20}" fill="#5b0d0d">${ini}</text></svg>`;
+}
+/* El lacre que se funde (siseo con chasquidos) y el golpe del sello */
+function sonarLacre(){
+  const c = audio(); if(!c) return;
+  const t = c.currentTime + .02, dur = 1.1, n = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+  for(let i = 0; i < n; i++){ const k = i / n; d[i] = (Math.random() * 2 - 1) * (1 - k) * (Math.random() < .015 ? 3 : .55); }
+  const src = c.createBufferSource(); src.buffer = buf;
+  const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = .7;
+  const g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + .06); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  src.connect(f).connect(g).connect(c.destination); src.start(t); src.stop(t + dur);
+  const o = c.createOscillator(), go = c.createGain(), t2 = t + .75;
+  o.type = 'sine'; o.frequency.setValueAtTime(170, t2); o.frequency.exponentialRampToValueAtTime(55, t2 + .2);
+  go.gain.setValueAtTime(.0001, t2); go.gain.exponentialRampToValueAtTime(.55, t2 + .015); go.gain.exponentialRampToValueAtTime(.0001, t2 + .25);
+  o.connect(go).connect(c.destination); o.start(t2); o.stop(t2 + .3);
+}
 function pactFrase(t, min){
   const x = t && !/^[A-ZÁÉÍÓÚÑ0-9]{2,}/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t;   // «Preparar…» -> «preparar…»
   return x ? `Me comprometo a <b>${esc(x)}</b> en menos de ${min} minutos.` : `Me comprometo a concentrarme durante ${min} minutos.`;
@@ -1436,6 +1472,7 @@ function pintarCompromiso(){
     ${P.firmado ? '' : `<div class="pact-mins">${P.opciones.map(m => `<button type="button" class="${m === P.min ? 'sel' : ''}" onclick="elegirMinPact(${m}, this)">${m === P.queda ? `Hasta el final del bloque · ${m} min` : m + ' min'}</button>`).join('')}</div>
     <input class="pact-name ${nombre ? 'oculto' : ''}" id="pactName" type="text" maxlength="40" placeholder="Tu nombre y apellido" autocomplete="name" value="${esc(nombre)}">`}
     <div class="pact-sign"><div class="pact-line"><span class="pact-lbl" id="pactLbl">${P.firmado ? 'Firmado' : 'Firma'}</span><span id="pactSig">${P.firmado ? esc(P.nombre) : ''}</span><span id="pactTime">${P.firmado ? 'a las ' + pactHora(P.at) : ''}</span></div>
+      <div class="pact-sello ${P.firmado ? 'fijo' : ''}" id="pactSello">${P.firmado ? selloSVG(P.nombre) : ''}</div>
       <div class="pact-aviso" id="pactAviso"></div></div>
     ${P.firmado ? (P.ver ? `<button type="button" class="pact-lapiz" aria-label="Cambiar el compromiso" onclick="editarCompromiso()">${ICO_LAPIZ}</button>` : '')
       : `<button type="button" class="pact-hold" id="pactHold"><span class="pact-fill" id="pactFill"></span><span class="pact-holdtxt" id="pactHoldTxt">Mantén pulsado para firmar</span></button>`}
@@ -1486,13 +1523,15 @@ function pactBucle(){
 }
 function pactFirmado(){
   const P = pact; P.firmado = true; P.sujeto = P.auto = false; P.at = Date.now();
-  sonarFinal(); guardarNombre(P.nombre);
+  sonarLacre(); guardarNombre(P.nombre);
   D.compromiso = {t: P.t, acc: P.acc, min: P.min, nombre: P.nombre, at: P.at, hasta: P.at + P.min * 60000, dia: hoyK(), estado: 'activo', mod: ahoraISO()};
   guardar();
   $('#pactSig').textContent = P.nombre; $('#pactTime').textContent = 'a las ' + pactHora(P.at);
   $('#pactLbl').textContent = 'Firmado'; $('#pactHoldTxt').textContent = '✓ Firmado';
   $('#pactBox').classList.add('signed');
-  setTimeout(() => { if(pact === P){ pact = null; cerrarHoja(); } rerenderDia(); }, 1600);
+  const sello = $('#pactSello'); if(sello) sello.innerHTML = selloSVG(P.nombre);
+  setTimeout(() => { const el = $('#pactSello'); if(el && pact === P) el.classList.add('puesto'); }, 750);   // con el golpe del sello
+  setTimeout(() => { if(pact === P){ pact = null; cerrarHoja(); } rerenderDia(); }, 2600);
 }
 /* Al hacer la tarea del compromiso: cumplido. Devuelve cómo deshacerlo (por el «Deshacer» de 4 s) */
 function cumplirCompromiso(a){
