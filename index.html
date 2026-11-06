@@ -374,7 +374,9 @@ body.pip .f-pact{margin-top:6px;padding:6px}
 /* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
 body.pip{padding:6px;overflow-x:hidden;overflow-y:auto}
 body.pip .ahora-blk{margin:0;zoom:.72}
-body.pip .foco-tit{display:none}
+body.pip .foco-tit,body.pip .btn.sec.btn-compro{display:none}
+.pip-cab{display:flex;align-items:center;gap:8px;margin:0 0 6px 2px;font-weight:800;font-size:16px;color:#f4f0fb}
+.pip-cab svg{width:24px;height:24px;flex:none}
 .pip-petalos{display:flex;gap:6px;overflow-x:auto;margin-top:5px;padding-bottom:3px;scroll-snap-type:x proximity;scrollbar-width:thin}
 .pip-petalos .chip{flex:none;scroll-snap-align:start;font-size:12px;padding:5px 10px}
 .pip-nueva{display:flex;gap:6px;margin-top:6px}
@@ -715,7 +717,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.49';
+const VERSION = 'v3.50';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -998,7 +1000,7 @@ async function abrirFlotante(){
     return;
   }
   if(pipWin){ try{ pipWin.focus(); }catch(e){} return; }
-  try{ pipWin = await documentPictureInPicture.requestWindow({width: 270, height: 410}); }
+  try{ pipWin = await documentPictureInPicture.requestWindow({width: 270, height: 460}); }
   catch(e){ pipWin = null; aviso('No se pudo abrir la ventana flotante'); return; }
   const d = pipWin.document;
   document.querySelectorAll('style, link[rel="stylesheet"]').forEach(x => d.head.appendChild(x.cloneNode(true)));
@@ -1020,7 +1022,7 @@ function pintarFlotante(){
   const fila = d.querySelector('.pip-petalos'), desliz = fila ? fila.scrollLeft : 0;
   const petalos = [...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo'))
     .map(x => `<button class="chip ${x.id === pipArea ? 'sel' : ''}" style="--c:${x.color}" onclick="pipArea='${x.id}'; pintarFlotante()">${ico(x)} ${x.corto}</button>`).join('');
-  d.body.innerHTML = (seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div><div class="pip-petalos">${petalos}</div>` : '')
+  d.body.innerHTML = (`<div class="pip-cab">${logoSVG()}<b>Amable Life</b></div>` + seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div><div class="pip-petalos">${petalos}</div>` : '')
     + '<div id="toast"></div>').replace(/ onclick=/g, ' data-onclick=');
   const nuevo = d.getElementById('pip-nueva'); if(nuevo){ nuevo.value = escrito; if(conFoco) nuevo.focus(); }
   const filaN = d.querySelector('.pip-petalos'); if(filaN) filaN.scrollLeft = desliz;
