@@ -728,7 +728,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.61';
+const VERSION = 'v3.62';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1347,7 +1347,8 @@ const puedeEnviarReg = c => cuentaGoogle() || !!claveReg(c);
 /* «Unir con Google» (Grow Panel, CUENTA-AMABLE.md «Regla actual»): nadie cambia de cuenta. A quien usa Grow Panel y entró aquí
    con email y PIN se le ofrece unir a ESA cuenta su Gmail de Grow Panel (linkWithPopup / en la app, linkWithCredential):
    mismo uid y mismos datos; desde entonces su token lleva la identidad de Google y el registro lo acepta.
-   Firebase solo deja un Google por cuenta: a quien ya entró con otro Google no se le ofrece (habría que quitar el suyo). */
+   Firebase solo deja un Google por cuenta: a quien ya entró con otro Google no se le ofrece; ese Gmail se añade en
+   Grow Panel → Ajustes → «+ Añadir otro Gmail» (Grow Panel v1.37) y el registro lo trata como de la misma persona. */
 const UNIR_NO = 'equilibra.unirGoogleNo';
 const correoGP = () => {
   try{ const c = window.GrowPanel && GrowPanel.correo && GrowPanel.correo(); if(c && /@/.test(c)) return c; }catch(e){}
@@ -1383,7 +1384,7 @@ async function trasUnir(){
   try{ await nube.usuario.getIdToken(true); }catch(e){}   // token nuevo, ya con la identidad de Google
   const g = googleDe(nube.usuario), gp = correoGP();
   if(g && gp && (g.email || '').toLowerCase() !== gp.toLowerCase())
-    aviso(`Unida a ${g.email}. En Grow Panel usas ${gp}: para ver allí tus números tiene que ser el mismo Gmail.`, 9000);
+    aviso(`Unida a ${g.email}. En Grow Panel usas ${gp}: añade ${g.email} en Grow Panel → Ajustes → «+ Añadir otro Gmail» para ver allí tus números.`, 10000);
   else aviso('Listo: tu cuenta está unida a tu Gmail. Sigues con todos tus datos.', 6000);
   // enviar ya los números con el token nuevo (hoy y, si hace falta, ayer)
   regAjVisto = 0; regUltimoIntento = 0;
