@@ -705,7 +705,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.44';
+const VERSION = 'v3.46';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1296,11 +1296,87 @@ function seccionAhora(){
       <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${pend.length}</b></span></div>
     ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${acts.length ? `<div class="prox-lista">${lista}</div>`
-      : `<p class="ah-vacio">Arrastra aquí una tarea (con los seis puntitos)</p>`}
+      : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}
     ${compromisoHTML(pend)}
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
     ${avisoCalendario()}
   </section>`;
+}
+/* ---------- Resumen diario para Grow Panel (registro diario de las apps Amable, en Cloudflare) ----------
+   Opcional y apagado de entrada. Con tu clave personal de Grow Panel, una vez al día se envían SOLO números:
+   bloques que han tenido tareas, tareas hechas y totales, y pasos. Nunca el texto de las tareas.
+   La clave y el ajuste se quedan en este dispositivo (no viajan por la nube). */
+const REGISTRO_URL = '';   // dirección del Worker «registro-diario» (p. ej. https://registro-diario.xxx.workers.dev): falta que Gustavo lo publique
+const CLAVE_REGISTRO = 'equilibra.registro';
+const claveRegValida = c => /^[A-Za-z0-9_-]{32,128}$/.test(c || '');
+function regCfg(){ try{ return Object.assign({on: false, clave: '', enviado: '', desde: ''}, JSON.parse(localStorage.getItem(CLAVE_REGISTRO)) || {}); }catch(e){ return {on: false, clave: '', enviado: '', desde: ''}; } }
+function regGuardar(c){ try{ localStorage.setItem(CLAVE_REGISTRO, JSON.stringify(c)); }catch(e){} }
+/* Los bloques que han tenido tareas hoy (las tachadas salen del bloque a los 4 s, así que se van apuntando durante el día) */
+function apuntarBloquesConTareas(){
+  const k = hoyK(), dia = (B_().days || {})[k] || {};
+  const r = D.registroDia && D.registroDia.dia === k ? D.registroDia : {dia: k, bloques: []};
+  let nuevo = false;
+  Object.keys(dia).forEach(i => { if((dia[i] || []).some(Boolean) && !r.bloques.includes(+i)){ r.bloques.push(+i); nuevo = true; } });
+  if(nuevo || D.registroDia !== r){ D.registroDia = r; }
+  return nuevo;
+}
+/* Los números de un día (AAAA-MM-DD) */
+function resumenDia(k){
+  const dia = (B_().days || {})[k] || {}, hechas = D.acciones.filter(a => a.hecha && a.hechaEn && claveDia(a.hechaEn) === k).length;
+  let pendientesDia = 0, sinArchivar = 0;
+  Object.keys(dia).forEach(i => (dia[i] || []).forEach(a => { if(!a) return; if(!hechaAct(a)) pendientesDia++; else if(!a.acc) sinArchivar++; }));
+  const conTareas = new Set(D.registroDia && D.registroDia.dia === k ? D.registroDia.bloques : []);
+  Object.keys(dia).forEach(i => { if((dia[i] || []).some(Boolean)) conTareas.add(+i); });
+  const p = (S_().pasos || {})[k];
+  return {bloques_con_tareas: conTareas.size, bloques_total: BLOQUES.length, tareas_hechas: hechas + sinArchivar,
+    tareas_total: hechas + sinArchivar + pendientesDia, pasos: p ? Math.round(p.steps || 0) : 0};
+}
+let regUltimoIntento = 0;
+async function enviarRegistro(fecha, aMano){
+  const c = regCfg();
+  if(!REGISTRO_URL){ if(aMano) aviso('Aún no está el servidor del registro diario'); return false; }
+  if(!c.on || !claveRegValida(c.clave)){ if(aMano) aviso('Activa el resumen y pega tu clave de Grow Panel'); return false; }
+  regUltimoIntento = Date.now();
+  try{
+    const r = await fetch(REGISTRO_URL.replace(/\/+$/, '') + '/registro', {method: 'POST',
+      headers: {'Authorization': 'Bearer ' + c.clave, 'Content-Type': 'application/json'},
+      body: JSON.stringify({fecha, app: 'amable-life', datos: resumenDia(fecha)})});
+    if(!r.ok) throw new Error(r.status);
+    const c2 = regCfg(); if(fecha > (c2.enviado || '')) c2.enviado = fecha; c2.ultimo = ahoraISO(); regGuardar(c2);
+    if(aMano) aviso('Resumen del día enviado');
+    if(vista === 'ajustes' && ajAbierto === 'registro') rerenderDia();
+    return true;
+  }catch(e){ if(aMano) aviso('No se pudo enviar el resumen (' + e.message + ')'); return false; }
+}
+/* Entre las 20:00 y las 20:25, y al abrir la app: si ayer o hoy (pasadas las 20:00) no se envió */
+function revisarRegistro(alAbrir){
+  const c = regCfg(); if(!REGISTRO_URL || !c.on || !claveRegValida(c.clave)) return;
+  if(Date.now() - regUltimoIntento < 5 * 60000) return;   // si falla, no insistir más de una vez cada 5 min
+  const hoy = hoyK(), ayer = claveDia(Date.now() - 864e5), m = minutosHoy();
+  if(alAbrir && (c.enviado || '') < ayer && (c.desde || '') <= ayer) enviarRegistro(ayer);
+  else if((alAbrir ? m >= 1200 : m >= 1200 && m < 1225) && c.enviado !== hoy) enviarRegistro(hoy);
+}
+function alternarRegistro(el){
+  const c = regCfg(); c.on = el.checked; if(c.on && !c.desde) c.desde = hoyK(); regGuardar(c);
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+}
+function guardarClaveRegistro(){
+  const v = valor('reg-clave');
+  if(!claveRegValida(v)){ aviso('La clave de Grow Panel tiene al menos 32 letras y números'); return; }
+  const c = regCfg(); c.clave = v; regGuardar(c); aviso('Clave guardada');
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+}
+function quitarClaveRegistro(){ const c = regCfg(); c.clave = ''; regGuardar(c); const y = window.scrollY; render(); window.scrollTo(0, y); }
+function registroHTML(){
+  const c = regCfg(), r = resumenDia(hoyK());
+  return `<label class="desliz" style="--c:#22a35a"><input type="checkbox" ${c.on ? 'checked' : ''} onchange="alternarRegistro(this)"><i></i><span>Compartir mi resumen diario ${c.on ? 'activado' : 'desactivado'}</span></label>
+    <p class="peq suave" style="margin:8px 0 0">Una vez al día, a las 20:00, Amable Life envía a tu Grow Panel <b>solo números</b>: bloques con tareas, tareas hechas y totales, y pasos. Nunca el texto de tus tareas. La clave se queda en este dispositivo.</p>
+    ${c.on ? `${claveRegValida(c.clave) ? `<p class="peq" style="margin:10px 0 0">✓ Clave de Grow Panel guardada · <button class="link" onclick="quitarClaveRegistro()">cambiarla</button></p>`
+      : `<div class="campo-voz" style="margin-top:10px"><input type="text" id="reg-clave" maxlength="128" autocomplete="off" spellcheck="false" placeholder="Pega tu clave de Grow Panel"></div>
+      <button class="btn sec ancho" style="margin-top:8px" onclick="guardarClaveRegistro()">Guardar la clave</button>`}
+    <p class="peq suave" style="margin:10px 0 0">Hoy, hasta ahora: ${r.bloques_con_tareas} de ${r.bloques_total} bloques con tareas · ${r.tareas_hechas} de ${r.tareas_total} tareas hechas · ${fmtN(r.pasos)} pasos</p>
+    <p class="peq suave" style="margin:4px 0 0">${!REGISTRO_URL ? 'Falta poner en marcha el servidor del registro: todavía no se envía nada.' : c.enviado ? `Último envío: ${fecha(c.enviado)}` : 'Aún no se ha enviado ninguno.'}</p>
+    ${REGISTRO_URL && claveRegValida(c.clave) ? `<button class="btn sec ancho" style="margin-top:8px" onclick="enviarRegistro(hoyK(), true)">Enviar ahora el resumen de hoy</button>` : ''}` : ''}`;
 }
 /* ---------- Compromiso (copiado de Amable PC): «Me comprometo a… en menos de N minutos» y se firma
    manteniendo pulsado el botón amarillo: se escribe tu nombre poco a poco, sale la hora y suena un acorde ---------- */
@@ -1918,7 +1994,7 @@ function actsDe(k, i, crear){
 }
 /* Una actividad ligada a una acción está hecha si lo está la acción */
 const hechaAct = a => a.d || !!(a.acc && (D.acciones.find(x => x.id === a.acc) || {}).hecha);
-function guardarBloques(){ B_().mod = ahoraISO(); guardar(); }
+function guardarBloques(){ B_().mod = ahoraISO(); apuntarBloquesConTareas(); guardar(); }
 function tiraBloque(){
   const c = bloqueAhora(), m = minutosHoy();
   let txt;
@@ -2109,11 +2185,13 @@ function arrastrar(c){
   }
   return n;
 }
-let recordarDesde = Date.now();
+let recordarDesde = Date.now(), bloquesTickAbrir = true;   // la primera vuelta cuenta como «al abrir la app»
 /* Redibuja Focus sin tocar la hoja que esté abierta, para no perder lo que estés escribiendo */
 function refrescarFocus(){ const h = hojaAbierta; hojaAbierta = null; rerenderDia(); hojaAbierta = h; }
 function bloquesTick(){
   const c = bloqueAhora(), B = B_();
+  if(apuntarBloquesConTareas()) guardar();
+  revisarRegistro(bloquesTickAbrir); bloquesTickAbrir = false;
   if(!archivoT) archivarHechas();
   if(c !== bUltimo){
     const primeraVez = bUltimo === null;
@@ -2561,6 +2639,8 @@ function fusionar(local, remoto){
   r.nombre = local.nombre || remoto.nombre || '';
   const al = local.appAndroid, ar = remoto.appAndroid;
   const cr = [local.calRevisado, remoto.calRevisado].filter(Boolean).sort().pop(); if(cr) r.calRevisado = cr;
+  const rl = local.registroDia, rr = remoto.registroDia;
+  if(rl || rr) r.registroDia = rl && rr && rl.dia === rr.dia ? {dia: rl.dia, bloques: [...new Set([...rl.bloques, ...rr.bloques])]} : [rl, rr].filter(Boolean).sort((a, b) => a.dia < b.dia ? 1 : -1)[0];
   const cl = local.compromiso, cm = remoto.compromiso;
   if(cl || cm) r.compromiso = (cm && (!cl || (cm.mod || '') > (cl.mod || ''))) ? cm : cl;
   if(al || ar) r.appAndroid = (ar && (!al || (ar.visto || '') > (al.visto || ''))) ? ar : al;
@@ -2794,6 +2874,9 @@ function vAjustes(){
           <div class="campo-voz area"><textarea id="pegar-bloques" placeholder="Si estás en la app Android: en Amable PC toca «Copiar mis bloques para Amable Life» y pega aquí el texto"></textarea></div>
           <button class="btn sec" onclick="traerBloques(valor('pegar-bloques'))">Traer el texto pegado</button>
         </div>`},
+    {k: 'registro', ico: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', t: 'Resumen diario para Grow Panel',
+      sub: regCfg().on ? (claveRegValida(regCfg().clave) ? 'Activado · solo números, una vez al día' : 'Activado · falta tu clave de Grow Panel') : 'Desactivado',
+      html: () => registroHTML()},  // no se ve hasta que exista el servidor del registro
     {k: 'datos', ico: '💾', t: 'Tus datos',
       sub: u ? 'En este móvil y en la nube' : 'Solo en este móvil',
       html: () => `<p class="suave">${u ? 'Se guardan en este dispositivo y en tu cuenta.' : 'Ahora se guardan solo en este dispositivo. Entra con Google para tenerlas también en la nube.'} También puedes guardar una copia en un archivo.</p>
@@ -2807,7 +2890,7 @@ function vAjustes(){
       sub: 'Tus próximas acciones y la flor',
       html: () => `<p>Lo principal son <b>tus próximas acciones</b>: siempre las tienes en grande en la pantalla de inicio. Cuando haces una, la marcas y sube la siguiente. Con los seis puntitos las ordenas.</p>
         <p class="suave">La flor te dice dónde poner energía: en cada área eliges <b>Estoy bien</b>, <b>Una acción a la semana</b> o <b>Necesita más acción</b>. Revísala cuando sientas que algo ha cambiado (te lo recordamos cada mes).</p>`}
-  ];
+  ].filter(T => T.k !== 'registro' || REGISTRO_URL);
   return `<h2 style="margin-top:18px">Ajustes</h2>
   <div class="aj-lista">${temas.map(T => `<button class="aj-fila ${ajAbierto === T.k ? 'sel' : ''}" onclick="abrirAj('${T.k}')" aria-expanded="${ajAbierto === T.k}">
       <span class="aj-ico">${T.ico}</span><span class="aj-t"><b>${T.t}</b><small>${T.sub}</small></span>${flecha(ajAbierto === T.k)}</button>
