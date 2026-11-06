@@ -724,7 +724,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.52';
+const VERSION = 'v3.53';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1326,7 +1326,7 @@ function seccionAhora(){
    Opcional y apagado de entrada. Con tu clave personal de Grow Panel, una vez al día se envían SOLO números:
    bloques que han tenido tareas, tareas hechas y totales, y pasos. Nunca el texto de las tareas.
    La clave y el ajuste se quedan en este dispositivo (no viajan por la nube). */
-const REGISTRO_URL = '';   // dirección del Worker «registro-diario» (p. ej. https://registro-diario.xxx.workers.dev): falta que Gustavo lo publique
+const REGISTRO_URL = 'https://registro-diario.proud-hill-016b.workers.dev';   // dirección del Worker «registro-diario» (p. ej. https://registro-diario.xxx.workers.dev): falta que Gustavo lo publique
 const CLAVE_REGISTRO = 'equilibra.registro';
 const claveRegValida = c => /^[A-Za-z0-9_-]{32,128}$/.test(c || '');
 const claveGrowPanel = () => { try{ const k = window.GrowPanel && GrowPanel.clave && GrowPanel.clave(); return claveRegValida(k) ? k : ''; }catch(e){ return ''; } };
