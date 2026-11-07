@@ -633,6 +633,80 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
 .ep .ico{width:14px;height:14px;vertical-align:-2px}
 .ag-dia-evs small[data-ev]{cursor:pointer}
+/* ---- Estadísticas ---- */
+.est-cab{margin-top:12px}
+.est-volver{display:inline-flex;align-items:center;gap:4px;font-weight:700}
+.est-tit{margin:6px 0 10px}
+.est-tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(var(--bl),.08);margin-bottom:12px}
+.est-tabs button{flex:1;border:0;border-radius:999px;padding:9px 6px;background:none;color:var(--suave);font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.est-tabs button.sel{background:var(--tarjeta);color:var(--tinta);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.est-per{display:flex;gap:6px;margin:-2px 0 12px}
+.est-per button{border:1px solid var(--linea);border-radius:999px;padding:6px 14px;background:none;color:var(--suave);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.est-per button.sel{background:rgba(var(--bl),.1);color:var(--tinta);border-color:rgba(var(--bl),.3)}
+.et-fila{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.et{display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:16px;background:var(--tarjeta);border:1px solid var(--linea);min-width:0}
+.et b{font-size:24px;font-weight:800;line-height:1.1}
+.et span{font-size:12.5px;color:var(--suave);line-height:1.25}
+.et small{font-size:11.5px;color:var(--suave);margin-top:2px}
+.et small .sube{color:#4ade80;font-weight:800} .et small .baja{color:#f87171;font-weight:800}
+html.claro .et small .sube{color:#15803d} html.claro .et small .baja{color:#dc2626}
+.ec-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.ec{padding:14px 14px 12px;border-radius:18px;background:var(--tarjeta);border:1px solid var(--linea);min-width:0}
+.ec-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.ec-cab h3{margin:0;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.ec-pt{width:10px;height:10px;border-radius:3px;display:inline-block}
+.ec-mas,.ec-sub{font-size:12.5px;color:var(--suave);font-weight:700}
+.ec-res{cursor:pointer}
+.ec-res:hover{border-color:rgba(var(--bl),.3)}
+.ec-num{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:2px 0 4px}
+.ec-num b{font-size:30px;font-weight:800;line-height:1}
+.ec-num span{font-size:13px;color:var(--suave)}
+.ec-sub2{margin:0 0 6px;font-size:12.5px;color:var(--suave)}
+.ec-vacio{margin:6px 0;color:var(--suave);font-size:14px}
+.eg{display:block;width:100%;height:auto;overflow:visible}
+.eg-rej{stroke:rgba(var(--bl),.1);stroke-width:1;stroke-dasharray:3 4}
+.eg-rej.base{stroke:rgba(var(--bl),.25);stroke-dasharray:none}
+.eg-eje{font-size:10px;fill:var(--suave);font-family:inherit}
+.eg-eje.hoy{fill:var(--tinta);font-weight:800}
+.eg-hit{cursor:pointer}
+.eg-hit.on{fill:rgba(var(--bl),.07)}
+.eh{display:flex;flex-direction:column;gap:7px}
+.eh-f{display:grid;grid-template-columns:minmax(0,9.5em) minmax(0,1fr) 2.6em;align-items:center;gap:10px;font-size:13px;border-radius:8px;padding:1px 2px}
+.eh-f.on{background:rgba(var(--bl),.06)}
+.eh-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tinta)}
+.eh-t .ico{width:12px;height:12px;vertical-align:-1px}
+.eh-b{height:10px;border-radius:99px;background:rgba(var(--bl),.07);overflow:hidden}
+.eh-b i{display:block;height:100%;border-radius:99px}
+.eh-v{text-align:right;font-weight:800}
+.eprog{height:12px;border-radius:99px;background:rgba(var(--bl),.08);overflow:hidden;margin-top:6px}
+.eprog i{display:block;height:100%;border-radius:99px}
+.eley{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--suave)}
+.eley span{display:inline-flex;align-items:center;gap:6px}
+.eley i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.eha-lista{display:flex;flex-direction:column}
+.eha{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--linea)}
+.eha:last-child{border-bottom:0}
+.eha-c{display:flex;flex-direction:column;min-width:0}
+.eha-c b{font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eha-c small,.eha-n small{font-size:12px;color:var(--suave)}
+.eha-n{display:flex;flex-direction:column;align-items:flex-end}
+.eha-n b{font-size:18px}
+.eha-p{grid-column:1 / -1;display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;margin-top:2px}
+.eha-p i,.eley-p i{display:block;aspect-ratio:1;border-radius:50%;max-width:18px;width:100%;justify-self:center}
+.eley-p i{width:11px;height:11px;aspect-ratio:auto}
+.p-hecho{background:#16a34a}
+.p-falta{background:none;box-shadow:inset 0 0 0 2px rgba(248,113,113,.75)}
+.p-no,.p-futuro{background:rgba(var(--bl),.1)}
+#est-tip{position:fixed;z-index:60;pointer-events:none;background:#2f2b38;color:#f1eef8;font-size:13px;font-weight:700;padding:6px 10px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.35);white-space:nowrap}
+#est-tip[hidden]{display:none}
+@media (max-width:420px){ .et b{font-size:20px} .et{padding:10px} .eh-f{grid-template-columns:minmax(0,7.5em) minmax(0,1fr) 2.4em} }
+@media (min-width:900px){
+  body.v-estad .envoltura{max-width:1040px}
+  .ec-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ec-grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .et-fila{gap:12px}
+  .est-tabs{max-width:520px}
+}
 .frec-panel{padding:10px 4px 2px}
 .frec-panel[hidden]{display:none}
 .frec-panel .eti{margin-top:0}
@@ -1184,7 +1258,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.88';
+const VERSION = 'v3.89';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1433,13 +1507,14 @@ function ir(v){
 }
 function render(){
   const cabH = $('.cab'); if(cabH && cabH.offsetHeight) document.documentElement.style.setProperty('--cab-h', cabH.offsetHeight + 'px');
-  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta};
+  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad};
   app.innerHTML = (vistas[vista] || vInicio)();
-  const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes'].includes(vista);
+  const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad'].includes(vista);
   $('#nav').style.display = conNav ? '' : 'none';
   document.body.classList.toggle('ancho', vista === 'agenda');
-  document.body.classList.toggle('v-ajustes', vista === 'ajustes');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial')));
+  document.body.classList.toggle('v-ajustes', vista === 'ajustes' || vista === 'estad');
+  document.body.classList.toggle('v-estad', vista === 'estad');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || (vista === 'estad' && b.dataset.v === 'ajustes')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
   ponerVersiones();
@@ -1880,6 +1955,7 @@ function apuntarBloquesConTareas(){
   let nuevo = false;
   Object.keys(dia).forEach(i => { if((dia[i] || []).some(Boolean) && !r.bloques.includes(+i)){ r.bloques.push(+i); nuevo = true; } });
   if(nuevo || D.registroDia !== r){ D.registroDia = r; }
+  if(r.bloques.length){ D.focoDias = D.focoDias || {}; if((D.focoDias[k] || 0) < r.bloques.length) D.focoDias[k] = r.bloques.length; }
   return nuevo;
 }
 /* Los números de un día (AAAA-MM-DD) */
@@ -3409,6 +3485,7 @@ const MENU_SECC = [['agenda', 'Calendario', mIco('<rect x="3.5" y="5" width="17"
   ['dia', 'Áreas', mIco('<circle cx="12" cy="12" r="3"/><path d="M12 9c-1.5-3-1.5-5 0-6.5 1.5 1.5 1.5 3.5 0 6.5zM12 15c1.5 3 1.5 5 0 6.5-1.5-1.5-1.5-3.5 0-6.5zM9 12c-3 1.5-5 1.5-6.5 0 1.5-1.5 3.5-1.5 6.5 0zM15 12c3-1.5 5-1.5 6.5 0-1.5 1.5-3.5 1.5-6.5 0z"/>')],
   ['inicio', 'Focus', mIco('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>')],
   ['salud', 'Cuerpo', mIco('<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 10h8M12 14l-3 6.5M12 14l3 6.5"/>')],
+  ['estad', 'Estadísticas', mIco('<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>')],
   ['ajustes', 'Ajustes', ICO_RUEDA]];
 function menuHTML(){
   const u = nube.usuario, foto = u && /^https:\/\//.test(u.photoURL || '') ? u.photoURL : '';
@@ -4319,6 +4396,8 @@ function fusionar(local, remoto){
   r.bloques.days = Object.assign({}, bPierde.days || {}, bGana.days || {});
   r.agenda = {eventos: unir((local.agenda || {}).eventos || [], (remoto.agenda || {}).eventos || [], 'mod')};   // calendario: por evento, gana el cambiado más tarde
   r.nombre = local.nombre || remoto.nombre || '';
+  const fl = local.focoDias || {}, fr = remoto.focoDias || {};   // bloques con tareas de cada día: el número más alto
+  if(Object.keys(fl).length || Object.keys(fr).length){ r.focoDias = {}; [...new Set([...Object.keys(fl), ...Object.keys(fr)])].forEach(k => r.focoDias[k] = Math.max(fl[k] || 0, fr[k] || 0)); }
   const al = local.appAndroid, ar = remoto.appAndroid;
   const cr = [local.calRevisado, remoto.calRevisado].filter(Boolean).sort().pop(); if(cr) r.calRevisado = cr;
   const rl = local.registroDia, rr = remoto.registroDia;
@@ -4545,7 +4624,166 @@ async function buscarActualizacion(manual){
 }
 /* Ajustes ordenados: una fila por tema; al tocarla se despliega (solo una abierta a la vez) */
 let ajAbierto = null;
+/* ---------- Estadísticas (Gustavo, 3.89; idea de las de TickTick, sin lo que sobra): Resumen, Tareas, Enfoque y Hábitos ----------
+   Gráficas en SVG hechas aquí (sin librerías): barras finas con la punta redondeada, rejilla suave, una sola serie por gráfica
+   (sin leyenda; el título dice qué es) o dos con leyenda, y al pasar el ratón o tocar una barra, su valor. */
+const ICO_ESTAD = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>';
+let estTab = 'resumen', estN = 7;
+const EST_COL = {tareas: '#8b5cf6', enfoque: '#d9731c', habitos: '#16a34a'};   // validadas con la guía de gráficas (modo oscuro y claro)
+const estDias = n => Array.from({length: n}, (_, i) => sumarDias(hoyK(), i - n + 1));
+const estDia3 = k => ['L', 'M', 'X', 'J', 'V', 'S', 'D'][diaSem(k)];
+const estFecha = k => `${capi(DIAS_LARGO[diaSem(k)])} ${fechaDe(k).getDate()} de ${MESES[fechaDe(k).getMonth()]}`;
+const estH = m => { m = Math.round(m); const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h} h ${r} min` : `${h} h`) : `${r} min`; };
+const estHc = m => { const h = m / 60; return h >= 10 ? Math.round(h) + ' h' : (Math.round(h * 10) / 10).toString().replace('.', ',') + ' h'; };
+/* --- datos --- */
+function estHechasPorDia(){ const m = {}; D.acciones.forEach(a => { if(a.hecha && a.hechaEn){ const k = claveDia(a.hechaEn); (m[k] = m[k] || []).push(a); } }); return m; }
+function estCalDia(k){   // lo del calendario de ese día con hora: minutos planificados y cumplidos
+  let plan = 0, hecho = 0;
+  eventosDe(k).forEach(e => { if(e.todo || e.ini == null) return; const d = Math.max(0, (e.fin || e.ini) - e.ini); plan += d; if(hechoEv(e, k)) hecho += d; });
+  return {plan, hecho};
+}
+const estHabitos = () => AG_().eventos.filter(e => e.tipo === 'habito');
+function estHabEstado(e, k){   // 'hecho' | 'falta' | 'no' (no tocaba) | 'futuro'
+  if(k < e.dia) return 'no';
+  const h = (e.hechos || []).includes(k);
+  if(h) return 'hecho';
+  if(k > hoyK()) return 'futuro';
+  if((e.frec || 'diario') === 'semanal') return k === hoyK() ? 'no' : 'no';
+  if(!tocaEv(e, k)) return 'no';
+  return k === hoyK() ? 'no' : 'falta';
+}
+function estHabCumple(e, dias){   // {hecho, esperado}
+  let hecho = 0, esp = 0;
+  if((e.frec || 'diario') === 'semanal'){
+    const sem = [...new Set(dias.filter(k => k >= e.dia).map(lunesDe))];
+    sem.forEach(l => { const hs = (e.hechos || []).filter(x => lunesDe(x) === l).length, v = e.veces || 3;
+      if(l === lunesDe(hoyK())){ hecho += Math.min(hs, v); esp += Math.min(hs, v); } else { hecho += Math.min(hs, v); esp += v; } });
+  } else dias.forEach(k => { const st = estHabEstado(e, k); if(st === 'hecho'){ hecho++; esp++; } else if(st === 'falta') esp++; });
+  return {hecho, esp};
+}
+function estRacha(e){   // días seguidos (o semanas, si es semanal) sin fallar
+  if((e.frec || 'diario') === 'semanal'){
+    let n = 0, l = lunesDe(hoyK()); const v = e.veces || 3, hs = l => (e.hechos || []).filter(x => lunesDe(x) === l).length;
+    if(hs(l) >= v) n++;
+    for(let i = 0; i < 104; i++){ l = sumarDias(l, -7); if(l < lunesDe(e.dia)) break; if(hs(l) >= v) n++; else break; }
+    return {n, u: n === 1 ? 'semana' : 'semanas'};
+  }
+  let n = 0, k = hoyK();
+  for(let i = 0; i < 730 && k >= e.dia; i++, k = sumarDias(k, -1)){
+    const st = estHabEstado(e, k);
+    if(st === 'hecho') n++; else if(st === 'falta') break;
+  }
+  return {n, u: n === 1 ? 'día' : 'días'};
+}
+/* --- piezas --- */
+function estBarras(vals, labels, tips, color, opt = {}){
+  const n = vals.length, W = 340, H = opt.h || 150, pl = 30, pr = 6, pt = 10, pb = 22, base = H - pb, max0 = Math.max(...vals, opt.min || 1);
+  const paso = max0 <= 4 ? 1 : max0 <= 10 ? 2 : max0 <= 20 ? 5 : max0 <= 50 ? 10 : Math.ceil(max0 / 5 / 10) * 10, max = Math.ceil(max0 / paso) * paso;
+  const y = v => base - (v / max) * (base - pt), cw = (W - pl - pr) / n, bw = Math.max(3, Math.min(22, cw * .56)), r = Math.min(4, bw / 2);
+  let g = '';
+  for(let v = 0; v <= max; v += paso) g += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" class="eg-rej ${v === 0 ? 'base' : ''}"/><text x="${pl - 6}" y="${y(v) + 3.5}" class="eg-eje" text-anchor="end">${opt.fmt ? opt.fmt(v) : v}</text>`;
+  const cada = n <= 8 ? 1 : n <= 16 ? 2 : 5;
+  vals.forEach((v, i) => {
+    const x = pl + i * cw + (cw - bw) / 2, yt = y(v), hgt = base - yt, fondo = opt.fondo ? opt.fondo[i] : null;
+    if(fondo){ const yf = y(fondo), hf = base - yf; if(hf > 0.5) g += `<path d="M${x},${base}V${yf + Math.min(r, hf)}a${Math.min(r, hf)},${Math.min(r, hf)} 0 0 1 ${Math.min(r, hf)},${-Math.min(r, hf)}H${x + bw - Math.min(r, hf)}a${Math.min(r, hf)},${Math.min(r, hf)} 0 0 1 ${Math.min(r, hf)},${Math.min(r, hf)}V${base}Z" fill="${color}" fill-opacity=".28"/>`; }
+    if(hgt > 0.5){ const rr = Math.min(r, hgt); g += `<path d="M${x},${base}V${yt + rr}a${rr},${rr} 0 0 1 ${rr},${-rr}H${x + bw - rr}a${rr},${rr} 0 0 1 ${rr},${rr}V${base}Z" fill="${color}"/>`; }
+    if(i % cada === 0 || i === n - 1) g += `<text x="${x + bw / 2}" y="${H - 6}" class="eg-eje ${i === n - 1 ? 'hoy' : ''}" text-anchor="middle">${labels[i]}</text>`;
+    g += `<rect x="${pl + i * cw}" y="${pt}" width="${cw}" height="${base - pt}" fill="transparent" class="eg-hit" data-tip="${esc(tips[i])}"/>`;
+  });
+  return `<svg class="eg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opt.aria || '')}">${g}</svg>`;
+}
+function estFilasH(filas, color0){   // barras horizontales con su nombre y su número (identidad nunca solo por color)
+  const max = Math.max(1, ...filas.map(f => f.v));
+  return `<div class="eh">${filas.map(f => `<div class="eh-f" data-tip="${esc(f.tip || (f.t + ': ' + f.v))}"><span class="eh-t">${f.ico || ''}${esc(f.t)}</span><span class="eh-b"><i style="width:${Math.max(f.v ? 3 : 0, f.v / max * 100)}%;background:${f.c || color0}"></i></span><b class="eh-v">${f.vt || f.v}</b></div>`).join('')}</div>`;
+}
+const estTile = (num, txt, sub, cls = '') => `<div class="et ${cls}"><b>${num}</b><span>${txt}</span>${sub ? `<small>${sub}</small>` : ''}</div>`;
+const estDelta = (a, b, unidad = '') => { const d = a - b; return d === 0 ? 'igual que antes' : `<span class="${d > 0 ? 'sube' : 'baja'}">${d > 0 ? '▲' : '▼'} ${Math.abs(Math.round(d * 10) / 10).toString().replace('.', ',')}${unidad} ${d > 0 ? 'más' : 'menos'}</span> que los ${estN} días anteriores`; };
+const estCard = (tit, cuerpo, extra = '') => `<section class="ec"><div class="ec-cab"><h3>${tit}</h3>${extra}</div>${cuerpo}</section>`;
+/* --- pestañas --- */
+function estTareas(){
+  const H = estHechasPorDia(), dias = estDias(estN), ant = dias.map(k => sumarDias(k, -estN));
+  const v = dias.map(k => (H[k] || []).length), tot = v.reduce((a, b) => a + b, 0), totA = ant.reduce((a, k) => a + (H[k] || []).length, 0);
+  const pend = D.acciones.filter(a => !a.hecha).length;
+  const porArea = {}; dias.forEach(k => (H[k] || []).forEach(a => { const id = a.area || '_'; porArea[id] = (porArea[id] || 0) + 1; }));
+  const filas = Object.entries(porArea).sort((a, b) => b[1] - a[1]).map(([id, n]) => { const ar = areaDe(id); return {t: ar ? ar.nombre : 'Sin área', v: n, c: ar ? ar.color : '#9a93b3', ico: ar ? ico(ar) + ' ' : ''}; });
+  let cal = 0, calOk = 0; dias.forEach(k => eventosDe(k).forEach(e => { if(e.tipo === 'habito' || k > hoyK() || (k === hoyK() && !hechoEv(e, k))) return; cal++; if(hechoEv(e, k)) calOk++; }));
+  return `<div class="et-fila">${estTile(tot, `tareas completadas en ${estN} días`, estDelta(tot, totA))}${estTile((Math.round(tot / estN * 10) / 10).toString().replace('.', ','), 'de media al día')}${estTile(pend, 'pendientes ahora')}</div>
+    <div class="ec-grid">${estCard('Tareas completadas por día', estBarras(v, dias.map(k => estN <= 8 ? estDia3(k) : fechaDe(k).getDate()), dias.map((k, i) => `${estFecha(k)}: ${v[i]} ${v[i] === 1 ? 'tarea' : 'tareas'}`), EST_COL.tareas, {aria: 'Tareas completadas por día'}))}
+    ${estCard('Completadas por área', filas.length ? estFilasH(filas, EST_COL.tareas) : '<p class="ec-vacio">Aún no has completado tareas en estos días.</p>')}
+    ${estCard('Tareas del calendario cumplidas', cal ? `<div class="ec-num"><b>${Math.round(calOk / cal * 100)}%</b><span>${calOk} de ${cal} cumplidas</span></div><div class="eprog"><i style="width:${calOk / cal * 100}%;background:${EST_COL.tareas}"></i></div>` : '<p class="ec-vacio">En estos días no tenías tareas en el calendario.</p>')}</div>`;
+}
+function estEnfoque(){
+  const dias = estDias(estN), c = dias.map(estCalDia), plan = c.reduce((a, x) => a + x.plan, 0), hecho = c.reduce((a, x) => a + x.hecho, 0);
+  const H = estHechasPorDia(), franjas = BLOQUES.map(() => 0);
+  dias.forEach(k => (H[k] || []).forEach(a => { const d = new Date(a.hechaEn), m = d.getHours() * 60 + d.getMinutes(); const i = BLOQUES.findIndex(b => m >= b.ini && m < b.fin); if(i >= 0) franjas[i]++; }));
+  const fd = D.focoDias || {}, bloques = dias.map(k => fd[k] || (k === hoyK() && D.registroDia && D.registroDia.dia === k ? D.registroDia.bloques.length : 0));
+  const hoyB = bloques[bloques.length - 1];
+  return `<div class="et-fila">${estTile(estHc(hecho), `cumplidas en tu calendario`, `de ${estHc(plan)} que tenías puestas`)}${estTile(plan ? Math.round(hecho / plan * 100) + '%' : '—', 'del tiempo planificado')}${estTile(hoyB, 'bloques de Focus con tareas hoy', hoyB ? `${estHc(hoyB * 90)} de enfoque` : '')}</div>
+    <div class="ec-grid">${estCard('Horas en tu calendario por día', estBarras(c.map(x => x.hecho / 60), dias.map(k => estN <= 8 ? estDia3(k) : fechaDe(k).getDate()), dias.map((k, i) => `${estFecha(k)}: ${estH(c[i].hecho)} cumplidas de ${estH(c[i].plan)}`), EST_COL.enfoque, {fondo: c.map(x => x.plan / 60), fmt: v => v + ' h', aria: 'Horas cumplidas y planificadas por día'}),
+      `<div class="eley"><span><i style="background:${EST_COL.enfoque}"></i>Cumplidas</span><span><i style="background:${EST_COL.enfoque};opacity:.28"></i>Planificadas</span></div>`)}
+    ${estCard('¿A qué hora completas tus tareas?', franjas.some(Boolean) ? estFilasH(BLOQUES.map((b, i) => ({t: `${hm(b.ini)} – ${hm(b.fin)}`, v: franjas[i]})), EST_COL.enfoque) : '<p class="ec-vacio">Aún no has completado tareas en estos días.</p>')}
+    ${estCard('Bloques de Focus con tareas', bloques.some(Boolean) ? estBarras(bloques, dias.map(k => estN <= 8 ? estDia3(k) : fechaDe(k).getDate()), dias.map((k, i) => `${estFecha(k)}: ${bloques[i]} ${bloques[i] === 1 ? 'bloque' : 'bloques'}`), EST_COL.enfoque, {aria: 'Bloques de Focus con tareas por día'}) : '<p class="ec-vacio">Se apuntan desde hoy: cada día que pongas tareas en tus bloques de Focus saldrá aquí.</p>')}</div>`;
+}
+function estHabitosTab(){
+  const hs = estHabitos(), dias = estDias(estN);
+  if(!hs.length) return `<div class="ec-grid">${estCard('Tus hábitos', '<p class="ec-vacio">Aún no tienes hábitos. Crea uno en el Calendario con «＋» → Hábito.</p>')}</div>`;
+  let H = 0, E = 0; const porDia = dias.map(k => { let h = 0, e = 0; hs.forEach(x => { const st = estHabEstado(x, k); if(st === 'hecho'){ h++; e++; } else if(st === 'falta') e++; }); return {h, e}; });
+  hs.forEach(x => { const c = estHabCumple(x, dias); H += c.hecho; E += c.esp; });
+  const rachas = hs.map(estRacha), mejor = rachas.reduce((a, r) => r.n > a.n ? r : a, {n: 0, u: 'días'});
+  const ult = estDias(14);
+  const filas = hs.map((x, i) => { const c = estHabCumple(x, dias), pct = c.esp ? Math.round(c.hecho / c.esp * 100) : null;
+    return `<div class="eha"><div class="eha-c"><b>${ICO_BROTE.replace('width="12" height="12"', 'width="15" height="15"')} ${esc(x.t)}</b><small>${txtHabito(x)}</small></div>
+      <div class="eha-n"><b>${pct == null ? '—' : pct + '%'}</b><small>racha ${rachas[i].n} ${rachas[i].u}</small></div>
+      <div class="eha-p" aria-label="Últimos 14 días">${ult.map(k => { const st = estHabEstado(x, k); return `<i class="p-${st}" data-tip="${esc(estFecha(k))}: ${st === 'hecho' ? 'hecho' : st === 'falta' ? 'sin hacer' : 'no tocaba'}"></i>`; }).join('')}</div></div>`; }).join('');
+  return `<div class="et-fila">${estTile(E ? Math.round(H / E * 100) + '%' : '—', `de cumplimiento en ${estN} días`, `${H} de ${E} veces`)}${estTile(mejor.n, `${mejor.u} de racha`, 'tu mejor racha ahora')}${estTile(hs.length, hs.length === 1 ? 'hábito' : 'hábitos')}</div>
+    <div class="ec-grid">${estCard('Hábitos hechos por día', estBarras(porDia.map(x => x.h), dias.map(k => estN <= 8 ? estDia3(k) : fechaDe(k).getDate()), dias.map((k, i) => `${estFecha(k)}: ${porDia[i].h} de ${porDia[i].e} ${porDia[i].e === 1 ? 'hábito' : 'hábitos'}`), EST_COL.habitos, {fondo: porDia.map(x => x.e), aria: 'Hábitos hechos por día'}),
+      `<div class="eley"><span><i style="background:${EST_COL.habitos}"></i>Hechos</span><span><i style="background:${EST_COL.habitos};opacity:.28"></i>Tocaban</span></div>`)}
+    ${estCard('Cada hábito', `<div class="eha-lista">${filas}</div><div class="eley eley-p"><span><i class="p-hecho"></i>Hecho</span><span><i class="p-falta"></i>Sin hacer</span><span><i class="p-no"></i>No tocaba</span><span>· últimos 14 días</span></div>`, `<span class="ec-sub">${estN} días</span>`)}</div>`;
+}
+function estResumen(){
+  const H = estHechasPorDia(), d7 = estDias(7), hoy = hoyK();
+  const t7 = d7.map(k => (H[k] || []).length), tHoy = t7[6], tSem = t7.reduce((a, b) => a + b, 0);
+  const c7 = d7.map(estCalDia), hHoy = c7[6].hecho, hSem = c7.reduce((a, x) => a + x.hecho, 0);
+  const hs = estHabitos(), hab7 = d7.map(k => hs.filter(x => estHabEstado(x, k) === 'hecho').length);
+  let HH = 0, EE = 0; hs.forEach(x => { const c = estHabCumple(x, d7); HH += c.hecho; EE += c.esp; });
+  const hoyTocan = hs.filter(x => tocaEv(x, hoy)).length, hoyHechos = hab7[6];
+  const total = D.acciones.filter(a => a.hecha).length, prim = [...D.acciones.map(a => a.creada), ...AG_().eventos.map(e => e.creada)].filter(Boolean).sort()[0];
+  const diasUso = prim ? Math.max(1, Math.round((fechaDe(hoy) - fechaDe(claveDia(prim))) / 864e5) + 1) : 1;
+  const mini = (vals, color, tips) => estBarras(vals, d7.map(estDia3), tips, color, {h: 96, aria: 'Últimos 7 días'});
+  const card = (tab, tit, ico, num, txt, sub, graf) => `<section class="ec ec-res" onclick="estTab = '${tab}'; render(); window.scrollTo(0, 0)" role="button" tabindex="0">
+    <div class="ec-cab"><h3>${ico}${tit}</h3><span class="ec-mas">Ver más ›</span></div>
+    <div class="ec-num"><b>${num}</b><span>${txt}</span></div>${sub ? `<p class="ec-sub2">${sub}</p>` : ''}${graf}</section>`;
+  return `<div class="et-fila et-tot">${estTile(total, 'tareas completadas en total')}${estTile(hs.length, hs.length === 1 ? 'hábito activo' : 'hábitos activos')}${estTile(diasUso, diasUso === 1 ? 'día con Amable Life' : 'días con Amable Life')}</div>
+    <div class="ec-grid ec-grid3">
+    ${card('tareas', 'Tareas', `<i class="ec-pt" style="background:${EST_COL.tareas}"></i>`, tHoy, `completadas hoy`, `${tSem} esta semana (7 días)`, mini(t7, EST_COL.tareas, d7.map((k, i) => `${estFecha(k)}: ${t7[i]} ${t7[i] === 1 ? 'tarea' : 'tareas'}`)))}
+    ${card('enfoque', 'Enfoque', `<i class="ec-pt" style="background:${EST_COL.enfoque}"></i>`, estHc(hHoy), 'cumplidas hoy en tu calendario', `${estHc(hSem)} en 7 días`, mini(c7.map(x => x.hecho / 60), EST_COL.enfoque, d7.map((k, i) => `${estFecha(k)}: ${estH(c7[i].hecho)}`)))}
+    ${card('habitos', 'Hábitos', `<i class="ec-pt" style="background:${EST_COL.habitos}"></i>`, hs.length ? `${hoyHechos}/${hoyTocan}` : '—', hs.length ? 'hechos hoy' : 'aún no tienes hábitos', EE ? `${Math.round(HH / EE * 100)}% de cumplimiento en 7 días` : '', mini(hab7, EST_COL.habitos, d7.map((k, i) => `${estFecha(k)}: ${hab7[i]} ${hab7[i] === 1 ? 'hábito hecho' : 'hábitos hechos'}`)))}</div>`;
+}
+function vEstad(){
+  const tabs = [['resumen', 'Resumen'], ['tareas', 'Tareas'], ['enfoque', 'Enfoque'], ['habitos', 'Hábitos']];
+  const cuerpo = {resumen: estResumen, tareas: estTareas, enfoque: estEnfoque, habitos: estHabitosTab}[estTab] || estResumen;
+  return `<div class="est">
+    <div class="est-cab"><button class="link est-volver" onclick="ir('ajustes')">${ICO_IZQ.replace('width="24" height="24"', 'width="18" height="18"')} Ajustes</button></div>
+    <h2 class="est-tit">Estadísticas</h2>
+    <div class="est-tabs" role="tablist">${tabs.map(([k, t]) => `<button role="tab" aria-selected="${estTab === k}" class="${estTab === k ? 'sel' : ''}" onclick="estTab = '${k}'; render()">${t}</button>`).join('')}</div>
+    ${estTab !== 'resumen' ? `<div class="est-per">${[[7, '7 días'], [30, '30 días']].map(([n, t]) => `<button class="${estN === n ? 'sel' : ''}" onclick="estN = ${n}; render()">${t}</button>`).join('')}</div>` : ''}
+    ${cuerpo()}
+  </div>`;
+}
+/* la etiqueta al pasar el ratón o tocar una barra */
+(function(){
+  let tip = null;
+  const ver = (el, x, y) => { if(!tip){ tip = document.createElement('div'); tip.id = 'est-tip'; document.body.appendChild(tip); }
+    tip.textContent = el.dataset.tip; tip.hidden = false; const w = tip.offsetWidth; tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, x - w / 2)) + 'px'; tip.style.top = Math.max(8, y - 44) + 'px';
+    document.querySelectorAll('.eg-hit.on,.eh-f.on').forEach(z => z.classList.remove('on')); el.classList.add('on'); };
+  const quitar = () => { if(tip) tip.hidden = true; document.querySelectorAll('.eg-hit.on,.eh-f.on').forEach(z => z.classList.remove('on')); };
+  document.addEventListener('mouseover', e => { const el = e.target.closest && e.target.closest('.est [data-tip]'); if(el) ver(el, e.clientX, e.clientY); else if(tip && !tip.hidden) quitar(); });
+  document.addEventListener('mousemove', e => { if(tip && !tip.hidden && e.target.closest && e.target.closest('.est [data-tip]')){ const w = tip.offsetWidth; tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, e.clientX - w / 2)) + 'px'; tip.style.top = Math.max(8, e.clientY - 44) + 'px'; } });
+  document.addEventListener('touchstart', e => { const el = e.target.closest && e.target.closest('.est [data-tip]'); if(el){ const t = e.touches[0]; ver(el, t.clientX, t.clientY); } else quitar(); }, {passive: true});
+  addEventListener('scroll', quitar, {passive: true});
+})();
 function abrirAj(k){
+  if(k === 'estad'){ ir('estad'); return; }
   ajAbierto = ajAbierto === k ? null : k;
   const y = window.scrollY; render(); window.scrollTo(0, y);
   const el = ajAbierto && $('#aj-' + ajAbierto);
@@ -4591,6 +4829,7 @@ function vAjustes(){
         ${vieja ? `<a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar la app ${APK_ULTIMA}</a>` : ''}</div>
         ${!mia && enAndroidWeb() ? `<p class="suave" style="margin-top:12px">Instala la app de Android para que suene la música al abrir y cuente tus pasos.</p>${pasosInstalar}<div class="bots"><a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar Amable Life ${APK_ULTIMA}</a></div>` : ''}`;
       }},
+    {k: 'estad', ico: ICO_ESTAD, t: 'Estadísticas', sub: 'Tus tareas, tu enfoque y tus hábitos, con gráficas', html: () => ''},
     {k: 'calendario', ico: ICO_CAL_AJ, t: 'Importar y exportar el calendario',
       sub: 'Google Calendar, Outlook y Apple (.ics) · Excel (.csv)',
       html: () => calAjustesHTML()},
