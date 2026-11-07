@@ -889,10 +889,10 @@ html.claro .meta-error{color:#dc2626}
 #dl-rec{max-height:330px;overflow:auto}
 .rj-ev .bandera{width:11px;height:11px;margin-right:2px;vertical-align:-1px}
 .rj-todo .bandera{width:9px;height:9px;margin-right:2px}
-.rj-ev b{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-.rj-ev span{font-size:11px;opacity:.85;white-space:nowrap}
+.rj-ev b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.rj-ev span{font-size:11px;font-weight:500;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .rj.sem .rj-ev{font-size:10.5px;padding:2px 3px;border-radius:5px;border-left-width:2px}
-.rj.sem .rj-ev b{white-space:normal;word-break:normal;hyphens:auto;font-weight:700}
+.rj.sem .rj-ev b{white-space:normal;word-break:normal;hyphens:auto;font-weight:600}
 .rj-ev.ok b{text-decoration:line-through;opacity:.6}
 .rj-ev.pasado:not(.ok){opacity:.7}
 .rj-ahora{position:absolute;left:0;right:0;border-top:2px solid #ef4444;z-index:2;pointer-events:none}
@@ -905,7 +905,7 @@ html.claro .meta-error{color:#dc2626}
 .rj-todo{display:grid;grid-template-columns:44px repeat(7,1fr);gap:2px;margin:2px 0 8px}
 .rj-todo em{font-style:normal;font-size:10px;line-height:1.1;color:var(--suave);align-self:center}
 .rj-todo div{display:flex;flex-direction:column;gap:2px;min-width:0}
-.rj-todo button{border:0;border-radius:5px;padding:2px 3px;font-size:10px;font-weight:700;background:color-mix(in srgb,var(--c) 40%,transparent);color:var(--tinta);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:left}
+.rj-todo button{border:0;border-radius:5px;padding:2px 3px;font-size:10px;font-weight:500;background:color-mix(in srgb,var(--c) 40%,transparent);color:var(--tinta);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:left}
 .ev-fila{display:flex;gap:10px;margin-top:12px}
 .ev-fila[hidden]{display:none}
 .ev-fila label{flex:1;display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--suave)}
@@ -1206,7 +1206,8 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   body.ancho .rj-cab button span{font-size:24px;width:46px;height:46px;font-weight:600}
   body.ancho .rj-h span{font-size:12px}
   body.ancho .rj.sem .rj-ev{font-size:13px;padding:3px 6px;border-radius:7px;border-left-width:3px}
-  body.ancho .rj.sem .rj-ev b{font-weight:800}
+  body.ancho .rj.sem .rj-ev b{font-weight:500}
+  body.ancho .rj.sem .rj-ev span{font-size:11.5px}
   body.ancho .rj-todo button{font-size:12.5px;padding:3px 6px}
   body.ancho .rj-todo em{font-size:11.5px}
   body.ancho .ag-mes{gap:0;margin-top:6px;border-top:1px solid rgba(var(--bl),.08);border-left:1px solid rgba(var(--bl),.08)}
@@ -1331,7 +1332,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.97';
+const VERSION = 'v3.98';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3010,7 +3011,7 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${campEv(e)}${esc(e.t)}</b>${!sem && alto > 34 ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
     return `<div class="rj-col" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   return `<div class="rj ${sem ? 'sem' : ''}"><div class="rj-cuerpo" style="height:${(h1 - h0) * AG_PX}px">${lineas}<div class="rj-cols" style="grid-template-columns:repeat(${dias.length},1fr)">${cols}</div></div></div>`;
