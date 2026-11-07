@@ -174,6 +174,28 @@ body.v-evaluar header.cab{display:none}
 .ph-lista li.falta{color:var(--suave)}
 .ph-ok{color:var(--c);font-weight:900;margin-left:4px}
 .leyenda-hab .pt-peq{display:inline-block;width:6px;height:10px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#cbbcf5}
+.flor-hab .flor:not(.mini){max-width:440px;width:calc(100% + 24px);margin:6px -12px 4px}
+.dh-caja{margin-top:16px;padding:18px 16px;border-radius:20px;background:color-mix(in srgb,var(--c) 14%,var(--tarjeta));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 45%,transparent)}
+.dh-tipo{display:flex;align-items:center;justify-content:center;gap:6px;margin:0;font-size:13px;font-weight:700;color:var(--suave)}
+.dh-tipo .brote{width:16px;height:16px;color:#22a35a}
+.dh-t{text-align:center;font-size:24px;font-weight:800;margin:4px 0 6px;line-height:1.2}
+.dh-preg{font-size:15px;font-weight:700;margin:16px 0 8px;text-align:center}
+.dh-dias{display:flex;justify-content:center;gap:6px}
+.dh-dias button{width:40px;height:40px;border-radius:50%;border:0;font:inherit;font-weight:800;font-size:15px;background:rgba(var(--bl),.1);color:var(--tinta);cursor:pointer}
+.dh-dias button.sel{background:var(--c);color:#fff}
+.dh-horas{display:flex;align-items:center;justify-content:center;gap:10px}
+.dh-horas select{font:inherit;font-size:17px;font-weight:700;padding:10px 12px;border-radius:12px;border:1.5px solid var(--linea);background:var(--tarjeta);color:var(--tinta)}
+.dh-off{opacity:.35}
+.dh-nodef{display:flex;align-items:center;gap:10px;margin:18px auto 0;border:0;background:none;font:inherit;font-weight:700;font-size:15px;color:var(--tinta);cursor:pointer}
+.dh-cas{width:24px;height:24px;border-radius:7px;border:2px solid var(--suave);display:grid;place-items:center;font-size:15px;font-weight:900;color:#fff}
+.dh-nodef.sel .dh-cas{background:var(--c);border-color:var(--c)}
+.dh-finde{display:flex;flex-direction:column;gap:8px}
+.dh-finde button{border:0;border-radius:14px;padding:14px;font:inherit;font-weight:700;font-size:15px;background:rgba(var(--bl),.08);color:var(--tinta);cursor:pointer}
+.dh-finde button.sel{background:var(--c);color:#fff}
+.dh-lista{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.dh-lista li{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--c) 14%,transparent)}
+.dh-lista li span{display:flex;flex-direction:column}
+.dh-lista li small{color:var(--suave);font-weight:600}
 .flor .eti-hab{font-size:8.5px;font-weight:700;fill:#fff;paint-order:stroke;stroke:rgba(20,12,40,.5);stroke-width:2.4px;stroke-linejoin:round}
 .flor .eti-nom.fuera{font-size:12px;stroke:none;fill:var(--tinta)}
 .bots-eval .btn{flex:1}
@@ -383,6 +405,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .flor-ayuda{text-align:center;margin:2px 0 0}
 .btn-definir{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;font-size:17px;line-height:1.25;padding:14px 16px;text-align:center}
 .btn-definir .brote{flex:none;color:#fff!important;width:24px;height:24px}
+.btn-definir > svg{flex:none;width:24px;height:24px;color:#fff}
 .dia-izq .pausa-fila{margin-top:10px}
 .pan-vacio{display:none}
 .avisos-btn{display:flex;align-items:center;gap:8px;margin-top:4px;padding:6px 0;border:0;background:none;color:var(--suave);font-size:14px;font-weight:800;text-align:left;font-variant-numeric:tabular-nums}
@@ -1715,7 +1738,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.66';
+const VERSION = 'v4.67';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2009,7 +2032,7 @@ function ir(v, sinHist){
 }
 function render(){
   const cabH = $('.cab'); if(cabH && cabH.offsetHeight) document.documentElement.style.setProperty('--cab-h', cabH.offsetHeight + 'px');
-  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad, premium:vPremium};
+  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, defhab:vDefHab, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad, premium:vPremium};
   app.innerHTML = (vistas[vista] || vInicio)();
   const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad','premium'].includes(vista);
   guardarHist();
@@ -2026,7 +2049,7 @@ function render(){
   document.body.classList.toggle('v-dia', vista === 'dia');
   document.body.classList.toggle('v-salud', vista === 'salud');
   document.body.classList.toggle('v-inicio', vista === 'inicio');
-  document.body.classList.toggle('v-evaluar', vista === 'evaluar');   // 4.63: en la revisión de la flor, sin cabecera   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
+  document.body.classList.toggle('v-evaluar', vista === 'evaluar' || (vista === 'defhab' && DH && !DH.fin));   // 4.63: en la revisión de la flor, sin cabecera   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || ((vista === 'estad' || vista === 'premium') && b.dataset.v === 'ajustes')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
@@ -3297,10 +3320,97 @@ function vPlanHab(){
       : (h.tengo.length ? h.tengo.map(t => `<li>${ICO_BROTE} ${esc(t)}</li>`).join('') : `<li>${nv ? NIVELES[nv].titulo : 'Sin revisar'}</li>`);
     return `<div class="plan-area" style="--c:${a.color}"><h3>${ico(a)} ${a.nombre} ${nv === 'mas' || !nv ? '' : '<span class="ph-ok">✓</span>'}</h3><ul class="ph-lista">${items}</ul></div>`; }).join('');
   return `<div class="res-tit"><h1>Tu flor de hábitos</h1><p class="suave">Áreas con hábitos establecidos: <b>${con} de ${FL.length}</b></p></div>
-    <section class="tarjeta flor-sec">${flor(D.niveles, {hab: true, habitos: D.habitosArea, centro: con, centroTxt: con === 1 ? 'área con hábitos' : 'áreas con hábitos'})}${LEYENDA_HAB}</section>
+    <section class="tarjeta flor-sec flor-hab">${flor(D.niveles, {hab: true, centro: con, centroTxt: con === 1 ? 'área con hábitos' : 'áreas con hábitos'})}${LEYENDA_HAB}</section>
     ${nuevas ? `<p class="suave peq" style="text-align:center;margin:0 0 10px">Lo que te falta ya está como tarea en su pétalo, en Hábitos.</p>` : ''}
     ${filas}
-    <div class="bots-eval"><button class="btn prim" onclick="P = null; ir('dia')">Ir a Hábitos</button></div>`;
+    ${habitosParaDefinir().length ? `<button class="btn prim ancho btn-definir" style="margin-top:18px" onclick="empezarDefHab()">${ICO_CAL} Define cuándo haces o quieres hacer estos hábitos</button>` : ''}
+    <div class="bots-eval"><button class="btn sec" onclick="P = null; ir('dia')">Ir a Hábitos</button></div>`;
+}
+
+/* ---------- 4.67 (Gustavo): definir cuándo haces (o quieres hacer) cada hábito, y ponerlo en el calendario ----------
+   Uno por uno, en el orden de la flor: qué días de la semana y de qué hora a qué hora. «No lo tengo definido»: recordatorio
+   el sábado o el domingo a las 10:00 (hay que elegir uno). Al final, todos van al calendario como hábitos (con aviso a la hora). */
+let DH = null;
+const claveHab = (area, t) => area + '|' + t.trim().toLowerCase();
+function habitosParaDefinir(){
+  const H = D.habitosArea || {}, L = [];
+  areasFlor().forEach(a => { const h = H[a.id] || {};
+    (h.tengo || []).forEach(t => L.push({area: a.id, t, ya: true}));
+    (h.quiero || []).forEach(t => L.push({area: a.id, t, ya: false})); });
+  return L;
+}
+function empezarDefHab(){
+  const ev = AG_().eventos;
+  DH = {i: 0, fin: false, items: habitosParaDefinir().map(x => {
+    const e = ev.find(z => z.tipo === 'habito' && z.habRev === claveHab(x.area, x.t));
+    return Object.assign(x, e ? {dias: (e.dias || []).slice(), ini: e.ini ?? 540, fin: e.fin ?? 570, nodef: false, finde: null}
+      : {dias: [], ini: 540, fin: 570, nodef: false, finde: null}); })};
+  vista = 'defhab'; render(); window.scrollTo(0, 0);
+}
+const DIAS_L = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+const DIAS_N = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+function opcHoras(sel, desde){ let h = ''; for(let m = 300; m <= 1425; m += 15) if(desde == null || m > desde) h += `<option value="${m}" ${m === sel ? 'selected' : ''}>${hm(m)}</option>`; return h; }
+function vDefHab(){
+  if(!DH) return vPlan();
+  if(DH.fin) return vDefHabFin();
+  const x = DH.items[DH.i], a = areaDe(x.area), n = DH.items.length;
+  return `<div class="ev-pant dh" style="--c:${a.color}">
+    <div class="ev-top"><button class="ev-volver" onclick="dhAtras()" aria-label="Atrás">${ICO_ATRAS}</button>
+      <h1 class="ev-area">${a.nombre}</h1><span class="ev-n">${DH.i + 1} de ${n}</span></div>
+    <div class="progreso">${DH.items.map((y, j) => `<i class="${j < DH.i ? 'hecho' : j === DH.i ? 'actual' : ''}" style="--c:${areaDe(y.area).color}"></i>`).join('')}</div>
+    <section class="dh-caja">
+      <p class="dh-tipo">${ICO_BROTE} ${x.ya ? 'Hábito que ya haces' : 'Hábito que quieres empezar'}</p>
+      <h2 class="dh-t">${esc(x.t)}</h2>
+      <div class="${x.nodef ? 'dh-off' : ''}">
+        <p class="dh-preg">¿Qué días de la semana?</p>
+        <div class="dh-dias">${DIAS_L.map((d, k) => `<button class="${x.dias.includes(k) ? 'sel' : ''}" onclick="dhDia(${k})" aria-label="${DIAS_N[k]}" ${x.nodef ? 'disabled' : ''}>${d}</button>`).join('')}</div>
+        <p class="dh-preg">¿De qué hora a qué hora?</p>
+        <div class="dh-horas"><select onchange="dhHora('ini', this.value)" ${x.nodef ? 'disabled' : ''}>${opcHoras(x.ini)}</select><span>a</span>
+          <select onchange="dhHora('fin', this.value)" ${x.nodef ? 'disabled' : ''}>${opcHoras(x.fin, x.ini)}</select></div>
+      </div>
+      <button class="dh-nodef ${x.nodef ? 'sel' : ''}" onclick="dhNodef()"><span class="dh-cas">${x.nodef ? '✓' : ''}</span> No lo tengo definido</button>
+      ${x.nodef ? `<p class="dh-preg">Te pongo un recordatorio a las 10:00. ¿Qué día?</p>
+        <div class="dh-finde"><button class="${x.finde === 5 ? 'sel' : ''}" onclick="dhFinde(5)">Recordatorio el sábado por la mañana</button>
+          <button class="${x.finde === 6 ? 'sel' : ''}" onclick="dhFinde(6)">Recordatorio el domingo por la mañana</button></div>` : ''}
+    </section>
+    <div class="bots-eval">
+      <button class="btn sec" onclick="dhAtras()">${DH.i === 0 ? 'Cancelar' : '← Atrás'}</button>
+      <button class="btn prim" onclick="dhSiguiente()">${DH.i === n - 1 ? 'Poner en el calendario' : 'Siguiente →'}</button>
+    </div></div>`;
+}
+function dhPinta(){ const y = window.scrollY; render(); window.scrollTo(0, y); }
+function dhDia(k){ const x = DH.items[DH.i]; x.dias = x.dias.includes(k) ? x.dias.filter(d => d !== k) : [...x.dias, k].sort(); dhPinta(); }
+function dhHora(c, v){ const x = DH.items[DH.i], dur = Math.max(15, x.fin - x.ini); x[c] = +v; if(c === 'ini') x.fin = Math.min(x.ini + dur, 1439); if(x.fin <= x.ini) x.fin = Math.min(x.ini + 30, 1439); dhPinta(); }
+function dhNodef(){ const x = DH.items[DH.i]; x.nodef = !x.nodef; if(!x.nodef) x.finde = null; dhPinta(); }
+function dhFinde(d){ DH.items[DH.i].finde = d; dhPinta(); }
+function dhAtras(){ if(DH.fin){ DH.fin = false; DH.i = DH.items.length - 1; } else if(DH.i === 0){ DH = null; vista = 'plan'; } else DH.i--; render(); window.scrollTo(0, 0); }
+function dhSiguiente(){
+  const x = DH.items[DH.i];
+  if(x.nodef && x.finde == null){ aviso('Elige sábado o domingo'); return; }
+  if(!x.nodef && !x.dias.length){ aviso('Elige qué días, o «No lo tengo definido»'); return; }
+  if(DH.i < DH.items.length - 1){ DH.i++; render(); window.scrollTo(0, 0); return; }
+  dhGuardar();
+}
+function dhGuardar(){
+  const A = AG_(), ahora = ahoraISO(); let n = 0;
+  DH.items.forEach(x => {
+    const dias = x.nodef ? [x.finde] : x.dias.slice().sort(), ini = x.nodef ? 600 : x.ini, fin = x.nodef ? 630 : x.fin, k = claveHab(x.area, x.t);
+    let e = A.eventos.find(z => z.tipo === 'habito' && z.habRev === k);
+    if(!e){ e = {id: uid(), creada: ahora, saltar: [], hechos: [], dia: hoyK(), habRev: k}; A.eventos.push(e); }
+    Object.assign(e, {t: x.t, tipo: 'habito', dias, frec: 'diario', veces: dias.length, cada: 2, todo: false, ini, fin, area: x.area, areas: [x.area],
+      rep: 'no', prio: e.prio || 1, avisos: [0], horasAviso: [], sinDefinir: !!x.nodef, mod: ahora});
+    n++;
+  });
+  guardar(); sonarFinal(); DH.fin = true; DH.n = n; render(); window.scrollTo(0, 0);
+  setTimeout(() => pedirAvisosWeb(false), 900);
+}
+function vDefHabFin(){
+  const fila = x => { const a = areaDe(x.area), d = x.nodef ? `${x.finde === 5 ? 'Sábado' : 'Domingo'} a las 10:00 (recordatorio)` : `${x.dias.map(k => DIAS_L[k]).join(' ')} · ${hm(x.ini)} – ${hm(x.fin)}`;
+    return `<li style="--c:${a.color}">${ico(a)}<span><b>${esc(x.t)}</b><small>${d}</small></span></li>`; };
+  return `<div class="res-tit"><h1>Hábitos en tu calendario</h1><p class="suave">${DH.n === 1 ? 'Tu hábito ya está' : `Tus ${DH.n} hábitos ya están`} en el calendario, con un aviso a la hora.</p></div>
+    <ul class="dh-lista">${DH.items.map(fila).join('')}</ul>
+    <button class="btn prim ancho" style="margin-top:16px" onclick="DH = null; P = null; agModo = 'semana'; agK = hoyK(); ir('agenda')">Ver mi calendario</button>
+    <div class="bots-eval"><button class="btn sec" onclick="DH = null; P = null; ir('dia')">Ir a Hábitos</button></div>`;
 }
 function vPlanViejo(){
   if(!P) P = {textos:{}};
