@@ -571,7 +571,17 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .desp-lista{display:flex;flex-direction:column;margin:6px 0 0 auto;width:min(78%,300px);background:#2c2252;border-radius:14px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
 .desp-lista[hidden]{display:none}
 .desp-op{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--tinta);font:inherit;font-size:15px;font-weight:700;padding:11px 10px;border-radius:10px;text-align:left}
-.desp-op span{flex:1;display:flex;align-items:center;gap:8px}
+.desp-op span{flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:2px 8px}
+.desp-op span .desp-sub{flex-basis:100%}
+.desp-op i{flex:none}
+#dl-snd{width:100%;margin-left:0}
+.perm-fila{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-top:8px;border-radius:14px;background:rgba(var(--bl),.08)}
+.perm-fila .perm-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.perm-fila small{font-size:13px;color:var(--suave)}
+.perm-fila .btn{flex:none;margin:0;padding:10px 16px}
+.perm-ok{flex:none;color:#16a34a;font-weight:800}
+.snd-tit{margin:10px 10px 4px;font-size:12.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--oro)}
+.snd-tit:first-child{margin-top:4px}
 .desp-op i{font-style:normal;color:var(--oro);font-weight:900;width:16px;text-align:center}
 .desp-op.sel{background:rgba(247,195,91,.13)}
 .ev-titulo{margin-top:0;margin-right:44px}
@@ -1454,7 +1464,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.19';
+const VERSION = 'v4.20';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3408,7 +3418,8 @@ function despOpciones(id){
   return [{k: 'no', t: 'Sin área', sel: !evEd.areas.length}, ...AREAS.map(a => ({k: a.id, t: `${ico(a)} ${a.nombre}`, sel: evEd.areas.includes(a.id)}))];
 }
 function despValor(id){
-  if(id === 'son') return (alarmaNativa() ? 'Del teléfono' : (ALARMAS.find(a => a.k === alarmaTipo()) || ALARMAS[0]).t) + (alarmaGradual() ? ' · gradual' : '');
+  if(id === 'snd') return `${despValor('son')} · ${durAlarmaTxt()}`;
+  if(id === 'son') return (alarmaNativa() ? 'Sonido del teléfono' : (ALARMAS.find(a => a.k === alarmaTipo()) || ALARMAS[0]).t) + (alarmaGradual() ? ' · gradual' : '');
   if(id === 'sdur') return durAlarmaTxt();
   if(id === 'dur'){ const d = durEv(); return d ? fmtDur(d) : '—'; }
   if(id === 'rep') return (opcionesRep().find(o => o.k === (evEd.rep || 'no')) || {t: 'No se repite'}).t;
@@ -3418,7 +3429,14 @@ function despValor(id){
   return evEd.areas.length ? evEd.areas.map(a => `${ico(areaDe(a))} ${areaDe(a).corto}`).join(' ') : 'Sin área';
 }
 function pintarDesp(id){
+  if(id === 'son' || id === 'sdur') id = 'snd';
   const l = $('#dl-' + id), v = $('#dv-' + id); if(!l) return;
+  if(id === 'snd'){   // dos apartados en el mismo desplegable
+    const op = (cual, o) => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${cual}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`;
+    l.innerHTML = `<p class="snd-tit">Sonido</p>${despOpciones('son').map(o => op('son', o)).join('')}<p class="snd-tit">Duración</p>${despOpciones('sdur').map(o => op('sdur', o)).join('')}`;
+    if(v) v.innerHTML = despValor(id);
+    evResumen(); return;
+  }
   l.innerHTML = despOpciones(id).map(o => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${id}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`).join('');
   if(v) v.innerHTML = despValor(id);
   evResumen();
@@ -3464,12 +3482,12 @@ function recPersGuardar(){
 function despElegir(id, k){
   if(id === 'son'){   // vale para todos los recordatorios; al elegir, suena 4 s
     if(k === 'elegir'){ try{ AndroidEquilibra.elegirSonidoAlarma(); }catch(e){} return; }
-    if(k === 'probar' || k === 'tel'){ sonarAlarma(4); return; }
+    if(k === 'probar' || k === 'tel'){ if(alarmaGain || alarmaApp){ pararAlarma(); aviso('Parado', 1500); } else { sonarAlarma(7); aviso('Sonando… vuelve a tocar «Probar» para pararlo', 3000); } return; }
     if(k === 'grad'){ try{ localStorage.setItem('equilibra.alarmaGradual', alarmaGradual() ? '0' : '1'); }catch(e){} pintarDesp(id); recordUlt = null; enviarRecordatorios(); if(alarmaGradual()) sonarAlarma(7); return; }
     if(k === 'nueva'){ hojaActualizar(); return; }
     try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); pintarDesp(id); return;
   }
-  if(id === 'sdur'){ try{ localStorage.setItem('equilibra.alarmaDur', String(k)); }catch(e){} pintarDesp(id); despTocar(id); recordUlt = null; enviarRecordatorios(); return; }
+  if(id === 'sdur'){ try{ localStorage.setItem('equilibra.alarmaDur', String(k)); }catch(e){} pintarDesp(id); recordUlt = null; enviarRecordatorios(); return; }
   if(id === 'rep'){ evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
   if(id === 'dur'){ const i = minDeHora(valor('ev-ini')); if(i != null) $('#ev-fin').value = hhmm(Math.min(i + +k, 1439)); pintarDesp(id); despTocar(id); return; }
   if(id === 'rec' && typeof k === 'string' && k[0] === 'h'){ const T = +k.slice(1), h = evEd.horasAviso || []; evEd.horasAviso = h.includes(T) ? h.filter(x => x !== T) : [...h, T]; pintarDesp(id); return; }
@@ -3521,7 +3539,7 @@ function pintarEvento(e){
     <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
       ${despHTML('rec', 'Recordatorio', ICO_CAMPANA)}
-      <div class="desp-par">${despHTML('son', 'Sonido', ICO_ALTAVOZ)}${despHTML('sdur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
+      ${despHTML('snd', 'Sonido y duración', ICO_ALTAVOZ)}
       ${despHTML('area', 'Área', ICO_PETALO)}
     </div>
     ${evEd.id ? `<button class="btn sec ancho" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
@@ -4691,7 +4709,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.44';   // última app Android publicada
+const APK_ULTIMA = '2.45';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
@@ -4723,6 +4741,31 @@ function avisoAppNueva(intentos = 0){
   try{ sessionStorage.setItem('equilibra.avisoApp', APK_ULTIMA); }catch(e){}
   hojaActualizar('Hay una versión nueva de la app.', 'Hay una versión nueva');
 }
+/* Permisos de la app de Android (Gustavo, 4.20 / APK 2.45): «que te obligue… y hasta que no lo actives, que te siga saliendo
+   la ventana». Al abrir la app y al volver a ella, si falta alguno de los que necesitan las alarmas, sale esta ventana con un
+   botón «Activar» por cada uno (abre el ajuste del teléfono). Se puede cerrar, pero vuelve a salir hasta que estén todos. */
+function permisosApp(){ try{ return JSON.parse(AndroidEquilibra.permisos()); }catch(e){ return null; } }
+window.revisarPermisos = (intentos = 0) => {
+  if(!esApp || !window.AndroidEquilibra || typeof AndroidEquilibra.permisos !== 'function') return;
+  const p = permisosApp(); if(!p) return;
+  const abierta = !!document.getElementById('hoja-permisos');
+  if(p.notif && p.sobre && p.pantalla){ if(abierta){ cerrarHoja(); aviso('Permisos activados ✓', 2500); } return; }
+  if(abierta){ hojaPermisos(p); return; }   // al volver de Ajustes: se pinta con lo que ya está activado
+  if($('#splash') || $('#hoja') || $('#menu-lat') || $('#alarma-full')){ if(intentos < 40) setTimeout(() => window.revisarPermisos(intentos + 1), 1500); return; }
+  hojaPermisos(p);
+};
+function hojaPermisos(p){
+  hojaAbierta = null;
+  const fila = (k, ok, t, d) => `<div class="perm-fila ${ok ? 'ok' : ''}"><div class="perm-t"><b>${t}</b><small>${d}</small></div>${ok
+    ? '<span class="perm-ok">✓ Activado</span>' : `<button type="button" class="btn prim" onclick="AndroidEquilibra.abrirPermiso('${k}')">Activar</button>`}</div>`;
+  mostrarHoja(`<div id="hoja-permisos"><div class="hoja-cab"><h2>Activa estos permisos</h2></div>
+    <p class="peq suave" style="margin:4px 0 12px">Son necesarios para que Amable Life funcione bien: sin ellos, las alarmas de tus recordatorios no suenan ni salen en grande con la app cerrada.</p>
+    ${fila('notif', p.notif, 'Notificaciones', 'Para avisarte a la hora de tus recordatorios.')}
+    ${fila('sobre', p.sobre, 'Mostrar sobre otras aplicaciones', 'Para que la alarma salga a pantalla completa aunque estés usando el móvil. En la lista, busca Amable Life y actívalo.')}
+    ${p.hayPantalla ? fila('pantalla', p.pantalla, 'Alarmas a pantalla completa', 'Para que la alarma se vea con el móvil bloqueado.') : ''}
+    <p class="peq suave" style="margin:12px 0 0">Cuando lo actives, vuelve a Amable Life: esta ventana se pone al día sola.</p></div>`, '#8b5cf6');
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden) setTimeout(() => window.revisarPermisos(), 600); });
 const S_ = () => D.salud;
 function claveDia(f){ const d = new Date(f); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 const minutosHoy = () => { const d = new Date(); return d.getHours()*60 + d.getMinutes(); };
@@ -6311,6 +6354,7 @@ addEventListener('growpanel-listo', enviarResumen);
   }
   setTimeout(() => buscarActualizacion(false), 4000);
   setTimeout(avisoAppNueva, 2000);
+  setTimeout(() => window.revisarPermisos(), 3500);
   setTimeout(pintarNotas, 1200);
 })();
 </script>
