@@ -809,21 +809,95 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <style>
-/* Calendario a todo el ancho en el ordenador (Gustavo): solo en pantallas de 900 px o más; en el móvil no cambia nada */
+/* ---------- Calendario en el ordenador (Gustavo, 3.69): con el aspecto de Google Calendar.
+   Solo en pantallas de 900 px o más y solo en la pestaña Calendario; en el móvil no cambia nada ---------- */
+.gc-top,.gc-lado,.ag-dia-evs{display:none}
 @media (min-width:900px){
-  body.ancho .envoltura,body.ancho .cab-in{max-width:1240px;padding-left:28px;padding-right:28px}
-  body.ancho .ag-fab{right:max(24px,calc(50% - 596px))}
-  body.ancho .ag-nav,body.ancho .ag-modos{max-width:620px;margin-left:auto;margin-right:auto}
+  body.ancho .cab{display:none}
+  body.ancho nav.abajo{display:none!important}
+  body.ancho .envoltura{max-width:none;padding:0 16px 16px 0;display:grid;grid-template-columns:264px minmax(0,1fr);grid-template-areas:"top top" "lado main";align-items:start}
+  body.ancho .gc-top{grid-area:top;display:flex;align-items:center;gap:4px;position:sticky;top:0;z-index:9;height:64px;padding:0 4px 0 10px;background:rgba(20,15,38,.97);backdrop-filter:blur(8px)}
+  body.ancho .gc-lado{grid-area:lado;display:flex;flex-direction:column;gap:20px;position:sticky;top:64px;max-height:calc(100vh - 64px);overflow:auto;padding:6px 14px 24px 14px}
+  body.ancho .gc-main{grid-area:main;background:var(--fondo2);border-radius:24px;padding:4px 14px 18px 6px;min-height:calc(100vh - 80px)}
+  body.ancho .gc-main > .tit-acc,body.ancho .ag-modos,body.ancho .ag-nav,body.ancho .ag-acc,body.ancho .ag-fab,body.ancho .ag-esp,body.ancho .ag-vacio{display:none}
+  .gc-ico{width:44px;height:44px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
+  .gc-ico:hover,.gc-hoy:hover,.gc-vista:hover{background:rgba(255,255,255,.08)}
+  .gc-marca{display:flex;align-items:center;gap:10px;margin:0 26px 0 6px;white-space:nowrap}
+  .gc-marca svg{width:36px;height:36px;flex:none}
+  .gc-marca b{font-size:22px;font-weight:800}
+  .gc-ver{font-size:11px;font-weight:700;color:var(--suave);border:1px solid var(--linea);border-radius:999px;padding:1px 7px}
+  .gc-hoy{height:40px;padding:0 22px;border-radius:99px;border:1px solid rgba(255,255,255,.35);background:none;color:var(--tinta);font-weight:700;font-size:15px;margin-right:12px;cursor:pointer}
+  .gc-tit{font-size:22px;font-weight:600;margin:0 8px 0 14px;white-space:nowrap}
+  .gc-chip{font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1);color:var(--suave);white-space:nowrap}
+  .gc-hueco{flex:1}
+  .gc-vista-w,.gc-menu-w{position:relative}
+  .gc-vista{height:40px;padding:0 14px 0 20px;border-radius:99px;border:1px solid rgba(255,255,255,.35);background:none;color:var(--tinta);font-weight:700;font-size:15px;display:flex;align-items:center;gap:10px;margin:0 8px;cursor:pointer}
+  .gc-pop{position:absolute;top:calc(100% + 6px);z-index:20;min-width:210px;background:#2a2150;border:1px solid var(--linea);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);padding:8px 0}
+  .gc-pop.der{right:8px}
+  .gc-pop.izq{left:0}
+  .gc-pop button{display:flex;justify-content:space-between;align-items:center;gap:20px;width:100%;border:0;background:none;color:var(--tinta);padding:11px 18px;font-size:15px;text-align:left;cursor:pointer}
+  .gc-pop button:hover{background:rgba(255,255,255,.08)}
+  .gc-pop button.sel{color:var(--oro);font-weight:800}
+  .gc-pop kbd{font:inherit;font-size:12px;color:var(--suave)}
+  .gc-crear{align-self:flex-start;display:flex;align-items:center;gap:12px;height:56px;padding:0 26px 0 16px;border-radius:16px;border:0;background:#2e2458;color:var(--tinta);font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer;margin-top:2px}
+  .gc-crear:hover{background:#372b69}
+  .gc-mini-cab{display:flex;align-items:center;gap:2px;padding-left:8px;margin-bottom:4px}
+  .gc-mini-cab b{flex:1;font-size:14px;font-weight:700}
+  .gc-mini-cab .gc-ico{width:30px;height:30px}
+  .gc-mini{display:grid;grid-template-columns:repeat(8,1fr);row-gap:2px;text-align:center;font-size:11.5px}
+  .gc-mini span{color:var(--suave);font-weight:700;line-height:28px}
+  .gc-mini .gc-msem{font-size:10px;opacity:.7}
+  .gc-mini button{width:28px;height:28px;margin:auto;border-radius:50%;border:0;background:none;color:var(--tinta);font-size:11.5px;cursor:pointer;padding:0}
+  .gc-mini button:hover{background:rgba(255,255,255,.1)}
+  .gc-mini button.fuera{color:var(--suave);opacity:.6}
+  .gc-mini button.rango{background:rgba(247,195,91,.13)}
+  .gc-mini button.sel{background:rgba(247,195,91,.35)}
+  .gc-mini button.hoy{background:var(--oro);color:#2a1d05;font-weight:800}
+  .gc-hora{display:flex;align-items:center;gap:8px;padding:0 8px;font-size:15px}
+  .gc-hora b{margin-left:auto;font-weight:600}
+  .gc-hora svg{color:var(--oro)}
+  .gc-flor{border:0;background:none;color:var(--tinta);padding:8px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:16px}
+  .gc-flor:hover{background:rgba(255,255,255,.04)}
+  .gc-flor svg{pointer-events:none;width:100%!important;max-width:236px!important;margin:0!important}
+  .gc-flor-t{align-self:flex-start;font-weight:800;font-size:15px;padding:0 8px}
+  .gc-flor-s{font-size:12px;color:var(--suave);padding:0 8px;text-align:center}
+  body.ancho .rj-cab{position:sticky;top:64px;z-index:4;background:var(--fondo2);padding:8px 0 6px;margin-top:0}
+  body.ancho .rj-cab button b{font-size:0}
+  body.ancho .rj-cab button b::after{content:attr(data-l);font-size:12px;letter-spacing:.6px}
+  body.ancho .rj-cab button span{font-size:24px;width:46px;height:46px;font-weight:600}
   body.ancho .rj-h span{font-size:12px}
   body.ancho .rj.sem .rj-ev{font-size:13px;padding:3px 6px;border-radius:7px;border-left-width:3px}
   body.ancho .rj.sem .rj-ev b{font-weight:800}
-  body.ancho .rj-cab button b{font-size:13px}
-  body.ancho .rj-cab button span{font-size:18px;width:36px;height:36px}
   body.ancho .rj-todo button{font-size:12.5px;padding:3px 6px}
   body.ancho .rj-todo em{font-size:11.5px}
-  body.ancho .ag-mes{gap:6px}
-  body.ancho .ag-dia{aspect-ratio:auto;height:68px;font-size:17px}
+  body.ancho .ag-mes{gap:0;margin-top:6px;border-top:1px solid rgba(255,255,255,.08);border-left:1px solid rgba(255,255,255,.08)}
+  body.ancho .ag-ds{font-size:12px;padding:8px 0;border-right:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
+  body.ancho .ag-dia{aspect-ratio:auto;min-height:112px;justify-content:flex-start;align-items:stretch;padding:5px;gap:3px;border-radius:0;background:none;border-right:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;cursor:pointer}
+  body.ancho .ag-dia:hover{background:rgba(255,255,255,.03)}
+  body.ancho .ag-dia > span:first-child{align-self:center;width:26px;height:26px;border-radius:50%;display:grid;place-items:center}
+  body.ancho .ag-dia.hoy{box-shadow:none;color:var(--tinta)}
+  body.ancho .ag-dia.hoy > span:first-child{background:var(--oro);color:#2a1d05}
+  body.ancho .ag-dia.sel{background:rgba(247,195,91,.12);color:var(--tinta)}
+  body.ancho .ag-dia i{display:none}
+  body.ancho .ag-dia-evs{display:flex;flex-direction:column;gap:2px;min-width:0}
+  body.ancho .ag-dia-evs small{display:block;font-size:12px;font-weight:600;padding:1px 6px;border-radius:4px;background:color-mix(in srgb,var(--c) 35%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+  body.ancho .ag-dia-evs em{font-style:normal;font-size:11px;color:var(--suave);text-align:left;padding-left:6px}
 }
+/* pantallas medianas (de 900 a 1200 px): la barra de arriba más apretada para que quepa todo */
+@media (min-width:900px) and (max-width:1199px){
+  body.ancho .envoltura{grid-template-columns:236px minmax(0,1fr)}
+  .gc-ver{display:none}
+  .gc-marca{margin-right:8px;gap:8px}
+  .gc-marca b{font-size:18px}
+  .gc-marca svg{width:30px;height:30px}
+  .gc-hoy{padding:0 14px;margin-right:4px}
+  .gc-ico{width:38px;height:38px}
+  .gc-tit{font-size:18px;margin:0 6px}
+  .gc-vista{padding:0 10px 0 14px;margin:0 4px}
+}
+.gc-res{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:50vh;overflow:auto}
+.gc-r{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:0;border-left:3px solid var(--c);border-radius:10px;background:rgba(255,255,255,.05);color:var(--tinta);padding:9px 12px;text-align:left;cursor:pointer}
+.gc-r span{font-size:12.5px;color:var(--suave)}
 </style>
 </head>
 <body>
@@ -861,7 +935,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.68';
+const VERSION = 'v3.69';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1199,6 +1273,7 @@ function ponerVersiones(){
   const el = $('#ver'); if(!el) return;
   let app = ''; try{ app = esApp ? versionApp() : (D && D.appAndroid && D.appAndroid.version) || ''; }catch(e){}
   el.textContent = 'web ' + VERSION.replace(/^v/, '') + (app && app !== '?' ? ' · app ' + app : '');
+  document.querySelectorAll('.gc-ver').forEach(x => x.textContent = el.textContent);
 }
 /* ---------- Reloj de arena: dura la hora y media del bloque; la arena cae grano a grano ---------- */
 /* El cristal se estrecha hacia el cuello: para que la arena guarde la proporción del tiempo se calcula por área, no por altura */
@@ -2373,7 +2448,7 @@ function vAgenda(){
     tit = dl.getMonth() === dd.getMonth() ? `${dl.getDate()} – ${dd.getDate()} de ${MESES[dd.getMonth()]}` : `${dl.getDate()} de ${MESES[dl.getMonth()]} – ${dd.getDate()} de ${MESES[dd.getMonth()]}`;
     conHoy = hoy >= l && hoy <= dom;
     const todos = dias.map(k => eventosDe(k).filter(e => e.todo));
-    cuerpo = `<div class="rj-cab"><span></span>${dias.map((k, n) => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b>${DIAS_CORTO[n]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`
+    cuerpo = `<div class="rj-cab"><span></span>${dias.map((k, n) => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[n]}">${DIAS_CORTO[n]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`
       + (todos.some(x => x.length) ? `<div class="rj-todo"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${dias[n]}')">${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else {
@@ -2383,16 +2458,16 @@ function vAgenda(){
     const celdas = Math.ceil((diaSem(primero) + nDias) / 7) * 7;
     let g = DIAS_CORTO.map(x => `<span class="ag-ds">${x}</span>`).join('');
     for(let n = 0; n < celdas; n++){ const k = sumarDias(ini, n), es = eventosDe(k);
-      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i></button>`; }
+      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
     const evs = eventosDe(agK);
     cuerpo = `<div class="ag-mes">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
   }
-  return `<h1 class="tit-acc">Calendario</h1>
+  return gcTop() + gcLado() + `<div class="gc-main"><h1 class="tit-acc">Calendario</h1>
     <div class="ag-modos">${[['dia', 'Día'], ['semana', 'Semana'], ['mes', 'Mes']].map(([k, t]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${t}</button>`).join('')}</div>
     <div class="ag-nav"><button class="fn-flecha" onclick="agMover(-1)" aria-label="Anterior">‹</button><b>${tit}</b><button class="fn-flecha" onclick="agMover(1)" aria-label="Siguiente">›</button></div>
     ${conHoy ? '' : '<div class="ag-acc"><button class="link" onclick="agHoy()">Volver a hoy</button></div>'}
-    ${cuerpo}<div style="height:76px"></div>
-    <button class="ag-fab" aria-label="Añadir al calendario" onclick="nuevoEvento()"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
+    ${cuerpo}<div class="ag-esp" style="height:76px"></div>
+    <button class="ag-fab" aria-label="Añadir al calendario" onclick="nuevoEvento()"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>`;
 }
 /* Rejilla de horas: de 5:00 a 23:00 (o más, si hay algo antes o después), 52 px por hora.
    Lo que se solapa se pone lado a lado; la raya roja es la hora de ahora y la franja suave, el bloque de Life de ahora. */
@@ -2440,14 +2515,134 @@ function agClicRejilla(ev, k, h0){
 function agVerAhora(){ setTimeout(() => { const l = $('.rj-ahora'); if(l) window.scrollTo(0, Math.max(0, l.getBoundingClientRect().top + window.scrollY - 260)); }, 0); }
 function agVer(m){ agModo = m; render(); window.scrollTo(0, 0); agVerAhora(); }
 function agMover(dir){
+  gcMiniDes = 0;
   if(agModo === 'dia') agK = sumarDias(agK, dir);
   else if(agModo === 'semana') agK = sumarDias(agK, 7 * dir);
   else { const d = fechaDe(agK); agK = claveDia(new Date(d.getFullYear(), d.getMonth() + dir, 1)); }
   render();
 }
-function agHoy(){ agK = hoyK(); render(); agVerAhora(); }
+function agHoy(){ agK = hoyK(); gcMiniDes = 0; render(); agVerAhora(); }
 function agIrDia(k){ agK = k; agModo = 'dia'; render(); window.scrollTo(0, 0); }
-function agElegir(k){ agK = k; render(); }
+function agElegir(k){ agK = k; gcMiniDes = 0; render(); }
+
+/* ---------- Calendario en el ordenador (Gustavo, 3.69): con el aspecto de Google Calendar ----------
+   Arriba: menú, logo, Hoy, flechas, el mes, la semana, la lupa, los ajustes y la vista (Día, Semana, Mes).
+   A la izquierda: Crear, el mes pequeño, la hora de España y la flor (que lleva a Áreas). En el móvil no se ve. */
+const ESCRITORIO = matchMedia('(min-width: 900px)');
+const DIAS_3 = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+const capi = t => t.replace(/^./, c => c.toUpperCase());
+const svgT = (d, w = 24) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICO_MENU = svgT('<path d="M4 7h16M4 12h16M4 17h16"/>');
+const ICO_IZQ = svgT('<path d="M15 6l-6 6 6 6"/>');
+const ICO_DER = svgT('<path d="M9 6l6 6-6 6"/>');
+const ICO_LUPA = svgT('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>');
+const ICO_RUEDA = svgT('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>');
+const ICO_BAJA = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg>';
+const ICO_MAS = svgT('<path d="M12 5v14M5 12h14"/>', 26);
+const ICO_SOL = svgT('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>', 20);
+const ICO_LUNA = svgT('<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>', 20);
+/* Número de semana (como Google Calendar: la semana 1 es la del primer jueves del año) */
+function semanaISO(k){
+  const d = fechaDe(k), t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 3 - (t.getUTCDay() + 6) % 7);
+  const e = new Date(Date.UTC(t.getUTCFullYear(), 0, 4));
+  return 1 + Math.round(((t - e) / 864e5 - 3 + (e.getUTCDay() + 6) % 7) / 7);
+}
+const horaEspana = () => new Intl.DateTimeFormat('es-ES', {timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date());
+function gcTop(){
+  const d = fechaDe(agK);
+  let t;
+  if(agModo === 'dia') t = `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
+  else if(agModo === 'semana'){
+    const a = fechaDe(lunesDe(agK)), b = fechaDe(sumarDias(lunesDe(agK), 6));
+    t = a.getMonth() === b.getMonth() ? `${capi(MESES[a.getMonth()])} de ${a.getFullYear()}`
+      : a.getFullYear() === b.getFullYear() ? `${capi(MESES[a.getMonth()].slice(0, 3))} – ${MESES[b.getMonth()].slice(0, 3)} de ${b.getFullYear()}`
+      : `${capi(MESES[a.getMonth()].slice(0, 3))} de ${a.getFullYear()} – ${MESES[b.getMonth()].slice(0, 3)} de ${b.getFullYear()}`;
+  }
+  else t = `${capi(MESES[d.getMonth()])} de ${d.getFullYear()}`;
+  const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes'}[agModo];
+  return `<div class="gc-top">
+    <div class="gc-menu-w"><button class="gc-ico" aria-label="Menú" aria-haspopup="true" onclick="gcPop('gc-menu', event)">${ICO_MENU}</button>
+      <div class="gc-pop izq" id="gc-menu" hidden>${[['agenda', 'Calendario'], ['dia', 'Áreas'], ['inicio', 'Focus'], ['salud', 'Cuerpo'], ['ajustes', 'Ajustes']].map(([v, x]) => `<button class="${v === 'agenda' ? 'sel' : ''}" onclick="ir('${v}')">${x}</button>`).join('')}</div></div>
+    <div class="gc-marca"><svg viewBox="-100 -100 200 200" aria-hidden="true">${logoInterior()}</svg><b>Amable Life</b><span class="gc-ver"></span></div>
+    <button class="gc-hoy" onclick="agHoy()" title="Ir a hoy (T)">Hoy</button>
+    <button class="gc-ico" aria-label="Anterior" title="Anterior" onclick="agMover(-1)">${ICO_IZQ}</button>
+    <button class="gc-ico" aria-label="Siguiente" title="Siguiente" onclick="agMover(1)">${ICO_DER}</button>
+    <h1 class="gc-tit">${t}</h1>${agModo !== 'mes' ? `<span class="gc-chip">Semana ${semanaISO(agK)}</span>` : ''}
+    <span class="gc-hueco"></span>
+    <button class="gc-ico" aria-label="Buscar" title="Buscar (/)" onclick="gcBuscar()">${ICO_LUPA}</button>
+    <button class="gc-ico" aria-label="Ajustes" title="Ajustes" onclick="ir('ajustes')">${ICO_RUEDA}</button>
+    <div class="gc-vista-w"><button class="gc-vista" aria-haspopup="true" onclick="gcPop('gc-vistas', event)">${nom}${ICO_BAJA}</button>
+      <div class="gc-pop der" id="gc-vistas" hidden>${[['dia', 'Día', 'D'], ['semana', 'Semana', 'W'], ['mes', 'Mes', 'M']].map(([k, x, l]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')"><span>${x}</span><kbd>${l}</kbd></button>`).join('')}</div></div>
+  </div>`;
+}
+let gcMiniDes = 0;
+function gcLado(){
+  const hoy = hoyK(), b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1), primero = claveDia(m0);
+  const ini = lunesDe(primero), filas = Math.ceil((diaSem(primero) + new Date(m0.getFullYear(), m0.getMonth() + 1, 0).getDate()) / 7);
+  let g = '<span></span>' + DIAS_CORTO.map(x => `<span>${x}</span>`).join('');
+  for(let f = 0; f < filas; f++){
+    const l = sumarDias(ini, f * 7);
+    g += `<span class="gc-msem">${semanaISO(l)}</span>`;
+    for(let n = 0; n < 7; n++){ const k = sumarDias(l, n);
+      g += `<button class="${k.slice(0, 7) !== primero.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''} ${agModo === 'semana' && l === lunesDe(agK) ? 'rango' : ''}" onclick="agElegir('${k}')">${fechaDe(k).getDate()}</button>`; }
+  }
+  const h = +horaEspana().slice(0, 2);
+  return `<aside class="gc-lado">
+    <button class="gc-crear" onclick="nuevoEvento()" title="Crear (C)">${ICO_MAS}Crear</button>
+    <div><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
+      <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
+      <div class="gc-mini">${g}</div></div>
+    <div class="gc-hora">Hora de España <b>${horaEspana()}</b>${h >= 7 && h < 20 ? ICO_SOL : ICO_LUNA}</div>
+    <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Áreas"><span class="gc-flor-t">Tus áreas</span>${florGirasol(D.niveles, null, pendientes().length)}<span class="gc-flor-s">Toca la flor para ver las tareas de cada área</span></button>
+  </aside>`;
+}
+setInterval(() => document.querySelectorAll('.gc-hora b').forEach(b => b.textContent = horaEspana()), 20000);
+/* Los desplegables de arriba (menú y vista) */
+function gcPop(id, ev){
+  if(ev) ev.stopPropagation();
+  const p = $('#' + id); if(!p) return;
+  const abrir = p.hidden;
+  document.querySelectorAll('.gc-pop').forEach(x => x.hidden = true);
+  p.hidden = !abrir;
+}
+document.addEventListener('click', e => { if(!e.target.closest('.gc-pop')) document.querySelectorAll('.gc-pop').forEach(x => x.hidden = true); });
+/* La lupa: buscar por el nombre en el calendario */
+const gcNorm = t => (t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+function gcBuscar(){
+  mostrarHoja(`<div class="hoja-cab"><h2>Buscar en el calendario</h2></div>
+    <div class="campo-voz" style="margin-top:10px"><input type="search" id="gc-q" maxlength="80" placeholder="Escribe una palabra" oninput="gcBuscarPintar()" onkeydown="if(event.key==='Enter'){const b=document.querySelector('.gc-r'); if(b) b.click();}"></div>
+    <div class="gc-res" id="gc-res"></div>`, '#f7c35b');
+  gcBuscarPintar();
+  setTimeout(() => { const q = $('#gc-q'); if(q) q.focus(); }, 80);
+}
+function gcProximo(e){
+  if(!repite(e)) return e.dia;
+  const hoy = hoyK();
+  for(let n = 0; n < 120; n++){ const k = sumarDias(hoy, n); if(eventosDe(k).some(x => x.id === e.id)) return k; }
+  return e.dia;
+}
+function gcBuscarPintar(){
+  const box = $('#gc-res'); if(!box) return;
+  const q = gcNorm(valor('gc-q'));
+  if(!q){ box.innerHTML = '<p class="peq suave" style="margin:0">Busca por el nombre de lo que tienes en el calendario.</p>'; return; }
+  const evs = AG_().eventos.filter(e => gcNorm(e.t).includes(q)).map(e => ({e, k: gcProximo(e)})).sort((a, b) => a.k.localeCompare(b.k)).slice(0, 40);
+  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · hábito' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
+    : '<p class="peq suave" style="margin:0">No hay nada con esa palabra.</p>';
+}
+function gcIrA(id, k){ cerrarHoja(); agK = k; gcMiniDes = 0; render(); agVerAhora(); editarEvento(id, k); }
+/* Atajos de teclado como Google Calendar: D, W, M (vista), T (hoy), flechas o J/K (antes/después), C (crear), / (buscar) */
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') document.querySelectorAll('.gc-pop').forEach(x => x.hidden = true);
+  if(vista !== 'agenda' || !ESCRITORIO.matches || e.ctrlKey || e.metaKey || e.altKey || $('#hoja')) return;
+  if(e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
+  const k = e.key.toLowerCase();
+  if(k === 'd') agVer('dia'); else if(k === 'w') agVer('semana'); else if(k === 'm') agVer('mes');
+  else if(k === 't') agHoy(); else if(k === 'c') nuevoEvento();
+  else if(k === 'j' || k === 'n' || e.key === 'ArrowRight') agMover(1);
+  else if(k === 'k' || k === 'p' || e.key === 'ArrowLeft') agMover(-1);
+  else if(k === '/'){ e.preventDefault(); gcBuscar(); }
+});
 /* ---- Hoja: nueva tarea o hábito del calendario ---- */
 let evEd = null;
 function nuevoEvento(k, ini, pre){
