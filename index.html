@@ -935,11 +935,17 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .cab-pop button svg{color:var(--suave);width:22px;height:22px;flex:none}
 .cab-pop button.sel{background:color-mix(in srgb,var(--oro) 24%,transparent)}
 .rt ul.chk{list-style:none;padding-left:2px;margin:4px 0}
-.rt ul.chk > li{position:relative;padding-left:26px;margin:3px 0}
-.rt ul.chk > li::before{content:'';position:absolute;left:0;top:.15em;width:15px;height:15px;border:2px solid currentColor;border-radius:4px;opacity:.65;cursor:pointer;box-sizing:content-box}
+/* 4.69 (Gustavo): seis puntitos a la izquierda de cada línea para subirla o bajarla; los números se reajustan solos */
+.rt li{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='16' viewBox='0 0 10 16'%3E%3Cg fill='%239a90b8'%3E%3Ccircle cx='2.5' cy='3' r='1.6'/%3E%3Ccircle cx='7.5' cy='3' r='1.6'/%3E%3Ccircle cx='2.5' cy='8' r='1.6'/%3E%3Ccircle cx='7.5' cy='8' r='1.6'/%3E%3Ccircle cx='2.5' cy='13' r='1.6'/%3E%3Ccircle cx='7.5' cy='13' r='1.6'/%3E%3C/g%3E%3C/svg%3E") no-repeat 0 .3em;cursor:default}
+.rt ul:not(.chk),.rt ol{padding-left:0;list-style-position:inside;margin:4px 0}
+.rt ul:not(.chk) > li,.rt ol > li{padding-left:18px;margin:2px 0}
+.rt li.li-mov{opacity:.75;background-color:rgba(var(--bl),.08);border-radius:6px}
+body.li-moviendo,body.li-moviendo *{cursor:grabbing!important;user-select:none}
+.rt ul.chk > li{position:relative;padding-left:42px;margin:3px 0}
+.rt ul.chk > li::before{content:'';position:absolute;left:16px;top:.15em;width:15px;height:15px;border:2px solid currentColor;border-radius:4px;opacity:.65;cursor:pointer;box-sizing:content-box}
 .rt ul.chk > li[data-ok="1"]{text-decoration:line-through;opacity:.6}
 .rt ul.chk > li[data-ok="1"]::before{background:#16a34a;border-color:#16a34a;opacity:1}
-.rt ul.chk > li[data-ok="1"]::after{content:'';position:absolute;left:6px;top:calc(.15em + 2px);width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.rt ul.chk > li[data-ok="1"]::after{content:'';position:absolute;left:22px;top:calc(.15em + 2px);width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
 .desp-par{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:start}
 .desp-par .desp-btn{flex-wrap:wrap;row-gap:2px;align-items:center}
 .desp-par .desp-btn .desp-v{order:3;flex-basis:100%;padding-left:32px;text-align:left;white-space:normal;line-height:1.25}
@@ -1744,7 +1750,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.68';
+const VERSION = 'v4.69';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4191,7 +4197,7 @@ function ulDeSel(d){
    en la tarjeta y en la nota adhesiva se guarda en el momento. Con Enter, la línea nueva empieza sin tilde. */
 function chkClic(e){
   const li = e.target.closest && e.target.closest('.rt ul.chk > li'); if(!li) return;
-  if(e.clientX - li.getBoundingClientRect().left > 24) return;   // solo la casilla, no el texto
+  const dx = e.clientX - li.getBoundingClientRect().left; if(dx < 15 || dx > 40) return;   // solo la casilla (a la izquierda, los seis puntitos)
   e.preventDefault(); e.stopPropagation();
   li.dataset.ok = li.dataset.ok === '1' ? '0' : '1';
   try{ sonarHecho && li.dataset.ok === '1' && sonarHecho(); }catch(x){}
@@ -4205,6 +4211,41 @@ function chkGuardar(li){
   const el = document.querySelector(`.nota-ad[data-id="${e.id}"] .na-d`); if(el && !el.contains(document.activeElement)) el.innerHTML = limpiarHTML(e.descH);
 }
 document.addEventListener('click', chkClic, true);
+/* 4.69: arrastrar una línea de lista por sus seis puntitos (en la hoja de editar, en la tarjeta y en la nota adhesiva) */
+let liArr = null;
+const enAsa = (e, li) => li && (e.clientX - li.getBoundingClientRect().left) < 15;
+function liDe(t){ return t && t.closest && t.closest('.rt li'); }
+function renumerarLista(lista){
+  let n = 0;
+  [...lista.children].forEach(li => {
+    const w = document.createTreeWalker(li, NodeFilter.SHOW_TEXT); let t = w.nextNode();
+    while(t && !t.data.trim()) t = w.nextNode();
+    if(t && /^\s*\d+\s*[.)º°]/.test(t.data)){ n++; t.data = t.data.replace(/^(\s*)\d+/, '$1' + n); }
+  });
+}
+document.addEventListener('pointerdown', e => {
+  const li = liDe(e.target); if(!li || !enAsa(e, li)) return;
+  e.preventDefault(); e.stopPropagation();
+  liArr = {li, lista: li.parentElement, movido: false}; li.classList.add('li-mov'); document.body.classList.add('li-moviendo');
+}, true);
+document.addEventListener('touchstart', e => { const t = e.touches[0], li = liDe(e.target); if(li && t && enAsa(t, li)) e.preventDefault(); }, {passive: false, capture: true});
+document.addEventListener('pointermove', e => {
+  if(!liArr) return; e.preventDefault();
+  const sobre = document.elementFromPoint(e.clientX, e.clientY), otro = liDe(sobre);
+  if(!otro || otro === liArr.li || otro.parentElement !== liArr.lista) return;
+  const r = otro.getBoundingClientRect();
+  liArr.lista.insertBefore(liArr.li, e.clientY < r.top + r.height / 2 ? otro : otro.nextSibling);
+  liArr.movido = true;
+}, {passive: false});
+function soltarLi(){
+  if(!liArr) return; const {li, lista, movido} = liArr; liArr = null;
+  li.classList.remove('li-mov'); document.body.classList.remove('li-moviendo');
+  if(!movido) return;
+  renumerarLista(lista);
+  if(!li.closest('[contenteditable="true"]') || li.closest('.nota-ad')) chkGuardar(li);   // tarjeta y nota: se guarda ya; en la hoja, con Guardar
+}
+document.addEventListener('pointerup', soltarLi);
+document.addEventListener('pointercancel', soltarLi);
 document.addEventListener('keydown', e => {
   if(e.key !== 'Enter' || !e.target.closest || !e.target.closest('.rt[contenteditable="true"]')) return;
   setTimeout(() => { const s = getSelection(); let n = s.anchorNode; if(n && n.nodeType === 3) n = n.parentElement;
