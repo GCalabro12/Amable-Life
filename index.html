@@ -160,6 +160,11 @@ body.v-evaluar header.cab{display:none}
 .eval .ilus .ilus-preg{position:absolute;left:0;right:0;bottom:0;z-index:1;margin:0;padding:0 20px 14px;font-size:19px;font-weight:800;line-height:1.3;color:var(--tinta);text-align:center;text-shadow:0 0 12px var(--tarjeta),0 0 4px var(--tarjeta)}
 .eval .ilus::after{background:linear-gradient(to bottom,transparent 35%,var(--tarjeta) 92%)!important}
 .ev-hab{margin-top:14px;text-align:left}
+.opcion-caja{border-radius:16px}
+.opcion-caja.sel{background:color-mix(in srgb,var(--c) 30%,transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 70%,#fff);padding-bottom:14px}
+.opcion-caja.sel .opcion{background:none;box-shadow:none}
+.opcion-caja .ev-hab{margin:2px 14px 0}
+.opcion-caja .ev-hab .pregunta{font-size:16px}
 .ev-hab .pregunta{margin:0 0 8px;text-align:center}
 .ev-hab .campo-voz + .campo-voz{margin-top:8px}
 .ev-hab .link{display:block;margin:8px auto 0}
@@ -169,6 +174,7 @@ body.v-evaluar header.cab{display:none}
 .ph-lista li.falta{color:var(--suave)}
 .ph-ok{color:var(--c);font-weight:900;margin-left:4px}
 .leyenda-hab .pt-peq{display:inline-block;width:6px;height:10px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#cbbcf5}
+.flor .eti-hab{font-size:8.5px;font-weight:700;fill:#fff;paint-order:stroke;stroke:rgba(20,12,40,.5);stroke-width:2.4px;stroke-linejoin:round}
 .flor .eti-nom.fuera{font-size:12px;stroke:none;fill:var(--tinta)}
 .bots-eval .btn{flex:1}
 
@@ -1709,7 +1715,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.65';
+const VERSION = 'v4.66';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1933,7 +1939,15 @@ function flor(niveles, opc = {}){
     areasFlor().forEach((a,i) => {
       const nv = niveles && niveles[a.id], ang = i*paso - 90, Li = LH(nv);
       const [xm,ym] = pt(opc.hab && nv === 'mas' ? base + Li + 22 : base + Li*.54, ang), giro = (ang > 90 || ang < -90) ? ang + 180 : ang;
-      s += `<text class="eti-nom${opc.hab && nv === 'mas' ? ' fuera' : ''}" x="${xm.toFixed(1)}" y="${ym.toFixed(1)}" transform="rotate(${giro} ${xm.toFixed(1)} ${ym.toFixed(1)})" text-anchor="middle" dominant-baseline="central"${opc.hab && nv === 'mas' ? ` fill="${a.color}"` : ''}>${a.corto}</text>`;
+      // 4.66 (Gustavo): en la flor de hábitos, los hábitos que has escrito van dentro de su pétalo, debajo del nombre
+      const habs = opc.hab && (nv === 'bien' || nv === 'una') ? ((opc.habitos || {})[a.id] || {}).tengo || [] : [];
+      const lin = habs.slice(0, nv === 'bien' ? 2 : 1), maxC = nv === 'bien' ? 17 : 12, corta = t => t.length > maxC ? t.slice(0, maxC - 1).trimEnd() + '…' : t;
+      if(lin.length){
+        const y0 = lin.length === 2 ? -11 : -7;
+        s += `<g transform="translate(${xm.toFixed(1)} ${ym.toFixed(1)}) rotate(${giro})"><text class="eti-nom" y="${y0}" text-anchor="middle" dominant-baseline="central">${a.corto}</text>
+          ${lin.map((t, k) => `<text class="eti-hab" y="${y0 + 13 + k * 10}" text-anchor="middle" dominant-baseline="central">${esc(corta(t))}</text>`).join('')}</g>`;
+      }
+      else s += `<text class="eti-nom${opc.hab && nv === 'mas' ? ' fuera' : ''}" x="${xm.toFixed(1)}" y="${ym.toFixed(1)}" transform="rotate(${giro} ${xm.toFixed(1)} ${ym.toFixed(1)})" text-anchor="middle" dominant-baseline="central"${opc.hab && nv === 'mas' ? ` fill="${a.color}"` : ''}>${a.corto}</text>`;
       const [xn,yn] = pt(base + Li + 9, ang);
       if(opc.hab){ if(nv === 'bien' || nv === 'una') s += `<text class="eti-marca" x="${xn.toFixed(1)}" y="${yn.toFixed(1)}" fill="${a.color}" text-anchor="middle" dominant-baseline="central">✓</text>`; }
       else if(nv === 'mas' || nv === 'una'){
@@ -3222,8 +3236,9 @@ function vEvaluar(){
     <section class="tarjeta eval">
       <div class="ilus" style="background-image:url(img/${a.id}.jpg)" role="img" aria-label="Ilustración de ${a.nombre}"><p class="ilus-preg">${pregHab(a)}</p></div>
       <div class="cuerpo">
-        ${opcionesNivel(nv, k => `elegirNivel('${k}')`)}
-        ${preg}
+        <div class="opciones">${Object.keys(NIVELES).map(k => { const N = NIVELES[k], sel = nv === k;
+          // 4.66 (Gustavo): la pregunta («¿Cuáles haces?»…) va dentro del mismo botón elegido, que se hace grande
+          return `<div class="opcion-caja ${sel ? 'sel' : ''}"><button class="opcion ${sel ? 'sel' : ''}" onclick="elegirNivel('${k}')"><span class="marca">${N.marca}</span><span><b>${N.titulo}</b><small>${N.sub}</small></span></button>${sel ? preg : ''}</div>`; }).join('')}</div>
       </div>
     </section>
     <div class="bots-eval">
@@ -3237,7 +3252,7 @@ function elegirNivel(k){
   nota(ESCALA[E.i] * 2, 0, .08, .25, false);
   const y = window.scrollY; render(); window.scrollTo(0, y);
   // 4.63: ya no pasa sola: debajo pregunta cuál haces o cuál quisieras hacer
-  const caja = $('.ev-hab'); if(caja) caja.scrollIntoView({behavior: 'smooth', block: 'center'});
+  const caja = $('.opcion-caja.sel'); if(caja) caja.scrollIntoView({behavior: 'smooth', block: 'nearest'});
 }
 function elegirSub(sub, k){
   const a = AREAS[E.i], d = E.detalle[a.id] = E.detalle[a.id] || {};
@@ -3282,7 +3297,7 @@ function vPlanHab(){
       : (h.tengo.length ? h.tengo.map(t => `<li>${ICO_BROTE} ${esc(t)}</li>`).join('') : `<li>${nv ? NIVELES[nv].titulo : 'Sin revisar'}</li>`);
     return `<div class="plan-area" style="--c:${a.color}"><h3>${ico(a)} ${a.nombre} ${nv === 'mas' || !nv ? '' : '<span class="ph-ok">✓</span>'}</h3><ul class="ph-lista">${items}</ul></div>`; }).join('');
   return `<div class="res-tit"><h1>Tu flor de hábitos</h1><p class="suave">Áreas con hábitos establecidos: <b>${con} de ${FL.length}</b></p></div>
-    <section class="tarjeta flor-sec">${flor(D.niveles, {hab: true, centro: con, centroTxt: con === 1 ? 'área con hábitos' : 'áreas con hábitos'})}${LEYENDA_HAB}</section>
+    <section class="tarjeta flor-sec">${flor(D.niveles, {hab: true, habitos: D.habitosArea, centro: con, centroTxt: con === 1 ? 'área con hábitos' : 'áreas con hábitos'})}${LEYENDA_HAB}</section>
     ${nuevas ? `<p class="suave peq" style="text-align:center;margin:0 0 10px">Lo que te falta ya está como tarea en su pétalo, en Hábitos.</p>` : ''}
     ${filas}
     <div class="bots-eval"><button class="btn prim" onclick="P = null; ir('dia')">Ir a Hábitos</button></div>`;
