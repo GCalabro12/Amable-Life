@@ -662,6 +662,17 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .cab-pop button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--tinta);padding:11px 18px;font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer}
 .cab-pop button svg{color:var(--suave);width:22px;height:22px;flex:none}
 .cab-pop button.sel{background:color-mix(in srgb,var(--oro) 24%,transparent)}
+.rt ul.chk{list-style:none;padding-left:2px;margin:4px 0}
+.rt ul.chk > li{position:relative;padding-left:26px;margin:3px 0}
+.rt ul.chk > li::before{content:'';position:absolute;left:0;top:.15em;width:15px;height:15px;border:2px solid currentColor;border-radius:4px;opacity:.65;cursor:pointer;box-sizing:content-box}
+.rt ul.chk > li[data-ok="1"]{text-decoration:line-through;opacity:.6}
+.rt ul.chk > li[data-ok="1"]::before{background:#16a34a;border-color:#16a34a;opacity:1}
+.rt ul.chk > li[data-ok="1"]::after{content:'';position:absolute;left:6px;top:calc(.15em + 2px);width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.alarma-ops{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.alarma-op{display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left;padding:10px 14px;border-radius:12px;border:1px solid var(--linea);background:rgba(var(--bl),.04);color:var(--tinta);font:inherit;cursor:pointer}
+.alarma-op small{grid-column:1;font-size:12.5px;color:var(--suave)}
+.alarma-op i{grid-column:2;grid-row:1 / span 2;font-style:normal;color:#16a34a;font-weight:800}
+.alarma-op.sel{border-color:#8b5cf6;background:rgba(139,92,246,.12)}
 .alarma{text-align:center;padding:4px 0 2px}
 .alarma-ico{color:var(--c, #f7c35b);animation:alarmaMueve .5s ease-in-out infinite alternate;display:inline-block}
 @keyframes alarmaMueve{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
@@ -1391,7 +1402,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.10';
+const VERSION = 'v4.11';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3417,6 +3428,8 @@ function limpiarHTML(h){
       const tag = OK[c.tagName];
       if(!tag){ out.appendChild(limpia(c)); return; }
       const el = document.createElement(tag);
+      if(tag === 'ul' && c.classList && c.classList.contains('chk')) el.className = 'chk';
+      if(tag === 'li' && c.parentElement && c.parentElement.classList.contains('chk')) el.dataset.ok = c.dataset.ok === '1' ? '1' : '0';
       if(tag === 'a'){ const href = c.getAttribute('href') || ''; if(/^(https?:|mailto:)/i.test(href)){ el.setAttribute('href', href); el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
       if(tag === 'span'){
         const col = (c.getAttribute('color') || c.style.color || '').trim();
@@ -3440,7 +3453,7 @@ function rtBarra(){
     <i class="rt-sep"></i>
     ${b('bold', 'Negrita', '<b>B</b>')}${b('italic', 'Cursiva', '<i>I</i>')}${b('underline', 'Subrayado', '<u>U</u>')}
     <i class="rt-sep"></i>
-    ${b('insertOrderedList', 'Lista numerada', svgT('<path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 4.5h1.5V9M4 9h3M4 14.5a1.5 1.5 0 0 1 3 0c0 1-3 2.3-3 3.6h3" stroke-width="1.5"/>', 18))}${b('insertUnorderedList', 'Lista con puntos', svgT('<path d="M10 6h10M10 12h10M10 18h10"/><circle cx="5" cy="6" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="5" cy="18" r="1.2" fill="currentColor"/>', 18))}
+    ${b('insertOrderedList', 'Lista numerada', svgT('<path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 4.5h1.5V9M4 9h3M4 14.5a1.5 1.5 0 0 1 3 0c0 1-3 2.3-3 3.6h3" stroke-width="1.5"/>', 18))}${b('insertUnorderedList', 'Lista con puntos', svgT('<path d="M10 6h10M10 12h10M10 18h10"/><circle cx="5" cy="6" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="5" cy="18" r="1.2" fill="currentColor"/>', 18))}${b('checklist', 'Lista con casillas', svgT('<rect x="3" y="4" width="6" height="6" rx="1.3"/><path d="M4.6 7l1.1 1.1 2-2.2" stroke-width="1.6"/><rect x="3" y="14" width="6" height="6" rx="1.3"/><path d="M12 7h9M12 17h9"/>', 18))}
     <i class="rt-sep"></i>
     <span class="rt-w"><button type="button" title="Enlace" aria-label="Enlace" onmousedown="event.preventDefault()" onclick="rtPop('rt-enl', event)">${svgT('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>', 18)}</button>
       <span class="rt-pop rt-pop-enl" id="rt-enl" hidden><input type="url" id="rt-url" placeholder="https://…" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); rtEnlace(); }"><button type="button" class="rt-poner" onclick="rtEnlace()">Poner</button></span></span>
@@ -3454,9 +3467,53 @@ function rtCmd(c, v){
   const d = $('#ev-desc'); if(!d) return;
   if(document.activeElement !== d) rtVolverRango();
   if(c === 'removeFormat'){ document.execCommand('removeFormat'); document.execCommand('unlink'); }
+  else if(c === 'checklist'){
+    const ul0 = ulDeSel(d);
+    if(ul0 && ul0.classList.contains('chk')) document.execCommand('insertUnorderedList');   // otra vez: se quita la lista
+    else {
+      if(!ul0) document.execCommand('insertUnorderedList');   // de texto o de lista numerada a lista, y luego con casillas
+      const ul = ulDeSel(d); if(ul){ ul.classList.add('chk'); ul.querySelectorAll(':scope > li').forEach(li => { if(li.dataset.ok !== '1') li.dataset.ok = '0'; }); }
+      // el cursor se quedaba al principio de la línea: se lleva al final, para seguir escribiendo
+      const s = getSelection(); let n = s.anchorNode; if(n && n.nodeType === 3) n = n.parentElement;
+      const li = n && n.closest && n.closest('li');
+      if(li && d.contains(li)){ const r = document.createRange(); r.selectNodeContents(li); r.collapse(false); s.removeAllRanges(); s.addRange(r); }
+    }
+    rtVacio(d);
+  }
   else document.execCommand(c, false, v || null);
   rtEstado();
 }
+/* La lista (ul) donde está el cursor dentro de la descripción; con una numerada, se convierte primero */
+function ulDeSel(d){
+  const s = getSelection(); if(!s.rangeCount) return null;
+  let n = s.anchorNode; if(n && n.nodeType === 3) n = n.parentElement;
+  const l = n && n.closest ? n.closest('ul, ol') : null;
+  if(l && l.tagName === 'OL' && d.contains(l)){ document.execCommand('insertUnorderedList'); return ulDeSel(d); }
+  return l && l.tagName === 'UL' && d.contains(l) ? l : null;
+}
+/* Tocar la casilla (a la izquierda de la línea): tilde y tachado. En la hoja se guarda al Guardar;
+   en la tarjeta y en la nota adhesiva se guarda en el momento. Con Enter, la línea nueva empieza sin tilde. */
+function chkClic(e){
+  const li = e.target.closest && e.target.closest('.rt ul.chk > li'); if(!li) return;
+  if(e.clientX - li.getBoundingClientRect().left > 24) return;   // solo la casilla, no el texto
+  e.preventDefault(); e.stopPropagation();
+  li.dataset.ok = li.dataset.ok === '1' ? '0' : '1';
+  try{ sonarHecho && li.dataset.ok === '1' && sonarHecho(); }catch(x){}
+  chkGuardar(li);
+}
+function chkGuardar(li){
+  const nota = li.closest('.nota-ad'); if(nota){ notaGuardar(nota.dataset.id); return; }
+  const tj = li.closest('.ep-desc[data-ev]'); if(!tj) return;   // en la hoja de editar se guarda con Guardar
+  const e = AG_().eventos.find(x => x.id === tj.dataset.ev); if(!e) return;
+  e.descH = limpiarHTML(tj.innerHTML).slice(0, 8000); e.mod = ahoraISO(); guardar();
+  const el = document.querySelector(`.nota-ad[data-id="${e.id}"] .na-d`); if(el && !el.contains(document.activeElement)) el.innerHTML = limpiarHTML(e.descH);
+}
+document.addEventListener('click', chkClic, true);
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Enter' || !e.target.closest || !e.target.closest('.rt[contenteditable="true"]')) return;
+  setTimeout(() => { const s = getSelection(); let n = s.anchorNode; if(n && n.nodeType === 3) n = n.parentElement;
+    const li = n && n.closest && n.closest('ul.chk > li'); if(li && !li.textContent.trim()) li.dataset.ok = '0'; }, 0);
+});
 function rtPop(id, ev){
   if(ev) ev.stopPropagation();
   rtGuardarRango();
@@ -3510,7 +3567,7 @@ function popHTML(e, k, enHoja){
       <p>${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
     <div id="ep-conf"></div>
     <button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? '✓ Hecho · desmarcar' : 'Marcar como hecho'}</button>
-    ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc">${desc}</div></div>` : ''}
+    ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}">${desc}</div></div>` : ''}
     ${rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : ''}
     ${e.prio ? `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div>Prioridad ${prioDe(e).t.toLowerCase()}</div></div>` : ''}
     ${ars.length ? `<div class="ep-fila">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<div>${ars.map(a => `${ico(a)} ${a.nombre}`).join(' · ')}</div></div>` : ''}`;
@@ -4043,26 +4100,54 @@ function avisosWebHTML(){
 /* Alarma (4.08): pitidos de despertador durante un minuto, aunque la música y los efectos estén apagados (no usa `audio()`),
    y una ventana con Parar, Posponer 5 min y Marcar como hecho. Los pitidos se dejan programados de golpe en el reloj del audio,
    así siguen sonando aunque el navegador frene la pestaña en segundo plano. */
-let alarmaGain = null, alarmaFinT = null;
-function sonarAlarma(seg = 60){
+/* Sonido de la alarma (Gustavo, 4.11): en la web se elige entre tres (Ajustes → Sonidos y avisos, `equilibra.alarma`);
+   en la app de Android (2.40 o más nueva) suena el sonido de alarma que elijas en el teléfono. */
+const ALARMAS = [{k: 'despertador', t: 'Despertador', d: 'Pitidos, como un reloj despertador'}, {k: 'campana', t: 'Campana', d: 'Campanadas claras'}, {k: 'suave', t: 'Suave', d: 'Unas notas que suben, más tranquilas'}];
+const alarmaTipo = () => { try{ const v = localStorage.getItem('equilibra.alarma'); return ALARMAS.some(a => a.k === v) ? v : 'despertador'; }catch(e){ return 'despertador'; } };
+const alarmaNativa = () => esApp && window.AndroidEquilibra && typeof AndroidEquilibra.sonarAlarma === 'function';
+let alarmaGain = null, alarmaFinT = null, alarmaApp = false;
+function tonoA(c, g, t, f, tipo, dur, vol){
+  const o = c.createOscillator(), e = c.createGain();
+  o.type = tipo; o.frequency.value = f;
+  e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(vol, t + .01);
+  if(tipo === 'square'){ e.gain.setValueAtTime(vol, t + dur - .03); e.gain.exponentialRampToValueAtTime(0.0001, t + dur); }
+  else e.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(e); e.connect(g); o.start(t); o.stop(t + dur + .02);
+}
+function sonarAlarma(seg = 60, tipo){
   pararAlarma();
+  try{ if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500, 250, 500]); }catch(e){}
+  if(alarmaNativa()){ try{ AndroidEquilibra.sonarAlarma(seg); alarmaApp = true; alarmaFinT = setTimeout(pararAlarma, seg * 1000 + 300); return; }catch(e){} }
   let c; try{ if(!ctxAudio) ctxAudio = new (window.AudioContext || window.webkitAudioContext)(); c = ctxAudio; }catch(e){ return; }
   if(c.state === 'suspended') c.resume();
   const g = c.createGain(); g.gain.value = .5; g.connect(c.destination); alarmaGain = g;
-  const t0 = c.currentTime + .05;
-  for(let i = 0; i * 1.6 < seg; i++) [0, .2, .4, .6].forEach((d, j) => {   // cuatro pitidos y una pausa, como un despertador
-    const t = t0 + i * 1.6 + d, o = c.createOscillator(), e = c.createGain();
-    o.type = 'square'; o.frequency.value = j % 2 ? 1046 : 880;
-    e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(.35, t + .01); e.gain.setValueAtTime(.35, t + .12); e.gain.exponentialRampToValueAtTime(0.0001, t + .15);
-    o.connect(e); e.connect(g); o.start(t); o.stop(t + .16);
-  });
+  const t0 = c.currentTime + .05, k = tipo || alarmaTipo();
+  // todo se deja programado de golpe en el reloj del audio: sigue sonando aunque el navegador frene la pestaña
+  if(k === 'campana') for(let i = 0; i * 2.4 < seg; i++){ const t = t0 + i * 2.4;
+    [[880, 1], [1318.5, .3], [2637, .08]].forEach(([f, v]) => tonoA(c, g, t, f, 'sine', 1.8, .4 * v));
+    [[659.25, 1], [988, .3]].forEach(([f, v]) => tonoA(c, g, t + .6, f, 'sine', 1.6, .4 * v)); }
+  else if(k === 'suave') for(let i = 0; i * 3 < seg; i++){ const t = t0 + i * 3;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, j) => { tonoA(c, g, t + j * .22, f, 'sine', .9, .3); tonoA(c, g, t + j * .22, f * 2, 'sine', .5, .06); }); }
+  else for(let i = 0; i * 1.6 < seg; i++) [0, .2, .4, .6].forEach((d, j) => tonoA(c, g, t0 + i * 1.6 + d, j % 2 ? 1046 : 880, 'square', .15, .35));   // cuatro pitidos y una pausa
   alarmaFinT = setTimeout(pararAlarma, seg * 1000 + 300);
-  try{ if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500, 250, 500]); }catch(e){}
 }
 function pararAlarma(){
   clearTimeout(alarmaFinT); alarmaFinT = null;
+  if(alarmaApp){ try{ AndroidEquilibra.pararAlarma(); }catch(e){} alarmaApp = false; }
   if(alarmaGain){ try{ alarmaGain.gain.cancelScheduledValues(0); alarmaGain.gain.value = 0; alarmaGain.disconnect(); }catch(e){} alarmaGain = null; }
   try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
+}
+function elegirAlarma(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); const y = window.scrollY; render(); window.scrollTo(0, y); }
+function probarAlarma(){ if(alarmaGain || alarmaApp){ pararAlarma(); const y = window.scrollY; render(); window.scrollTo(0, y); return; } sonarAlarma(6); }
+function alarmaHTML(){
+  const app = esApp, nueva = alarmaNativa(), sel = alarmaTipo();
+  return `<div class="cta-b"><h4>Sonido de la alarma</h4>
+    <p class="peq suave">Suena un minuto a la hora de tus recordatorios, con la ventana para pararla o posponerla.</p>
+    ${app ? (nueva ? `<p class="peq suave">En el móvil suena el sonido de alarma que elijas en el teléfono.</p>
+      <div class="bots"><button class="btn sec" onclick="AndroidEquilibra.elegirSonidoAlarma()">Elegir el sonido de la alarma</button><button class="btn sec" onclick="probarAlarma()">Probar</button></div>`
+      : `<p class="peq suave">Para elegir el sonido de alarma de tu teléfono, instala la app nueva.</p><div class="bots"><button class="btn sec" onclick="hojaActualizar()">Descargar la app nueva</button><button class="btn sec" onclick="probarAlarma()">Probar</button></div>`)
+    : `<div class="alarma-ops">${ALARMAS.map(a => `<button type="button" class="alarma-op ${sel === a.k ? 'sel' : ''}" onclick="elegirAlarma('${a.k}')"><b>${a.t}</b><small>${a.d}</small><i>${sel === a.k ? '✓' : ''}</i></button>`).join('')}</div>
+      <p class="peq suave" style="margin:6px 0 0">Toca uno para oírlo y elegirlo.</p>`}</div>`;
 }
 function hojaAlarma(e, k, txt){
   hojaAbierta = null;
@@ -4394,7 +4479,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Equilibra/main/Amable-Life.apk' : 'Amable-Life.apk';
-const APK_ULTIMA = '2.39';   // última app Android publicada
+const APK_ULTIMA = '2.40';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
@@ -5382,7 +5467,7 @@ function vAjustes(){
       sub: (sonidoOn ? 'Música y efectos activados' : 'Música y efectos apagados') + (pausa.salud && pausa.tareas ? ' · todos los avisos en pausa' : pausa.salud ? ' · cuerpo en pausa' : pausa.tareas ? ' · tareas en pausa' : ''),
       html: () => `<label class="interruptor">🔊 Música y efectos de la app<input type="checkbox" ${sonidoOn ? 'checked' : ''} onchange="alternarSonido()"></label>
         <p class="peq suave" style="margin:10px 0 0">Para dejar de recibir avisos un rato (los pasos se siguen contando):</p>${botonPausa('todo')}
-        <p class="peq suave" style="margin:12px 0 0">O solo una parte:</p>${botonPausa('salud')}${botonPausa('tareas')}${avisosWebHTML()}`},
+        <p class="peq suave" style="margin:12px 0 0">O solo una parte:</p>${botonPausa('salud')}${botonPausa('tareas')}${alarmaHTML()}${avisosWebHTML()}`},
     {k: 'versiones', ico: '📲', t: 'Versiones y actualizaciones',
       sub: (miAppVieja() ? `<span class="aj-aviso">Hay una app nueva: ${APK_ULTIMA}</span> · ` : !miApp() && enAndroidWeb() ? '<span class="aj-aviso">Instala la app de Android</span> · ' : '')
         + `web ${VERSION.replace(/^v/, '')} · app ${miApp() ? esc(miApp()) : '—'}`,
