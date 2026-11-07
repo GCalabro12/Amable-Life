@@ -923,6 +923,7 @@ html.claro .ev-ctx .ctx-borrar{color:#dc2626}
 }
 /* ---- Estadísticas ---- */
 .est-cab{margin-top:12px}
+.hoja-plana > .est-cab{margin:-4px 0 6px}
 .est-volver{display:inline-flex;align-items:center;gap:4px;font-weight:700}
 .est-tit{margin:6px 0 10px}
 .est-tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(var(--bl),.08);margin-bottom:12px}
@@ -1559,7 +1560,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.48';
+const VERSION = 'v4.49';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2801,12 +2802,15 @@ function salirEdicion(){
 
 /* ---------- Hojas (desde abajo): pétalo y nueva acción ---------- */
 const ICO_CRUZ = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+/* 4.49 (Gustavo): las ventanas que se abren desde el menú de tres rayas (Tu cuenta, Actualizaciones, Importar y exportar,
+   Cómo funciona, Ajustes, Estadísticas, Suscripción) llevan arriba a la izquierda «‹ Menú», que vuelve al menú, y no la cruz */
+const botonMenuHTML = fn => `<div class="est-cab"><button class="link est-volver" onclick="${fn}">${ICO_IZQ.replace('width="24" height="24"', 'width="18" height="18"')} Menú</button></div>`;
 function mostrarHoja(html, color){
   let hoja = $('#hoja');
   if(!hoja){ hoja = document.createElement('div'); hoja.id = 'hoja'; hoja.className = 'hoja'; hoja.onclick = e => { if(e.target === hoja && Date.now() - hojaMovidaEn > 400) cerrarHojaX(); }; document.body.appendChild(hoja); }
   const nueva = !hoja.classList.contains('ver');
   const pos = !nueva && hoja.querySelector('.hoja-in') ? hoja.querySelector('.hoja-in').style.transform : '';
-  hoja.innerHTML = `<div class="hoja-in accion" style="--c:${color}"><div class="hoja-asa" title="Arrastra para mover la ventana" onmousedown="hojaArrastrar(event)"><svg viewBox="0 0 24 12" width="26" height="13" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.8"/><circle cx="12" cy="3" r="1.8"/><circle cx="19" cy="3" r="1.8"/><circle cx="5" cy="9" r="1.8"/><circle cx="12" cy="9" r="1.8"/><circle cx="19" cy="9" r="1.8"/></svg></div><button class="hoja-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button>${html}</div>`;
+  hoja.innerHTML = `<div class="hoja-in accion" style="--c:${color}"><div class="hoja-asa" title="Arrastra para mover la ventana" onmousedown="hojaArrastrar(event)"><svg viewBox="0 0 24 12" width="26" height="13" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.8"/><circle cx="12" cy="3" r="1.8"/><circle cx="19" cy="3" r="1.8"/><circle cx="5" cy="9" r="1.8"/><circle cx="12" cy="9" r="1.8"/><circle cx="19" cy="9" r="1.8"/></svg></div>${/class="hoja-plana"/.test(html) ? '' : `<button class="hoja-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button>`}${html.replace('<div class="hoja-plana">', `<div class="hoja-plana">${botonMenuHTML("cerrarHoja(); abrirMenu()")}`)}</div>`;
   if(pos) hoja.querySelector('.hoja-in').style.transform = pos;   // si ya la habías movido, se queda donde estaba
   if(nueva) requestAnimationFrame(() => hoja.classList.add('ver'));
 }
@@ -5986,8 +5990,8 @@ function vAjustes(){
   ];
   temasAjCache = temasTodos;
   const temas = temasTodos.filter(T => AJ_DENTRO.includes(T.k));
-  return `<div class="aj-arriba"><button class="aj-volver" onclick="ir('agenda'); window.scrollTo(0, 0)">${svgT('<path d="M4 11l8-6.5 8 6.5"/><path d="M6 9.5V19.5h12V9.5"/><path d="M10 19.5v-5h4v5"/>', 20)} Inicio</button><button class="gc-ico" aria-label="Cerrar" title="Cerrar" onclick="ir(vistaPrevia)">${ICO_CRUZ}</button></div>
-  <h2 class="aj-tit" style="margin-top:18px"><span class="aj-tit-ico">${ICO_RUEDA}</span>Ajustes</h2>
+  return `${botonMenuHTML('abrirMenu()')}
+  <h2 class="aj-tit" style="margin-top:10px"><span class="aj-tit-ico">${ICO_RUEDA}</span>Ajustes</h2>
 
   <div class="aj-lista">${temas.map(T => `<button class="aj-fila ${ajAbierto === T.k ? 'sel' : ''}" onclick="abrirAj('${T.k}')" aria-expanded="${ajAbierto === T.k}">
       <span class="aj-ico">${T.ico}</span><span class="aj-t aj-t1"><b>${T.t}</b>${T.k === 'versiones' && (miAppVieja() || !miApp() && enAndroidWeb()) ? '<span class="aj-nueva">nueva</span>' : ''}</span>${flecha(ajAbierto === T.k)}</button>
