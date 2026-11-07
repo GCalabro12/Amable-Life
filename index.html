@@ -393,6 +393,23 @@ body.pip .compro-link{display:none}
 .pact-fill{position:absolute;top:0;bottom:0;left:0;width:0;background:#f59e0b}
 .pact-holdtxt{position:relative}
 .pact-box.signed .pact-line{animation:pactTinta .6s ease}
+/* 4.57: el contrato firmado, alargado (a la derecha de Focus en el ordenador) */
+.pact-vert{margin:14px 0 0;padding:22px 18px 18px}
+.pact-vert .pact-text{font-size:21px;margin:4px 0 18px}
+.pv-firma{display:flex;flex-direction:column;align-items:center;gap:2px;padding-bottom:8px;border-bottom:2px dotted #92400e}
+.pv-nombre{font-family:'Brush Script MT','Segoe Script',cursive;font-size:26px;line-height:1.15;color:#166534;overflow-wrap:anywhere}
+.pv-hora{font-family:'Brush Script MT','Segoe Script',cursive;font-size:20px;color:#166534}
+.pv-sello{width:78px;height:94px;margin:12px auto 4px;transform:rotate(-8deg)}
+.pv-cuenta{margin-top:6px;font:800 17px system-ui,sans-serif}
+.pact-vert .pact-cuenta{color:#b45309}
+.pv-fin{margin:6px 0 10px;font:800 15px system-ui,sans-serif;color:#b91c1c}
+.pact-vert.vencido{border-color:#f87171}
+@media (min-width:900px){
+  body.v-inicio .envoltura:has(.foco-cols){max-width:900px}
+  .foco-cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start}
+  .pact-lado{position:sticky;top:84px}
+  .pact-lado .pact-vert{margin-top:62px}
+}
 @keyframes pactTinta{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 .f-pact{margin-top:12px;padding:12px;border-radius:14px;border:1px solid rgba(245,158,11,.6);background:rgba(245,158,11,.08);text-align:center}
 .f-pact.vencido{border-color:rgba(248,113,113,.7);background:rgba(248,113,113,.08)}
@@ -1638,7 +1655,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.56';
+const VERSION = 'v4.57';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1920,7 +1937,8 @@ function render(){
   document.body.classList.toggle('h12', !!fPref.h12);
   document.body.classList.toggle('v-estad', vista === 'estad');
   document.body.classList.toggle('v-dia', vista === 'dia');
-  document.body.classList.toggle('v-salud', vista === 'salud');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
+  document.body.classList.toggle('v-salud', vista === 'salud');
+  document.body.classList.toggle('v-inicio', vista === 'inicio');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || ((vista === 'estad' || vista === 'premium') && b.dataset.v === 'ajustes')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
@@ -1982,7 +2000,7 @@ function pintarFlotante(){
   const fila = d.querySelector('.pip-petalos'), desliz = fila ? fila.scrollLeft : 0;
   const petalos = pipAreas()
     .map(x => `<button class="chip ${x.id === pipArea ? 'sel' : ''}" style="--c:${x.color}" onclick="pipArea='${x.id}'; pintarFlotante()">${ico(x)} ${x.corto}</button>`).join('');
-  d.body.innerHTML = (`<div class="pip-cab">${logoSVG()}<b>Amable Life</b></div>` + seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div>
+  d.body.innerHTML = (`<div class="pip-cab">${logoSVG()}<b>Amable Life</b></div>` + seccionAhora(true) + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div>
       <div class="pip-pet-fila"><div class="pip-petalos">${petalos}</div><button type="button" class="pip-fl" aria-label="Pétalo anterior" onclick="pipPetalo(-1)">‹</button><button type="button" class="pip-fl" aria-label="Pétalo siguiente" onclick="pipPetalo(1)">›</button></div>` : '')
     + botonAvisosHTML() + (pipAvisos ? `<div class="pip-avisos">${avisosFocusHTML()}</div>` : '')
     + `<div class="pip-ver">web ${VERSION.replace(/^v/, '')}</div><div id="toast"></div>`).replace(/ onclick=/g, ' data-onclick=').replace(/ onchange=/g, ' data-onchange=')
@@ -2203,8 +2221,11 @@ function vInicio(){
   let h = `${bannerApp()}
     ${hayFlotante() ? `<div class="av-fila" style="margin-top:14px;justify-content:flex-end"><button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button></div>` : '<div style="height:14px"></div>'}
     ${seccionAhora()}
+    ${ESCRITORIO.matches ? '' : contratoLado()}
     ${botonAvisosHTML()}
     ${listaSinAsignar()}`;
+  const lado = ESCRITORIO.matches ? contratoLado() : '';
+  if(lado) h = `<div class="foco-cols"><div class="foco-main">${h}</div>${lado}</div>`;
   return h;
 }
 const hoyK = () => claveDia(new Date());
@@ -2257,7 +2278,7 @@ function asignarAhora(id){
 function alternarActAhora(i){ bDia = 0; bSel = bloqueAhora(); if(bSel >= 0) alternarAct(i); }
 function quitarActAhora(i){ bDia = 0; bSel = bloqueAhora(); if(bSel >= 0) borrarAct(i); }
 /* Arriba: el bloque en el que estás y sus tareas (se pueden soltar aquí tareas arrastradas) */
-function seccionAhora(){
+function seccionAhora(pip){
   const c = bloqueAhora(), m = minutosHoy();
   if(c < 0) return `<section class="ahora-blk fuera"><div class="ah-cab"><span class="ah-reloj">${m >= 1320 ? '🌙' : '🌅'}</span><div><b>${m >= 1320 ? 'Hora de descansar' : 'Tu día empieza a las 5:30'}</b><small>Los bloques van de 5:30 a 22:00</small></div></div>
     <button class="link" onclick="ir('dia')">Planificar los bloques →</button></section>`;
@@ -2285,7 +2306,7 @@ function seccionAhora(){
     ${evPend}
     ${pend.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}
-    ${compromisoHTML(pend)}
+    ${pip ? compromisoHTML(pend) : ''}
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
   </section>${hechasBloqueHTML(c)}`;
 }
@@ -2545,6 +2566,21 @@ function compromisoHTML(pend){
   if(c) return `<div class="f-pact vencido"><div class="f-pact-title">Se acabó el tiempo del compromiso</div><div class="f-pact-text">${pactFrase(c.t, c.min)}</div>
     <button class="btn sec ancho btn-compro" onclick="abrirCompromiso()">${ICO_FIRMA} Volver a comprometerme</button></div>`;
   return '';
+}
+/* 4.57 (Gustavo): el compromiso firmado se ve como el contrato que firmaste, alargado: en el ordenador a la derecha de Focus
+   (en el móvil, debajo del bloque); «Firmado» encima del nombre, el sello debajo y lo que queda */
+function contratoLado(){
+  const c = compVigente(); if(!c) return '';
+  const fin = c.estado !== 'activo';
+  return `<aside class="pact-lado"><div class="pact-box pact-vert ${fin ? 'vencido' : ''}">
+    <div class="pact-head">Mi compromiso</div>
+    <div class="pact-text">${pactFrase(c.t, c.min)}</div>
+    <div class="pv-firma"><span class="pact-lbl">Firmado</span><span class="pv-nombre">${esc(c.nombre)}</span><span class="pv-hora">a las ${pactHora(c.at)}</span></div>
+    <div class="pv-sello">${selloSVG(c.nombre)}</div>
+    ${fin ? `<div class="pv-fin">Se acabó el tiempo del compromiso</div><button class="btn prim ancho" onclick="editarCompromiso()">${ICO_FIRMA} Volver a comprometerme</button>`
+      : `<div class="pv-cuenta"><span class="pact-cuenta" data-hasta="${c.hasta}">${txtCompromiso(c.hasta)}</span></div>
+    <button type="button" class="pact-lapiz" aria-label="Cambiar el compromiso" onclick="editarCompromiso()">${ICO_LAPIZ}</button>`}
+  </div></aside>`;
 }
 /* Botón: la primera tarea sin hacer del bloque, en menos de 15 / 25 / 45 min o hasta el final del bloque */
 function abrirCompromiso(previo){
@@ -3478,6 +3514,7 @@ function agElegir(k){ agK = k; gcMiniDes = 0; render(); }
    Arriba: menú, logo, Hoy, flechas, el mes, la semana, la lupa, los ajustes y la vista (Día, Semana, Mes).
    A la izquierda: Crear, el mes pequeño, la hora de España y la flor (que lleva a Áreas). En el móvil no se ve. */
 const ESCRITORIO = matchMedia('(min-width: 900px)');
+try{ ESCRITORIO.addEventListener('change', () => { if(typeof render === 'function' && D) render(); }); }catch(e){}   // 4.57: al pasar de móvil a ordenador, se recoloca
 const DIAS_3 = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
 const capi = t => t.replace(/^./, c => c.toUpperCase());
 const svgT = (d, w = 24) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
