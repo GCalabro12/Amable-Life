@@ -609,6 +609,11 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
 .aj-ir{width:100%;border:0;border-bottom:1px solid rgba(var(--bl),.07);background:none;color:var(--tinta);font:inherit;font-weight:700;text-align:left}
 .aj-ir svg{color:var(--suave);flex:none}
 .ml-tema{padding:6px 22px 10px}
+.ml-secc{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px 12px 10px}
+.ml-secc button{display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;border-radius:12px;padding:8px 2px;color:var(--oro);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.ml-secc button:hover{background:rgba(var(--bl),.07)}
+.ml-secc button.act{background:rgba(247,195,91,.14);font-weight:800}
+.ml-secc .nav-ico{width:28px;height:28px}
 .ml-tema .seg-tema{width:100%}
 .ml-tema .seg-tema button{flex:1;justify-content:center}
 .aj-eliminar{margin-top:4px}
@@ -1520,7 +1525,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.41';
+const VERSION = 'v4.42';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3946,6 +3951,11 @@ const MENU_SECC = [['agenda', 'Calendario', mIco('<rect x="3.5" y="5" width="17"
   ['salud', 'Cuerpo', mIco('<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 10h8M12 14l-3 6.5M12 14l3 6.5"/>')],
   ['estad', 'Estadísticas', mIco('<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>')],
   ['ajustes', 'Ajustes', ICO_RUEDA]];
+/* 4.42 (Gustavo): en el ordenador, arriba del menú, las cuatro secciones con los mismos iconos de colores de la barra de abajo del móvil */
+function menuSeccionesHTML(){
+  return `<div class="ml-secc">${['agenda', 'dia', 'inicio', 'salud'].map(v => { const b = document.querySelector(`#nav [data-v="${v}"]`); if(!b) return '';
+    const svg = b.querySelector('svg'); return `<button type="button" class="${vista === v ? 'act' : ''}" onclick="cerrarMenu(); ir('${v}')">${svg ? svg.outerHTML : ''}<span>${esc(b.textContent.trim())}</span></button>`; }).join('')}</div>`;
+}
 function menuExtraHTML(fila){
   const nueva = miAppVieja() || !miApp() && enAndroidWeb();
   return fila(ICO_PREMIUM, 'Suscripción', "cerrarMenu(); abrirSeccion('premium')")
@@ -3958,10 +3968,11 @@ function menuHTML(){
   const fila = (ico, t, fn, sel) => `<button type="button" class="ml-f ${sel ? 'sel' : ''}" onclick="${fn}">${ico}<span>${t}</span></button>`;
   return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><span class="ml-tv"><b>Amable Life</b><small>web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</small></span><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
 
+    ${ESCRITORIO.matches ? menuSeccionesHTML() : ''}
     <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}
       <div class="ml-tema"><div class="seg-tema"><button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro'); abrirMenu()">${ICO_SOL} Día</button><button class="${temaClaro() ? '' : 'sel'}" onclick="ponerTema('oscuro'); abrirMenu()">${ICO_LUNA} Noche</button></div></div>
       ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}</div>
-    <div class="ml-g">${menuExtraHTML(fila)}${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+    <div class="ml-g">${menuExtraHTML(fila)}${MENU_SECC.filter(([v]) => ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
 `;
 }
 /* Móvil: botón de la vista en la cabecera («Semana ▾») con Agenda, Día, 3 días, Semana, Mes y Año (Gustavo) */
