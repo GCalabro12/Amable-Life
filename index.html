@@ -633,6 +633,14 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
 .ep .ico{width:14px;height:14px;vertical-align:-2px}
 .ag-dia-evs small[data-ev]{cursor:pointer}
+.aj-ico svg{display:block;margin:auto;color:var(--oro)}
+.cal-ayuda{margin-top:10px;font-size:13.5px;color:var(--suave)}
+.cal-ayuda summary{cursor:pointer;font-weight:700;color:var(--tinta)}
+.cal-ayuda p{margin:6px 0 0}
+.cal-res{margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(var(--bl),.06)}
+.cal-res p{margin:0 0 8px}
+.cal-ok{margin:10px 0 0;font-weight:800;color:var(--sube)}
+html.claro .cal-ok{color:#15803d}
 .hoja-asa{display:none}
 @media (min-width:900px){
   .hoja-in{position:relative}
@@ -1134,7 +1142,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.81';
+const VERSION = 'v3.82';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4105,6 +4113,7 @@ async function iniciarNube(){
     firebase.auth().onAuthStateChanged(async u => {
       nube.usuario = u;
       // Cada persona tiene su propio documento: usuarios/{uid}/equilibra/datos (las reglas solo dejan entrar a su dueño)
+      if(nube.escucha){ nube.escucha(); nube.escucha = null; }
       nube.ref = u ? firebase.firestore().collection('usuarios').doc(u.uid).collection('equilibra').doc('datos') : null;
       if(u) await traerNube();
       if(u && u.displayName && !D.nombre) guardarNombre(u.displayName);
@@ -4170,13 +4179,34 @@ async function traerNube(){
     enviarResumen();
   }catch(e){ console.warn(e); aviso('No se pudo sincronizar con la nube'); }
   nube.sincronizando = false;
+  escucharNube();
+}
+/* Tiempo real (Gustavo, 3.82: «añadí una tarea en el móvil y no la veo en el ordenador»): se escucha el documento de la nube;
+   cuando otro aparato lo cambia, se une con lo de aquí y se vuelve a pintar (sin interrumpir si estás escribiendo). */
+function escucharNube(){
+  if(!nube.ref || nube.escucha) return;
+  nube.escucha = nube.ref.onSnapshot(doc => {
+    if(doc.metadata.hasPendingWrites || !doc.exists) return;   // es lo que acabo de subir yo
+    const r = doc.data(); if(!r || r.actualizado === nube.subido) return;
+    const antes = JSON.stringify(D);
+    D = fusionar(D, r);
+    if(JSON.stringify(D) === antes) return;
+    try{ localStorage.setItem(CLAVE, JSON.stringify(D)); }catch(e){}
+    pintarDesdeNube();
+  }, e => console.warn('nube en tiempo real', e));
+}
+function pintarDesdeNube(){
+  const f = document.activeElement;
+  if(f && f.closest && f.closest('input, textarea, select, [contenteditable="true"]')){ clearTimeout(nube.tPintar); nube.tPintar = setTimeout(pintarDesdeNube, 2500); return; }
+  rerenderDia();
 }
 let tSubida;
 function programarSubida(){ if(!nube.ref) return; clearTimeout(tSubida); tSubida = setTimeout(subirNube, 700); }
 async function subirNube(){
   if(!nube.ref) return;
   try{
-    await nube.ref.set(JSON.parse(JSON.stringify(Object.assign({}, D, {actualizado: new Date().toISOString(), version: VERSION}))));
+    const actualizado = new Date().toISOString(); nube.subido = actualizado;
+    await nube.ref.set(JSON.parse(JSON.stringify(Object.assign({}, D, {actualizado, version: VERSION}))));
   }catch(e){ console.warn(e); }
 }
 /* En la app Android, Google no deja iniciar sesión dentro de la web: el teléfono la hace y devuelve un token */
@@ -4401,6 +4431,9 @@ function vAjustes(){
         ${vieja ? `<a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar la app ${APK_ULTIMA}</a>` : ''}</div>
         ${!mia && enAndroidWeb() ? `<p class="suave" style="margin-top:12px">Instala la app de Android para que suene la música al abrir y cuente tus pasos.</p>${pasosInstalar}<div class="bots"><a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar Amable Life ${APK_ULTIMA}</a></div>` : ''}`;
       }},
+    {k: 'calendario', ico: ICO_CAL_AJ, t: 'Importar y exportar el calendario',
+      sub: 'Google Calendar, Outlook y Apple (.ics) · Excel (.csv)',
+      html: () => calAjustesHTML()},
     {k: 'datos', ico: '💾', t: 'Tus datos',
       sub: u ? 'En este móvil y en la nube' : 'Solo en este móvil',
       html: () => `<p class="suave">${u ? 'Se guardan en este dispositivo y en tu cuenta.' : 'Ahora se guardan solo en este dispositivo. Entra con Google para tenerlas también en la nube.'} También puedes guardar una copia en un archivo.</p>
@@ -4424,6 +4457,217 @@ function vAjustes(){
   </div>
   <p class="peq suave" style="text-align:center;margin-top:18px">Amable Life · web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''} · ${n} ${n===1?'acción hecha':'acciones hechas'}</p>
   <div class="sellos">${sellosHTML()}</div>`;
+}
+/* ---------- Calendario: importar y exportar (Gustavo, 3.82) ----------
+   .ics (iCalendar): el formato con el que Google Calendar, Outlook y Apple pasan calendarios, con repeticiones, días quitados y avisos.
+   .csv: el de Google Calendar (Subject, Start Date…), para Excel; lo que se repite sale día a día (de hace un mes a dentro de un año). */
+const ICO_CAL_AJ = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M12 13v5M9.5 15.5L12 18l2.5-2.5"/></svg>';
+function calAjustesHTML(){
+  const n = AG_().eventos.length;
+  return `<p class="suave">Trae lo que tienes en otro calendario o llévate el de Amable Life.</p>
+    <p class="eti" style="margin-top:14px">Importar</p>
+    <p class="peq" style="margin:4px 0 8px">Sube un archivo <b>.ics</b> (el normal de los calendarios) o <b>.csv</b>. Si algo ya lo habías importado antes, se pone al día y no se repite.</p>
+    <div class="bots"><button class="btn sec" onclick="$('#cal-imp').click()">Elegir archivo .ics o .csv</button></div>
+    <input type="file" id="cal-imp" accept=".ics,.csv,text/calendar,text/csv" hidden onchange="calImportar(this)">
+    <div id="cal-imp-res"></div>
+    <details class="cal-ayuda"><summary>¿Cómo saco el archivo de mi calendario?</summary>
+      <p><b>Google Calendar</b> (en el ordenador): rueda dentada → Configuración → Importar y exportar → Exportar. Te baja un .zip: ábrelo y sube aquí el .ics de tu calendario.</p>
+      <p><b>Outlook</b>: Archivo → Guardar calendario (sale un .ics).</p>
+      <p><b>Apple</b> (Mac): app Calendario → Archivo → Exportar → Exportar…</p></details>
+    <p class="eti" style="margin-top:16px">Exportar</p>
+    <p class="peq" style="margin:4px 0 8px">${n ? `Tienes ${n} ${n === 1 ? 'cosa' : 'cosas'} en el calendario.` : 'Aún no tienes nada en el calendario.'}</p>
+    <div class="bots"><button class="btn sec" ${n ? '' : 'disabled'} onclick="calExportar('ics')">Bajar el calendario (.ics)</button><button class="btn sec" ${n ? '' : 'disabled'} onclick="calExportar('csv')">Bajar para Excel (.csv)</button></div>
+    <p class="peq suave" style="margin-top:8px">Para llevarlo a Google Calendar: Configuración → Importar y exportar → Importar, y eliges el .ics.</p>`;
+}
+function bajarArchivo(texto, nombre, tipo){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([texto], {type: tipo}));
+  a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+const BYDAY = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+const icsTxt = t => String(t || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+const icsFecha = k => k.replace(/-/g, '');
+const icsHora = (k, m) => icsFecha(k) + 'T' + String(Math.floor(m / 60)).padStart(2, '0') + String(m % 60).padStart(2, '0') + '00';
+const icsPlegar = l => { const o = []; let x = l; while(x.length > 74){ o.push(x.slice(0, 74)); x = ' ' + x.slice(74); } o.push(x); return o.join('\r\n'); };
+function calICS(){
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Practica Integral//Amable Life//ES', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:Amable Life'];
+  const sello = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  AG_().eventos.forEach(e => {
+    const dia = e.dia || hoyK(), ini = e.ini || 0, fin = e.fin != null ? e.fin : Math.min(ini + 60, 1439);
+    L.push('BEGIN:VEVENT', 'UID:' + (e.impId || e.id + '@amablelife'), 'DTSTAMP:' + sello, 'SUMMARY:' + icsTxt(e.t));
+    if(e.todo) L.push('DTSTART;VALUE=DATE:' + icsFecha(dia), 'DTEND;VALUE=DATE:' + icsFecha(sumarDias(dia, 1)));
+    else L.push('DTSTART:' + icsHora(dia, ini), 'DTEND:' + icsHora(dia, fin));
+    const rr = e.tipo === 'habito' ? 'FREQ=WEEKLY;BYDAY=' + (e.dias && e.dias.length ? e.dias : [diaSem(dia)]).slice().sort().map(d => BYDAY[d]).join(',')
+      : ({dia: 'FREQ=DAILY', semana: 'FREQ=WEEKLY;BYDAY=' + BYDAY[diaSem(dia)], mes: 'FREQ=MONTHLY;BYMONTHDAY=' + fechaDe(dia).getDate(), anio: 'FREQ=YEARLY', lab: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'})[e.rep] || '';
+    if(rr) L.push('RRULE:' + rr);
+    if(e.tipo === 'habito') L.push('X-AMABLE-TIPO:habito');
+    (e.saltar || []).forEach(k => L.push(e.todo ? 'EXDATE;VALUE=DATE:' + icsFecha(k) : 'EXDATE:' + icsHora(k, ini)));
+    if(e.desc) L.push('DESCRIPTION:' + icsTxt(e.desc));
+    if(e.prio) L.push('PRIORITY:' + ({1: 9, 2: 5, 3: 1})[e.prio]);
+    const ars = areasEv(e); if(ars.length) L.push('CATEGORIES:' + ars.map(a => icsTxt(a.nombre)).join(','));
+    (e.avisos || []).forEach(m => {
+      const off = e.todo ? 540 - m : -m;   // todo el día: el aviso es a las 9:00
+      L.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsTxt(e.t), 'TRIGGER:' + (off < 0 ? '-PT' + (-off) : 'PT' + off) + 'M', 'END:VALARM');
+    });
+    L.push('END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(icsPlegar).join('\r\n') + '\r\n';
+}
+function calCSV(){
+  const q = v => /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  const us = k => { const [y, m, d] = k.split('-'); return `${m}/${d}/${y}`; };
+  const h12 = m => { let h = Math.floor(m / 60); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${String(m % 60).padStart(2, '0')} ${ap}`; };
+  const fila = (e, k) => [e.t, us(k), e.todo ? '' : h12(e.ini || 0), us(k), e.todo ? '' : h12(e.fin != null ? e.fin : (e.ini || 0) + 60), e.todo ? 'True' : 'False', e.desc || '', 'True'];
+  const F = [['Subject', 'Start Date', 'Start Time', 'End Date', 'End Time', 'All Day Event', 'Description', 'Private']];
+  AG_().eventos.filter(e => !repite(e)).sort((a, b) => (a.dia + (a.ini || 0)).localeCompare(b.dia + (b.ini || 0))).forEach(e => F.push(fila(e, e.dia)));
+  const desde = sumarDias(hoyK(), -30);
+  for(let n = 0; n <= 395; n++){ const k = sumarDias(desde, n); eventosDe(k).filter(repite).forEach(e => F.push(fila(e, k))); }
+  return '\ufeff' + F.map(f => f.map(x => q(String(x))).join(',')).join('\r\n') + '\r\n';
+}
+function calExportar(tipo){
+  const fecha = hoyK();
+  if(tipo === 'ics') bajarArchivo(calICS(), `amable-life-calendario-${fecha}.ics`, 'text/calendar;charset=utf-8');
+  else bajarArchivo(calCSV(), `amable-life-calendario-${fecha}.csv`, 'text/csv;charset=utf-8');
+  aviso('Archivo bajado: lo tienes en Descargas');
+}
+/* Importar: se lee el archivo, se enseña cuánto hay y se elige si desde hace un mes o todo */
+let calImp = [];
+function calImportar(inp){
+  const f = inp.files && inp.files[0]; inp.value = ''; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    const box = $('#cal-imp-res');
+    try{ const t = String(r.result || ''); calVista(/BEGIN:VCALENDAR/i.test(t) ? leerICS(t) : leerCSV(t), f.name); }
+    catch(e){ box.innerHTML = `<p class="meta-error">No he podido leer ese archivo${e && e.message ? ': ' + esc(e.message) : ''}.</p>`; }
+  };
+  r.readAsText(f);
+}
+function leerICS(txt){
+  const lineas = txt.replace(/\r?\n[ \t]/g, '').split(/\r?\n/), out = [];
+  let ev = null, alarma = null;
+  for(const l of lineas){
+    if(/^BEGIN:VEVENT/i.test(l)){ ev = {props: [], alarmas: []}; continue; }
+    if(/^END:VEVENT/i.test(l)){ if(ev) out.push(...icsAEventos(ev)); ev = null; continue; }
+    if(!ev) continue;
+    if(/^BEGIN:VALARM/i.test(l)){ alarma = {}; continue; }
+    if(/^END:VALARM/i.test(l)){ if(alarma) ev.alarmas.push(alarma); alarma = null; continue; }
+    const i = l.indexOf(':'); if(i < 0) continue;
+    const cab = l.slice(0, i).split(';'), p = {nom: cab[0].toUpperCase(), params: cab.slice(1).join(';').toUpperCase(), val: l.slice(i + 1)};
+    if(alarma) alarma[p.nom] = p; else ev.props.push(p);
+  }
+  return out;
+}
+function icsLeerFecha(v){
+  const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?/.exec(String(v || '').trim()); if(!m) return null;
+  if(!m[4]) return {k: `${m[1]}-${m[2]}-${m[3]}`, m: null};
+  if(m[7]){ const d = new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5])); return {k: claveDia(d), m: d.getHours() * 60 + d.getMinutes()}; }
+  return {k: `${m[1]}-${m[2]}-${m[3]}`, m: +m[4] * 60 + +m[5]};
+}
+const icsSinEsc = v => String(v || '').replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1');
+function icsAEventos(ev){
+  const g = n => ev.props.find(p => p.nom === n), todos = n => ev.props.filter(p => p.nom === n);
+  if(g('RECURRENCE-ID') || (g('STATUS') && /CANCELLED/i.test(g('STATUS').val))) return [];   // cambios sueltos de una serie y cancelados: fuera
+  const a = g('DTSTART') && icsLeerFecha(g('DTSTART').val); if(!a) return [];
+  const todo = a.m == null;
+  let fin = null;
+  if(!todo){
+    const b = g('DTEND') && icsLeerFecha(g('DTEND').val), du = g('DURATION') && /P(?:\d+D)?T?(?:(\d+)H)?(?:(\d+)M)?/.exec(g('DURATION').val);
+    if(b && b.m != null) fin = b.k === a.k ? b.m : 1439;
+    else if(du) fin = a.m + (+du[1] || 0) * 60 + (+du[2] || 0);
+    if(fin == null || fin <= a.m) fin = a.m + 60;
+    fin = Math.min(fin, 1439);
+  }
+  let rep = 'no', dias = null, simple = false, semDias = null;
+  const rr = g('RRULE');
+  if(rr){
+    const R = Object.fromEntries(rr.val.toUpperCase().split(';').map(x => x.split('=')));
+    const hasta = R.UNTIL && icsLeerFecha(R.UNTIL);
+    if((R.INTERVAL && +R.INTERVAL > 1) || (hasta && hasta.k < hoyK())) simple = true;   // cada 2 semanas, o ya terminó: un solo día
+    else if(R.FREQ === 'DAILY') rep = 'dia';
+    else if(R.FREQ === 'WEEKLY'){
+      const bd = [...new Set((R.BYDAY || BYDAY[diaSem(a.k)]).split(',').map(x => BYDAY.indexOf(x.slice(-2))).filter(i => i >= 0))].sort(); semDias = bd;
+      if(bd.join() === '0,1,2,3,4') rep = 'lab'; else { rep = 'semana'; if(bd.length > 1 || bd[0] !== diaSem(a.k)) dias = bd; }
+    }
+    else if(R.FREQ === 'MONTHLY') rep = 'mes';
+    else if(R.FREQ === 'YEARLY') rep = 'anio';
+    else simple = true;
+  }
+  const saltar = todos('EXDATE').flatMap(p => p.val.split(',')).map(icsLeerFecha).filter(Boolean).map(x => x.k);
+  const avisos = todo ? [] : [...new Set(ev.alarmas.map(al => al.TRIGGER && /^(-)?P(?:(\d+)W)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?/.exec(al.TRIGGER.val)).filter(Boolean)
+    .map(t => ((+t[2] || 0) * 10080 + (+t[3] || 0) * 1440 + (+t[4] || 0) * 60 + (+t[5] || 0)) * (t[1] ? 1 : 0))
+    .map(m => RECORD_HORA.map(r => r.k).reduce((c, k) => Math.abs(k - m) < Math.abs(c - m) ? k : c, 0)))];
+  const pr = g('PRIORITY') ? +g('PRIORITY').val : 0;
+  const base = {uid: g('UID') ? g('UID').val.trim() : 'ics:' + a.k + (a.m || '') + (g('SUMMARY') || {}).val, t: icsSinEsc(g('SUMMARY') && g('SUMMARY').val).trim() || SIN_TITULO,
+    dia: a.k, todo, ini: todo ? null : a.m, fin, rep, saltar, avisos, simple,
+    desc: icsSinEsc(g('DESCRIPTION') && g('DESCRIPTION').val).replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim().slice(0, 2000),
+    prio: pr >= 1 && pr <= 4 ? 3 : pr === 5 ? 2 : 1};
+  if(semDias && g('X-AMABLE-TIPO') && /habito/i.test(g('X-AMABLE-TIPO').val)) return [Object.assign(base, {tipo: 'habito', dias: semDias, rep: 'no'})];
+  if(!dias) return [base];
+  // semanal en varios días: uno por día (cada uno se repite cada semana)
+  return dias.map(d => { let k = a.k; while(diaSem(k) !== d) k = sumarDias(k, 1); return Object.assign({}, base, {uid: base.uid + '#' + d, dia: k}); });
+}
+function leerCSV(txt){
+  const t = txt.replace(/^\ufeff/, ''), cab0 = t.split(/\r?\n/)[0];
+  const sep = (cab0.match(/;/g) || []).length > (cab0.match(/,/g) || []).length ? ';' : ',';
+  const F = []; let fila = [], campo = '', dentro = false;
+  for(let i = 0; i < t.length; i++){
+    const c = t[i];
+    if(dentro){ if(c === '"'){ if(t[i + 1] === '"'){ campo += '"'; i++; } else dentro = false; } else campo += c; continue; }
+    if(c === '"') dentro = true;
+    else if(c === sep){ fila.push(campo); campo = ''; }
+    else if(c === '\n' || c === '\r'){ if(c === '\r' && t[i + 1] === '\n') i++; fila.push(campo); campo = ''; if(fila.some(x => x.trim())) F.push(fila); fila = []; }
+    else campo += c;
+  }
+  fila.push(campo); if(fila.some(x => x.trim())) F.push(fila);
+  const cab = (F.shift() || []).map(h => gcNorm(h).trim());
+  const col = (...n) => cab.findIndex(h => n.includes(h));
+  const cT = col('subject', 'asunto', 'titulo', 'title', 'nombre', 'evento', 'tarea'), cFi = col('start date', 'fecha de inicio', 'fecha inicio', 'inicio', 'fecha', 'date', 'start'),
+    cHi = col('start time', 'hora de inicio', 'hora inicio', 'hora'), cFf = col('end date', 'fecha de finalizacion', 'fecha de fin', 'fecha fin', 'end'),
+    cHf = col('end time', 'hora de finalizacion', 'hora de fin', 'hora fin'), cTodo = col('all day event', 'todo el dia', 'all day', 'dia completo'), cD = col('description', 'descripcion', 'notas', 'notes', 'nota');
+  if(cT < 0 || cFi < 0) throw new Error('no encuentro las columnas del título y de la fecha');
+  const espanol = cab.some(h => /asunto|fecha|hora|descripcion/.test(h));
+  const partes = F.map(f => /(\d{1,4})[\/.-](\d{1,2})[\/.-](\d{1,4})/.exec(f[cFi] || '')).filter(Boolean);
+  const diaPrimero = partes.some(m => m[1].length <= 2 && +m[1] > 12) || (espanol && !partes.some(m => m[1].length <= 2 && +m[2] > 12));
+  const fecha = v => { const m = /(\d{1,4})[\/.-](\d{1,2})[\/.-](\d{1,4})/.exec(v || ''); if(!m) return null;
+    let y, mo, d; if(m[1].length === 4){ y = m[1]; mo = m[2]; d = m[3]; } else { y = m[3].length === 2 ? '20' + m[3] : m[3]; [d, mo] = diaPrimero ? [m[1], m[2]] : [m[2], m[1]]; }
+    if(+mo < 1 || +mo > 12 || +d < 1 || +d > 31) return null;
+    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`; };
+  const hora = v => { const m = /(\d{1,2})[:.h](\d{2})\s*([ap])?/i.exec(v || ''); if(!m) return null; let h = +m[1] % 24; if(m[3]){ h = h % 12 + (/p/i.test(m[3]) ? 12 : 0); } return h * 60 + Math.min(59, +m[2]); };
+  const si = v => /^(true|si|sí|yes|1|verdadero)$/i.test(String(v || '').trim());
+  return F.map(f => {
+    const k = fecha(f[cFi]); if(!k) return null;
+    const ini = cHi >= 0 ? hora(f[cHi]) : hora(f[cFi]), todo = (cTodo >= 0 && si(f[cTodo])) || ini == null;
+    let fin = todo ? null : (cHf >= 0 ? hora(f[cHf]) : null);
+    if(!todo && (fin == null || fin <= ini || (cFf >= 0 && fecha(f[cFf]) && fecha(f[cFf]) !== k))) fin = fin != null && fin > ini ? fin : Math.min(ini + 60, 1439);
+    const t = String(f[cT] || '').trim() || SIN_TITULO;
+    return {uid: 'csv:' + k + ':' + (todo ? 'todo' : ini) + ':' + t, t, dia: k, todo, ini: todo ? null : ini, fin, rep: 'no', saltar: [], avisos: [], prio: 1, desc: cD >= 0 ? String(f[cD] || '').trim().slice(0, 2000) : ''};
+  }).filter(Boolean);
+}
+function calVista(lista, nombre){
+  calImp = lista;
+  const box = $('#cal-imp-res'); if(!box) return;
+  if(!lista.length){ box.innerHTML = '<p class="meta-error">En ese archivo no he encontrado nada para el calendario.</p>'; return; }
+  const desde = sumarDias(hoyK(), -30), rec = lista.filter(x => x.rep !== 'no' || x.dia >= desde).length;
+  const ya = lista.filter(x => AG_().eventos.some(e => e.impId === x.uid)).length, simples = lista.filter(x => x.simple).length;
+  box.innerHTML = `<div class="cal-res"><p>En «${esc(nombre)}» hay <b>${lista.length}</b> ${lista.length === 1 ? 'cosa' : 'cosas'}: <b>${rec}</b> desde hace un mes (o que se repiten) y ${lista.length - rec} más antiguas.${ya ? ` ${ya} ya estaban aquí: se ponen al día.` : ''}</p>
+    ${simples ? `<p class="peq suave">${simples} se repetían de una forma que aquí no hay (cada 2 semanas, o ya terminada): entran solo en su primer día.</p>` : ''}
+    <div class="bots">${rec ? `<button class="btn prim" onclick="calMeter(false)">Importar desde hace un mes (${rec})</button>` : ''}<button class="btn sec" onclick="calMeter(true)">Importar todo (${lista.length})</button></div></div>`;
+}
+function calMeter(todo){
+  const desde = sumarDias(hoyK(), -30), A = AG_();
+  let lista = calImp.filter(x => todo || x.rep !== 'no' || x.dia >= desde), n = 0;
+  if(lista.length > 3000){ lista = lista.sort((a, b) => b.dia.localeCompare(a.dia)).slice(0, 3000); aviso('Son muchas: entran las 3000 más recientes', 3500); }
+  lista.forEach(x => {
+    let e = A.eventos.find(z => z.impId === x.uid);
+    if(!e){ e = {id: uid(), creada: ahoraISO(), hechos: [], impId: x.uid, area: null, areas: []}; A.eventos.push(e); }
+    Object.assign(e, {t: x.t, tipo: x.tipo || 'tarea', dia: x.dia, dias: x.dias || [], rep: x.rep, todo: x.todo, ini: x.ini, fin: x.fin, saltar: x.saltar || [], desc: x.desc || '', descH: '', avisos: x.avisos || [], prio: x.prio || 1, mod: ahoraISO()});
+    n++;
+  });
+  guardar(); calImp = [];
+  const box = $('#cal-imp-res'); if(box) box.innerHTML = `<p class="cal-ok">✓ ${n} ${n === 1 ? 'cosa importada' : 'cosas importadas'} en tu calendario.</p>`;
+  sonarHecho(); aviso(n === 1 ? '1 cosa en tu calendario' : `${n} cosas en tu calendario`);
 }
 function exportar(){
   const blob = new Blob([JSON.stringify(D, null, 2)], {type:'application/json'});
