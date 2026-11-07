@@ -606,6 +606,11 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
 .aj-sw.sub{padding-left:18px;font-weight:600;font-size:15px}
 .aj-sw .desliz{margin:0;align-self:center}
 .aj-sub{margin-top:10px}
+.aj-ir{width:100%;border:0;border-bottom:1px solid rgba(var(--bl),.07);background:none;color:var(--tinta);font:inherit;font-weight:700;text-align:left}
+.aj-ir svg{color:var(--suave);flex:none}
+.ml-tema{padding:6px 22px 10px}
+.ml-tema .seg-tema{width:100%}
+.ml-tema .seg-tema button{flex:1;justify-content:center}
 .aj-eliminar{margin-top:4px}
 .aj-eliminar .aj-sub > summary{color:#dc2626}
 html:not(.claro) .aj-eliminar .aj-sub > summary{color:#f87171}
@@ -1515,7 +1520,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.37';
+const VERSION = 'v4.38';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3947,13 +3952,9 @@ function menuHTML(){
   return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><span class="ml-tv"><b>Amable Life</b><small>web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</small></span><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
 
     <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}
-      ${fila(temaClaro() ? ICO_LUNA.replace('width="20" height="20"', 'width="24" height="24"') : ICO_SOL.replace('width="20" height="20"', 'width="24" height="24"'), temaClaro() ? 'Modo noche' : 'Modo día', "ponerTema(temaClaro() ? 'oscuro' : 'claro'); abrirMenu()")}</div>
-    <div class="ml-g ml-cuenta">${u ? `<div class="ml-u">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<span class="ml-ini">${esc((u.displayName || u.email || '?').trim().charAt(0).toUpperCase())}</span>`}
-        <span><b>${esc(u.email || u.displayName || 'Tu cuenta')}</b><small>Google · tus datos se guardan en la nube</small></span></div>
-        <p class="ml-nota">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
-        ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
-      : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
-    <div class="ml-g">${hayConfigAlarma() ? fila(mIco('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>'), 'Configuración de la alarma', 'cerrarMenu(); abrirConfigAlarma()') : ''}${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+      <div class="ml-tema"><div class="seg-tema"><button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro'); abrirMenu()">${ICO_SOL} Día</button><button class="${temaClaro() ? '' : 'sel'}" onclick="ponerTema('oscuro'); abrirMenu()">${ICO_LUNA} Noche</button></div></div>
+      ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}</div>
+    <div class="ml-g">${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
 `;
 }
 /* Móvil: botón de la vista en la cabecera («Semana ▾») con Agenda, Día, 3 días, Semana, Mes y Año (Gustavo) */
@@ -5815,6 +5816,14 @@ function ponerTema(t){
   const m = document.querySelector('meta[name="theme-color"]'); if(m) m.content = t === 'claro' ? '#f3f0f9' : '#140f26';
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
+/* 4.38 (Gustavo): «Tu cuenta» del menú abre solo lo de la cuenta (el correo, copia, PIN, Cerrar sesión y Eliminar cuenta) */
+function abrirCuenta(){
+  hojaAbierta = () => abrirCuenta();
+  mostrarHoja(`<div class="hoja-cab"><h2>Tu cuenta</h2></div>${cuentaHTML()}
+    ${nube.usuario ? `<p class="peq suave" style="margin:12px 0 0">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
+      <div class="bots aj-salir"><button class="btn sec ancho" onclick="cerrarHoja(); salir()">Cerrar sesión</button></div>
+      <div class="aj-eliminar">${ajSubHTML('eliminar', 'Eliminar cuenta', `<p class="peq suave" style="margin:2px 0 10px">Borra tu cuenta y todos tus datos, de la nube y de este aparato. No se puede deshacer.</p><div class="bots"><button class="btn peligro" onclick="abrirEliminarCuenta()">Eliminar mi cuenta</button></div>`)}</div>` : ''}`, '#8b5cf6');
+}
 function temaHTML(){
   return `<div class="aj-tema"><span>Aspecto</span><div class="seg-tema">
     <button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro')">${ICO_SOL} Día</button>
@@ -5829,6 +5838,7 @@ function vAjustes(){
     {k: 'sonidos', ico: ICO_ALTAVOZ.replace('width="18" height="18"', 'width="24" height="24"'), t: 'Sonidos y avisos',
       sub: (sonidoOn ? 'Música y efectos activados' : 'Música y efectos apagados') + (pausa.salud && pausa.tareas ? ' · todos los avisos en pausa' : pausa.salud ? ' · cuerpo en pausa' : pausa.tareas ? ' · tareas en pausa' : ''),
       html: () => `${ajSw('Música y efectos de la app', sonidoOn, 'alternarSonido()')}
+        ${hayConfigAlarma() ? `<button type="button" class="aj-sw aj-ir" onclick="abrirConfigAlarma()"><span>Permisos de la alarma</span>${svgT('<path d="M9 5l7 7-7 7"/>', 22)}</button>` : ''}
         ${ajSubHTML('pausa', 'Pausar avisos', `<p class="peq suave" style="margin:2px 0 6px">Para dejar de recibir avisos un rato (los pasos se siguen contando).</p>
           ${ajSw('Pausar todos los avisos', pausa.salud && pausa.tareas, "alternarPausa('todo')", false, 'p-todo')}
           ${ajSw('Pausar los avisos del cuerpo', pausa.salud, "alternarPausa('salud')", true, 'p-salud')}
@@ -5873,7 +5883,7 @@ function vAjustes(){
   ];
   return `<div class="aj-arriba"><button class="aj-volver" onclick="ir('agenda'); window.scrollTo(0, 0)">${svgT('<path d="M4 11l8-6.5 8 6.5"/><path d="M6 9.5V19.5h12V9.5"/><path d="M10 19.5v-5h4v5"/>', 20)} Inicio</button><button class="gc-ico" aria-label="Cerrar" title="Cerrar" onclick="ir(vistaPrevia)">${ICO_CRUZ}</button></div>
   <h2 class="aj-tit" style="margin-top:18px">Ajustes <span class="aj-ver">web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</span></h2>
-  ${temaHTML()}
+
   <div class="aj-lista">${temas.map(T => `<button class="aj-fila ${ajAbierto === T.k ? 'sel' : ''}" onclick="abrirAj('${T.k}')" aria-expanded="${ajAbierto === T.k}">
       <span class="aj-ico">${T.ico}</span><span class="aj-t aj-t1"><b>${T.t}</b>${T.k === 'versiones' && (miAppVieja() || !miApp() && enAndroidWeb()) ? '<span class="aj-nueva">nueva</span>' : ''}</span>${flecha(ajAbierto === T.k)}</button>
     ${ajAbierto === T.k ? `<section class="aj-cont ajustes" id="aj-${T.k}">${T.html()}</section>` : ''}`).join('')}
