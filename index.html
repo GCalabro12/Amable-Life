@@ -633,6 +633,13 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
 .ep .ico{width:14px;height:14px;vertical-align:-2px}
 .ag-dia-evs small[data-ev]{cursor:pointer}
+/* el mes y los días se quedan fijos arriba al bajar por las horas (Gustavo) */
+.ag-fijo{position:sticky;top:var(--cab-h,58px);z-index:4;margin:0 -16px;padding:2px 16px 4px;background:rgba(20,15,38,.97);backdrop-filter:blur(8px)}
+html.claro .ag-fijo{background:rgba(243,240,249,.97)}
+.ag-fijo .ag-nav{margin:2px 0}
+.ag-fijo .rj-cab{margin-top:0}
+@media (max-width:899px){ .ag-modos{margin-top:12px} .rj.sem .rj-ev .campanita{display:none} }
+@media (min-width:900px){ body.ancho .ag-fijo{top:64px;margin:0;padding:0;background:var(--fondo2);backdrop-filter:none} body.ancho .ag-fijo .rj-cab{position:static} }
 .aj-ico svg{display:block;margin:auto;color:var(--oro)}
 .cal-ayuda{margin-top:10px;font-size:13.5px;color:var(--suave)}
 .cal-ayuda summary{cursor:pointer;font-weight:700;color:var(--tinta)}
@@ -1142,7 +1149,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.82';
+const VERSION = 'v3.83';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1390,6 +1397,7 @@ function ir(v){
   if(v === 'dia') centrarBloque();
 }
 function render(){
+  const cabH = $('.cab'); if(cabH && cabH.offsetHeight) document.documentElement.style.setProperty('--cab-h', cabH.offsetHeight + 'px');
   const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta};
   app.innerHTML = (vistas[vista] || vInicio)();
   const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes'].includes(vista);
@@ -2712,7 +2720,7 @@ function vAgenda(){
   if(!agK) agK = hoyK();
   recordarVista();
   const hoy = hoyK(), d0 = fechaDe(agK);
-  let tit, cuerpo, conHoy;
+  let tit, cuerpo, conHoy, fijo = '';   // fijo: la fila de los días, que se queda arriba con el mes al bajar por las horas
   if(agModo === 'dia'){
     tit = fechaLarga(agK) + (agK === hoy ? ' · hoy' : ''); conHoy = agK === hoy;
     const todo = evsVer(agK).filter(e => e.todo);
@@ -2723,8 +2731,8 @@ function vAgenda(){
     tit = rangoTxt(todosD[0], todosD[todosD.length - 1]);
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo));
-    cuerpo = `<div class="rj-cab" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`
-      + (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
+    fijo = `<div class="rj-cab" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`;
+    cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
     const ds = semsDias(), nCols = verFinde() ? 7 : 5;
@@ -2759,9 +2767,10 @@ function vAgenda(){
     const evs = evsVer(agK);
     cuerpo = `<div class="ag-mes" style="grid-template-columns:repeat(${nCols},minmax(0,1fr))">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
   }
-  return gcTop() + gcLado() + `<div class="gc-main"><h1 class="tit-acc">Calendario</h1>
+  return gcTop() + gcLado() + `<div class="gc-main">
     <div class="ag-modos">${[['dia', 'Día'], ['semana', 'Semana'], ['mes', 'Mes']].map(([k, t]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${t}</button>`).join('')}</div>
-    <div class="ag-nav"><button class="fn-flecha" onclick="agMover(-1)" aria-label="Anterior">‹</button><b>${tit}</b><button class="fn-flecha" onclick="agMover(1)" aria-label="Siguiente">›</button></div>
+    <div class="ag-fijo"><div class="ag-nav"><button class="fn-flecha" onclick="agMover(-1)" aria-label="Anterior">‹</button><b>${tit}</b><button class="fn-flecha" onclick="agMover(1)" aria-label="Siguiente">›</button></div>
+${fijo}</div>
     ${conHoy ? '' : '<div class="ag-acc"><button class="link" onclick="agHoy()">Volver a hoy</button></div>'}
     ${cuerpo}<div class="ag-esp" style="height:76px"></div>
     <button class="ag-fab" aria-label="Añadir al calendario" onclick="nuevoEvento()"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>`;
