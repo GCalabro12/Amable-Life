@@ -579,6 +579,11 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .perm-fila .perm-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .perm-fila small{font-size:13px;color:var(--suave)}
 .perm-fila .btn{flex:none;margin:0;padding:10px 16px}
+.perm-ayuda{margin-top:8px;padding:12px 14px;border-radius:14px;background:rgba(247,195,91,.12);border:1px solid rgba(247,195,91,.35);font-size:14px}
+.perm-ayuda p{margin:6px 0}
+.perm-ayuda ol{margin:4px 0 10px;padding-left:20px}
+.perm-ayuda li{margin:3px 0}
+.perm-ayuda .btn{margin:0}
 .perm-ok{flex:none;color:#16a34a;font-weight:800}
 .snd-tit{margin:10px 10px 4px;font-size:12.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--oro)}
 .snd-tit:first-child{margin-top:4px}
@@ -1464,7 +1469,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.20';
+const VERSION = 'v4.21';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2733,6 +2738,10 @@ function cerrarHojaX(){
   if(edicion) salirEdicion();
   else if(evEd) salirEvento();
   else if(avisoSalud) responderAviso(false);
+  else if(document.getElementById('hoja-permisos')){   // 4.21 (Gustavo): no se puede dejar sin activar
+    cerrarHoja(); aviso('Es necesario activar estos permisos para usar la aplicación', 3500);
+    setTimeout(() => window.revisarPermisos(), 4000);
+  }
   else cerrarHoja();
 }
 function opcionesNivel(actual, onclick, compacta){
@@ -4762,6 +4771,10 @@ function hojaPermisos(p){
     <p class="peq suave" style="margin:4px 0 12px">Son necesarios para que Amable Life funcione bien: sin ellos, las alarmas de tus recordatorios no suenan ni salen en grande con la app cerrada.</p>
     ${fila('notif', p.notif, 'Notificaciones', 'Para avisarte a la hora de tus recordatorios.')}
     ${fila('sobre', p.sobre, 'Mostrar sobre otras aplicaciones', 'Para que la alarma salga a pantalla completa aunque estés usando el móvil. En la lista, busca Amable Life y actívalo.')}
+    ${p.sobre ? '' : `<div class="perm-ayuda"><b>¿Te sale «Ajuste restringido» o «Permiso denegado»?</b>
+      <p>Android lo bloquea en las apps instaladas desde un archivo. Para desbloquearlo:</p>
+      <ol><li>Pulsa <b>Abrir la información de la app</b>.</li><li>Arriba a la derecha, toca los <b>tres puntos ⋮</b>.</li><li>Elige <b>«Permitir ajustes restringidos»</b> (te pedirá tu huella o tu PIN).</li><li>Vuelve aquí y pulsa otra vez <b>Activar</b>.</li></ol>
+      <button type="button" class="btn sec" onclick="try{ AndroidEquilibra.openAppSettings(); }catch(e){}">Abrir la información de la app</button></div>`}
     ${p.hayPantalla ? fila('pantalla', p.pantalla, 'Alarmas a pantalla completa', 'Para que la alarma se vea con el móvil bloqueado.') : ''}
     <p class="peq suave" style="margin:12px 0 0">Cuando lo actives, vuelve a Amable Life: esta ventana se pone al día sola.</p></div>`, '#8b5cf6');
 }
