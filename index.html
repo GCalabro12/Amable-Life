@@ -225,7 +225,7 @@ nav.abajo button.act .nav-flor{color:var(--oro);opacity:1}
 #splash .sellos{position:absolute;bottom:calc(28px + env(safe-area-inset-bottom));left:16px;right:16px;margin:0;animation:sube .8s ease-out 1.6s both}
 
 /* Aviso flotante */
-#toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:#f4f0fb;color:#1d1636;font-weight:800;
+#toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:#1f1b26;color:#fff;font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.35);
   padding:10px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:30;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 #toast.ver{opacity:1;transform:translate(-50%,0)}
 #toast.con-boton{display:flex;align-items:center;gap:14px;white-space:nowrap;padding:8px 8px 8px 16px}
@@ -614,7 +614,7 @@ html:not(.claro) .aj-eliminar .aj-sub > summary{color:#f87171}
 .aj-ico svg{width:24px;height:24px}
 .aj-sub > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-radius:14px;background:rgba(var(--bl),.08);font-weight:800;cursor:pointer}
 .aj-sub > summary::-webkit-details-marker{display:none}
-.aj-sub > summary > span{flex:1}
+.aj-sub > summary > span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .aj-info{flex:none;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:none;color:var(--suave);cursor:pointer}
 .aj-info:hover{background:rgba(var(--bl),.1);color:var(--tinta)}
 .aj-sub[open] > summary{background:rgba(var(--bl),.13)}
@@ -1512,7 +1512,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.35';
+const VERSION = 'v4.36';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1690,7 +1690,7 @@ function alternarSonido(){
   try{ localStorage.setItem(CLAVE_SONIDO, sonidoOn ? 'si' : 'no'); }catch(e){}
   if(sonidoOn) sonarHecho(); else musica.pause();
   if(typeof configNativa === 'function') configNativa();
-  if(vista === 'ajustes') render();
+  if(vista === 'ajustes' && !document.querySelector('.aj-sw')) render();   // con el interruptor nuevo ya se ve cambiado
 }
 
 /* ---------- Dibujos: la flor (v2: pétalos iguales; la intensidad dice el nivel) ---------- */
@@ -4365,10 +4365,11 @@ function pararAlarma(){
   if(alarmaGain){ try{ alarmaGain.gain.cancelScheduledValues(0); alarmaGain.gain.value = 0; alarmaGain.disconnect(); }catch(e){} alarmaGain = null; }
   try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
 }
-function elegirAlarma(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); const y = window.scrollY; render(); window.scrollTo(0, y); }
+function elegirAlarma(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k);
+  document.querySelectorAll('.alarma-op').forEach(b => { const si = b.getAttribute('onclick') === `elegirAlarma('${k}')`; b.classList.toggle('sel', si); const i = b.querySelector('i'); if(i) i.textContent = si ? '✓' : ''; }); }
 function probarAlarma(){ if(alarmaGain || alarmaApp){ pararAlarma(); const y = window.scrollY; render(); window.scrollTo(0, y); return; } sonarAlarma(6); }
 /* 4.30 (Gustavo): interruptores deslizables a la derecha en Sonidos y avisos (antes casilla y botones) */
-const ajSw = (t, on, fn, sub) => `<label class="aj-sw ${sub ? 'sub' : ''}"><span>${t}</span><span class="desliz" style="--c:#8b5cf6"><input type="checkbox" ${on ? 'checked' : ''} onchange="${fn}"><i></i></span></label>`;
+const ajSw = (t, on, fn, sub, key) => `<label class="aj-sw ${sub ? 'sub' : ''}"><span>${t}</span><span class="desliz" style="--c:#8b5cf6"><input type="checkbox" ${key ? `data-sw="${key}"` : ''} ${on ? 'checked' : ''} onchange="${fn}"><i></i></span></label>`;
 /* Desplegables dentro de una fila de Ajustes (4.28): se recuerda cuál está abierto aunque se vuelva a pintar */
 let ajSub = null;
 const ICO_INFO = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/></svg>';
@@ -4382,7 +4383,7 @@ function alarmaHTML(dentro){
       <p class="peq suave" style="margin:6px 0 0">Toca uno para oírlo y elegirlo.</p>`}
     ${ajSw('Gradual: sube poco a poco en 5 segundos', alarmaGradual(), "localStorage.setItem('equilibra.alarmaGradual', this.checked ? '1' : '0'); recordUlt = null; enviarRecordatorios(); if(this.checked) sonarAlarma(7)")}
     <p class="peq" style="margin:12px 0 6px"><b>Cuánto tiempo suena</b></p>
-    <div class="rec-son-b">${ALARMA_DUR.map(d => `<button type="button" class="${alarmaDur() === d.k ? 'sel' : ''}" onclick="localStorage.setItem('equilibra.alarmaDur','${d.k}'); recordUlt = null; enviarRecordatorios(); const y = scrollY; render(); scrollTo(0, y)">${d.t}</button>`).join('')}</div></div>`;
+    <div class="rec-son-b">${ALARMA_DUR.map(d => `<button type="button" class="${alarmaDur() === d.k ? 'sel' : ''}" onclick="localStorage.setItem('equilibra.alarmaDur','${d.k}'); recordUlt = null; enviarRecordatorios(); this.parentNode.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b === this))">${d.t}</button>`).join('')}</div></div>`;
 }
 /* Ventana de alarma a pantalla completa (Gustavo, 4.14): «Amable Life · Recordatorio», la tarea, cuándo es, y
    Enterado (para la alarma), Posponer (5, 15 o 30 min, 1, 2 o 3 h) y Completado, que solo sale en la última alarma de esa tarea
@@ -4927,6 +4928,11 @@ function alternarPausa(tipo){
   const nombre = tipo === 'todo' ? 'Todos los avisos' : tipo === 'salud' ? 'Avisos del cuerpo' : 'Avisos de tareas';
   const on = tipo === 'todo' ? pausa.salud && pausa.tareas : pausa[tipo];
   aviso(nombre + (on ? ' en pausa' : ' activados'));
+  if(vista === 'ajustes' && document.querySelector('[data-sw="p-todo"]')){   // solo se mueven los interruptores
+    const pon = (k, v) => document.querySelectorAll(`[data-sw="${k}"]`).forEach(i => i.checked = v);
+    pon('p-todo', pausa.salud && pausa.tareas); pon('p-salud', pausa.salud); pon('p-tareas', pausa.tareas);
+    return;
+  }
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
 function hablar(texto, tipo){
@@ -5821,9 +5827,9 @@ function vAjustes(){
       sub: (sonidoOn ? 'Música y efectos activados' : 'Música y efectos apagados') + (pausa.salud && pausa.tareas ? ' · todos los avisos en pausa' : pausa.salud ? ' · cuerpo en pausa' : pausa.tareas ? ' · tareas en pausa' : ''),
       html: () => `${ajSw('Música y efectos de la app', sonidoOn, 'alternarSonido()')}
         ${ajSubHTML('pausa', 'Pausar avisos', `<p class="peq suave" style="margin:2px 0 6px">Para dejar de recibir avisos un rato (los pasos se siguen contando).</p>
-          ${ajSw('Pausar todos los avisos', pausa.salud && pausa.tareas, "alternarPausa('todo')")}
-          ${ajSw('Pausar los avisos del cuerpo', pausa.salud, "alternarPausa('salud')", true)}
-          ${ajSw('Pausar los avisos de tareas', pausa.tareas, "alternarPausa('tareas')", true)}`)}
+          ${ajSw('Pausar todos los avisos', pausa.salud && pausa.tareas, "alternarPausa('todo')", false, 'p-todo')}
+          ${ajSw('Pausar los avisos del cuerpo', pausa.salud, "alternarPausa('salud')", true, 'p-salud')}
+          ${ajSw('Pausar los avisos de tareas', pausa.tareas, "alternarPausa('tareas')", true, 'p-tareas')}`)}
         ${ajSubHTML('alarma', 'Sonido del aviso de tarea', alarmaHTML(true), 'Suena a la hora de tus recordatorios, con una ventana para pararla o posponerla.' + (alarmaNativa() ? ' En el móvil suena el sonido de alarma que elijas en el teléfono.' : ''))}${avisosWebHTML()}`},
     {k: 'versiones', ico: svgT('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>', 24), t: 'Actualizaciones',
       sub: (miAppVieja() ? `<span class="aj-aviso">Hay una app nueva: ${APK_ULTIMA}</span> · ` : !miApp() && enAndroidWeb() ? '<span class="aj-aviso">Instala la app de Android</span> · ' : '')
