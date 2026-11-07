@@ -295,6 +295,8 @@ img,svg{-webkit-user-drag:none}
 .hoja-in{width:100%;max-width:520px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 22%,var(--tarjeta)),var(--tarjeta) 55%);
   border-radius:24px 24px 0 0;padding:16px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .3s ease;max-height:82vh;overflow:auto}
 .hoja.ver .hoja-in{transform:none}
+.ev-hecha-b{display:none;color:#15803d}
+@media (min-width:900px){ .ev-hecha-b{display:block} }
 .hoja-in:has(.ev-hoja){max-height:95vh;max-height:95dvh}
 @media (min-width:900px){
   .hoja-in:has(.ev-hoja){max-width:min(1040px,calc(100vw - 48px));max-height:calc(100vh - 12px);max-height:calc(100dvh - 12px);padding:20px 26px 22px}
@@ -302,9 +304,15 @@ img,svg{-webkit-user-drag:none}
   .hoja-in:has(.ev-hoja){min-height:calc(100vh - 12px);min-height:calc(100dvh - 12px);display:flex;flex-direction:column}
   .ev-hoja{flex:1;display:flex;flex-direction:column}
   .ev-col .ed-bots{padding-top:4px}
+  .hoja-in:has(.ev-hoja) .hoja-x{position:absolute;top:14px;right:16px;margin:0;float:none}
+  .hoja-in:has(.ev-hoja) .rt-barra{display:flex}
+  .hoja-in:has(.ev-hoja) .rt-ed{min-height:260px;max-height:48vh}
+  .hoja-in:has(.ev-hoja) .ev-desc-c{background:rgba(var(--bl),.04)}
+  .ev-hecho-fila{display:none}
+  .ed-bots:has(.ev-hecha-b) .ev-cancelar{display:none}
   .ev-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 28px;align-items:start}
   .ev-cols .ev-col:last-child > .desps:first-child{margin-top:0}
-  .ev-cols .ev-col:last-child{padding-top:4px}
+  .ev-cols .ev-col:last-child{padding-top:48px}   /* sitio para la cruz de arriba a la derecha (4.27) */
 }
 .hoja-x{position:sticky;top:0;float:right;z-index:2;width:38px;height:38px;display:grid;place-items:center;padding:0;margin:0 -6px 0 8px;border:0;border-radius:50%;background:rgba(var(--bl),.14);color:#fff}
 .hoja-x:active{background:rgba(var(--bl),.26)}
@@ -1475,7 +1483,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.26';
+const VERSION = 'v4.27';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3557,8 +3565,8 @@ function pintarEvento(e){
       ${despHTML('snd', 'Sonido y duración', ICO_ALTAVOZ)}
       ${despHTML('area', 'Área', ICO_PETALO)}
     </div>
-    ${evEd.id ? `<button class="btn sec ancho" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
-    <div class="ed-bots"><button class="btn prim" onclick="guardarEvento()">Guardar</button>${evEd.id ? '<button class="btn peligro" id="ev-borrar" onclick="borrarEvento()">Borrar</button>' : ''}<button class="btn sec" onclick="salirEvento()">Cancelar</button></div>
+    ${evEd.id ? `<button class="btn sec ancho ev-hecho-fila" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
+    <div class="ed-bots"><button class="btn prim" onclick="guardarEvento()">Guardar</button>${evEd.id ? '<button class="btn peligro" id="ev-borrar" onclick="borrarEvento()">Borrar</button>' : ''}${evEd.id ? `<button class="btn sec ev-hecha-b" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar' : '✓ Hecha'}</button>` : ''}<button class="btn sec ev-cancelar" onclick="salirEvento()">Cancelar</button></div>
     </div></div>
     <div id="ev-borrar-rep"></div></div>`, evEd.areas.length ? areaDe(evEd.areas[0]).color : '#f7c35b');
   $('#ev-t').value = e.t && e.t !== SIN_TITULO ? e.t : '';
