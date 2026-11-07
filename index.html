@@ -149,6 +149,27 @@ textarea::placeholder,input::placeholder{color:#7f74a3}
 textarea{min-height:80px;resize:vertical;margin-top:8px}
 textarea:focus,input[type=text]:focus{outline:none;border-color:var(--acento)}
 .bots-eval{display:flex;gap:10px;margin-top:16px}
+/* 4.63: revisión de la flor */
+body.v-evaluar header.cab{display:none}
+.ev-top{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;margin-top:10px}
+.ev-volver{width:44px;height:44px;border:0;border-radius:50%;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0}
+.ev-volver:hover{background:rgba(var(--bl),.08)}
+.ev-area{margin:0;text-align:center;font-size:28px;font-weight:800;color:color-mix(in srgb,var(--c) 70%,var(--tinta))}
+.ev-n{font-size:12px;font-weight:700;color:var(--suave);text-align:right}
+.ev-pant .progreso{margin-top:8px}
+.eval .ilus .ilus-preg{position:absolute;left:0;right:0;bottom:0;z-index:1;margin:0;padding:0 20px 14px;font-size:19px;font-weight:800;line-height:1.3;color:var(--tinta);text-align:center;text-shadow:0 0 12px var(--tarjeta),0 0 4px var(--tarjeta)}
+.eval .ilus::after{background:linear-gradient(to bottom,transparent 35%,var(--tarjeta) 92%)!important}
+.ev-hab{margin-top:14px;text-align:left}
+.ev-hab .pregunta{margin:0 0 8px;text-align:center}
+.ev-hab .campo-voz + .campo-voz{margin-top:8px}
+.ev-hab .link{display:block;margin:8px auto 0}
+.ph-lista{margin:4px 0 0;padding:0;list-style:none}
+.ph-lista li{display:flex;align-items:center;gap:6px;font-size:15px;padding:3px 0}
+.ph-lista li .brote{width:16px;height:16px;color:var(--c);flex:none}
+.ph-lista li.falta{color:var(--suave)}
+.ph-ok{color:var(--c);font-weight:900;margin-left:4px}
+.leyenda-hab .pt-peq{display:inline-block;width:6px;height:10px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#cbbcf5}
+.flor .eti-nom.fuera{font-size:12px;stroke:none;fill:var(--tinta)}
 .bots-eval .btn{flex:1}
 
 /* Resultado */
@@ -240,8 +261,8 @@ html.en-app .ag-fab{bottom:80px}
 .accion{border-left:0;background:linear-gradient(100deg,color-mix(in srgb,var(--c) 16%,transparent),transparent 75%)}
 .aviso-semana{border:0}
 .eval{margin:10px -16px 0}
-.eval .ilus{height:min(58vh,440px);background-position:center 25%}
-.eval .cuerpo{padding:0 16px 20px;margin-top:-70px}
+.eval .ilus{height:min(50vh,420px);background-position:center 25%}
+.eval .cuerpo{padding:6px 16px 20px;margin-top:0}
 .bienvenida{margin:0 -16px}
 .bienvenida .hero{height:min(62vh,460px)}
 .bienvenida .hero::after{background:linear-gradient(to bottom,transparent 40%,var(--fondo))}
@@ -1683,7 +1704,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.62';
+const VERSION = 'v4.63';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1698,6 +1719,7 @@ const AREAS = [
   {id:'trabajo', corto:'Trabajo',     nombre:'Trabajo y dinero', etiqueta:'Trabajo y|dinero',        color:'#22a35a',
    dobles:[{id:'gusta', texto:'¿Te gusta tu trabajo?', corto:'Te gusta'},
            {id:'dinero',texto:'¿Te da el dinero que necesitas?', corto:'Dinero'}],
+   pregunta:'¿Te gusta tu trabajo y te da el dinero que necesitas?',
    ejemplos:['revisar mis gastos del mes el domingo', 'dedicar 1 hora a la tarea que más me gusta', 'buscar una forma de ganar algo más este mes']},
   {id:'crecimiento', corto:'Crecimiento', nombre:'Crecimiento personal', etiqueta:'Crecimiento|personal',    color:'#8b5cf6',
    pregunta:'¿Estás aprendiendo y creciendo como te gustaría?', ejemplos:['leer 10 páginas cada noche', 'ver un curso o charla de 30 minutos', 'escribir 3 cosas que aprendí esta semana']},
@@ -1716,9 +1738,9 @@ const app = $('#app');
    D = {v:2, niveles:{area:'bien'|'una'|'mas'}, detalle:{trabajo:{gusta,dinero}}, comentarios:{}, nivelesMod,
         revisiones:[{id, fecha, niveles, detalle, comentarios}], acciones:[{id, area, texto, hecha, creada, hechaEn, mod}], borradas:[] } */
 const NIVELES = {
-  bien: {marca:'✓',  titulo:'Estoy bien',             sub:'No necesita acciones',        n:0, peso:0},
-  una:  {marca:'1',  titulo:'Una acción a la semana', sub:'Necesita un pequeño paso',    n:1, peso:1},
-  mas:  {marca:'2+', titulo:'Necesita más acción',    sub:'2 o 3 acciones esta semana',  n:2, peso:2},
+  bien: {marca:'2+', titulo:'Ya practico más de un hábito a la semana', sub:'En esta área tengo hábitos establecidos', n:0, peso:0},
+  una:  {marca:'1',  titulo:'Practico un hábito a la semana',           sub:'Tengo un hábito en esta área',            n:1, peso:1},
+  mas:  {marca:'0',  titulo:'No hago ningún hábito',                    sub:'Necesito hacer algún hábito',             n:2, peso:2},
 };
 /* Salud (venido de Amable PC): agua, movimiento y pasos */
 const SALUD_DEF = {aguaOn:true, aguaMin:45, aguaGoal:8, movOn:true, movMin:60, aguaNext:0, movNext:0, days:{},
@@ -1886,27 +1908,30 @@ function petalo(L, W){
 let idFlor = 0;
 function flor(niveles, opc = {}){
   // mismo dibujo que el logotipo: centro dorado grande con semillas y pétalos alrededor
-  const mini = !!opc.mini, paso = 360/AREAS.length, R0 = mini ? 56 : 60, Lp = mini ? 88 : 86, base = R0 - 8, L = base + Lp, n = ++idFlor, vb = mini ? 140 : 160;
+  const mini = !!opc.mini, paso = 360/AREAS.length, R0 = mini ? 56 : 60, Lp = mini ? 88 : 86, base = R0 - 8, L = base + Lp, n = ++idFlor, vb = mini ? 140 : opc.hab ? 182 : 160;
+  // 4.63 (Gustavo): en la flor de hábitos, más de un hábito = pétalo muy grande, uno = normal, ninguno = muy pequeño
+  const LH = nv => !opc.hab || !nv ? Lp : nv === 'bien' ? 116 : nv === 'una' ? 86 : 46, WH = nv => !opc.hab || !nv ? 36 : nv === 'bien' ? 44 : nv === 'una' ? 36 : 24;
   let s = `<svg viewBox="${-vb} ${-vb} ${vb*2} ${vb*2}" class="flor${mini?' mini':''}" role="img" aria-label="Tu flor">
   <defs><filter id="brillo${n}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <radialGradient id="centro${n}"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient>
   <pattern id="semi${n}" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.4" fill="#7a4310" fill-opacity=".38"/></pattern></defs>`;
   areasFlor().forEach((a,i) => {
     const nv = niveles && niveles[a.id];
-    const op = !nv ? .18 : nv === 'bien' ? .42 : nv === 'una' ? .78 : 1;
+    const op = !nv ? .18 : opc.hab ? 1 : nv === 'bien' ? .42 : nv === 'una' ? .78 : 1;
     const extra = !nv ? `stroke="${a.color}" stroke-width="1.5" stroke-dasharray="4 4"` : '';
-    s += `<g transform="rotate(${i*paso}) translate(0 ${-base})"><path class="${mini?'':'petalo'}" style="animation-delay:${i*70}ms" d="${petalo(Lp, 36)}" fill="${a.color}" fill-opacity="${op}" ${extra}/></g>`;
+    s += `<g transform="rotate(${i*paso}) translate(0 ${-base})"><path class="${mini?'':'petalo'}" style="animation-delay:${i*70}ms" d="${petalo(LH(nv), WH(nv))}" fill="${a.color}" fill-opacity="${op}" ${extra}/></g>`;
   });
   s += `<g class="${mini?'':'centro'}"><circle r="${R0}" fill="url(#centro${n})"/><circle r="${R0}" fill="url(#semi${n})"/>`;
   if(!mini && opc.centro != null) s += `<text class="centro-num" y="-3" text-anchor="middle" dominant-baseline="central">${opc.centro}</text><text class="centro-txt" y="14" text-anchor="middle" dominant-baseline="central">${opc.centroTxt || ''}</text>`;
   s += '</g>';
   if(!mini){
     areasFlor().forEach((a,i) => {
-      const nv = niveles && niveles[a.id], ang = i*paso - 90;
-      const [xm,ym] = pt(base + Lp*.54, ang), giro = (ang > 90 || ang < -90) ? ang + 180 : ang;
-      s += `<text class="eti-nom" x="${xm.toFixed(1)}" y="${ym.toFixed(1)}" transform="rotate(${giro} ${xm.toFixed(1)} ${ym.toFixed(1)})" text-anchor="middle" dominant-baseline="central">${a.corto}</text>`;
-      const [xn,yn] = pt(L + 9, ang);
-      if(nv === 'mas' || nv === 'una'){
+      const nv = niveles && niveles[a.id], ang = i*paso - 90, Li = LH(nv);
+      const [xm,ym] = pt(opc.hab && nv === 'mas' ? base + Li + 22 : base + Li*.54, ang), giro = (ang > 90 || ang < -90) ? ang + 180 : ang;
+      s += `<text class="eti-nom${opc.hab && nv === 'mas' ? ' fuera' : ''}" x="${xm.toFixed(1)}" y="${ym.toFixed(1)}" transform="rotate(${giro} ${xm.toFixed(1)} ${ym.toFixed(1)})" text-anchor="middle" dominant-baseline="central"${opc.hab && nv === 'mas' ? ` fill="${a.color}"` : ''}>${a.corto}</text>`;
+      const [xn,yn] = pt(base + Li + 9, ang);
+      if(opc.hab){ if(nv === 'bien' || nv === 'una') s += `<text class="eti-marca" x="${xn.toFixed(1)}" y="${yn.toFixed(1)}" fill="${a.color}" text-anchor="middle" dominant-baseline="central">✓</text>`; }
+      else if(nv === 'mas' || nv === 'una'){
         const k = nv === 'mas' ? 2 : 1;
         for(let j = 0; j < k; j++) s += `<circle cx="${(xn + (j - (k-1)/2) * 11).toFixed(1)}" cy="${yn.toFixed(1)}" r="4.5" fill="${a.color}" stroke="#fff" stroke-width="1.6"/>`;
       }else{
@@ -1917,7 +1942,9 @@ function flor(niveles, opc = {}){
   if(opc.clic) areasFlor().forEach((a,i) => { s += `<path d="${petalo(L + 20, 46)}" transform="rotate(${i*paso})" fill="transparent" style="cursor:pointer" onclick="abrirPetalo('${a.id}')"/>`; });
   return s + '</svg>';
 }
-const LEYENDA = `<div class="leyenda-niv"><span><i class="pt2"></i><i class="pt2"></i> Necesita más acción</span><span><i class="pt2"></i> Una acción a la semana</span><span><b>✓</b> Estoy bien</span></div>`;
+const LEYENDA = `<div class="leyenda-niv"><span><i class="pt2"></i><i class="pt2"></i> Necesita algún hábito</span><span><i class="pt2"></i> Un hábito a la semana</span><span><b>✓</b> Más de un hábito</span></div>`;
+/* 4.63: leyenda de la flor de hábitos (al terminar la revisión) */
+const LEYENDA_HAB = `<div class="leyenda-niv leyenda-hab"><span><b>✓</b> Área con hábitos establecidos (uno o más)</span><span><i class="pt-peq"></i> Pétalo pequeño: le falta algún hábito</span></div>`;
 /* Logo: el girasol de la app (centro dorado grande con semillas; pétalos de colores alrededor; sin aro) */
 function logoInterior(){
   let s = '<defs><radialGradient id="lc"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient>'
@@ -1979,7 +2006,8 @@ function render(){
   document.body.classList.toggle('v-estad', vista === 'estad');
   document.body.classList.toggle('v-dia', vista === 'dia');
   document.body.classList.toggle('v-salud', vista === 'salud');
-  document.body.classList.toggle('v-inicio', vista === 'inicio');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
+  document.body.classList.toggle('v-inicio', vista === 'inicio');
+  document.body.classList.toggle('v-evaluar', vista === 'evaluar');   // 4.63: en la revisión de la flor, sin cabecera   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || ((vista === 'estad' || vista === 'premium') && b.dataset.v === 'ajustes')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
@@ -3146,47 +3174,60 @@ function anadirDesdeFlotante(){
 }
 
 /* ---------- Revisar la flor: 3 botones por área ---------- */
+/* 4.63 (Gustavo): «Revisar mi flor» con hábitos. Por área: más de un hábito a la semana (¿cuáles haces? al menos dos huecos),
+   un hábito (¿cuál haces?) o ninguno (¿cuál quisieras hacer?). Orden de la flor (areasFlor). Sin cabecera; la flecha vuelve a Áreas. */
 function empezar(){
-  E = {i:0, niveles:{...D.niveles}, detalle: JSON.parse(JSON.stringify(D.detalle || {})), comentarios:{...(D.comentarios || {})}};
-  if(!E.detalle.trabajo) E.detalle.trabajo = {};
+  E = {i:0, niveles:{...D.niveles}, detalle: JSON.parse(JSON.stringify(D.detalle || {})), comentarios:{...(D.comentarios || {})}, hab: JSON.parse(JSON.stringify(D.habitosArea || {}))};
   cerrarHoja(); vista = 'evaluar'; render(); window.scrollTo(0,0);
   precargar(1);
 }
-function precargar(i){ if(AREAS[i]) (new Image()).src = `img/${AREAS[i].id}.jpg`; }
+function precargar(i){ const a = areasFlor()[i]; if(a) (new Image()).src = `img/${a.id}.jpg`; }
+function salirRevision(){ clearTimeout(tAvance); E = null; ir('dia'); }
+const ICO_ATRAS = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+function masHabito(id){
+  const t = E.hab[id].tengo; if(t.length >= 6) return;
+  const n = Math.max(2, t.length); while(t.length <= n) t.push('');
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+  const ins = document.querySelectorAll('.ev-hab input'); if(ins.length) ins[ins.length - 1].focus({preventScroll: true});
+}
 const maxNivel = (a, b) => NIVELES[a].peso >= NIVELES[b].peso ? a : b;
 function vEvaluar(){
   if(!E) return vInicio();
-  const a = AREAS[E.i];
-  let cuerpo;
-  if(a.dobles){
-    cuerpo = a.dobles.map(d => `<p class="pregunta">${d.texto}</p>${opcionesNivel(E.detalle.trabajo[d.id], k => `elegirSub('${d.id}','${k}')`, true)}`).join('');
-  }else{
-    cuerpo = `<p class="pregunta">${a.pregunta}</p>${opcionesNivel(E.niveles[a.id], k => `elegirNivel('${k}')`)}`;
+  const FL = areasFlor(), a = FL[E.i], nv = E.niveles[a.id];
+  const hb = E.hab[a.id] = E.hab[a.id] || {tengo: [], quiero: []};
+  if(!hb.tengo) hb.tengo = []; if(!hb.quiero) hb.quiero = [];
+  let preg = '';
+  if(nv){
+    const q = nv === 'mas' ? 'quiero' : 'tengo', n = nv === 'bien' ? Math.max(2, hb.tengo.length) : 1, lista = hb[q];
+    const tit = nv === 'bien' ? '¿Cuáles haces?' : nv === 'una' ? '¿Cuál haces?' : '¿Cuál quisieras hacer?';
+    const ph = k => nv === 'mas' ? `Por ejemplo: ${a.ejemplos[k] || a.ejemplos[0]}` : nv === 'bien' ? `Hábito ${k + 1}` : 'Tu hábito';
+    preg = `<div class="ev-hab"><p class="pregunta">${tit}</p>
+      ${Array.from({length: n}, (_, k) => `<div class="campo-voz"><input type="text" maxlength="120" value="${esc(lista[k] || '')}" placeholder="${esc(ph(k))}" oninput="E.hab['${a.id}'].${q}[${k}]=this.value" onkeydown="if(event.key==='Enter')this.blur()">${botonMic()}</div>`).join('')}
+      ${nv === 'bien' && n < 6 ? `<button class="link" onclick="masHabito('${a.id}')">＋ Otro hábito</button>` : ''}</div>`;
   }
-  const com = E.comentarios[a.id] || '';
-  return `<div style="--c:${a.color}">
-    <div class="progreso">${AREAS.map((x,j) => `<i class="${j<E.i?'hecho':j===E.i?'actual':''}" style="--c:${x.color}"></i>`).join('')}</div>
-    <p class="paso">Pétalo ${E.i+1} de ${AREAS.length}</p>
+  return `<div class="ev-pant" style="--c:${a.color}">
+    <div class="ev-top"><button class="ev-volver" onclick="salirRevision()" aria-label="Volver a Áreas">${ICO_ATRAS}</button>
+      <h1 class="ev-area">${a.nombre}</h1><span class="ev-n">${E.i+1} de ${FL.length}</span></div>
+    <div class="progreso">${FL.map((x,j) => `<i class="${j<E.i?'hecho':j===E.i?'actual':''}" style="--c:${x.color}"></i>`).join('')}</div>
     <section class="tarjeta eval">
-      <div class="ilus" style="background-image:url(img/${a.id}.jpg)" role="img" aria-label="Ilustración de ${a.nombre}"></div>
+      <div class="ilus" style="background-image:url(img/${a.id}.jpg)" role="img" aria-label="Ilustración de ${a.nombre}"><p class="ilus-preg">${a.pregunta}</p></div>
       <div class="cuerpo">
-        <h2>${a.nombre}</h2>
-        ${cuerpo}
-        <details class="nota" ${com?'open':''}><summary>＋ Añadir una nota (opcional)</summary>
-          <div class="campo-voz area"><textarea placeholder="¿Algo que quieras recordar sobre esta área?" oninput="E.comentarios['${a.id}']=this.value">${esc(com)}</textarea>${botonMic()}</div></details>
+        ${opcionesNivel(nv, k => `elegirNivel('${k}')`)}
+        ${preg}
       </div>
     </section>
     <div class="bots-eval">
       <button class="btn sec" onclick="atras()">${E.i === 0 ? 'Cancelar' : '← Atrás'}</button>
-      <button class="btn prim" onclick="siguiente()">${E.i === AREAS.length-1 ? 'Terminar ✓' : 'Siguiente →'}</button>
+      <button class="btn prim" onclick="siguiente()">${E.i === FL.length-1 ? 'Terminar ✓' : 'Siguiente →'}</button>
     </div></div>`;
 }
 let tAvance;
 function elegirNivel(k){
-  const a = AREAS[E.i]; E.niveles[a.id] = k;
+  const a = areasFlor()[E.i]; E.niveles[a.id] = k;
   nota(ESCALA[E.i] * 2, 0, .08, .25, false);
   const y = window.scrollY; render(); window.scrollTo(0, y);
-  clearTimeout(tAvance); tAvance = setTimeout(() => { if(vista === 'evaluar' && E && AREAS[E.i].id === a.id) siguiente(); }, 420);
+  // 4.63: ya no pasa sola: debajo pregunta cuál haces o cuál quisieras hacer
+  const caja = $('.ev-hab'); if(caja) caja.scrollIntoView({behavior: 'smooth', block: 'center'});
 }
 function elegirSub(sub, k){
   const a = AREAS[E.i], d = E.detalle[a.id] = E.detalle[a.id] || {};
@@ -3196,24 +3237,47 @@ function elegirSub(sub, k){
   const y = window.scrollY; render(); window.scrollTo(0, y);
   if(E.niveles[a.id] && a.dobles.every(x => d[x.id])){ clearTimeout(tAvance); tAvance = setTimeout(() => { if(vista === 'evaluar' && E && AREAS[E.i].id === a.id) siguiente(); }, 520); }
 }
-function atras(){ clearTimeout(tAvance); if(E.i === 0){ ir('inicio'); } else { E.i--; render(); window.scrollTo(0,0); } }
+function atras(){ clearTimeout(tAvance); if(E.i === 0){ salirRevision(); } else { E.i--; render(); window.scrollTo(0,0); } }
 function siguiente(){
   clearTimeout(tAvance);
-  const a = AREAS[E.i];
+  const FL = areasFlor(), a = FL[E.i];
   if(!E.niveles[a.id]){ aviso('Elige cómo está esta área'); return; }
-  if(E.i < AREAS.length-1){ sonarPaso(E.i); E.i++; render(); window.scrollTo(0,0); precargar(E.i+1); return; }
+  if(E.i < FL.length-1){ sonarPaso(E.i); E.i++; render(); window.scrollTo(0,0); precargar(E.i+1); return; }
   sonarFinal();
   const comentarios = {};
   Object.keys(E.comentarios).forEach(k => { const t = (E.comentarios[k]||'').trim(); if(t) comentarios[k] = t; });
-  D.revisiones.push({id: uid(), fecha: ahoraISO(), niveles: {...E.niveles}, detalle: JSON.parse(JSON.stringify(E.detalle)), comentarios});
-  D.niveles = {...E.niveles}; D.detalle = JSON.parse(JSON.stringify(E.detalle)); D.comentarios = comentarios; D.nivelesMod = ahoraISO();
+  // 4.63: lo que haces y lo que te falta, por área; lo que te falta entra como tarea en su pétalo (sin repetir)
+  const limpia = x => [...new Set((x || []).map(t => (t || '').trim()).filter(Boolean))];
+  const hab = {}; let nuevas = 0;
+  FL.forEach(x => { const h = E.hab[x.id] || {}, nv = E.niveles[x.id];
+    hab[x.id] = {tengo: nv === 'mas' ? [] : limpia(h.tengo).slice(0, nv === 'una' ? 1 : 6), quiero: nv === 'mas' ? limpia(h.quiero).slice(0, 1) : []};
+    hab[x.id].quiero.forEach(t => { if(!D.acciones.some(z => z.area === x.id && !z.hecha && z.texto.trim().toLowerCase() === t.toLowerCase())){ nuevaAccion(x.id, t); nuevas++; } }); });
+  D.revisiones.push({id: uid(), fecha: ahoraISO(), niveles: {...E.niveles}, detalle: JSON.parse(JSON.stringify(E.detalle)), comentarios, habitos: hab});
+  D.niveles = {...E.niveles}; D.detalle = JSON.parse(JSON.stringify(E.detalle)); D.comentarios = comentarios; D.habitosArea = hab; D.nivelesMod = ahoraISO();
   guardar();
-  E = null; P = {textos:{}};
+  E = null; P = {nuevas};
   vista = 'plan'; render(); window.scrollTo(0,0);
 }
 
 /* ---------- Plan: acciones para las áreas que lo necesitan ---------- */
 function vPlan(){
+  if(!P || P.textos) return vPlanHab();   // 4.63: al terminar la revisión, la flor de hábitos
+  return vPlanHab();
+}
+function vPlanHab(){
+  const FL = areasFlor(), H = D.habitosArea || {}, nuevas = (P && P.nuevas) || 0;
+  const con = FL.filter(a => nivel(a.id) === 'bien' || nivel(a.id) === 'una').length;
+  const filas = FL.map(a => { const nv = nivel(a.id), h = H[a.id] || {tengo: [], quiero: []};
+    const items = nv === 'mas' ? (h.quiero.length ? h.quiero.map(t => `<li class="falta">${ICO_BROTE} Quiero empezar: ${esc(t)}</li>`).join('') : '<li class="falta">Te falta algún hábito</li>')
+      : (h.tengo.length ? h.tengo.map(t => `<li>${ICO_BROTE} ${esc(t)}</li>`).join('') : `<li>${nv ? NIVELES[nv].titulo : 'Sin revisar'}</li>`);
+    return `<div class="plan-area" style="--c:${a.color}"><h3>${ico(a)} ${a.nombre} ${nv === 'mas' || !nv ? '' : '<span class="ph-ok">✓</span>'}</h3><ul class="ph-lista">${items}</ul></div>`; }).join('');
+  return `<div class="res-tit"><h1>Tu flor de hábitos</h1><p class="suave">Áreas con hábitos establecidos: <b>${con} de ${FL.length}</b></p></div>
+    <section class="tarjeta flor-sec">${flor(D.niveles, {hab: true, centro: con, centroTxt: con === 1 ? 'área con hábitos' : 'áreas con hábitos'})}${LEYENDA_HAB}</section>
+    ${nuevas ? `<p class="suave peq" style="text-align:center;margin:0 0 10px">Lo que te falta ya está como tarea en su pétalo, en Áreas.</p>` : ''}
+    ${filas}
+    <div class="bots-eval"><button class="btn prim" onclick="P = null; ir('dia')">Ir a Áreas</button></div>`;
+}
+function vPlanViejo(){
   if(!P) P = {textos:{}};
   const areas = AREAS.filter(a => nivel(a.id) && NIVELES[nivel(a.id)].n > 0).sort((x,y) => pesoArea(y.id) - pesoArea(x.id));
   let h = `<div class="res-tit"><h1>Tu flor está lista 🌸</h1></div>
@@ -4237,12 +4301,13 @@ function menuHTML(){
   return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><span class="ml-tv"><b>Amable Life</b><small>web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</small></span><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
 
 
-    <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}
+    <div class="ml-g">
       <div class="ml-tema"><div class="seg-tema"><button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro'); abrirMenu()">${ICO_SOL} Día</button><button class="${temaClaro() ? '' : 'sel'}" onclick="ponerTema('oscuro'); abrirMenu()">${ICO_LUNA} Noche</button></div></div>
       ${MENU_SECC.filter(([v]) => v === 'estad').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}
       ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}${MENU_SECC.filter(([v]) => v === 'ajustes').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
     <div class="ml-g">${menuExtraHTML(fila)}</div>
-`;
+    <div class="ml-g ml-g-sinc">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}</div>
+`;   // 4.63 (Gustavo): Sincronizar, abajo del todo (ya se sincroniza solo)
 }
 /* Móvil: botón de la vista en la cabecera («Semana ▾») con Agenda, Día, 3 días, Semana, Mes y Año (Gustavo) */
 function cabVistaHTML(){
@@ -4252,7 +4317,12 @@ function cabVistaHTML(){
 }
 function abrirMenu(){
   let m = $('#menu-lat');
-  if(!m){ m = document.createElement('div'); m.id = 'menu-lat'; m.className = 'ml'; m.onclick = e => { if(e.target === m) cerrarMenu(); }; document.body.appendChild(m); }
+  if(!m){ m = document.createElement('div'); m.id = 'menu-lat'; m.className = 'ml'; m.onclick = e => { if(e.target === m) cerrarMenu(); }; document.body.appendChild(m);
+    // 4.63 (Gustavo): deslizar de derecha a izquierda cierra el menú
+    let t0 = null;
+    m.addEventListener('touchstart', e => { t0 = e.touches.length === 1 ? {x: e.touches[0].clientX, y: e.touches[0].clientY} : null; }, {passive: true});
+    m.addEventListener('touchend', e => { if(!t0) return; const dx = e.changedTouches[0].clientX - t0.x, dy = e.changedTouches[0].clientY - t0.y; t0 = null;
+      if(dx < -50 && Math.abs(dx) > Math.abs(dy) * 1.2) cerrarMenu(); }, {passive: true}); }
   m.innerHTML = `<nav class="ml-in" aria-label="Menú">${menuHTML()}</nav>`;
   requestAnimationFrame(() => m.classList.add('ver'));
 }
@@ -4930,7 +5000,7 @@ function vDia(){
   return `${unirHTML()}<h1 class="tit-acc tit-bloques">Tareas por áreas</h1><p class="sub-bloques">Trabajo en bloques de tiempo de 1,5 horas</p><div class="dia-cols"><div class="dia-izq">${botonPausa('tareas')}
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0)}</div>
-    <p class="peq suave flor-ayuda">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo · <button class="link" onclick="empezar()">revisar toda la flor</button> · <button class="link" onclick="ir('historial')">ver el historial</button></p>
+    <p class="peq suave flor-ayuda">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo · <button class="link" onclick="empezar()">revisar mi flor</button> · <button class="link" onclick="ir('historial')">ver el historial</button></p>
     </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div><div class="dia-der">
     <div class="tira-blk" id="tiraBlk">${tira}</div>
     <div class="blk-barra-caja"><div class="blk-riel">${BLOQUES.map((x, i) => `<i class="${i === cur ? 'ya' : ''}" style="left:${(posBarra(i, cur) * 100).toFixed(2)}%"></i>`).join('')}</div>
@@ -5639,6 +5709,7 @@ function fusionar(local, remoto){
   r.revisiones = unir(local.revisiones, remoto.revisiones, 'fecha').sort((x,y) => x.fecha < y.fecha ? -1 : 1);
   const gana = (remoto.nivelesMod || '') > (local.nivelesMod || '') ? remoto : local;
   r.niveles = {...gana.niveles}; r.detalle = gana.detalle || {}; r.comentarios = gana.comentarios || {}; r.nivelesMod = gana.nivelesMod;
+  if(gana.habitosArea || local.habitosArea || remoto.habitosArea) r.habitosArea = gana.habitosArea || local.habitosArea || remoto.habitosArea;
   // salud: ajustes del lado cambiado más tarde; por día se queda el número más alto
   const sl = local.salud || nuevaSalud(), sr = remoto.salud || nuevaSalud();
   r.salud = nuevaSalud((sr.mod || '') > (sl.mod || '') ? sr : sl);
@@ -6714,7 +6785,7 @@ document.addEventListener('touchend', () => {
 function deslizar(dir){
   if(vista === 'agenda'){ agMover(dir); return; }   // en el calendario, deslizar pasa de día, semana o mes
   if(vista === 'evaluar' && E){
-    if(dir > 0){ if(E.i === AREAS.length-1) return; siguiente(); }   // el último pétalo se guarda con su botón
+    if(dir > 0){ if(E.i === AREAS.length-1) return; siguiente(); }   // el último pétalo se guarda con su botón (mismo número de pétalos)
     else { if(E.i === 0) return; atras(); }
     animarEntrada(dir);
     return;
