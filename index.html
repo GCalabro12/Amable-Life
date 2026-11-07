@@ -1469,7 +1469,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.22';
+const VERSION = 'v4.23';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4718,13 +4718,13 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.45';   // última app Android publicada
+const APK_ULTIMA = '2.46';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
 // la app Android que tienes en el móvil: dentro de la app, la real; en el navegador, la que la app apuntó en tus datos
 const miApp = () => esApp ? versionApp() : (D.appAndroid && D.appAndroid.version) || '';
-const miAppVieja = () => !!miApp() && vMenor(miApp(), APK_ULTIMA);
+const miAppVieja = () => !dePlay() && !!miApp() && vMenor(miApp(), APK_ULTIMA);
 function apuntarApp(){
   if(!esApp) return;
   const v = versionApp(); if(!v || v === '?') return;
@@ -4732,7 +4732,9 @@ function apuntarApp(){
   if(a.version === v && a.visto && a.visto.slice(0, 10) === hoy) return;
   D.appAndroid = {version: v, visto: ahoraISO()}; guardar();
 }
-const appVieja = () => { if(!esApp) return false; const a = versionApp().split('.').map(Number), b = APK_ULTIMA.split('.').map(Number);
+/* 4.23: la app instalada desde Google Play (APK 2.46, versión «play») se actualiza desde la tienda: no se ofrece descargar la APK */
+const dePlay = () => { try{ return esApp && typeof AndroidEquilibra.dePlay === 'function' && !!AndroidEquilibra.dePlay(); }catch(e){ return false; } };
+const appVieja = () => { if(!esApp || dePlay()) return false; const a = versionApp().split('.').map(Number), b = APK_ULTIMA.split('.').map(Number);
   return (a[0]||0) < b[0] || ((a[0]||0) === b[0] && (a[1]||0) < b[1]); };
 function hojaActualizar(motivo, titulo = 'Actualiza la app'){
   mostrarHoja(`<div class="aviso-salud"><div class="aviso-ico"><svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5"/><path d="M5 19.5h14"/></svg></div><h2>${titulo}</h2>
@@ -4773,7 +4775,7 @@ function hojaPermisos(p){
     <p class="peq suave" style="margin:4px 0 12px">Son necesarios para que Amable Life funcione bien: sin ellos, las alarmas de tus recordatorios no suenan ni salen en grande con la app cerrada.</p>
     ${fila('notif', p.notif, 'Notificaciones', 'Para avisarte a la hora de tus recordatorios.')}
     ${fila('sobre', p.sobre, 'Mostrar sobre otras aplicaciones', 'Para que la alarma salga a pantalla completa aunque estés usando el móvil. En la lista, busca Amable Life y actívalo.')}
-    ${p.sobre ? '' : `<div class="perm-ayuda"><b>¿Te sale «Ajuste restringido» o «Permiso denegado»?</b>
+    ${p.sobre || dePlay() ? '' : `<div class="perm-ayuda"><b>¿Te sale «Ajuste restringido» o «Permiso denegado»?</b>
       <p>Android lo bloquea en las apps instaladas desde un archivo. Para desbloquearlo:</p>
       <ol><li>Pulsa <b>Abrir la información de la app</b>.</li><li>Arriba a la derecha, toca los <b>tres puntos ⋮</b>.</li><li>Elige <b>«Permitir ajustes restringidos»</b> (te pedirá tu huella o tu PIN).</li><li>Vuelve aquí y pulsa otra vez <b>Activar</b>.</li></ol>
       <button type="button" class="btn sec" onclick="try{ AndroidEquilibra.openAppSettings(); }catch(e){}">Abrir la información de la app</button></div>`}
