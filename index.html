@@ -581,6 +581,19 @@ nav.abajo button{font-size:11px}
 .ev-rep .desp-btn > svg:first-child,.ev-rep .desp-t{display:none}
 .ev-rep .desp-v{flex:none;text-align:left;font-size:15px;font-weight:600;color:var(--tinta)}
 .ev-rep .desp-lista{margin:6px 0 0}
+.ev-tipo.ev-tabs{align-items:center}
+.ev-prios{margin-left:auto;display:flex;gap:4px}
+.ev-tipo.ev-tabs .ev-prio{width:40px;height:40px;padding:0;border-radius:10px;background:none;display:grid;place-items:center;cursor:pointer;opacity:.4}
+.ev-tipo.ev-tabs .ev-prio:hover{opacity:.75}
+.ev-tipo.ev-tabs .ev-prio.sel{opacity:1;background:color-mix(in srgb,var(--c) 22%,transparent);box-shadow:inset 0 0 0 1.5px var(--c)}
+.ev-prio svg{width:19px;height:19px}
+.ev-desc{display:flex;gap:14px;align-items:flex-start;padding:6px 6px 4px;cursor:text}
+.ev-desc > svg{flex:none;color:var(--suave);margin-top:10px}
+.ev-desc textarea{flex:1;border:0;background:none;border-radius:10px;padding:9px 10px;color:var(--tinta);font:inherit;font-size:15px;resize:none;min-height:40px;margin:0;overflow:hidden}
+.ev-desc textarea:hover{background:rgba(var(--bl),.05)}
+.ev-desc textarea:focus{outline:none;background:rgba(var(--bl),.07)}
+.ev-desc textarea::placeholder{color:var(--suave)}
+.ev-d{display:block;font-size:12.5px;color:var(--suave);white-space:pre-line;margin-top:1px}
 .ev-de{display:flex;align-items:center;gap:10px;margin-top:12px;font-weight:700}
 .ev-de[hidden]{display:none}
 .hl-w{position:relative}
@@ -1044,7 +1057,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.74';
+const VERSION = 'v3.75';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2544,7 +2557,7 @@ function evsBloqueHTML(k, b){
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
     <button class="check ${ok ? 'hecho' : ''}" ${e.prio ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
-    <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
+    <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al arrastrar más de 7 días   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
 const CON_COLS = ['semana', '7dias', 'rango'];
@@ -2842,7 +2855,7 @@ let evEd = null;
 function nuevoEvento(k, ini, pre){
   const dia = k || agK || hoyK(), m = minutosHoy();
   const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
-  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 0, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], avisos: [], acc: (pre && pre.acc) || null};
+  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], avisos: [], acc: (pre && pre.acc) || null};
   pintarEvento({t: (pre && pre.t) || '', dia, todo: false, ini: base, fin: Math.min(base + ((pre && pre.dur) || 60), 1439)});
 }
 function editarEvento(id, k){
@@ -2898,7 +2911,8 @@ function pintarEvento(e){
   hojaAbierta = null;
   const hab = evEd.tipo === 'habito', todo = !!e.todo;
   mostrarHoja(`<div class="campo-voz ev-titulo"><input type="text" id="ev-t" maxlength="120" placeholder="Añade un título" aria-label="Título">${botonMic()}</div>
-    <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" onclick="evTipo('habito')">Hábito</button></div>
+    <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" onclick="evTipo('habito')">Hábito</button>
+      <span class="ev-prios">${[1, 2, 3].map(k => `<button type="button" class="ev-prio ${evEd.prio === k ? 'sel' : ''}" style="--c:${PRIO[k].c}" title="Prioridad ${PRIO[k].t.toLowerCase()}" aria-label="Prioridad ${PRIO[k].t.toLowerCase()}" onclick="evPrioB(${k}, this)">${ICO_BANDERA(PRIO[k].c)}</button>`).join('')}</span></div>
     <div id="ev-hab" ${hab ? '' : 'hidden'}>
       <p class="eti" style="margin-top:14px">¿Cuántas veces a la semana?</p>
       <div class="ev-veces">${[1, 2, 3, 4, 5, 6, 7].map(n => `<button data-n="${n}" class="${evEd.dias.length === n ? 'sel' : ''}" onclick="evVeces(${n})">${n}</button>`).join('')}</div>
@@ -2920,17 +2934,17 @@ function pintarEvento(e){
       <label class="ev-chk"><input type="checkbox" id="ev-todo" ${todo ? 'checked' : ''} onchange="evTodo(this.checked)"><span>Todo el día</span></label>
       <div id="ev-rep-c" class="ev-rep" ${hab ? 'hidden' : ''}>${despHTML('rep', 'Repetir', ICO_REP)}</div>
     </div></div>
+    <label class="ev-desc">${svgT('<path d="M4 7h16M4 12h16M4 17h11"/>', 20)}<textarea id="ev-desc" rows="1" maxlength="1000" placeholder="Añadir descripción" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea></label>
     <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
       ${despHTML('rec', 'Recordatorio', ICO_CAMPANA)}
       ${despHTML('area', 'Área', ICO_PETALO)}
     </div>
-    <p class="eti" style="margin-top:12px">Prioridad</p>
-    ${chipsPrio('evEd.prio', evEd.prio)}
     ${evEd.id ? `<button class="btn sec ancho" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
     <div class="ed-bots"><button class="btn prim" onclick="guardarEvento()">Guardar</button>${evEd.id ? '<button class="btn peligro" id="ev-borrar" onclick="borrarEvento()">Borrar</button>' : ''}<button class="btn sec" onclick="salirEvento()">Cancelar</button></div>
     <div id="ev-borrar-rep"></div>`, evEd.areas.length ? areaDe(evEd.areas[0]).color : '#f7c35b');
   $('#ev-t').value = e.t || '';
+  const ds = $('#ev-desc'); if(ds){ ds.value = e.desc || ''; if(ds.value) requestAnimationFrame(() => { ds.style.height = 'auto'; ds.style.height = ds.scrollHeight + 'px'; }); }
   pintarDesp('dur');   // la duración ya con las horas puestas (y la línea del día)
   if(!evEd.id) setTimeout(() => { const t = $('#ev-t'); if(t && matchMedia('(hover: hover)').matches) t.focus(); }, 120);
 }
@@ -2947,6 +2961,7 @@ function evResumen(){
   if(bi && i != null) bi.textContent = hm(i);
   if(bf && f != null) bf.textContent = hm(f);
 }
+function evPrioB(k, b){ evEd.prio = k; b.parentNode.querySelectorAll('.ev-prio').forEach(x => x.classList.toggle('sel', x === b)); }
 function evAbrirFecha(){ $('#ev-res').hidden = true; $('#ev-fecha').hidden = false; }
 /* El día: el botón abre el calendario del sistema */
 function evElegirDia(){ const i = $('#ev-dia'); try{ i.showPicker(); }catch(e){ i.focus(); i.click(); } }
@@ -2986,7 +3001,7 @@ const chipsDur = (donde, actual) => `<div class="chips" style="justify-content:f
 const bandAct = a => { const x = a && a.acc && D.acciones.find(z => z.id === a.acc); return bandX(x || a); };
 function evTipo(t){
   evEd.tipo = t; const hab = t === 'habito';
-  document.querySelectorAll('.ev-tipo button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
+  document.querySelectorAll('.ev-tipo > button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
   evResumen();
 }
@@ -3017,7 +3032,7 @@ function guardarEvento(){
   const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.prio || 0, avisos: e0.avisos.slice().sort((a, b) => a - b), acc: e0.acc || null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.prio || 0, desc: valor('ev-desc'), avisos: e0.avisos.slice().sort((a, b) => a - b), acc: e0.acc || null, mod: ahoraISO()});
   guardar(); sonarHecho();
   aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
