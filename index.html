@@ -676,6 +676,7 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .rt ul.chk > li[data-ok="1"]{text-decoration:line-through;opacity:.6}
 .rt ul.chk > li[data-ok="1"]::before{background:#16a34a;border-color:#16a34a;opacity:1}
 .rt ul.chk > li[data-ok="1"]::after{content:'';position:absolute;left:6px;top:calc(.15em + 2px);width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.desp-sub{display:block;font-size:12px;font-weight:400;color:var(--suave)}
 .rec-son{margin:6px 4px 2px;padding:10px 8px 4px;border-top:1px solid var(--linea)}
 .rec-son p{margin:0 0 8px;font-size:13px;font-weight:600}
 .rec-son small{font-weight:400;color:var(--suave)}
@@ -1434,7 +1435,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.14';
+const VERSION = 'v4.15';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3360,7 +3361,12 @@ function opcionesRep(){
     {k: 'anio', t: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`}, {k: 'lab', t: 'De lunes a viernes'}];
 }
 const durEv = () => { const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin')); return i != null && f != null && f > i ? f - i : 0; };
+const ICO_ALTAVOZ = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
 function despOpciones(id){
+  if(id === 'son') return alarmaNativa() ? [{k: 'tel', t: 'El sonido de alarma del teléfono', sel: true}, {k: 'elegir', t: 'Elegir otro sonido del teléfono…', sel: false}, {k: 'probar', t: 'Probar', sel: false}]
+    : esApp ? [...ALARMAS.map(a => ({k: a.k, t: a.t, sel: alarmaTipo() === a.k})), {k: 'nueva', t: 'Instala la app nueva para usar los del teléfono', sel: false}]
+    : ALARMAS.map(a => ({k: a.k, t: `${a.t} <small class="desp-sub">${a.d}</small>`, sel: alarmaTipo() === a.k}));
+  if(id === 'sdur') return ALARMA_DUR.map(d => ({k: d.k, t: d.t, sel: alarmaDur() === d.k}));
   if(id === 'dur') return DURS.filter(m => evEd.tipo !== 'habito' || m <= 120).map(m => ({k: m, t: fmtDur(m), sel: durEv() === m}));   // hábitos: como mucho 2 horas
   if(id === 'rep') return opcionesRep().map(o => ({k: o.k, t: o.t, sel: (evEd.rep || 'no') === o.k}));
   if(id === 'rec' && evEd.tipo === 'habito'){
@@ -3375,6 +3381,8 @@ function despOpciones(id){
   return [{k: 'no', t: 'Sin área', sel: !evEd.areas.length}, ...AREAS.map(a => ({k: a.id, t: `${ico(a)} ${a.nombre}`, sel: evEd.areas.includes(a.id)}))];
 }
 function despValor(id){
+  if(id === 'son') return alarmaNativa() ? 'Del teléfono' : (ALARMAS.find(a => a.k === alarmaTipo()) || ALARMAS[0]).t;
+  if(id === 'sdur') return durAlarmaTxt();
   if(id === 'dur'){ const d = durEv(); return d ? fmtDur(d) : '—'; }
   if(id === 'rep') return (opcionesRep().find(o => o.k === (evEd.rep || 'no')) || {t: 'No se repite'}).t;
   if(id === 'rec' && evEd.tipo === 'habito'){ const l = [...(evEd.avisos.includes(0) ? ['A la hora'] : []), ...(evEd.horasAviso || []).slice().sort((a, b) => a - b).map(T => 'A las ' + hm(T))]; return l.length ? l.join(', ') : 'Sin recordatorio'; }
@@ -3384,7 +3392,7 @@ function despValor(id){
 }
 function pintarDesp(id){
   const l = $('#dl-' + id), v = $('#dv-' + id); if(!l) return;
-  l.innerHTML = despOpciones(id).map(o => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${id}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`).join('') + (id === 'rec' ? recSonidoHTML() : '');
+  l.innerHTML = despOpciones(id).map(o => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${id}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`).join('');
   if(v) v.innerHTML = despValor(id);
   evResumen();
 }
@@ -3427,6 +3435,13 @@ function recPersGuardar(){
   pintarDesp('rec');
 }
 function despElegir(id, k){
+  if(id === 'son'){   // vale para todos los recordatorios; al elegir, suena 4 s
+    if(k === 'elegir'){ try{ AndroidEquilibra.elegirSonidoAlarma(); }catch(e){} return; }
+    if(k === 'probar' || k === 'tel'){ sonarAlarma(4); return; }
+    if(k === 'nueva'){ hojaActualizar(); return; }
+    try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); pintarDesp(id); return;
+  }
+  if(id === 'sdur'){ try{ localStorage.setItem('equilibra.alarmaDur', String(k)); }catch(e){} pintarDesp(id); despTocar(id); recordUlt = null; enviarRecordatorios(); return; }
   if(id === 'rep'){ evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
   if(id === 'dur'){ const i = minDeHora(valor('ev-ini')); if(i != null) $('#ev-fin').value = hhmm(Math.min(i + +k, 1439)); pintarDesp(id); despTocar(id); return; }
   if(id === 'rec' && typeof k === 'string' && k[0] === 'h'){ const T = +k.slice(1), h = evEd.horasAviso || []; evEd.horasAviso = h.includes(T) ? h.filter(x => x !== T) : [...h, T]; pintarDesp(id); return; }
@@ -3476,6 +3491,8 @@ function pintarEvento(e){
     <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
       ${despHTML('rec', 'Recordatorio', ICO_CAMPANA)}
+      ${despHTML('son', 'Sonido', ICO_ALTAVOZ)}
+      ${despHTML('sdur', 'Duración del sonido', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}
       ${despHTML('area', 'Área', ICO_PETALO)}
     </div>
     ${evEd.id ? `<button class="btn sec ancho" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
@@ -4188,6 +4205,11 @@ function avisosWebHTML(){
    en la app de Android (2.40 o más nueva) suena el sonido de alarma que elijas en el teléfono. */
 const ALARMAS = [{k: 'despertador', t: 'Despertador', d: 'Pitidos, como un reloj despertador'}, {k: 'campana', t: 'Campana', d: 'Campanadas claras'}, {k: 'suave', t: 'Suave', d: 'Unas notas que suben, más tranquilas'}];
 const alarmaTipo = () => { try{ const v = localStorage.getItem('equilibra.alarma'); return ALARMAS.some(a => a.k === v) ? v : 'despertador'; }catch(e){ return 'despertador'; } };
+const ALARMA_DUR = [{k: 15, t: '15 segundos'}, {k: 30, t: '30 segundos'}, {k: 60, t: '1 minuto'}, {k: 0, t: 'Hasta que la apague'}];
+const alarmaDur = () => { try{ const v = localStorage.getItem('equilibra.alarmaDur'); return v !== null && ALARMA_DUR.some(d => String(d.k) === v) ? +v : 60; }catch(e){ return 60; } };
+/* segundos que suena: «hasta que la apague» = 10 min en el navegador (los pitidos se programan de golpe) y 1 h en el teléfono */
+const alarmaSeg = nativa => alarmaDur() || (nativa ? 3600 : 600);
+const durAlarmaTxt = () => (ALARMA_DUR.find(d => d.k === alarmaDur()) || ALARMA_DUR[2]).t;
 const alarmaNativa = () => esApp && window.AndroidEquilibra && typeof AndroidEquilibra.sonarAlarma === 'function';
 let alarmaGain = null, alarmaFinT = null, alarmaApp = false;
 function tonoA(c, g, t, f, tipo, dur, vol){
@@ -4198,8 +4220,9 @@ function tonoA(c, g, t, f, tipo, dur, vol){
   else e.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(e); e.connect(g); o.start(t); o.stop(t + dur + .02);
 }
-function sonarAlarma(seg = 60, tipo){
+function sonarAlarma(seg, tipo){
   pararAlarma();
+  if(!seg) seg = alarmaSeg(alarmaNativa());
   try{ if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500, 250, 500]); }catch(e){}
   if(alarmaNativa()){ try{ AndroidEquilibra.sonarAlarma(seg); alarmaApp = true; alarmaFinT = setTimeout(pararAlarma, seg * 1000 + 300); return; }catch(e){} }
   let c; try{ if(!ctxAudio) ctxAudio = new (window.AudioContext || window.webkitAudioContext)(); c = ctxAudio; }catch(e){ return; }
@@ -4221,26 +4244,19 @@ function pararAlarma(){
   if(alarmaGain){ try{ alarmaGain.gain.cancelScheduledValues(0); alarmaGain.gain.value = 0; alarmaGain.disconnect(); }catch(e){} alarmaGain = null; }
   try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
 }
-/* Debajo de las opciones de Recordatorio (4.13): el sonido de la alarma, el mismo de Ajustes → Sonidos y avisos (vale para todos) */
-function recSonidoHTML(){
-  const app = esApp, sel = alarmaTipo();
-  return `<div class="rec-son"><p>Sonido de la alarma <small>(para todos tus recordatorios)</small></p>
-    ${app ? (alarmaNativa() ? `<div class="rec-son-b"><button type="button" onclick="AndroidEquilibra.elegirSonidoAlarma()">Elegir el sonido del teléfono</button><button type="button" onclick="probarAlarma()">Probar</button></div>`
-      : `<div class="rec-son-b"><button type="button" onclick="hojaActualizar()">Instala la app nueva para elegirlo</button></div>`)
-    : `<div class="rec-son-b">${ALARMAS.map(a => `<button type="button" class="${sel === a.k ? 'sel' : ''}" title="${a.d}" onclick="alarmaRec('${a.k}')">${a.t}</button>`).join('')}</div>`}</div>`;
-}
-function alarmaRec(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); pintarDesp('rec'); }
 function elegirAlarma(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); const y = window.scrollY; render(); window.scrollTo(0, y); }
 function probarAlarma(){ if(alarmaGain || alarmaApp){ pararAlarma(); const y = window.scrollY; render(); window.scrollTo(0, y); return; } sonarAlarma(6); }
 function alarmaHTML(){
   const app = esApp, nueva = alarmaNativa(), sel = alarmaTipo();
   return `<div class="cta-b"><h4>Sonido de la alarma</h4>
-    <p class="peq suave">Suena un minuto a la hora de tus recordatorios, con la ventana para pararla o posponerla.</p>
+    <p class="peq suave">Suena a la hora de tus recordatorios, con la ventana para pararla o posponerla.</p>
     ${app ? (nueva ? `<p class="peq suave">En el móvil suena el sonido de alarma que elijas en el teléfono.</p>
       <div class="bots"><button class="btn sec" onclick="AndroidEquilibra.elegirSonidoAlarma()">Elegir el sonido de la alarma</button><button class="btn sec" onclick="probarAlarma()">Probar</button></div>`
       : `<p class="peq suave">Para elegir el sonido de alarma de tu teléfono, instala la app nueva.</p><div class="bots"><button class="btn sec" onclick="hojaActualizar()">Descargar la app nueva</button><button class="btn sec" onclick="probarAlarma()">Probar</button></div>`)
     : `<div class="alarma-ops">${ALARMAS.map(a => `<button type="button" class="alarma-op ${sel === a.k ? 'sel' : ''}" onclick="elegirAlarma('${a.k}')"><b>${a.t}</b><small>${a.d}</small><i>${sel === a.k ? '✓' : ''}</i></button>`).join('')}</div>
-      <p class="peq suave" style="margin:6px 0 0">Toca uno para oírlo y elegirlo.</p>`}</div>`;
+      <p class="peq suave" style="margin:6px 0 0">Toca uno para oírlo y elegirlo.</p>`}
+    <p class="peq" style="margin:12px 0 6px"><b>Cuánto tiempo suena</b></p>
+    <div class="rec-son-b">${ALARMA_DUR.map(d => `<button type="button" class="${alarmaDur() === d.k ? 'sel' : ''}" onclick="localStorage.setItem('equilibra.alarmaDur','${d.k}'); recordUlt = null; enviarRecordatorios(); const y = scrollY; render(); scrollTo(0, y)">${d.t}</button>`).join('')}</div></div>`;
 }
 /* Ventana de alarma a pantalla completa (Gustavo, 4.14): «Amable Life · Recordatorio», la tarea, cuándo es, y
    Enterado (para la alarma), Posponer (5, 15 o 30 min, 1, 2 o 3 h) y Completado, que solo sale en la última alarma de esa tarea
@@ -4284,7 +4300,7 @@ function posponerAlarma(id, k, min = 5, ultima = 1){
   const at = Date.now() + min * 60000, txt = `Pospuesto · ${horaEv(e)}`;
   aviso(`Te lo vuelvo a recordar ${min < 60 ? `en ${min} minutos` : min === 60 ? 'en 1 hora' : `en ${min / 60} horas`}`, 3000);
   if(esApp && window.AndroidEquilibra && typeof AndroidEquilibra.posponerAlarma === 'function'){
-    try{ AndroidEquilibra.posponerAlarma(JSON.stringify({id: `${id}|${k}|pos`, at, tit: e.t, txt, ev: id, k, ul: !!ultima})); return; }catch(x){}
+    try{ AndroidEquilibra.posponerAlarma(JSON.stringify({id: `${id}|${k}|pos`, at, tit: e.t, txt, ev: id, k, ul: !!ultima, dur: alarmaDur()})); return; }catch(x){}
   }
   let l; try{ l = JSON.parse(localStorage.getItem('equilibra.pospuestos')) || []; }catch(x){ l = []; }
   l = l.filter(p => !(p.ev === id && p.k === k)); l.push({ev: id, k, at, ul: !!ultima});
@@ -4328,7 +4344,7 @@ function enviarRecordatorios(){
     const k = sumarDias(hoy, n);
     eventosDe(k).forEach(e => { if(hechoEv(e, k)) return; (e.avisos || []).forEach(a => {
       const at = fechaDe(k).getTime() + (e.todo ? 540 : e.ini) * 60000 - a * 60000;
-      if(at > ahora) lista.push({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : ''), ev: e.id, k, ul: a === Math.min(...e.avisos)});
+      if(at > ahora) lista.push({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : ''), ev: e.id, k, ul: a === Math.min(...e.avisos), dur: alarmaDur()});
     }); });
   }
   lista.sort((x, y) => x.at - y.at);
@@ -4631,7 +4647,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Equilibra/main/Amable-Life.apk' : 'Amable-Life.apk';
-const APK_ULTIMA = '2.41';   // última app Android publicada
+const APK_ULTIMA = '2.42';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
