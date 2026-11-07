@@ -1301,7 +1301,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.92';
+const VERSION = 'v3.93';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4951,7 +4951,7 @@ function vAjustes(){
       html: () => `<p>Lo principal son <b>tus próximas acciones</b>: siempre las tienes en grande en la pantalla de inicio. Cuando haces una, la marcas y sube la siguiente. Con los seis puntitos las ordenas.</p>
         <p class="suave">La flor te dice dónde poner energía: en cada área eliges <b>Estoy bien</b>, <b>Una acción a la semana</b> o <b>Necesita más acción</b>. Revísala cuando sientas que algo ha cambiado (te lo recordamos cada mes).</p>`}
   ];
-  return `<div class="aj-arriba"><button class="aj-volver" onclick="ir(vistaPrevia)">${ICO_IZQ} Volver</button><button class="gc-ico" aria-label="Cerrar" title="Cerrar" onclick="ir(vistaPrevia)">${ICO_CRUZ}</button></div>
+  return `<div class="aj-arriba"><button class="aj-volver" onclick="ir('agenda'); window.scrollTo(0, 0)">${svgT('<path d="M4 11l8-6.5 8 6.5"/><path d="M6 9.5V19.5h12V9.5"/><path d="M10 19.5v-5h4v5"/>', 20)} Inicio</button><button class="gc-ico" aria-label="Cerrar" title="Cerrar" onclick="ir(vistaPrevia)">${ICO_CRUZ}</button></div>
   <h2 class="aj-tit" style="margin-top:18px">Ajustes <span class="aj-ver">web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</span></h2>
   ${temaHTML()}
   <div class="aj-lista">${temas.map(T => `<button class="aj-fila ${ajAbierto === T.k ? 'sel' : ''}" onclick="abrirAj('${T.k}')" aria-expanded="${ajAbierto === T.k}">
