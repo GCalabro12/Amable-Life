@@ -662,6 +662,10 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .cab-pop button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--tinta);padding:11px 18px;font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer}
 .cab-pop button svg{color:var(--suave);width:22px;height:22px;flex:none}
 .cab-pop button.sel{background:color-mix(in srgb,var(--oro) 24%,transparent)}
+.ml-sinc{display:block;font-size:12px;font-weight:500;color:#16a34a;margin-top:1px}
+.ml-sinc.mal{color:#ef4444}
+button.na-pie{display:block;width:100%;border:0;background:none;font-family:inherit;text-align:left;cursor:pointer;border-radius:0 0 12px 12px}
+button.na-pie:hover{color:rgba(43,36,51,.9);text-decoration:underline;background:rgba(0,0,0,.04)}
 .cta-b{margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(var(--bl),.05);border:1px solid var(--linea)}
 .cta-b h4{margin:0 0 4px;font-size:15px}
 .cta-b p{margin:0 0 8px}
@@ -1375,7 +1379,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.05';
+const VERSION = 'v4.06';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3626,12 +3630,11 @@ function menuHTML(){
   const fila = (ico, t, fn, sel) => `<button type="button" class="ml-f ${sel ? 'sel' : ''}" onclick="${fn}">${ico}<span>${t}</span></button>`;
   return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><span class="ml-tv"><b>Amable Life</b><small>web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</small></span><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
 
-    <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), 'Actualizar', 'menuActualizar()')}
+    <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Actualizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}
       ${fila(temaClaro() ? ICO_LUNA.replace('width="20" height="20"', 'width="24" height="24"') : ICO_SOL.replace('width="20" height="20"', 'width="24" height="24"'), temaClaro() ? 'Modo noche' : 'Modo día', "ponerTema(temaClaro() ? 'oscuro' : 'claro'); abrirMenu()")}</div>
     <div class="ml-g ml-cuenta">${u ? `<div class="ml-u">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<span class="ml-ini">${esc((u.displayName || u.email || '?').trim().charAt(0).toUpperCase())}</span>`}
         <span><b>${esc(u.email || u.displayName || 'Tu cuenta')}</b><small>Google · tus datos se guardan en la nube</small></span></div>
         <p class="ml-nota">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
-        ${txtNube() ? `<p class="ml-nota" style="color:${nube.error ? '#ef4444' : '#16a34a'}">${txtNube()}</p><p class="ml-nota">${cuentaNube()}</p>` : ''}
         ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta y cambiar de cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
       : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
     <div class="ml-g">${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
@@ -3680,7 +3683,7 @@ function pintarNotas(){
         <div class="na-cols" hidden>${NOTA_COL.map((c, i) => `<button type="button" style="background:${c}" aria-label="Color ${i + 1}" onclick="notaColor('${n.id}', ${i})"></button>`).join('')}</div></div>
         <div class="na-t" contenteditable="true" spellcheck="true" data-ph="Título"></div>
         <div class="na-d rt" contenteditable="true" data-ph="Escribe aquí…"></div>
-        <div class="na-pie"></div>`;
+        <button type="button" class="na-pie" title="Editar la tarea" onclick="notaEditar('${n.id}')"></button>`;
       document.body.appendChild(el);
       el.querySelector('.na-t').addEventListener('input', () => notaGuardar(n.id));
       el.querySelector('.na-d').addEventListener('input', () => notaGuardar(n.id));
@@ -3689,11 +3692,17 @@ function pintarNotas(){
       el.querySelector('.na-t').textContent = e.t === SIN_TITULO ? '' : e.t;
       el.querySelector('.na-d').innerHTML = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
     }
+    else if(!el.contains(document.activeElement)){
+      const t = e.t === SIN_TITULO ? '' : e.t, dh = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
+      if(el.querySelector('.na-t').textContent !== t) el.querySelector('.na-t').textContent = t;
+      if(el.querySelector('.na-d').innerHTML !== dh) el.querySelector('.na-d').innerHTML = dh;
+    }
     el.style.left = Math.max(0, Math.min(innerWidth - 120, n.x)) + 'px'; el.style.top = Math.max(0, Math.min(innerHeight - 60, n.y)) + 'px';
     el.style.setProperty('--nc', NOTA_COL[n.c] || NOTA_COL[0]);
     el.querySelector('.na-pie').textContent = `${capi(fechaLarga(n.k || e.dia))}${e.todo ? '' : ' · ' + hm(e.ini) + ' – ' + hm(e.fin)}`;
   });
 }
+function notaEditar(id){ const n = notasLeer().find(x => x.id === id), e = AG_().eventos.find(z => z.id === id); if(e) editarEvento(id, (n && n.k) || e.dia); }
 let notaT = null;
 function notaGuardar(id){
   clearTimeout(notaT);
@@ -4761,19 +4770,9 @@ function errorNube(e, que){
   nube.error = {que, c, at: Date.now()};
   if(!nube.avisado){ nube.avisado = true; aviso(que === 'subir' ? `No se han podido guardar tus cambios en la nube (${c}). Se reintentará solo.` : `No se ha podido leer la nube (${c}).`, 6000); }
 }
-/* Diagnóstico (Gustavo, 4.05: «¿qué otra causa puede ser?»): en el menú, cuántas cosas hay en este aparato y quién guardó
-   lo último en la nube, para comparar el móvil y el ordenador */
+/* Quién guardó lo último en la nube (4.05; se apunta para poder mirarlo si vuelve a fallar la sincronización) */
 const nombreAparato = () => esApp ? 'la app del móvil' : ESCRITORIO.matches ? 'el ordenador' : 'el navegador del móvil';
 function notaRemota(r){ if(r && r.actualizado) nube.remoto = {at: r.actualizado, aparato: r.aparato || '', version: r.version || '', ev: ((r.agenda || {}).eventos || []).length, acc: (r.acciones || []).length}; }
-function cuentaNube(){
-  const ev = (D.agenda && D.agenda.eventos || []).length, pend = D.acciones.filter(a => !a.hecha).length, hech = D.acciones.length - pend;
-  const n = x => x.toLocaleString('es-ES');
-  let t = `En este aparato: ${n(ev)} en el calendario · ${n(pend)} tareas pendientes · ${n(hech)} hechas`;
-  const r = nube.remoto;
-  if(r){ const d = new Date(r.at), hoy = d.toDateString() === new Date().toDateString();
-    t += `<br>En la nube: ${n(r.ev)} en el calendario · ${n(r.acc)} tareas. Lo último lo guardó ${r.aparato ? esc(r.aparato) : 'una versión anterior'} ${hoy ? 'hoy' : 'el ' + d.toLocaleDateString('es-ES')} a las ${hm(d.getHours() * 60 + d.getMinutes())}${r.version ? ` (web ${esc(String(r.version).replace(/^v/, ''))})` : ''}`; }
-  return t;
-}
 function txtNube(){
   if(!nube.ref) return '';
   if(nube.error) return `No sincronizado: ${nube.error.que === 'subir' ? 'no se pudo guardar' : 'no se pudo leer'} (${esc(nube.error.c)}) a las ${hm(new Date(nube.error.at).getHours() * 60 + new Date(nube.error.at).getMinutes())}`;
