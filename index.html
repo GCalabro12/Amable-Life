@@ -1469,7 +1469,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.24';
+const VERSION = 'v4.25';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4334,7 +4334,8 @@ function alarmaHTML(){
    (la de la hora en punto, o la más tardía si pusiste varias). En el móvil con la app cerrada la hace el teléfono (APK 2.41). */
 const POSPONER_MIN = [5, 15, 30, 60, 120, 180];
 function hojaAlarma(e, k, txt, ultima){
-  alarmaCerrar(true);
+  // 4.25: antes llamaba a alarmaCerrar(), que paraba el sonido que se acababa de empezar (la ventana salía en silencio)
+  const vieja = $('#alarma-full'); if(vieja){ vieja.id = ''; vieja.remove(); }
   const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full'; d.style.setProperty('--c', colorEv(e));
   d.innerHTML = `<div class="af-in" role="alertdialog" aria-label="Recordatorio">
     <div class="af-marca"><svg viewBox="-100 -100 200 200" width="34" height="34" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1A')}</svg><b>Amable Life</b></div>
