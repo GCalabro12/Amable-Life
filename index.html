@@ -682,6 +682,24 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .rec-son-b{display:flex;flex-wrap:wrap;gap:6px}
 .rec-son-b button{border:1px solid var(--linea);background:rgba(var(--bl),.05);color:var(--tinta);font:inherit;font-size:13px;padding:6px 12px;border-radius:99px;cursor:pointer}
 .rec-son-b button.sel{border-color:#8b5cf6;background:rgba(139,92,246,.16);font-weight:700}
+.alarma-full{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:24px 16px calc(24px + env(safe-area-inset-bottom));
+  background:radial-gradient(120% 70% at 50% 20%,color-mix(in srgb,var(--c) 45%,#2a1f52) 0,#140f26 70%);color:#f4f0fb;opacity:0;transition:opacity .25s;overflow-y:auto}
+.alarma-full.ver{opacity:1}
+.af-in{width:100%;max-width:440px;text-align:center}
+.af-marca{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px}
+.af-rec{margin:6px 0 18px;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#f7c35b;font-weight:700}
+.af-ico{color:#f7c35b;display:inline-block;animation:alarmaMueve .5s ease-in-out infinite alternate}
+.alarma-full h1{margin:16px 0 8px;font-size:30px;line-height:1.2;word-break:break-word}
+.af-cuando{margin:0;font-size:18px;color:#e9e4ff}
+.af-dia{margin:6px 0 28px;font-size:15px;color:#a99fca}
+.af-bots{display:flex;flex-direction:column;gap:10px}
+.af-b{border:0;border-radius:16px;padding:16px;font:inherit;font-size:18px;font-weight:800;cursor:pointer;color:#fff}
+.af-ok{background:#16a34a}
+.af-pos{background:#8b5cf6}
+.af-ent{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.35)}
+.af-pos-l{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.af-pos-l[hidden]{display:none}
+.af-pos-l button{border:1.5px solid #8b5cf6;background:rgba(139,92,246,.18);color:#fff;border-radius:12px;padding:12px 4px;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
 .alarma-ops{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .alarma-op{display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left;padding:10px 14px;border-radius:12px;border:1px solid var(--linea);background:rgba(var(--bl),.04);color:var(--tinta);font:inherit;cursor:pointer}
 .alarma-op small{grid-column:1;font-size:12.5px;color:var(--suave)}
@@ -1416,7 +1434,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.13';
+const VERSION = 'v4.14';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4224,18 +4242,76 @@ function alarmaHTML(){
     : `<div class="alarma-ops">${ALARMAS.map(a => `<button type="button" class="alarma-op ${sel === a.k ? 'sel' : ''}" onclick="elegirAlarma('${a.k}')"><b>${a.t}</b><small>${a.d}</small><i>${sel === a.k ? '✓' : ''}</i></button>`).join('')}</div>
       <p class="peq suave" style="margin:6px 0 0">Toca uno para oírlo y elegirlo.</p>`}</div>`;
 }
-function hojaAlarma(e, k, txt){
-  hojaAbierta = null;
-  mostrarHoja(`<div class="alarma"><div class="alarma-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="40" height="40"')}</div>
-    <p class="alarma-cuando">${esc(txt.replace(': ' + e.t, ''))}</p><h2>${broteEv(e)}${esc(e.t)}</h2>
-    <button class="btn prim ancho" onclick="pararAlarma(); cerrarHoja()">Parar la alarma</button>
-    <div class="ed-bots"><button class="btn sec" onclick="posponerAlarma('${e.id}','${k}')">Posponer 5 min</button><button class="btn sec" onclick="pararAlarma(); cerrarHoja(); alternarEv('${e.id}','${k}')">Marcar como hecho</button></div></div>`, colorEv(e));
+/* Ventana de alarma a pantalla completa (Gustavo, 4.14): «Amable Life · Recordatorio», la tarea, cuándo es, y
+   Enterado (para la alarma), Posponer (5, 15 o 30 min, 1, 2 o 3 h) y Completado, que solo sale en la última alarma de esa tarea
+   (la de la hora en punto, o la más tardía si pusiste varias). En el móvil con la app cerrada la hace el teléfono (APK 2.41). */
+const POSPONER_MIN = [5, 15, 30, 60, 120, 180];
+function hojaAlarma(e, k, txt, ultima){
+  alarmaCerrar(true);
+  const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full'; d.style.setProperty('--c', colorEv(e));
+  d.innerHTML = `<div class="af-in" role="alertdialog" aria-label="Recordatorio">
+    <div class="af-marca"><svg viewBox="-100 -100 200 200" width="34" height="34" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1A')}</svg><b>Amable Life</b></div>
+    <p class="af-rec">Recordatorio</p>
+    <div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="64" height="64"')}</div>
+    <h1>${broteEv(e)}${esc(e.t)}</h1>
+    <p class="af-cuando">${esc(txt.replace(': ' + e.t, ''))}</p>
+    <p class="af-dia">${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>
+    <div class="af-bots">
+      ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">Completado</button>` : ''}
+      <button type="button" class="af-b af-pos" onclick="const l = document.getElementById('af-pos-l'); l.hidden = !l.hidden">Posponer</button>
+      <div class="af-pos-l" id="af-pos-l" hidden>${POSPONER_MIN.map(m => `<button type="button" onclick="posponerAlarma('${e.id}','${k}',${m},${ultima ? 1 : 0})">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div>
+      <button type="button" class="af-b af-ent" onclick="alarmaCerrar()">Enterado</button>
+    </div></div>`;
+  document.body.appendChild(d);
+  requestAnimationFrame(() => d.classList.add('ver'));
 }
-function posponerAlarma(id, k){
-  pararAlarma(); cerrarHoja(); aviso('Te lo vuelvo a recordar en 5 minutos', 3000);
-  setTimeout(() => { const e = AG_().eventos.find(x => x.id === id); if(!e || hechoEv(e, k)) return;
-    sonarAlarma(); hojaAlarma(e, k, `Pospuesto · ${horaEv(e)}: ${e.t}`); notifWeb(e.t, 'Pospuesto · ' + horaEv(e), 'pos-' + id, false, {requireInteraction: true, renotify: true}); }, 5 * 60000);
+function alarmaCerrar(rapido){
+  pararAlarma();
+  const d = $('#alarma-full'); if(!d) return;
+  d.id = ''; if(rapido){ d.remove(); return; }
+  d.classList.remove('ver'); setTimeout(() => d.remove(), 250);
 }
+function alarmaCompletar(id, k){
+  alarmaCerrar();
+  const e = AG_().eventos.find(x => x.id === id);
+  if(e && !hechoEv(e, k)){ alternarEv(id, k); aviso(`«${e.t}» completada`, 3000); }
+}
+/* Posponer: en la app de Android lo programa el teléfono (suena aunque cierres la app); en el navegador se apunta en este
+   aparato (`equilibra.pospuestos`) y lo vigila `revisarPospuestos` cada 30 s, también si recargas la página */
+function posponerAlarma(id, k, min = 5, ultima = 1){
+  alarmaCerrar();
+  const e = AG_().eventos.find(x => x.id === id); if(!e) return;
+  const at = Date.now() + min * 60000, txt = `Pospuesto · ${horaEv(e)}`;
+  aviso(`Te lo vuelvo a recordar ${min < 60 ? `en ${min} minutos` : min === 60 ? 'en 1 hora' : `en ${min / 60} horas`}`, 3000);
+  if(esApp && window.AndroidEquilibra && typeof AndroidEquilibra.posponerAlarma === 'function'){
+    try{ AndroidEquilibra.posponerAlarma(JSON.stringify({id: `${id}|${k}|pos`, at, tit: e.t, txt, ev: id, k, ul: !!ultima})); return; }catch(x){}
+  }
+  let l; try{ l = JSON.parse(localStorage.getItem('equilibra.pospuestos')) || []; }catch(x){ l = []; }
+  l = l.filter(p => !(p.ev === id && p.k === k)); l.push({ev: id, k, at, ul: !!ultima});
+  try{ localStorage.setItem('equilibra.pospuestos', JSON.stringify(l)); }catch(x){}
+  setTimeout(revisarPospuestos, min * 60000 + 500);
+}
+function revisarPospuestos(){
+  let l; try{ l = JSON.parse(localStorage.getItem('equilibra.pospuestos')) || []; }catch(x){ return; }
+  if(!l.length) return;
+  const ahora = Date.now(), toca = l.filter(p => p.at <= ahora), quedan = l.filter(p => p.at > ahora);
+  if(!toca.length) return;
+  try{ localStorage.setItem('equilibra.pospuestos', JSON.stringify(quedan)); }catch(x){}
+  const p = toca[toca.length - 1], e = AG_().eventos.find(x => x.id === p.ev);
+  if(!e || hechoEv(e, p.k) || ahora - p.at > 6 * 3600000) return;
+  sonarAlarma(); hojaAlarma(e, p.k, `Pospuesto · ${horaEv(e)}: ${e.t}`, p.ul);
+  notifWeb(e.t, 'Pospuesto · ' + horaEv(e), 'pos-' + e.id, false, {requireInteraction: true, renotify: true, silent: false});
+}
+/* La app de Android avisa de un pospuesto con la app en pantalla (APK 2.41) */
+window.alarmaDesdeApp = o => { const e = AG_().eventos.find(x => x.id === o.ev); if(!e || hechoEv(e, o.k)) return; sonarAlarma(); hojaAlarma(e, o.k, `${o.txt}: ${e.t}`, !!o.ul); };
+/* «Completado» pulsado en la ventana del teléfono con la app cerrada: al volver, se marca aquí y viaja a la nube */
+window.aplicarAlarmas = () => {
+  if(!esApp || !window.AndroidEquilibra || typeof AndroidEquilibra.pendientesAlarma !== 'function') return;
+  let l = []; try{ l = JSON.parse(AndroidEquilibra.pendientesAlarma() || '[]'); }catch(x){ return; }
+  l.forEach(o => { const e = AG_().eventos.find(x => x.id === o.ev); if(e && !hechoEv(e, o.k)) alternarEv(o.ev, o.k); });
+};
+document.addEventListener('visibilitychange', () => { if(!document.hidden){ window.aplicarAlarmas(); revisarPospuestos(); } });
+document.addEventListener('keydown', ev => { if(ev.key === 'Escape' && $('#alarma-full')) alarmaCerrar(); });
 function textoRecord(e, a, falta){
   if(e.tipo === 'habito' && a !== 0) return e.todo ? 'Tu hábito de hoy' : `Tu hábito de las ${hm(e.ini)}`;
   if(e.todo) return a === 0 ? 'Hoy' : a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : a === 10080 ? 'Dentro de una semana' : `Dentro de ${Math.round(a / 1440)} días`;
@@ -4252,7 +4328,7 @@ function enviarRecordatorios(){
     const k = sumarDias(hoy, n);
     eventosDe(k).forEach(e => { if(hechoEv(e, k)) return; (e.avisos || []).forEach(a => {
       const at = fechaDe(k).getTime() + (e.todo ? 540 : e.ini) * 60000 - a * 60000;
-      if(at > ahora) lista.push({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : '')});
+      if(at > ahora) lista.push({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : ''), ev: e.id, k, ul: a === Math.min(...e.avisos)});
     }); });
   }
   lista.sort((x, y) => x.at - y.at);
@@ -4263,6 +4339,7 @@ function enviarRecordatorios(){
 }
 /* Recordatorios (con la app abierta), como en TickTick: varios por cosa; los de «todo el día», a las 9:00 */
 function avisarEventos(){
+  revisarPospuestos();
   const ahora = Date.now(), hoy = hoyK();
   let vistos; try{ vistos = JSON.parse(localStorage.getItem('equilibra.recordados')) || []; }catch(e){ vistos = []; }
   let cambio = false;
@@ -4274,7 +4351,7 @@ function avisarEventos(){
       vistos.push(clave); cambio = true;
       if(esApp && document.visibilityState !== 'visible' && recordNativo()) return;   // la notificación del teléfono ya avisa
       const txt = `${textoRecord(e, a, Math.max(1, Math.round((base - ahora) / 60000)))}: ${e.t}`;   // con lo que falta de verdad
-      sonarAlarma(); hojaAlarma(e, k, txt);
+      sonarAlarma(); hojaAlarma(e, k, txt, a === Math.min(...e.avisos));
       notifWeb(e.t, txt.replace(': ' + e.t, ''), clave, false, {requireInteraction: true, renotify: true, silent: false});
       setTimeout(() => hablar(txt.replace(/\(en (\d+) min\)/, 'dentro de $1 minutos').replace('(en 1 hora)', 'dentro de una hora') + '.', 'tareas'), 3500);
     }));
@@ -4554,7 +4631,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Equilibra/main/Amable-Life.apk' : 'Amable-Life.apk';
-const APK_ULTIMA = '2.40';   // última app Android publicada
+const APK_ULTIMA = '2.41';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
