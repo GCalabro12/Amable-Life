@@ -522,7 +522,7 @@ html:not(.claro) .btn-avisos .off{color:#f87171}
 @keyframes rayosLate{0%,100%{opacity:.75}50%{opacity:1}}
 .disco.grande.aro{position:relative}
 .disco.grande.aro b{position:relative;z-index:1}
-.flecha-aro{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:rotate(calc((100 - var(--p,0)) * 3.6deg))}
+.flecha-aro{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:rotate(calc(var(--p,0) * 3.6deg))}
 .flecha-aro .fl-g{filter:drop-shadow(0 0 1.2px rgba(0,0,0,.6));animation:flechaSale 2.6s linear infinite}
 .flecha-aro .fl-m{stroke-dasharray:100;stroke-dashoffset:100;animation:flechaCrece 2.6s ease-in-out infinite}
 @keyframes flechaCrece{0%{stroke-dashoffset:100}55%,100%{stroke-dashoffset:0}}
@@ -534,7 +534,7 @@ html:not(.claro) .btn-avisos .off{color:#f87171}
 .pet-desp[aria-expanded="true"] .desp-f{transform:rotate(180deg)}
 .disco.grande{width:72px;height:72px;display:grid;place-items:center;margin-right:6px}
 .disco.grande b{font-size:15px;font-weight:800;color:#1d1636;background:rgba(255,255,255,.88);border-radius:999px;padding:1px 7px}
-.disco.grande.aro{width:86px;height:86px;background:conic-gradient(#22a35a calc((100 - var(--p,0))*1%),#e0323a 0)}
+.disco.grande.aro{width:86px;height:86px;background:conic-gradient(#e0323a calc(var(--p,0)*1%),#22a35a 0)}   /* 4.53: el rojo avanza en el sentido del reloj, como el aro de Áreas */
 .disco.grande.aro::before{display:none}
 .cuenta-col .tic-btn{align-self:flex-start;margin-top:6px}
 .prox .asa-hueco{width:12px;flex:none}
@@ -1634,7 +1634,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.52';
+const VERSION = 'v4.53';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4772,7 +4772,7 @@ function tiraBloque(){
 }
 /* 4.51 (Gustavo): en el círculo de Focus, una flecha medio curva y de punta fina que se va dibujando por el rojo
    hasta donde empieza el verde (el lado que avanza) y desaparece, en bucle. Se dibuja con la raya en lo alto y se gira con --p */
-const FLECHA_ARO = '<svg class="flecha-aro" viewBox="0 0 86 86" aria-hidden="true"><defs><mask id="flecha-m" maskUnits="userSpaceOnUse" x="0" y="0" width="86" height="86"><path class="fl-m" d="M69.85 27.50 A31 31 0 0 0 38.15 12.38" fill="none" stroke="#fff" stroke-width="14" pathLength="100"/></mask></defs><g class="fl-g" mask="url(#flecha-m)"><path d="M68.99 25.47 L67.77 23.70 L66.45 22.01 L65.02 20.40 L63.48 18.87 L61.85 17.45 L60.12 16.13 L58.30 14.93 L56.39 13.84 L54.41 12.88 L52.36 12.05 L50.26 11.36 L48.10 10.80 L48.57 7.84 L40.30 12.12 L47.13 16.93 L47.60 13.96 L49.60 14.21 L51.59 14.61 L53.55 15.14 L55.48 15.82 L57.37 16.63 L59.20 17.58 L60.96 18.66 L62.64 19.86 L64.24 21.19 L65.75 22.64 L67.14 24.20 L68.41 25.86Z" fill="#fff"/></g></svg>';
+const FLECHA_ARO = '<svg class="flecha-aro" viewBox="0 0 86 86" aria-hidden="true"><defs><mask id="flecha-m" maskUnits="userSpaceOnUse" x="0" y="0" width="86" height="86"><path class="fl-m" d="M69.85 27.50 A31 31 0 0 0 38.15 12.38" fill="none" stroke="#fff" stroke-width="14" pathLength="100"/></mask></defs><g transform="matrix(-1 0 0 1 86 0)"><g class="fl-g" mask="url(#flecha-m)"><path d="M68.99 25.47 L67.77 23.70 L66.45 22.01 L65.02 20.40 L63.48 18.87 L61.85 17.45 L60.12 16.13 L58.30 14.93 L56.39 13.84 L54.41 12.88 L52.36 12.05 L50.26 11.36 L48.10 10.80 L48.57 7.84 L40.30 12.12 L47.13 16.93 L47.60 13.96 L49.60 14.21 L51.59 14.61 L53.55 15.14 L55.48 15.82 L57.37 16.63 L59.20 17.58 L60.96 18.66 L62.64 19.86 L64.24 21.19 L65.75 22.64 L67.14 24.20 L68.41 25.86Z" fill="#fff"/></g></g></svg>';
 /* 4.51 (Gustavo): los rayos de Focus llegan hasta los bordes de la pantalla. Capa fija detrás de todo, centrada en el bloque */
 function pintarRayos(){
   const blk = vista === 'inicio' ? document.querySelector('#app .ahora-blk:not(.fuera)') : null;
