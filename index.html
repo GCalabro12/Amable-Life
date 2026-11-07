@@ -301,7 +301,7 @@ img,svg{-webkit-user-drag:none}
   /* todo lo alta que cabe (Gustavo): los botones Guardar / Cancelar quedan abajo del todo */
   .hoja-in:has(.ev-hoja){min-height:calc(100vh - 12px);min-height:calc(100dvh - 12px);display:flex;flex-direction:column}
   .ev-hoja{flex:1;display:flex;flex-direction:column}
-  .ev-hoja > .ed-bots{margin-top:auto;padding-top:14px}
+  .ev-col .ed-bots{padding-top:4px}
   .ev-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 28px;align-items:start}
   .ev-cols .ev-col:last-child > .desps:first-child{margin-top:0}
   .ev-cols .ev-col:last-child{padding-top:4px}
@@ -1469,7 +1469,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.23';
+const VERSION = 'v4.24';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3552,8 +3552,8 @@ function pintarEvento(e){
       ${despHTML('area', 'Área', ICO_PETALO)}
     </div>
     ${evEd.id ? `<button class="btn sec ancho" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
-    </div></div>
     <div class="ed-bots"><button class="btn prim" onclick="guardarEvento()">Guardar</button>${evEd.id ? '<button class="btn peligro" id="ev-borrar" onclick="borrarEvento()">Borrar</button>' : ''}<button class="btn sec" onclick="salirEvento()">Cancelar</button></div>
+    </div></div>
     <div id="ev-borrar-rep"></div></div>`, evEd.areas.length ? areaDe(evEd.areas[0]).color : '#f7c35b');
   $('#ev-t').value = e.t && e.t !== SIN_TITULO ? e.t : '';
   const ds = $('#ev-desc'); if(ds) ds.innerHTML = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
