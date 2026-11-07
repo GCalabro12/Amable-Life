@@ -193,6 +193,8 @@ nav.abajo button.act .nav-flor{color:var(--oro);opacity:1}
 .pi-seal::before{content:"";width:7px;height:7px;border-radius:50%;background:#4ADE80}
 .gp-seal svg{width:14px;height:14px;flex:none}
 .pi-seal:hover{border-color:#4ADE80}
+.sellos.sellos-fila{flex-wrap:nowrap;gap:6px;margin-top:22px}
+.sellos-fila .pi-seal,.sellos-fila .gp-seal{font-size:11px;padding:5px 9px;gap:6px;letter-spacing:0}
 .gp-seal:hover{border-color:#8b5cf6}
 
 /* Portada: la flor se abre */
@@ -598,7 +600,12 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
 .aj-sw.sub{padding-left:18px;font-weight:600;font-size:15px}
 .aj-sw .desliz{margin:0;align-self:center}
 .aj-sub{margin-top:10px}
-.aj-eliminar{margin-top:22px}
+.aj-eliminar{margin-top:12px}
+.aj-salir{margin-top:22px}
+.aj-t1{flex-direction:row!important;align-items:center;gap:8px}
+.aj-t1 b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aj-nueva{flex:none;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;background:#f7c35b;color:#2a1f52}
+.aj-ico svg{width:24px;height:24px}
 .aj-sub > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-radius:14px;background:rgba(var(--bl),.08);font-weight:800;cursor:pointer}
 .aj-sub > summary::-webkit-details-marker{display:none}
 .aj-sub > summary > span{flex:1}
@@ -1498,7 +1505,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.33';
+const VERSION = 'v4.34';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5372,8 +5379,7 @@ function cuentaHTML(){
     <p class="nube-ok" style="margin:0 0 12px">☁️ Tus acciones y tu flor se guardan en la nube y se ven en todos tus dispositivos.</p>
     ${copiaHTML()}
     ${esCuentaPin(u) ? `<div class="cta-b"><h4>PIN</h4><p class="peq suave">El PIN de 4 números con el que entras con tu correo.</p><div class="bots"><button class="btn sec" onclick="abrirCambiarPin()">Cambiar el PIN</button></div></div>` : ''}
-    <div class="bots" style="margin-top:12px"><button class="btn sec" onclick="salir()">Cerrar sesión</button></div>
-    <p class="peq suave" style="margin:12px 0 0">Para eliminar tu cuenta, baja al final de Ajustes.</p>`;
+`;
   return `<p class="suave" style="margin-top:0">Entra para no perder tus acciones y verlas en el móvil y en el ordenador.</p>
     <div class="bots"><button class="btn google ancho" onclick="entrar()">Entrar con Google</button>
     <button class="btn sec ancho" onclick="cuentaModo='entrar'; ir('cuenta')">Entrar con email y PIN</button>
@@ -5801,10 +5807,10 @@ function temaHTML(){
 function vAjustes(){
   const n = D.acciones.filter(a => a.hecha).length, u = nube.usuario;
   const temas = [
-    {k: 'cuenta', ico: '👤', t: 'Tu cuenta',
+    {k: 'cuenta', ico: svgT('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>', 24), t: 'Tu cuenta',
       sub: u ? esc(u.email || u.displayName || 'Con cuenta') : 'Sin cuenta: tus datos solo están en este móvil',
       html: () => cuentaHTML()},
-    {k: 'sonidos', ico: '🔊', t: 'Sonidos y avisos',
+    {k: 'sonidos', ico: ICO_ALTAVOZ.replace('width="18" height="18"', 'width="24" height="24"'), t: 'Sonidos y avisos',
       sub: (sonidoOn ? 'Música y efectos activados' : 'Música y efectos apagados') + (pausa.salud && pausa.tareas ? ' · todos los avisos en pausa' : pausa.salud ? ' · cuerpo en pausa' : pausa.tareas ? ' · tareas en pausa' : ''),
       html: () => `${ajSw('Música y efectos de la app', sonidoOn, 'alternarSonido()')}
         ${ajSubHTML('pausa', 'Pausar avisos', `<p class="peq suave" style="margin:2px 0 6px">Para dejar de recibir avisos un rato (los pasos se siguen contando).</p>
@@ -5812,7 +5818,7 @@ function vAjustes(){
           ${ajSw('Pausar los avisos del cuerpo', pausa.salud, "alternarPausa('salud')", true)}
           ${ajSw('Pausar los avisos de tareas', pausa.tareas, "alternarPausa('tareas')", true)}`)}
         ${ajSubHTML('alarma', 'Sonido del aviso de tarea', alarmaHTML(true), 'Suena a la hora de tus recordatorios, con una ventana para pararla o posponerla.' + (alarmaNativa() ? ' En el móvil suena el sonido de alarma que elijas en el teléfono.' : ''))}${avisosWebHTML()}`},
-    {k: 'versiones', ico: '📲', t: 'Versiones y actualizaciones',
+    {k: 'versiones', ico: svgT('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>', 24), t: 'Actualizaciones',
       sub: (miAppVieja() ? `<span class="aj-aviso">Hay una app nueva: ${APK_ULTIMA}</span> · ` : !miApp() && enAndroidWeb() ? '<span class="aj-aviso">Instala la app de Android</span> · ' : '')
         + `web ${VERSION.replace(/^v/, '')} · app ${miApp() ? esc(miApp()) : '—'}`,
       html: () => {
@@ -5834,17 +5840,17 @@ function vAjustes(){
     {k: 'fecha', ico: ICO_RELOJ.replace('width="12" height="12"', 'width="24" height="24"'), t: 'Fecha y hora',
       sub: `${fPref.h12 ? '12 horas' : '24 horas'} · la semana empieza el ${fPref.dom ? 'domingo' : 'lunes'}${fPref.cal ? ' · ' + (CAL_EXTRA.find(c => c[0] === fPref.cal) || ['', ''])[1].toLowerCase() : ''}`,
       html: () => fechaAjHTML()},
-    {k: 'calendario', ico: ICO_CAL_AJ, t: 'Importar y exportar el calendario',
+    {k: 'calendario', ico: ICO_CAL_AJ, t: 'Importar y exportar',
       sub: 'Google Calendar, Outlook y Apple (.ics) · Excel (.csv)',
       html: () => calAjustesHTML()},
-    {k: 'datos', ico: '💾', t: 'Tus datos',
+    {k: 'datos', ico: svgT('<ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6"/><path d="M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/>', 24), t: 'Tus datos',
       sub: u ? 'En este móvil y en la nube' : 'Solo en este móvil',
       html: () => `<p class="suave">${u ? 'Se guardan en este dispositivo y en tu cuenta.' : 'Ahora se guardan solo en este dispositivo. Entra con Google para tenerlas también en la nube.'} La copia de seguridad (guardar y recuperar) está en «Tu cuenta».</p>
         <div class="bots">
           <button class="btn sec" onclick="abrirAj('cuenta')">Copia de seguridad y restauración</button>
           <button class="btn peligro" onclick="borrarTodo()">Borrar todos mis datos</button>
         </div>`},
-    {k: 'ayuda', ico: '❓', t: '¿Cómo funciona Amable Life?',
+    {k: 'ayuda', ico: svgT('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3"/><circle cx="12" cy="16.8" r=".7" fill="currentColor"/>', 24), t: 'Cómo funciona la app',
       sub: 'Tus próximas acciones y la flor',
       html: () => `<p>Lo principal son <b>tus próximas acciones</b>: siempre las tienes en grande en la pantalla de inicio. Cuando haces una, la marcas y sube la siguiente. Con los seis puntitos las ordenas.</p>
         <p class="suave">La flor te dice dónde poner energía: en cada área eliges <b>Estoy bien</b>, <b>Una acción a la semana</b> o <b>Necesita más acción</b>. Revísala cuando sientas que algo ha cambiado (te lo recordamos cada mes).</p>`}
@@ -5853,12 +5859,12 @@ function vAjustes(){
   <h2 class="aj-tit" style="margin-top:18px">Ajustes <span class="aj-ver">web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</span></h2>
   ${temaHTML()}
   <div class="aj-lista">${temas.map(T => `<button class="aj-fila ${ajAbierto === T.k ? 'sel' : ''}" onclick="abrirAj('${T.k}')" aria-expanded="${ajAbierto === T.k}">
-      <span class="aj-ico">${T.ico}</span><span class="aj-t"><b>${T.t}</b><small>${T.sub}</small></span>${flecha(ajAbierto === T.k)}</button>
+      <span class="aj-ico">${T.ico}</span><span class="aj-t aj-t1"><b>${T.t}</b>${T.k === 'versiones' && (miAppVieja() || !miApp() && enAndroidWeb()) ? '<span class="aj-nueva">nueva</span>' : ''}</span>${flecha(ajAbierto === T.k)}</button>
     ${ajAbierto === T.k ? `<section class="aj-cont ajustes" id="aj-${T.k}">${T.html()}</section>` : ''}`).join('')}
   </div>
+  ${nube.usuario ? `<div class="bots aj-salir"><button class="btn sec ancho" onclick="salir()">Cerrar sesión</button></div>` : ''}
   ${nube.usuario ? `<div class="cta-b cta-peligro aj-eliminar"><h4>Eliminar cuenta</h4><p class="peq suave">Borra tu cuenta y todos tus datos, de la nube y de este aparato. No se puede deshacer.</p><div class="bots"><button class="btn peligro" onclick="abrirEliminarCuenta()">Eliminar cuenta</button></div></div>` : ''}
-  <p class="peq suave" style="text-align:center;margin-top:18px">Amable Life · web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''} · ${n} ${n===1?'acción hecha':'acciones hechas'}</p>
-  <div class="sellos">${sellosHTML()}</div>`;
+  <div class="sellos sellos-fila">${sellosHTML()}</div>`;
 }
 /* ---------- Calendario: importar y exportar (Gustavo, 3.82) ----------
    .ics (iCalendar): el formato con el que Google Calendar, Outlook y Apple pasan calendarios, con repeticiones, días quitados y avisos.
