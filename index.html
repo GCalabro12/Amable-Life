@@ -633,6 +633,9 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
 .ep .ico{width:14px;height:14px;vertical-align:-2px}
 .ag-dia-evs small[data-ev]{cursor:pointer}
+.frec-panel{padding:10px 4px 2px}
+.frec-panel[hidden]{display:none}
+.frec-panel .eti{margin-top:0}
 .cab-menu{width:42px;height:42px;border:0;border-radius:50%;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0;margin-right:-8px}
 .cab-menu:hover{background:rgba(var(--bl),.1)}
 .ml{position:fixed;inset:0;z-index:45;background:rgba(8,5,20,0);transition:background .25s}
@@ -1172,7 +1175,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.84';
+const VERSION = 'v3.85';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3065,10 +3068,13 @@ function pintarEvento(e){
       <div class="ev-meta"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92">
         <div><p>Un hábito es como una planta: hay que <b>regarlo cada día</b>.</p>
         <button type="button" class="btn sec ev-meta-b" onclick="metaAbrir()">${ICO_BROTE.replace('width="12" height="12"', 'width="18" height="18"')} Importar hábitos de Metas Amables</button></div></div>
-      <p class="eti" style="margin-top:14px">¿Cuántas veces a la semana?</p>
+      <div class="desps" style="margin-top:12px"><div class="desp" id="dc-frec"><button type="button" class="desp-btn" onclick="frecTocar(this)">${ICO_REP}<span class="desp-t">Frecuencia</span><span class="desp-v" id="dv-frec">${frecTxt()}</span>${FLECHA_ABAJO}</button>
+      <div class="frec-panel" id="frec-panel" hidden>
+      <p class="eti">¿Cuántas veces a la semana?</p>
       <div class="ev-veces">${[1, 2, 3, 4, 5, 6, 7].map(n => `<button data-n="${n}" class="${evEd.dias.length === n ? 'sel' : ''}" onclick="evVeces(${n})">${n}</button>`).join('')}</div>
       <p class="eti" style="margin-top:10px">¿Qué días?</p>
       <div class="ev-dias">${DIAS_CORTO.map((x, i) => `<button data-d="${i}" class="${evEd.dias.includes(i) ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evDia(${i})">${x}</button>`).join('')}</div>
+      </div></div></div>
     </div>
     <button type="button" class="ev-res" id="ev-res" onclick="evAbrirFecha()">${ICO_RELOJ.replace('width="12" height="12"', 'width="20" height="20"')}<span><b id="ev-res-t"></b><small id="ev-res-s"></small></span></button>
     <div class="ev-fecha" id="ev-fecha" hidden>${ICO_RELOJ.replace('width="12" height="12"', 'width="20" height="20"')}<div class="ev-fecha-c">
@@ -3453,7 +3459,16 @@ function evTipo(t){
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
   evResumen();
 }
+/* Frecuencia del hábito (Gustavo): botón alargado como los demás; dentro, cuántas veces a la semana y qué días */
+const frecTxt = () => { const d = (evEd && evEd.dias || []).slice().sort(); if(!d.length) return 'Elige los días'; return d.length === 7 ? 'Cada día' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana · ${d.map(i => DIAS_CORTO[i]).join(' ')}`; };
+function frecTocar(b){
+  const p = $('#frec-panel'), abrir = p.hidden;
+  document.querySelectorAll('#hoja .desp-lista').forEach(x => x.hidden = true);
+  document.querySelectorAll('#hoja .desp-btn').forEach(x => x.classList.remove('abierto'));
+  p.hidden = !abrir; b.classList.toggle('abierto', abrir);
+}
 function pintarDias(){
+  const fv = $('#dv-frec'); if(fv) fv.textContent = frecTxt();
   document.querySelectorAll('.ev-dias button').forEach(b => b.classList.toggle('sel', evEd.dias.includes(+b.dataset.d)));
   document.querySelectorAll('.ev-veces button').forEach(b => b.classList.toggle('sel', +b.dataset.n === evEd.dias.length));
   evResumen();
