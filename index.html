@@ -676,6 +676,12 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .rt ul.chk > li[data-ok="1"]{text-decoration:line-through;opacity:.6}
 .rt ul.chk > li[data-ok="1"]::before{background:#16a34a;border-color:#16a34a;opacity:1}
 .rt ul.chk > li[data-ok="1"]::after{content:'';position:absolute;left:6px;top:calc(.15em + 2px);width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.rec-son{margin:6px 4px 2px;padding:10px 8px 4px;border-top:1px solid var(--linea)}
+.rec-son p{margin:0 0 8px;font-size:13px;font-weight:600}
+.rec-son small{font-weight:400;color:var(--suave)}
+.rec-son-b{display:flex;flex-wrap:wrap;gap:6px}
+.rec-son-b button{border:1px solid var(--linea);background:rgba(var(--bl),.05);color:var(--tinta);font:inherit;font-size:13px;padding:6px 12px;border-radius:99px;cursor:pointer}
+.rec-son-b button.sel{border-color:#8b5cf6;background:rgba(139,92,246,.16);font-weight:700}
 .alarma-ops{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .alarma-op{display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left;padding:10px 14px;border-radius:12px;border:1px solid var(--linea);background:rgba(var(--bl),.04);color:var(--tinta);font:inherit;cursor:pointer}
 .alarma-op small{grid-column:1;font-size:12.5px;color:var(--suave)}
@@ -1410,7 +1416,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.12';
+const VERSION = 'v4.13';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3360,7 +3366,7 @@ function despValor(id){
 }
 function pintarDesp(id){
   const l = $('#dl-' + id), v = $('#dv-' + id); if(!l) return;
-  l.innerHTML = despOpciones(id).map(o => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${id}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`).join('');
+  l.innerHTML = despOpciones(id).map(o => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${id}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`).join('') + (id === 'rec' ? recSonidoHTML() : '');
   if(v) v.innerHTML = despValor(id);
   evResumen();
 }
@@ -4197,6 +4203,15 @@ function pararAlarma(){
   if(alarmaGain){ try{ alarmaGain.gain.cancelScheduledValues(0); alarmaGain.gain.value = 0; alarmaGain.disconnect(); }catch(e){} alarmaGain = null; }
   try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
 }
+/* Debajo de las opciones de Recordatorio (4.13): el sonido de la alarma, el mismo de Ajustes → Sonidos y avisos (vale para todos) */
+function recSonidoHTML(){
+  const app = esApp, sel = alarmaTipo();
+  return `<div class="rec-son"><p>Sonido de la alarma <small>(para todos tus recordatorios)</small></p>
+    ${app ? (alarmaNativa() ? `<div class="rec-son-b"><button type="button" onclick="AndroidEquilibra.elegirSonidoAlarma()">Elegir el sonido del teléfono</button><button type="button" onclick="probarAlarma()">Probar</button></div>`
+      : `<div class="rec-son-b"><button type="button" onclick="hojaActualizar()">Instala la app nueva para elegirlo</button></div>`)
+    : `<div class="rec-son-b">${ALARMAS.map(a => `<button type="button" class="${sel === a.k ? 'sel' : ''}" title="${a.d}" onclick="alarmaRec('${a.k}')">${a.t}</button>`).join('')}</div>`}</div>`;
+}
+function alarmaRec(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); pintarDesp('rec'); }
 function elegirAlarma(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); const y = window.scrollY; render(); window.scrollTo(0, y); }
 function probarAlarma(){ if(alarmaGain || alarmaApp){ pararAlarma(); const y = window.scrollY; render(); window.scrollTo(0, y); return; } sonarAlarma(6); }
 function alarmaHTML(){
