@@ -592,6 +592,14 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .perm-ayuda ol{margin:4px 0 10px;padding-left:20px}
 .perm-ayuda li{margin:3px 0}
 .perm-ayuda .btn{margin:0}
+.perm-aviso{margin:6px 0 4px;padding:10px 12px;border-radius:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#b91c1c;font-weight:700;font-size:14px}
+html:not(.claro) .perm-aviso{color:#fca5a5}
+.aj-sub{margin-top:10px}
+.aj-sub > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-radius:14px;background:rgba(var(--bl),.08);font-weight:800;cursor:pointer}
+.aj-sub > summary::-webkit-details-marker{display:none}
+.aj-sub[open] > summary{background:rgba(var(--bl),.13)}
+.aj-sub[open] > summary .desp-f{transform:rotate(180deg)}
+.aj-sub-c{padding:8px 4px 4px}
 .perm-ok{flex:none;color:#16a34a;font-weight:800}
 .snd-tit{margin:10px 10px 4px;font-size:12.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--oro)}
 .snd-tit:first-child{margin-top:4px}
@@ -1483,7 +1491,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.27';
+const VERSION = 'v4.28';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2752,8 +2760,15 @@ function cerrarHojaX(){
   if(edicion) salirEdicion();
   else if(evEd) salirEvento();
   else if(avisoSalud) responderAviso(false);
-  else if(document.getElementById('hoja-permisos')){   // 4.22 (Gustavo): la cruz la cierra; se vuelve a recordar al día siguiente, cada día
-    cerrarHoja(); aviso('Es necesario activar estos permisos para usar la aplicación. Te lo recordaré mañana.', 4000);
+  else if(document.getElementById('hoja-permisos')){   // 4.28 (Gustavo): la 1.ª vez avisa y no se cierra; la 2.ª se cierra y vuelve mañana
+    if(!permX){
+      permX = 1;
+      const h = document.getElementById('hoja-permisos');
+      if(h && !h.querySelector('.perm-aviso')) h.querySelector('.hoja-cab').insertAdjacentHTML('afterend', '<p class="perm-aviso">Es necesario activar estos permisos para que funcionen bien los recordatorios. Si aun así quieres cerrar, vuelve a tocar la cruz.</p>');
+      aviso('Es necesario activar estos permisos para que funcionen bien los recordatorios', 3500);
+      return;
+    }
+    permX = 0; cerrarHoja(); aviso('Te lo recordaré mañana', 2500);
     try{ localStorage.setItem('equilibra.permisosCerrada', hoyK()); }catch(e){}
   }
   else cerrarHoja();
@@ -4330,9 +4345,12 @@ function pararAlarma(){
 }
 function elegirAlarma(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); const y = window.scrollY; render(); window.scrollTo(0, y); }
 function probarAlarma(){ if(alarmaGain || alarmaApp){ pararAlarma(); const y = window.scrollY; render(); window.scrollTo(0, y); return; } sonarAlarma(6); }
-function alarmaHTML(){
+/* Desplegables dentro de una fila de Ajustes (4.28): se recuerda cuál está abierto aunque se vuelva a pintar */
+let ajSub = null;
+const ajSubHTML = (k, t, html) => `<details class="aj-sub" ${ajSub === k ? 'open' : ''} ontoggle="if(this.open) ajSub = '${k}'; else if(ajSub === '${k}') ajSub = null"><summary><span>${t}</span>${FLECHA_ABAJO}</summary><div class="aj-sub-c">${html}</div></details>`;
+function alarmaHTML(dentro){
   const app = esApp, nueva = alarmaNativa(), sel = alarmaTipo();
-  return `<div class="cta-b"><h4>Sonido de la alarma</h4>
+  return `<div class="${dentro ? 'aj-sub-in' : 'cta-b'}">${dentro ? '' : '<h4>Sonido de la alarma</h4>'}
     <p class="peq suave">Suena a la hora de tus recordatorios, con la ventana para pararla o posponerla.</p>
     ${app ? (nueva ? `<p class="peq suave">En el móvil suena el sonido de alarma que elijas en el teléfono.</p>
       <div class="bots"><button class="btn sec" onclick="AndroidEquilibra.elegirSonidoAlarma()">Elegir el sonido de la alarma</button><button class="btn sec" onclick="probarAlarma()">Probar</button></div>`
@@ -4799,8 +4817,9 @@ window.revisarPermisos = (intentos = 0) => {
   let cerradaHoy = false; try{ cerradaHoy = localStorage.getItem('equilibra.permisosCerrada') === hoyK(); }catch(e){}
   if(cerradaHoy) return;   // cerrada con la cruz hoy: vuelve mañana
   if($('#splash') || $('#hoja') || $('#menu-lat') || $('#alarma-full')){ if(intentos < 40) setTimeout(() => window.revisarPermisos(intentos + 1), 1500); return; }
-  hojaPermisos(p);
+  permX = 0; hojaPermisos(p);
 };
+let permX = 0;   // veces que se ha tocado la cruz de la ventana de permisos
 function hojaPermisos(p){
   hojaAbierta = null;
   const fila = (k, ok, t, d) => `<div class="perm-fila ${ok ? 'ok' : ''}"><div class="perm-t"><b>${t}</b><small>${d}</small></div>${ok
@@ -4815,6 +4834,7 @@ function hojaPermisos(p){
       <button type="button" class="btn sec" onclick="try{ AndroidEquilibra.openAppSettings(); }catch(e){}">Abrir la información de la app</button></div>`}
     ${p.hayPantalla ? fila('pantalla', p.pantalla, 'Alarmas a pantalla completa', 'Para que la alarma se vea con el móvil bloqueado.') : ''}
     <p class="peq suave" style="margin:12px 0 0">Cuando lo actives, vuelve a Amable Life: esta ventana se pone al día sola.</p></div>`, '#8b5cf6');
+  if(permX){ const h = document.getElementById('hoja-permisos'); if(h) h.querySelector('.hoja-cab').insertAdjacentHTML('afterend', '<p class="perm-aviso">Es necesario activar estos permisos para que funcionen bien los recordatorios. Si aun así quieres cerrar, vuelve a tocar la cruz.</p>'); }
 }
 document.addEventListener('visibilitychange', () => { if(!document.hidden) setTimeout(() => window.revisarPermisos(), 600); });
 const S_ = () => D.salud;
@@ -5773,8 +5793,9 @@ function vAjustes(){
     {k: 'sonidos', ico: '🔊', t: 'Sonidos y avisos',
       sub: (sonidoOn ? 'Música y efectos activados' : 'Música y efectos apagados') + (pausa.salud && pausa.tareas ? ' · todos los avisos en pausa' : pausa.salud ? ' · cuerpo en pausa' : pausa.tareas ? ' · tareas en pausa' : ''),
       html: () => `<label class="interruptor">🔊 Música y efectos de la app<input type="checkbox" ${sonidoOn ? 'checked' : ''} onchange="alternarSonido()"></label>
-        <p class="peq suave" style="margin:10px 0 0">Para dejar de recibir avisos un rato (los pasos se siguen contando):</p>${botonPausa('todo')}
-        <p class="peq suave" style="margin:12px 0 0">O solo una parte:</p>${botonPausa('salud')}${botonPausa('tareas')}${alarmaHTML()}${avisosWebHTML()}`},
+        ${ajSubHTML('pausa', 'Pausar avisos', `<p class="peq suave" style="margin:2px 0 0">Para dejar de recibir avisos un rato (los pasos se siguen contando):</p>${botonPausa('todo')}
+          <p class="peq suave" style="margin:12px 0 0">O solo una parte:</p>${botonPausa('salud')}${botonPausa('tareas')}`)}
+        ${ajSubHTML('alarma', 'Sonido de la alarma', alarmaHTML(true))}${avisosWebHTML()}`},
     {k: 'versiones', ico: '📲', t: 'Versiones y actualizaciones',
       sub: (miAppVieja() ? `<span class="aj-aviso">Hay una app nueva: ${APK_ULTIMA}</span> · ` : !miApp() && enAndroidWeb() ? '<span class="aj-aviso">Instala la app de Android</span> · ' : '')
         + `web ${VERSION.replace(/^v/, '')} · app ${miApp() ? esc(miApp()) : '—'}`,
