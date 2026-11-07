@@ -731,6 +731,12 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .af-pos{background:#8b5cf6}
 .af-ent{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.35)}
 .af-sinson{display:block;margin:0 auto 14px;border:0;border-radius:99px;padding:10px 18px;background:#f7c35b;color:#2a1f52;font:inherit;font-weight:800;cursor:pointer;animation:alarmaMueve .6s ease-in-out infinite alternate}
+.af-nosuena{display:block;margin:18px auto 0;border:0;background:none;color:#c9c2ea;font:inherit;font-size:15px;text-decoration:underline;cursor:pointer}
+.af-ayuda{margin:12px 0 0;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.08);text-align:left;font-size:15px;line-height:1.45}
+.af-ayuda ol{margin:0 0 12px;padding-left:20px}
+.af-ayuda li{margin:6px 0}
+.af-ayuda-b{display:flex;flex-wrap:wrap;gap:8px}
+.af-ayuda-b button{border:1.5px solid #f7c35b;background:rgba(247,195,91,.15);color:#fff;border-radius:12px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}
 .af-pos-l{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .af-pos-l[hidden]{display:none}
 .af-pos-l button{border:1.5px solid #8b5cf6;background:rgba(139,92,246,.18);color:#fff;border-radius:12px;padding:12px 4px;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
@@ -1469,7 +1475,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.25';
+const VERSION = 'v4.26';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4222,7 +4228,7 @@ function pedirAvisosWeb(forzar){
   if($('#hoja')){ if(!forzar) setTimeout(() => pedirAvisosWeb(false), 1500); return; }
   mostrarHoja(`<div class="aviso-salud"><div class="aviso-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="44" height="44"')}</div>
     <h2>¿Te aviso aunque estés en otra ventana?</h2>
-    <p>Así tus recordatorios salen en la esquina de la pantalla, como los de Google Calendar, aunque tengas Amable Life detrás de otras ventanas.</p>
+    <p>Aunque tengas Amable Life detrás de otras ventanas, a la hora del recordatorio <b>suena la alarma</b> y sale un aviso en la esquina de la pantalla. Al tocar el aviso, Amable Life se pone delante con la ventana de la alarma.</p>
     <p class="peq suave">Después, el navegador te preguntará: pulsa «Permitir». Mientras Amable Life esté abierta (aunque sea en otra pestaña), te llegarán.</p>
     <button class="btn prim ancho" onclick="permitirAvisosWeb()">Sí, avísame</button>
     <button class="btn sec ancho" style="margin-top:8px" onclick="noAvisosWeb()">Ahora no</button></div>`, '#f7c35b');
@@ -4252,7 +4258,7 @@ function avisosWebHTML(){
   if(!hayAvisosWeb()) return '';
   const p = Notification.permission;
   return `<div class="cta-b"><h4>Avisos en la pantalla del ordenador</h4>
-    <p class="peq suave">${p === 'granted' ? 'Activados: tus recordatorios salen en la esquina de la pantalla aunque estés en otra ventana.' : p === 'denied' ? 'Bloqueados en este navegador.' : 'Aún no los has activado.'}</p>
+    <p class="peq suave">${p === 'granted' ? 'Activados: aunque estés en otra ventana, suena la alarma y sale el aviso en la esquina; al tocarlo, Amable Life se pone delante.' : p === 'denied' ? 'Bloqueados en este navegador.' : 'Aún no los has activado.'}</p>
     <div class="bots">${p === 'granted' ? `<button class="btn sec" onclick="notifWeb('Amable Life', 'Así se verán tus recordatorios', 'prueba', true)">Probar un aviso</button>` : `<button class="btn sec" onclick="pedirAvisosWeb(true)">${p === 'denied' ? 'Cómo activarlos' : 'Activar los avisos'}</button>`}</div></div>`;
 }
 /* Alarma (4.08): pitidos de despertador durante un minuto, aunque la música y los efectos estén apagados (no usa `audio()`),
@@ -4349,9 +4355,28 @@ function hojaAlarma(e, k, txt, ultima){
       <button type="button" class="af-b af-pos" onclick="const l = document.getElementById('af-pos-l'); l.hidden = !l.hidden">Posponer</button>
       <div class="af-pos-l" id="af-pos-l" hidden>${POSPONER_MIN.map(m => `<button type="button" onclick="posponerAlarma('${e.id}','${k}',${m},${ultima ? 1 : 0})">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div>
       <button type="button" class="af-b af-ent" onclick="alarmaCerrar()">Enterado</button>
-    </div></div>`;
+    </div>
+    <button type="button" class="af-nosuena" onclick="ayudaSonido(this)">¿No te suena la alarma?</button>
+    </div>`;
   document.body.appendChild(d);
   requestAnimationFrame(() => d.classList.add('ver'));
+}
+/* «¿No te suena la alarma?» (Gustavo, 4.26): debajo de los botones, los pasos para que suene y, en Windows, un botón que abre
+   directamente el volumen de las apps (ms-settings:apps-volume) */
+const enWindows = () => /Windows/i.test(navigator.userAgent);
+function abrirVolumenWindows(){ const a = document.createElement('a'); a.href = 'ms-settings:apps-volume'; document.body.appendChild(a); a.click(); a.remove(); }
+function ayudaSonido(b){
+  const ya = document.querySelector('.af-ayuda'); if(ya){ ya.remove(); return; }
+  abrirAudio();   // por si el navegador lo tenía bloqueado: este toque ya lo desbloquea
+  const pasos = esApp
+    ? `<li>Sube el <b>volumen de la alarma</b> del teléfono (botón de volumen → ajustes de sonido → Alarma).</li>
+       <li>Quita <b>No molestar</b> o deja que las alarmas suenen en él.</li>
+       <li>En Ajustes → Sonidos y avisos, elige el sonido y pulsa <b>Probar</b>.</li>`
+    : `<li>Pulsa <b>Probar el sonido</b>. Si ahora suena, era el navegador: solo deja sonar después de tocar la app, y ya está.</li>
+       ${enWindows() ? '<li>Si no suena, abre el <b>volumen de Windows</b> y sube <b>Amable Life</b> (o Google Chrome) y el volumen general.</li>' : '<li>Si no suena, sube el volumen del ordenador y el del navegador.</li>'}
+       <li>Si sigue sin sonar: en la barra de arriba de la app, menú <b>⋮</b> → <b>Información de la app</b> (o el candado de la dirección) → <b>Sonido</b> → <b>Permitir</b>.</li>`;
+  b.insertAdjacentHTML('afterend', `<div class="af-ayuda"><ol>${pasos}</ol>
+    <div class="af-ayuda-b"><button type="button" onclick="sonarAlarma(5)">Probar el sonido</button>${!esApp && enWindows() ? '<button type="button" onclick="abrirVolumenWindows()">Abrir el volumen de Windows</button>' : ''}</div></div>`);
 }
 function alarmaCerrar(rapido){
   pararAlarma();
