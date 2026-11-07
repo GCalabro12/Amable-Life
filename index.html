@@ -598,6 +598,7 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
 .aj-sw.sub{padding-left:18px;font-weight:600;font-size:15px}
 .aj-sw .desliz{margin:0;align-self:center}
 .aj-sub{margin-top:10px}
+.aj-eliminar{margin-top:22px}
 .aj-sub > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-radius:14px;background:rgba(var(--bl),.08);font-weight:800;cursor:pointer}
 .aj-sub > summary::-webkit-details-marker{display:none}
 .aj-sub > summary > span{flex:1}
@@ -1497,7 +1498,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.32';
+const VERSION = 'v4.33';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3933,7 +3934,7 @@ function menuHTML(){
     <div class="ml-g ml-cuenta">${u ? `<div class="ml-u">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<span class="ml-ini">${esc((u.displayName || u.email || '?').trim().charAt(0).toUpperCase())}</span>`}
         <span><b>${esc(u.email || u.displayName || 'Tu cuenta')}</b><small>Google · tus datos se guardan en la nube</small></span></div>
         <p class="ml-nota">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
-        ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta y cambiar de cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
+        ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
       : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
     <div class="ml-g">${hayConfigAlarma() ? fila(mIco('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>'), 'Configuración de la alarma', 'cerrarMenu(); abrirConfigAlarma()') : ''}${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
 `;
@@ -5372,7 +5373,7 @@ function cuentaHTML(){
     ${copiaHTML()}
     ${esCuentaPin(u) ? `<div class="cta-b"><h4>PIN</h4><p class="peq suave">El PIN de 4 números con el que entras con tu correo.</p><div class="bots"><button class="btn sec" onclick="abrirCambiarPin()">Cambiar el PIN</button></div></div>` : ''}
     <div class="bots" style="margin-top:12px"><button class="btn sec" onclick="salir()">Cerrar sesión</button></div>
-    <div class="cta-b cta-peligro"><h4>Eliminar cuenta</h4><p class="peq suave">Borra tu cuenta y todos tus datos, de la nube y de este aparato. No se puede deshacer.</p><div class="bots"><button class="btn peligro" onclick="abrirEliminarCuenta()">Eliminar cuenta</button></div></div>`;
+    <p class="peq suave" style="margin:12px 0 0">Para eliminar tu cuenta, baja al final de Ajustes.</p>`;
   return `<p class="suave" style="margin-top:0">Entra para no perder tus acciones y verlas en el móvil y en el ordenador.</p>
     <div class="bots"><button class="btn google ancho" onclick="entrar()">Entrar con Google</button>
     <button class="btn sec ancho" onclick="cuentaModo='entrar'; ir('cuenta')">Entrar con email y PIN</button>
@@ -5855,6 +5856,7 @@ function vAjustes(){
       <span class="aj-ico">${T.ico}</span><span class="aj-t"><b>${T.t}</b><small>${T.sub}</small></span>${flecha(ajAbierto === T.k)}</button>
     ${ajAbierto === T.k ? `<section class="aj-cont ajustes" id="aj-${T.k}">${T.html()}</section>` : ''}`).join('')}
   </div>
+  ${nube.usuario ? `<div class="cta-b cta-peligro aj-eliminar"><h4>Eliminar cuenta</h4><p class="peq suave">Borra tu cuenta y todos tus datos, de la nube y de este aparato. No se puede deshacer.</p><div class="bots"><button class="btn peligro" onclick="abrirEliminarCuenta()">Eliminar cuenta</button></div></div>` : ''}
   <p class="peq suave" style="text-align:center;margin-top:18px">Amable Life · web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''} · ${n} ${n===1?'acción hecha':'acciones hechas'}</p>
   <div class="sellos">${sellosHTML()}</div>`;
 }
