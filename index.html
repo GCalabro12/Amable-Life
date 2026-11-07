@@ -818,6 +818,10 @@ html.claro .ag-fijo{background:rgba(243,240,249,.97)}
 .cal-res{margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(var(--bl),.06)}
 .cal-res p{margin:0 0 8px}
 .cal-ok{margin:10px 0 0;font-weight:800;color:var(--sube)}
+.tt-op{display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer}
+.tt-op input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--oro);flex:none}
+.tt-op span{display:flex;flex-direction:column;gap:2px;font-size:14.5px}
+.tt-op small{font-size:12.5px;color:var(--suave)}
 html.claro .cal-ok{color:#15803d}
 .hoja-asa{display:none}
 @media (min-width:900px){
@@ -1322,7 +1326,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.95';
+const VERSION = 'v3.96';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5026,14 +5030,15 @@ function calAjustesHTML(){
   const n = AG_().eventos.length;
   return `<p class="suave">Trae lo que tienes en otro calendario o llévate el de Amable Life.</p>
     <p class="eti" style="margin-top:14px">Importar</p>
-    <p class="peq" style="margin:4px 0 8px">Sube un archivo <b>.ics</b> (el normal de los calendarios) o <b>.csv</b>. Si algo ya lo habías importado antes, se pone al día y no se repite.</p>
+    <p class="peq" style="margin:4px 0 8px">Sube un archivo <b>.ics</b> (el normal de los calendarios), <b>.csv</b> o <b>la copia de seguridad de TickTick</b>. Si algo ya lo habías importado antes, se pone al día y no se repite.</p>
     <div class="bots"><button class="btn sec" onclick="$('#cal-imp').click()">Elegir archivo .ics o .csv</button></div>
     <input type="file" id="cal-imp" accept=".ics,.csv,text/calendar,text/csv" hidden onchange="calImportar(this)">
     <div id="cal-imp-res"></div>
     <details class="cal-ayuda"><summary>¿Cómo saco el archivo de mi calendario?</summary>
       <p><b>Google Calendar</b> (en el ordenador): rueda dentada → Configuración → Importar y exportar → Exportar. Te baja un .zip: ábrelo y sube aquí el .ics de tu calendario.</p>
       <p><b>Outlook</b>: Archivo → Guardar calendario (sale un .ics).</p>
-      <p><b>Apple</b> (Mac): app Calendario → Archivo → Exportar → Exportar…</p></details>
+      <p><b>Apple</b> (Mac): app Calendario → Archivo → Exportar → Exportar…</p>
+      <p><b>TickTick</b> (en su web, ticktick.com; en la app del móvil no se puede): tu foto → Ajustes → Copia de seguridad e importación → Generar copia de seguridad. Te baja un .csv con todas tus tareas: súbelo aquí tal cual.</p></details>
     <p class="eti" style="margin-top:16px">Exportar</p>
     <p class="peq" style="margin:4px 0 8px">${n ? `Tienes ${n} ${n === 1 ? 'cosa' : 'cosas'} en el calendario.` : 'Aún no tienes nada en el calendario.'}</p>
     <div class="bots"><button class="btn sec" ${n ? '' : 'disabled'} onclick="calExportar('ics')">Bajar el calendario (.ics)</button><button class="btn sec" ${n ? '' : 'disabled'} onclick="calExportar('csv')">Bajar para Excel (.csv)</button></div>
@@ -5100,7 +5105,9 @@ function calImportar(inp){
   const r = new FileReader();
   r.onload = () => {
     const box = $('#cal-imp-res');
-    try{ const t = String(r.result || ''); calVista(/BEGIN:VCALENDAR/i.test(t) ? leerICS(t) : leerCSV(t), f.name); }
+    try{ const t = String(r.result || '');
+      if(esCopiaTickTick(t)){ ttVista(leerTickTick(t), f.name); return; }
+      calVista(/BEGIN:VCALENDAR/i.test(t) ? leerICS(t) : leerCSV(t), f.name); }
     catch(e){ box.innerHTML = `<p class="meta-error">No he podido leer ese archivo${e && e.message ? ': ' + esc(e.message) : ''}.</p>`; }
   };
   r.readAsText(f);
@@ -5211,6 +5218,109 @@ function leerCSV(txt){
     const t = String(f[cT] || '').trim() || SIN_TITULO;
     return {uid: 'csv:' + k + ':' + (todo ? 'todo' : ini) + ':' + t, t, dia: k, todo, ini: todo ? null : ini, fin, rep: 'no', saltar: [], avisos: [], prio: 1, desc: cD >= 0 ? String(f[cD] || '').trim().slice(0, 2000) : ''};
   }).filter(Boolean);
+}
+/* ---------- La copia de seguridad de TickTick (Gustavo, 3.96) ----------
+   Es un .csv con unas líneas de información arriba y las columnas «Folder Name, List Name, Title, Kind, Tags, Content, …, Start Date, Due Date,
+   Reminder, Repeat, Priority, Status, Created Time, Completed Time, …, Is All Day, …, taskId, parentId». Se reparte así:
+   pendientes con fecha → Calendario (con hora, repetición, prioridad, recordatorio y descripción); pendientes sin fecha → Áreas;
+   completadas → tareas hechas con su fecha (cuentan en las Estadísticas). Las notas y las «no lo haré» no entran. */
+const esCopiaTickTick = t => /"?List Name"?\s*,\s*"?Title"?/.test(t) && /taskId/.test(t);
+function filasCSV(t, sep){
+  const F = []; let fila = [], campo = '', dentro = false;
+  for(let i = 0; i < t.length; i++){
+    const c = t[i];
+    if(dentro){ if(c === '"'){ if(t[i + 1] === '"'){ campo += '"'; i++; } else dentro = false; } else campo += c; continue; }
+    if(c === '"') dentro = true;
+    else if(c === sep){ fila.push(campo); campo = ''; }
+    else if(c === '\n' || c === '\r'){ if(c === '\r' && t[i + 1] === '\n') i++; fila.push(campo); campo = ''; if(fila.some(x => x.trim())) F.push(fila); fila = []; }
+    else campo += c;
+  }
+  fila.push(campo); if(fila.some(x => x.trim())) F.push(fila);
+  return F;
+}
+const ttFecha = v => { v = String(v || '').trim(); if(!v) return null; const d = new Date(v.replace(/([+-]\d{2})(\d{2})$/, '$1:$2')); return isNaN(d) ? null : d; };
+const TT_AREAS = {salud: ['salud', 'health', 'deporte', 'ejercicio', 'gym', 'medico'], pareja: ['pareja', 'partner'], familia: ['familia', 'amigos', 'family', 'friends'],
+  trabajo: ['trabajo', 'dinero', 'work', 'oficina', 'negocio', 'clientes', 'finanzas'], crecimiento: ['crecimiento', 'aprender', 'estudio', 'formacion', 'lectura', 'libros', 'study', 'cursos'],
+  ocio: ['ocio', 'disfrute', 'viaje', 'travel', 'hobby', 'diversion'], proposito: ['proposito', 'espiritual', 'meditacion', 'mision'], hogar: ['hogar', 'casa', 'entorno', 'home', 'compras', 'shopping']};
+function ttArea(lista, carpeta){   // si la lista (o la carpeta) se llama como un área de Life, va a esa área
+  const n = gcNorm((lista || '') + ' ' + (carpeta || ''));
+  const id = Object.keys(TT_AREAS).find(a => TT_AREAS[a].some(w => n.includes(w)));
+  return id && AREAS.some(a => a.id === id) ? id : null;
+}
+function leerTickTick(txt){
+  const F = filasCSV(txt.replace(/^﻿/, ''), ',');
+  const ic = F.findIndex(f => f.includes('Title') && f.includes('taskId'));
+  if(ic < 0) throw new Error('no encuentro las columnas de la copia de TickTick');
+  const cab = F[ic], col = n => cab.indexOf(n), v = (f, n) => col(n) >= 0 ? String(f[col(n)] || '').trim() : '';
+  const out = {cal: [], areas: [], hechas: [], notas: 0, nohago: 0};
+  F.slice(ic + 1).forEach(f => {
+    const t = v(f, 'Title'), id = v(f, 'taskId') || (t + v(f, 'Created Time')), kind = v(f, 'Kind').toUpperCase();
+    if(!t && !v(f, 'Content')) return;
+    if(kind === 'NOTE'){ out.notas++; return; }
+    const st = v(f, 'Status'), hecho = v(f, 'Completed Time') && st !== '-1' || st === '1' || st === '2';
+    if(st === '-1'){ out.nohago++; return; }
+    const pr = +v(f, 'Priority') || 0, prio = pr >= 5 ? 3 : pr >= 3 ? 2 : 1;
+    const desc = v(f, 'Content').replace(/▫|▪/g, '• ').slice(0, 2000), area = ttArea(v(f, 'List Name'), v(f, 'Folder Name'));
+    const di = ttFecha(v(f, 'Start Date')) || ttFecha(v(f, 'Due Date')), df = ttFecha(v(f, 'Due Date')), todo = /^true$/i.test(v(f, 'Is All Day')) || !di;
+    if(hecho){ const h = ttFecha(v(f, 'Completed Time')) || di || ttFecha(v(f, 'Created Time')) || new Date();
+      out.hechas.push({uid: 'tt:' + id, t: t || SIN_TITULO, area, prio, creada: (ttFecha(v(f, 'Created Time')) || h).toISOString(), hechaEn: h.toISOString()}); return; }
+    if(!di){ out.areas.push({uid: 'tt:' + id, t: t || SIN_TITULO, area, prio, creada: (ttFecha(v(f, 'Created Time')) || new Date()).toISOString()}); return; }
+    const k = claveDia(di), ini = todo ? null : di.getHours() * 60 + di.getMinutes();
+    let fin = null;
+    if(!todo){ fin = df && df > di && claveDia(df) === k ? df.getHours() * 60 + df.getMinutes() : Math.min(ini + 60, 1439); if(fin <= ini) fin = Math.min(ini + 60, 1439); }
+    // recordatorios: TRIGGER:-PT15M, -PT1H, -P1D…
+    const trig = (v(f, 'Reminder').match(/-?P(?:\d+W)?(?:\d+D)?T?(?:\d+H)?(?:\d+M)?(?:\d+S)?/g) || []).map(x => { const m = /^(-)?P(?:(\d+)W)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?/.exec(x); return m ? ((+m[2] || 0) * 10080 + (+m[3] || 0) * 1440 + (+m[4] || 0) * 60 + (+m[5] || 0)) * (m[1] ? 1 : -1) : null; }).filter(x => x != null);
+    const avisos = [...new Set(trig.map(m => todo ? (m >= 7 * 1440 ? 10080 : m >= 2 * 1440 ? 2880 : m >= 1440 ? 1440 : 0) : RECORD_HORA.map(r => r.k).reduce((c, kk) => Math.abs(kk - Math.max(0, m)) < Math.abs(c - Math.max(0, m)) ? kk : c, 0)))];
+    // repetición, como en el .ics
+    let rep = 'no', dias = null; const rr = v(f, 'Repeat').replace(/^RRULE:/i, '');
+    if(rr){ const R = Object.fromEntries(rr.toUpperCase().split(';').map(x => x.split('='))), hasta = R.UNTIL && icsLeerFecha(R.UNTIL);
+      if(!((R.INTERVAL && +R.INTERVAL > 1) || (hasta && hasta.k < hoyK()))){
+        if(R.FREQ === 'DAILY') rep = 'dia';
+        else if(R.FREQ === 'WEEKLY'){ const bd = [...new Set((R.BYDAY || BYDAY[diaSem(k)]).split(',').map(x => BYDAY.indexOf(x.slice(-2))).filter(i => i >= 0))].sort();
+          if(bd.join() === '0,1,2,3,4') rep = 'lab'; else { rep = 'semana'; if(bd.length > 1 || bd[0] !== diaSem(k)) dias = bd; } }
+        else if(R.FREQ === 'MONTHLY') rep = 'mes'; else if(R.FREQ === 'YEARLY') rep = 'anio'; } }
+    const base = {uid: 'tt:' + id, t: t || SIN_TITULO, dia: k, todo, ini, fin, rep, saltar: [], avisos, prio, desc, area};
+    if(!dias) out.cal.push(base);
+    else dias.forEach(d => { let kk = k; while(diaSem(kk) !== d) kk = sumarDias(kk, 1); out.cal.push(Object.assign({}, base, {uid: base.uid + '#' + d, dia: kk})); });
+  });
+  return out;
+}
+let ttImp = null;
+function ttVista(r, nombre){
+  ttImp = r;
+  const box = $('#cal-imp-res'); if(!box) return;
+  const desde = sumarDias(hoyK(), -30), calRec = r.cal.filter(x => x.rep !== 'no' || x.dia >= desde).length, viejas = r.cal.length - calRec;
+  const ya = [...r.cal, ...r.areas, ...r.hechas].filter(x => AG_().eventos.some(e => e.impId === x.uid) || D.acciones.some(a => a.impId === x.uid)).length;
+  if(!r.cal.length && !r.areas.length && !r.hechas.length){ box.innerHTML = '<p class="meta-error">En esa copia de TickTick no he encontrado tareas.</p>'; return; }
+  const op = (id, n, t, sub, on = true) => `<label class="tt-op"><input type="checkbox" id="${id}" ${on && n ? 'checked' : ''} ${n ? '' : 'disabled'}><span><b>${n}</b> ${t}${sub ? `<small>${sub}</small>` : ''}</span></label>`;
+  box.innerHTML = `<div class="cal-res"><p>Copia de <b>TickTick</b> («${esc(nombre)}»). Elige qué traer:</p>
+    ${op('tt-cal', calRec, calRec === 1 ? 'tarea con fecha → Calendario' : 'tareas con fecha → Calendario', 'Con su hora, repetición, prioridad, recordatorio y descripción (desde hace un mes, y las que se repiten).')}
+    ${viejas ? op('tt-vie', viejas, viejas === 1 ? 'tarea con fecha más antigua, sin hacer' : 'tareas con fecha más antiguas, sin hacer', 'Las que se quedaron atrasadas hace más de un mes.', false) : ''}
+    ${op('tt-are', r.areas.length, r.areas.length === 1 ? 'tarea sin fecha → Áreas' : 'tareas sin fecha → Áreas', 'Si su lista se llama como un área (Trabajo, Salud…), entra en esa área; si no, sin área.')}
+    ${op('tt-hec', r.hechas.length, r.hechas.length === 1 ? 'tarea completada → tu historial' : 'tareas completadas → tu historial', 'Con su fecha: cuentan en las Estadísticas.')}
+    ${r.notas || r.nohago ? `<p class="peq suave" style="margin:6px 0 0">No entran ${[r.notas ? `${r.notas} ${r.notas === 1 ? 'nota' : 'notas'}` : '', r.nohago ? `${r.nohago} marcadas como «no lo haré»` : ''].filter(Boolean).join(' ni ')}.</p>` : ''}
+    ${ya ? `<p class="peq suave" style="margin:6px 0 0">${ya} ya estaban aquí de otra vez: se ponen al día, no se repiten.</p>` : ''}
+    <div class="bots"><button class="btn prim" onclick="ttMeter()">Importar de TickTick</button></div></div>`;
+}
+function ttMeter(){
+  const r = ttImp; if(!r) return;
+  const desde = sumarDias(hoyK(), -30), on = id => { const c = $('#' + id); return !!(c && c.checked); }, A = AG_();
+  let nc = 0, na = 0, nh = 0, orden = Math.max(0, ...D.acciones.map(a => a.orden || 0));
+  r.cal.filter(x => (x.rep !== 'no' || x.dia >= desde) ? on('tt-cal') : on('tt-vie')).slice(0, 3000).forEach(x => {
+    let e = A.eventos.find(z => z.impId === x.uid);
+    if(!e){ e = {id: uid(), creada: ahoraISO(), hechos: [], impId: x.uid}; A.eventos.push(e); }
+    Object.assign(e, {t: x.t, tipo: 'tarea', dia: x.dia, dias: [], rep: x.rep, todo: x.todo, ini: x.ini, fin: x.fin, saltar: [], desc: x.desc, descH: '', avisos: x.avisos, prio: x.prio, area: x.area, areas: x.area ? [x.area] : [], mod: ahoraISO()});
+    nc++;
+  });
+  const accion = (x, hecha) => { let a = D.acciones.find(z => z.impId === x.uid);
+    if(!a){ a = {id: uid(), impId: x.uid, orden: ++orden}; D.acciones.push(a); }
+    Object.assign(a, {area: x.area, texto: x.t, prio: x.prio, hecha, creada: x.creada, hechaEn: hecha ? x.hechaEn : null, mod: ahoraISO()}); };
+  if(on('tt-are')) r.areas.slice(0, 3000).forEach(x => { accion(x, false); na++; });
+  if(on('tt-hec')) r.hechas.slice(0, 5000).forEach(x => { accion(x, true); nh++; });
+  guardar(); ttImp = null; sonarHecho();
+  const box = $('#cal-imp-res');
+  if(box) box.innerHTML = `<p class="cal-ok">✓ De TickTick: ${nc} al Calendario, ${na} a Áreas y ${nh} al historial.</p>`;
+  aviso(`TickTick importado: ${nc + na + nh} tareas`);
 }
 function calVista(lista, nombre){
   calImp = lista;
