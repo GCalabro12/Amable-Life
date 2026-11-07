@@ -633,6 +633,18 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
 .ep .ico{width:14px;height:14px;vertical-align:-2px}
 .ag-dia-evs small[data-ev]{cursor:pointer}
+.hoja-asa{display:none}
+@media (min-width:900px){
+  .hoja-in{position:relative}
+  .hoja-asa{display:flex;justify-content:center;align-items:center;position:absolute;top:3px;left:50%;transform:translateX(-50%);width:72px;height:22px;z-index:3;color:var(--suave);cursor:grab;border-radius:8px}
+  .hoja-asa:hover{color:var(--tinta);background:rgba(var(--bl),.07)}
+  body.moviendo,body.moviendo *{cursor:grabbing!important;user-select:none}
+}
+#toast.con-boton{background:#2f2b38;color:#f1eef8;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.35);padding:6px 6px 6px 18px;border-radius:8px}
+#toast.con-boton button{border:0;background:none;color:#a8c7fa;font:inherit;font-weight:800;padding:8px 10px;border-radius:6px;cursor:pointer}
+#toast.con-boton button:hover{background:rgba(255,255,255,.08)}
+#toast .toast-x{color:#f1eef8!important;display:grid;place-items:center;padding:6px!important}
+#toast .toast-x svg{width:18px;height:18px}
 .brote{color:#4ade80;flex:none;vertical-align:-1px;margin-right:2px}
 html.claro .brote{color:#16a34a}
 .rj.sem .brote,.rj-todo .brote{width:10px;height:10px}
@@ -1122,7 +1134,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.80';
+const VERSION = 'v3.81';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2340,10 +2352,27 @@ function salirEdicion(){
 const ICO_CRUZ = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function mostrarHoja(html, color){
   let hoja = $('#hoja');
-  if(!hoja){ hoja = document.createElement('div'); hoja.id = 'hoja'; hoja.className = 'hoja'; hoja.onclick = e => { if(e.target === hoja) cerrarHojaX(); }; document.body.appendChild(hoja); }
+  if(!hoja){ hoja = document.createElement('div'); hoja.id = 'hoja'; hoja.className = 'hoja'; hoja.onclick = e => { if(e.target === hoja && Date.now() - hojaMovidaEn > 400) cerrarHojaX(); }; document.body.appendChild(hoja); }
   const nueva = !hoja.classList.contains('ver');
-  hoja.innerHTML = `<div class="hoja-in accion" style="--c:${color}"><button class="hoja-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button>${html}</div>`;
+  const pos = !nueva && hoja.querySelector('.hoja-in') ? hoja.querySelector('.hoja-in').style.transform : '';
+  hoja.innerHTML = `<div class="hoja-in accion" style="--c:${color}"><div class="hoja-asa" title="Arrastra para mover la ventana" onmousedown="hojaArrastrar(event)"><svg viewBox="0 0 24 12" width="26" height="13" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.8"/><circle cx="12" cy="3" r="1.8"/><circle cx="19" cy="3" r="1.8"/><circle cx="5" cy="9" r="1.8"/><circle cx="12" cy="9" r="1.8"/><circle cx="19" cy="9" r="1.8"/></svg></div><button class="hoja-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button>${html}</div>`;
+  if(pos) hoja.querySelector('.hoja-in').style.transform = pos;   // si ya la habías movido, se queda donde estaba
   if(nueva) requestAnimationFrame(() => hoja.classList.add('ver'));
+}
+/* Mover la ventana con los seis puntitos (Gustavo): se arrastra a cualquier parte de la pantalla, sin salirse */
+let hojaMovidaEn = 0;
+function hojaArrastrar(ev){
+  const h = ev.target.closest('.hoja-in'); if(!h || ev.button !== 0) return;
+  ev.preventDefault();
+  const m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(h.style.transform || ''), x0 = m ? +m[1] : 0, y0 = m ? +m[2] : 0;
+  const r = h.getBoundingClientRect(), sx = ev.clientX, sy = ev.clientY;
+  h.style.transition = 'none'; document.body.classList.add('moviendo');
+  const mover = e => {
+    const dx = Math.max(-r.left, Math.min(innerWidth - r.right, e.clientX - sx)), dy = Math.max(-r.top, Math.min(innerHeight - r.top - 60, e.clientY - sy));
+    h.style.transform = `translate(${x0 + dx}px, ${y0 + dy}px)`;
+  };
+  const soltar = () => { removeEventListener('mousemove', mover); removeEventListener('mouseup', soltar); h.style.transition = ''; document.body.classList.remove('moviendo'); hojaMovidaEn = Date.now(); };
+  addEventListener('mousemove', mover); addEventListener('mouseup', soltar);
 }
 function cerrarHoja(){ hojaAbierta = null; const h = $('#hoja'); if(h){ h.id = ''; h.classList.remove('ver'); setTimeout(() => h.remove(), 300); } }
 const cerrarPetalo = cerrarHoja;
@@ -3191,12 +3220,7 @@ function popBorrar(id, k){
     <button class="btn peligro" onclick="popBorrar2('${id}','${k}', true)">${hab ? 'Todo el hábito' : 'Todas las veces'}</button>
     <button class="btn sec" onclick="this.closest('#ep-conf').innerHTML = ''">Cancelar</button></div></div>`;
 }
-function popBorrar2(id, k, todo){
-  const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
-  if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas = (D.borradas || []).concat(e.id); aviso('Borrado del calendario'); }
-  else { e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO(); aviso('Quitado ese día'); }
-  guardar(); popCerrarTodo(); rerenderDia();
-}
+function popBorrar2(id, k, todo){ popCerrarTodo(); borrarDelCalendario(id, k, todo); }
 /* con el ratón encima de una tarea durante un segundo, también sale su tarjeta */
 document.addEventListener('mouseover', e => {
   if(!ESCRITORIO.matches || !matchMedia('(hover: hover)').matches) return;
@@ -3392,10 +3416,8 @@ function borrarEvento(){
   borrarEvento2(true);
 }
 function borrarEvento2(todo){
-  const e0 = evEd, A = AG_(), e = e0 && A.eventos.find(x => x.id === e0.id); if(!e) return;
-  if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas.push(e.id); aviso('Borrado del calendario'); }
-  else { e.saltar = [...new Set([...(e.saltar || []), e0.k])]; e.mod = ahoraISO(); aviso('Quitado ese día'); }
-  guardar(); evEd = null; cerrarHoja(); rerenderDia();
+  const e0 = evEd; if(!e0) return;
+  evEd = null; cerrarHoja(); borrarDelCalendario(e0.id, e0.k, todo);
 }
 function salirEvento(){ evEd = null; cerrarHoja(); }
 function alternarEv(id, k, desdeHoja){
@@ -4509,11 +4531,26 @@ let tToast;
 function aviso(t, ms = 2400){ const el = $('#toast'); accionDeshacer = null; el.textContent = t; el.classList.remove('con-boton'); el.classList.add('ver'); clearTimeout(tToast); tToast = setTimeout(() => el.classList.remove('ver'), ms); }
 /* Aviso de 4 segundos con «Deshacer», por si se ha tocado sin querer */
 let accionDeshacer = null;
-function avisoDeshacer(t, fn){
+function avisoDeshacer(t, fn, ms = 4000){
   const el = $('#toast'); accionDeshacer = fn;
-  el.innerHTML = `<span>${esc(t)}</span><button type="button" onclick="deshacer()">Deshacer</button>`;
+  el.innerHTML = `<span>${esc(t)}</span><button type="button" onclick="deshacer()">Deshacer</button><button type="button" class="toast-x" aria-label="Cerrar" onclick="cerrarToast()">${ICO_CRUZ}</button>`;
   el.classList.add('ver', 'con-boton'); clearTimeout(tToast);
-  tToast = setTimeout(() => { accionDeshacer = null; el.classList.remove('ver'); }, 4000);
+  tToast = setTimeout(() => { accionDeshacer = null; el.classList.remove('ver'); }, ms);
+}
+function cerrarToast(){ accionDeshacer = null; clearTimeout(tToast); $('#toast').classList.remove('ver'); }
+/* Borrar algo del calendario: todo, o solo un día; con «Deshacer» durante 5 segundos */
+function borrarDelCalendario(id, k, todo){
+  const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
+  const hab = e.tipo === 'habito', copia = JSON.parse(JSON.stringify(e)), d = fechaDe(k);
+  if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas = (D.borradas || []).concat(e.id); }
+  else { e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO(); }
+  guardar(); rerenderDia();
+  avisoDeshacer(todo ? (hab ? 'Hábito eliminado' : e.t === SIN_TITULO ? 'Tarea eliminada' : `«${e.t.length > 28 ? e.t.slice(0, 27) + '…' : e.t}» eliminada`) : `Quitado el ${d.getDate()} de ${MESES[d.getMonth()]}`, () => {
+    const B = AG_();
+    if(todo){ D.borradas = (D.borradas || []).filter(b => b !== copia.id); if(!B.eventos.some(x => x.id === copia.id)) B.eventos.push(Object.assign(copia, {mod: ahoraISO()})); }
+    else { const x = B.eventos.find(z => z.id === id); if(x){ x.saltar = (x.saltar || []).filter(z => z !== k); x.mod = ahoraISO(); } }
+    guardar(); rerenderDia(); aviso(hab ? 'Hábito recuperado' : 'Tarea recuperada');
+  }, 5000);
 }
 function deshacer(){
   const fn = accionDeshacer; accionDeshacer = null;
