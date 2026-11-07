@@ -1044,7 +1044,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.73';
+const VERSION = 'v3.74';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3969,6 +3969,7 @@ async function buscarActualizacion(manual){
         aviso('Actualizando a la ' + m[1] + '…');
         try{ const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); }catch(e){}
         try{ const r = await navigator.serviceWorker.getRegistration(); if(r) await r.update(); }catch(e){}
+        try{ sessionStorage.setItem('equilibra.sinPortada', '1'); }catch(e){}   // al volver, sin repetir la flor de entrada
         recargando = true; setTimeout(() => location.reload(), 600);
       }
     } else if(manual && est) est.textContent = '✓ Tienes la última versión de la web (' + VERSION + ')' + (appVieja() ? ' · hay una app Android nueva: ' + APK_ULTIMA : '');
@@ -4200,6 +4201,9 @@ addEventListener('growpanel-listo', enviarResumen);
 
   // Portada: la flor abre sus pétalos con una nota por pétalo
   const splash = $('#splash');
+  let sinPortada = false; try{ sinPortada = sessionStorage.getItem('equilibra.sinPortada') === '1'; sessionStorage.removeItem('equilibra.sinPortada'); }catch(e){}
+  if(sinPortada) splash.remove();
+  else {
   for(let k = 0; k < 18; k++){
     const c = document.createElement('i'); c.className = 'chispa';
     const ang = Math.random()*Math.PI*2, dist = 90 + Math.random()*120;
@@ -4247,6 +4251,7 @@ addEventListener('growpanel-listo', enviarResumen);
     if(sonada || !sonidoOn) cerrar();
     else $('#tocar').classList.add('ver');
   }, 2600);
+  }
 
   iniciarNube();
   iniciarSalud();
@@ -4266,7 +4271,8 @@ addEventListener('growpanel-listo', enviarResumen);
     const habia = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {});
     // si entra un service worker nuevo (versión nueva), se recarga una vez para mostrarla
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if(habia && !recargando){ recargando = true; location.reload(); } });
+    // (antes recargaba siempre y la flor de entrada salía dos veces, aunque la página ya fuera la nueva: ahora solo si hace falta)
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if(habia && !recargando) buscarActualizacion(false); });
   }
   setTimeout(() => buscarActualizacion(false), 4000);
 })();
