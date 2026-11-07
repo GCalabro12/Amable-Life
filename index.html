@@ -409,11 +409,23 @@ body.pip .f-pact{margin-top:6px;padding:6px}
 /* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
 body.pip{padding:6px;overflow-x:hidden;overflow-y:auto}
 body.pip .ahora-blk{margin:0;zoom:.72}
-body.pip .foco-tit,body.pip .btn.sec.btn-compro{display:none}
+body.pip .btn.sec.btn-compro{display:none}
 .pip-cab{display:flex;align-items:center;gap:8px;margin:0 0 6px 2px;font-weight:800;font-size:16px;color:#f4f0fb}
 .pip-cab svg{width:24px;height:24px;flex:none}
-.pip-ver{margin-left:auto;margin-right:4px;font-size:11px;font-weight:600;color:#a99cc4}
-.pip-petalos{display:flex;gap:6px;overflow-x:auto;margin-top:5px;padding-bottom:3px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.pip-ver{margin:8px 0 2px;text-align:center;font-size:11px;font-weight:600;color:#a99cc4}
+.pip-pet-fila{display:flex;align-items:center;gap:4px;margin-top:5px}
+.pip-petalos{position:relative;flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;scroll-behavior:smooth}
+.pip-petalos::-webkit-scrollbar{display:none}
+.pip-fl{flex:none;width:28px;height:28px;border:0;border-radius:50%;background:rgba(var(--bl),.14);color:#f4f0fb;font:inherit;font-size:18px;font-weight:800;line-height:1;cursor:pointer}
+.pip-fl:active{background:rgba(var(--bl),.26)}
+body.pip .btn.btn-avisos{display:flex;width:100%;margin-top:8px;padding:8px 10px;font-size:12.5px}
+body.pip .hechas-blk{zoom:.72}
+.pip-avisos{--c:#8b5cf6;margin-top:6px;padding:4px 8px 10px;border-radius:12px;background:rgba(var(--bl),.06);font-size:13px}
+.pip-avisos .av-lista{gap:10px;margin-top:6px}
+.pip-avisos .av-lista .desliz{font-size:13px}
+body.pip .hechas-blk{margin-top:8px;padding:8px 10px}
+body.pip .hechas-blk h3{font-size:12px}
+body.pip .hb-fila .check{pointer-events:auto}
 .pip-petalos .chip{flex:none;scroll-snap-align:start;font-size:12px;padding:5px 10px}
 .pip-nueva{display:flex;gap:6px;margin-top:6px}
 .pip-nueva input{flex:1;min-width:0;padding:8px 10px;border:2px solid #e0323a;border-radius:10px;background:rgba(var(--bl),.06);color:#f4f0fb;font:inherit;font-size:13px;outline:none}
@@ -465,7 +477,24 @@ html:not(.claro) .ver-est.ok{color:#4ade80}
 .ver-fila{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:16px}
 .ver-fila b{font-size:18px;color:var(--oro)}
 .ahora-blk{margin:12px 0 0;padding:14px 12px;border:2px solid #e0323a;border-radius:20px;background:rgba(247,195,91,.08);transition:background .15s,box-shadow .15s}
-.foco-tit{font-size:24px;font-weight:800;margin:14px 0 0}
+.foco-tit{font-size:24px;font-weight:800;margin:14px 0 0;color:var(--oro)}
+.aro-punto{animation:aroParpadea 1s ease-in-out infinite}
+@keyframes aroParpadea{0%,100%{opacity:1}50%{opacity:.15}}
+@media (prefers-reduced-motion:reduce){.aro-punto{animation:none}}
+.btn.sec.btn-avisos{background:var(--tarjeta);box-shadow:0 0 0 1px rgba(var(--bl),.1)}
+.btn-avisos{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-variant-numeric:tabular-nums}
+.btn-avisos .on{color:#16a34a}
+html:not(.claro) .btn-avisos .on{color:#4ade80}
+.btn-avisos .off{color:#dc2626}
+html:not(.claro) .btn-avisos .off{color:#f87171}
+.hechas-blk{margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--tarjeta);box-shadow:0 0 0 1px rgba(var(--bl),.1)}
+.hechas-blk h3{margin:0 0 6px;font-size:14px;font-weight:800;color:var(--suave)}
+.hechas-blk .ev-blk{margin:4px 0}
+.hb-fila{--c:#22a35a;display:flex;align-items:center;gap:10px;padding:5px 0}
+.hb-fila .check.cuadro{width:28px;height:28px;flex:none}
+.hb-t{flex:1;min-width:0;text-decoration:line-through;opacity:.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-a{flex:none;font-size:12px;color:var(--suave);display:inline-flex;align-items:center;gap:4px}
+.av-todos{padding-top:12px;border-top:1px solid rgba(var(--bl),.14)}
 .ahora-blk.fuera{border:0;background:rgba(139,92,246,.1)}
 .ahora-blk.drop-ok{background:rgba(247,195,91,.22);box-shadow:inset 0 0 0 3px var(--oro)}
 .ah-cab{display:flex;align-items:center;gap:12px}
@@ -483,9 +512,20 @@ html:not(.claro) .ver-est.ok{color:#4ade80}
 .cuenta-fila{display:flex;align-items:center;gap:12px;margin-top:10px}
 .ah-tit{font-size:19px;color:#dc2626;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ahora-blk:not(.fuera){position:relative;background:linear-gradient(rgba(247,195,91,.08),rgba(247,195,91,.08)),var(--fondo);box-shadow:0 0 0 4px rgba(239,68,68,.12),0 0 28px rgba(239,68,68,.35);animation:focoLate 3s ease-in-out infinite}
-.ahora-blk:not(.fuera)::before{content:'';position:absolute;inset:-30px -14px;z-index:-1;border-radius:40px;pointer-events:none;
-  background:repeating-conic-gradient(from 0deg,rgba(239,68,68,.6) 0deg 6deg,transparent 6deg 15deg);
-  -webkit-mask:radial-gradient(farthest-side,#000 78%,transparent 100%);mask:radial-gradient(farthest-side,#000 78%,transparent 100%)}
+/* 4.51: los rayos, en una capa fija que llega a los bordes de la pantalla (pintarRayos) */
+#foco-rayos{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at var(--cx,50%) var(--cy,50%),rgba(239,68,68,.3) 0deg 6deg,transparent 6deg 15deg);
+  -webkit-mask:radial-gradient(circle at var(--cx,50%) var(--cy,50%),#000 0,#000 260px,rgba(0,0,0,.4) 100%);mask:radial-gradient(circle at var(--cx,50%) var(--cy,50%),#000 0,#000 260px,rgba(0,0,0,.4) 100%);
+  animation:rayosLate 3s ease-in-out infinite}
+@keyframes rayosLate{0%,100%{opacity:.75}50%{opacity:1}}
+.disco.grande.aro{position:relative}
+.disco.grande.aro b{position:relative;z-index:1}
+.flecha-aro{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:rotate(calc((100 - var(--p,0)) * 3.6deg))}
+.flecha-aro .fl-g{filter:drop-shadow(0 0 1.2px rgba(0,0,0,.6));animation:flechaSale 2.6s linear infinite}
+.flecha-aro .fl-m{stroke-dasharray:100;stroke-dashoffset:100;animation:flechaCrece 2.6s ease-in-out infinite}
+@keyframes flechaCrece{0%{stroke-dashoffset:100}55%,100%{stroke-dashoffset:0}}
+@keyframes flechaSale{0%,72%{opacity:1}88%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.flecha-aro .fl-m{animation:none;stroke-dashoffset:0}.flecha-aro .fl-g{animation:none}#foco-rayos{animation:none}}
 @keyframes focoLate{0%,100%{box-shadow:0 0 0 4px rgba(239,68,68,.12),0 0 22px rgba(239,68,68,.3)}50%{box-shadow:0 0 0 7px rgba(239,68,68,.18),0 0 38px rgba(239,68,68,.5)}}
 .ahora-blk .ah-tit,html.claro .ahora-blk .ah-tit{color:#dc2626!important;font-weight:900}
 .pet-desp{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
@@ -1234,6 +1274,20 @@ body.pip .ev-mini{pointer-events:none}
 .s-flecha svg{width:32px;height:32px;transition:transform .2s}
 .s-flecha.abierta svg{transform:rotate(180deg)}
 .salud-tiles .salud-sec{margin:0}
+.s-tile .s-svg{width:30px;height:30px;flex:none}
+@media (min-width:900px){
+  body.v-salud .envoltura{max-width:1100px}
+  body.v-salud .salud-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:18px 0 12px}
+  body.v-salud .s-tile{order:0;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:12px;padding:28px 22px 18px;min-height:300px;border:2px solid var(--c);border-radius:26px}
+  body.v-salud .s-tile .s-svg{width:56px;height:56px}
+  body.v-salud .s-tile b{font-size:38px}
+  body.v-salud .s-tile small{font-size:13px}
+  body.v-salud .s-tile .s-txt{align-items:center;flex:none;gap:6px}
+  body.v-salud .s-tile .s-est{font-size:16px}
+  body.v-salud .s-tile .desliz{align-self:center;margin-top:8px}
+  body.v-salud .s-tile .s-flecha{margin-top:auto}
+  body.v-salud .salud-tiles .salud-sec{order:1;grid-column:1/-1}
+}
 .asa{flex:none;align-self:stretch;display:flex;align-items:center;padding:0 6px;margin:0 -8px 0 -10px;color:rgba(255,255,255,.42);cursor:grab;touch-action:none}
 .otra .asa{margin:0 2px 0 -6px}
 .arrastrando{position:relative;z-index:5;animation:none!important;opacity:.95;box-shadow:0 14px 34px rgba(0,0,0,.5);background-color:#2a1f52}
@@ -1336,9 +1390,16 @@ nav.abajo button{font-size:11px}
   -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px))}
 .disco.aro::before{inset:-4px;-webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px))}
 .tira-blk{position:relative;padding:8px calc(50% - 32px) 10px;scroll-snap-type:none}
-input.blk-barra{-webkit-appearance:none;appearance:none;display:block;width:100%;height:30px;margin:6px 0 0;padding:0;background:transparent;touch-action:none;cursor:pointer}
-input.blk-barra::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:rgba(var(--bl),.18)}
-input.blk-barra::-moz-range-track{height:6px;border-radius:3px;background:rgba(var(--bl),.18)}
+input.blk-barra{-webkit-appearance:none;appearance:none;display:block;position:relative;z-index:1;width:100%;height:30px;margin:0;padding:0;background:transparent;touch-action:none;cursor:pointer}
+input.blk-barra::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:transparent}
+input.blk-barra::-moz-range-track{height:6px;border-radius:3px;background:transparent}
+.blk-barra-caja{position:relative;margin:6px 0 0}
+.blk-riel{position:absolute;left:12px;right:12px;top:50%;height:6px;margin-top:-3px;border-radius:3px;background:rgba(var(--bl),.18)}
+.blk-riel::before,.blk-riel::after{content:'';position:absolute;top:0;width:12px;height:6px;border-radius:3px;background:rgba(var(--bl),.18)}
+.blk-riel::before{left:-12px}.blk-riel::after{right:-12px}
+.blk-riel i{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:rgba(var(--bl),.42)}
+.blk-riel i.ya{width:14px;height:14px;margin:-7px 0 0 -7px;background:#e0323a;box-shadow:0 0 0 2px var(--fondo)}
+.volver-ahora{display:block;margin:4px auto 6px;font-weight:700}
 input.blk-barra::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border:0;border-radius:50%;background:var(--oro);box-shadow:0 1px 6px rgba(0,0,0,.5)}
 input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;background:var(--oro)}
 .disco{flex:none;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(122,67,16,.3) 1px,transparent 1.4px) 0 0/6px 6px,radial-gradient(circle,#ffe59a 0,#f7b733 55%,#c9741a 100%)}
@@ -1560,7 +1621,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.50';
+const VERSION = 'v4.51';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1841,13 +1902,15 @@ function render(){
   document.body.classList.toggle('v-premium', vista === 'premium');
   document.body.classList.toggle('h12', !!fPref.h12);
   document.body.classList.toggle('v-estad', vista === 'estad');
-  document.body.classList.toggle('v-dia', vista === 'dia');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
+  document.body.classList.toggle('v-dia', vista === 'dia');
+  document.body.classList.toggle('v-salud', vista === 'salud');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || ((vista === 'estad' || vista === 'premium') && b.dataset.v === 'ajustes')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
   ponerVersiones();
   ajustarFoco();
   if(vista === 'dia') centrarBloque();
+  pintarRayos();
   pintarFlotante();
 }
 /* La tarea en la que te enfocas, siempre en un solo renglón: se achica la letra hasta que quepa */
@@ -1887,6 +1950,7 @@ async function abrirFlotante(){
   // los botones llaman a las funciones de la ventana principal
   d.addEventListener('click', e => { const el = e.target.closest('[data-onclick]'); if(el) Function('event', el.dataset.onclick).call(el, e); });
   d.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'pip-nueva') anadirDesdeFlotante(); });
+  d.addEventListener('change', e => { const el = e.target.closest('[data-onchange]'); if(el) Function('event', el.dataset.onchange).call(el, e); });
   pipWin.addEventListener('pagehide', () => { pipWin = null; });
   if(!pipToast){ pipToast = new MutationObserver(copiarToast); pipToast.observe($('#toast'), {attributes: true, childList: true, subtree: true, characterData: true}); }
   pipWin.setInterval(tickFlotante, 1000);
@@ -1899,13 +1963,26 @@ function pintarFlotante(){
   // lo que estés escribiendo no se pierde al redibujar
   const viejo = d.getElementById('pip-nueva'), escrito = viejo ? viejo.value : '', conFoco = !!viejo && d.activeElement === viejo;
   const fila = d.querySelector('.pip-petalos'), desliz = fila ? fila.scrollLeft : 0;
-  const petalos = [...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo'))
+  const petalos = pipAreas()
     .map(x => `<button class="chip ${x.id === pipArea ? 'sel' : ''}" style="--c:${x.color}" onclick="pipArea='${x.id}'; pintarFlotante()">${ico(x)} ${x.corto}</button>`).join('');
-  d.body.innerHTML = (`<div class="pip-cab">${logoSVG()}<b>Amable Life</b><span class="pip-ver">web ${VERSION.replace(/^v/, '')}</span></div>` + seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div><div class="pip-petalos">${petalos}</div>` : '')
-    + '<div id="toast"></div>').replace(/ onclick=/g, ' data-onclick=');
+  d.body.innerHTML = (`<div class="pip-cab">${logoSVG()}<b>Amable Life</b></div>` + seccionAhora() + (cabe ? `<div class="pip-nueva"><input id="pip-nueva" maxlength="120" placeholder="Nueva tarea para este bloque" autocomplete="off"><button type="button" aria-label="Añadir al bloque" onclick="anadirDesdeFlotante()">＋</button></div>
+      <div class="pip-pet-fila"><div class="pip-petalos">${petalos}</div><button type="button" class="pip-fl" aria-label="Pétalo anterior" onclick="pipPetalo(-1)">‹</button><button type="button" class="pip-fl" aria-label="Pétalo siguiente" onclick="pipPetalo(1)">›</button></div>` : '')
+    + botonAvisosHTML() + (pipAvisos ? `<div class="pip-avisos">${avisosFocusHTML()}</div>` : '')
+    + `<div class="pip-ver">web ${VERSION.replace(/^v/, '')}</div><div id="toast"></div>`).replace(/ onclick=/g, ' data-onclick=').replace(/ onchange=/g, ' data-onchange=')
+    .replace('data-onclick="abrirAvisos()"', 'data-onclick="pipAvisos = !pipAvisos; pintarFlotante()"');
   const nuevo = d.getElementById('pip-nueva'); if(nuevo){ nuevo.value = escrito; if(conFoco) nuevo.focus(); }
-  const filaN = d.querySelector('.pip-petalos'); if(filaN) filaN.scrollLeft = desliz;
+  const filaN = d.querySelector('.pip-petalos');
+  if(filaN){ filaN.scrollLeft = desliz;
+    const ch = filaN.querySelector('.chip.sel');   // el pétalo elegido, siempre a la vista
+    if(ch){ const l = ch.offsetLeft; if(l < filaN.scrollLeft) filaN.scrollLeft = l; else if(l + ch.offsetWidth > filaN.scrollLeft + filaN.clientWidth) filaN.scrollLeft = l + ch.offsetWidth - filaN.clientWidth; } }
   ajustarFoco(d); copiarToast();
+}
+/* 4.51 (Gustavo): en la flotante, flechas para pasar de pétalo en lugar de la barra de desplazamiento */
+const pipAreas = () => [...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo'));
+let pipAvisos = false;   // el desplegable de los avisos de Focus en la flotante
+function pipPetalo(d){
+  const ids = pipAreas().map(x => x.id), i = ids.indexOf(pipArea);
+  pipArea = ids[(i + d + ids.length) % ids.length]; pintarFlotante();
 }
 function copiarToast(){
   const t = pipWin && pipWin.document.getElementById('toast'), m = $('#toast'); if(!t || !m) return;
@@ -1917,6 +1994,7 @@ function tickFlotante(){
   d.querySelectorAll('.cuenta-atras').forEach(e => { e.textContent = fmtCuenta(+e.dataset.fin); });
   d.querySelectorAll('.pact-cuenta').forEach(e => { e.textContent = txtCompromiso(+e.dataset.hasta); });
   d.querySelectorAll('.aro[data-ini]').forEach(e => e.style.setProperty('--p', progresoBloque(+e.dataset.ini, +e.dataset.fin).toFixed(1)));
+  const av = d.getElementById('av-estado'); if(av) av.textContent = txtAvisos();
   if(document.hidden) segundero();   // con la ventana principal minimizada, sus relojes van lentos: manda la flotante
 }
 function animarArenaPip(){
@@ -2106,10 +2184,9 @@ function vInicio(){
   const actsAhora = c >= 0 ? actsDe(hoyK(), c) : [];
   const tuNombre = nombrePila();
   let h = `${bannerApp()}
-    <div class="av-fila" style="margin-top:14px"><button class="avisos-btn" type="button" aria-label="Cambiar los avisos" onclick="abrirAvisos()"><span id="av-estado" class="${pausa.tareas ? 'off' : 'on'}">${txtAvisos()}</span>${ICO_LAPIZ}</button>
-      ${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
+    ${hayFlotante() ? `<div class="av-fila" style="margin-top:14px;justify-content:flex-end"><button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button></div>` : '<div style="height:14px"></div>'}
     ${seccionAhora()}
-    <button class="btn sec ancho" style="margin-top:14px" onclick="abrirNueva()">＋ Nueva tarea</button>
+    ${botonAvisosHTML()}
     ${listaSinAsignar()}`;
   return h;
 }
@@ -2127,8 +2204,11 @@ function progresoBloque(ini, fin){
   const d = new Date(), m = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
   return Math.max(0, Math.min(100, (m - ini) / (fin - ini) * 100));
 }
+/* Dónde va el punto del aro: arriba al empezar y en el sentido del reloj */
+function puntoAro(p, r){ const a = p * 3.6 * Math.PI / 180; return {x: (r * Math.sin(a)).toFixed(2), y: (-r * Math.cos(a)).toFixed(2)}; }
 function avanzarAros(){
   let acabado = false;
+  document.querySelectorAll('.aro-punto').forEach(c => { const q = puntoAro(progresoBloque(+c.dataset.ini, +c.dataset.fin), +c.dataset.r); c.setAttribute('cx', q.x); c.setAttribute('cy', q.y); });
   document.querySelectorAll('.aro-tiempo').forEach(c => { const p = progresoBloque(+c.dataset.ini, +c.dataset.fin); if(p >= 100) acabado = true; c.setAttribute('stroke-dasharray', p.toFixed(2) + ' 100'); });
   document.querySelectorAll('.aro[data-ini]').forEach(e => { const p = progresoBloque(+e.dataset.ini, +e.dataset.fin); if(p >= 100) acabado = true; e.style.setProperty('--p', p.toFixed(1)); });
   if(acabado && !$('#hoja') && ['inicio', 'dia'].includes(vista)){ const y = window.scrollY; render(); window.scrollTo(0, y); }
@@ -2175,22 +2255,44 @@ function seccionAhora(){
   };
   // arriba solo la tarea en la que estás (la primera sin hacer); debajo las demás pendientes; las hechas al final, tachadas
   const orden = acts.map((a, i) => ({a, i})), pend = orden.filter(o => !hechaAct(o.a)), hechas = orden.filter(o => hechaAct(o.a));
-  const lista = pend.map((o, k) => fila(o.a, o.i, k === 0)).join('') + hechas.map(o => fila(o.a, o.i, false)).join('');
+  const lista = pend.map((o, k) => fila(o.a, o.i, k === 0)).join('');   // 4.51: las hechas van fuera del recuadro (hechasBloqueHTML)
+  const evPend = evsBloqueHTML(hoyK(), b, 'pend');
   const p = progresoBloque(b.ini, b.fin).toFixed(1);
   return `<section class="ahora-blk" data-drop="ahora">
     <div class="ah-cab"><b class="ah-tit">FOCUS · bloque · ${hm(b.ini)} – ${hm(b.fin)}</b></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
-      <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true"><b>${pend.length}</b></span></div>
-    ${evsBloqueHTML(hoyK(), b)}
-    ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
-    ${acts.length ? `<div class="prox-lista">${lista}</div>`
+      <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<b>${pend.length}</b></span></div>
+    ${pend.length || evPend ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
+    ${evPend}
+    ${pend.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}
     ${compromisoHTML(pend)}
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
-    ${avisoCalendario()}
-  </section>`;
+  </section>${hechasBloqueHTML(c)}`;
+}
+/* 4.51 (Gustavo): lo completado en el bloque de ahora sale debajo, fuera del recuadro rojo: las tareas tachadas
+   (también las que ya se archivaron) y lo del calendario hecho. Tocar la casilla lo vuelve a dejar pendiente */
+function hechasBloqueHTML(c){
+  const b = BLOQUES[c], k = hoyK(), cero = new Date().setHours(0, 0, 0, 0), t0 = cero + b.ini * 60000, t1 = cero + b.fin * 60000;
+  const filas = [];
+  actsDe(k, c).forEach((a, i) => { if(a.d && !a.acc) filas.push({t: a.t, ar: null, fn: `alternarActAhora(${i})`}); });
+  D.acciones.filter(x => x.hecha && x.hechaEn && +new Date(x.hechaEn) >= t0 && +new Date(x.hechaEn) < t1)
+    .sort((x, y) => x.hechaEn < y.hechaEn ? 1 : -1)
+    .forEach(x => filas.push({t: x.texto, ar: x.area ? areaDe(x.area) : null, fn: `deshacerHecha('${x.id}')`}));
+  const evs = evsBloqueHTML(k, b, 'hechos');
+  if(!filas.length && !evs) return '';
+  return `<section class="hechas-blk"><h3>Completadas en este bloque</h3>${evs}
+    ${filas.map(f => `<div class="hb-fila"><button class="check cuadro hecho" aria-label="Desmarcar" onclick="${f.fn}">✓</button><span class="hb-t">${esc(f.t)}</span>${f.ar ? `<span class="hb-a">${ico(f.ar)} ${f.ar.corto}</span>` : ''}</div>`).join('')}</section>`;
+}
+/* Desmarcar una tarea completada en el bloque: vuelve a estar pendiente y, si cabe, vuelve al bloque de ahora */
+function deshacerHecha(id){
+  const x = D.acciones.find(a => a.id === id); if(!x) return;
+  if(!x.area){ alternarAccion(id); return; }   // las sin pétalo vuelven solas al bloque
+  const c = bloqueAhora(), acts = c >= 0 ? actsDe(hoyK(), c, true) : null, enBloque = acts && acts.some(a => a.acc === id);
+  alternarAccion(id);
+  if(acts && !enBloque && acts.length < MAX_ACT){ acts.unshift({t: x.texto, d: false, acc: id}); guardarBloques(); refrescarFocus(); }
 }
 /* ---------- Resumen diario para Grow Panel (registro diario de las apps Amable, en Cloudflare) ----------
    Opcional y apagado de entrada. Con tu clave personal de Grow Panel, una vez al día se envían SOLO números:
@@ -2628,8 +2730,11 @@ function florGirasol(niveles, bloque, pendientesN){
     s += `<g transform="rotate(${i*paso}) translate(0 ${-R0 + 8})"><path d="${petalo(Lp, 38)}" fill="${a.color}" fill-opacity="${sel && !nv ? .5 : op}" ${extra}/></g>`;
   });
   s += `<circle r="${R0}" fill="url(#centro${n})"/><circle r="${R0}" fill="url(#semillas${n})"/>`;
-  if(bloque && bloque.actual) s += `<circle r="${R0 + 3}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="6"/>
-    <circle class="aro-tiempo" data-ini="${bloque.ini}" data-fin="${bloque.fin}" r="${R0 + 3}" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" pathLength="100" stroke-dasharray="${progresoBloque(bloque.ini, bloque.fin).toFixed(2)} 100" transform="rotate(-90)"/>`;
+  // 4.51 (Gustavo): lo que falta del bloque, en verde; lo pasado, en rojo; y un punto rojo que parpadea donde va el tiempo
+  if(bloque && bloque.actual){ const pa = progresoBloque(bloque.ini, bloque.fin), pp = puntoAro(pa, R0 + 3);
+    s += `<circle r="${R0 + 3}" fill="none" stroke="#22a35a" stroke-width="6"/>
+    <circle class="aro-tiempo" data-ini="${bloque.ini}" data-fin="${bloque.fin}" r="${R0 + 3}" fill="none" stroke="#e0323a" stroke-width="6" pathLength="100" stroke-dasharray="${pa.toFixed(2)} 100" transform="rotate(-90)"/>
+    <circle class="aro-punto" data-ini="${bloque.ini}" data-fin="${bloque.fin}" data-r="${R0 + 3}" cx="${pp.x}" cy="${pp.y}" r="6" fill="#e0323a" stroke="#fff" stroke-width="2"/>`; }
   if(bloque){
     // BLOQUE · 16:00 – 17:30 (en una línea) · primera tarea · +N con el icono de tarea
     const tareas = bloque.tareas || [], resto = tareas.length - 1;
@@ -3120,8 +3225,8 @@ function agendaDia(k){
   return {eventos_hoy: evs.length, horas_agenda_hoy: Math.round(min / 60 * 100) / 100, eventos_hechos: evs.filter(e => hechoEv(e, k) || pasadoEv(e, k)).length};
 }
 /* Lo del calendario que cae dentro de un bloque (en Tareas y en Focus) */
-function evsBloqueHTML(k, b){
-  const es = eventosDe(k).filter(e => !e.todo && e.ini < b.fin && e.fin > b.ini); if(!es.length) return '';
+function evsBloqueHTML(k, b, que){
+  const es = eventosDe(k).filter(e => !e.todo && e.ini < b.fin && e.fin > b.ini && (!que || (que === 'hechos') === !!hechoEv(e, k))); if(!es.length) return '';
   return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${broteEv(e)}${campEv(e)}${esc(e.t)}</span></button>`).join('')}</div>`;
 }
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
@@ -4652,6 +4757,21 @@ function tiraBloque(){
   else txt = `<b>${m >= 1320 ? 'Hora de descansar 🌙' : 'Tu día empieza a las 5:30'}</b><span>Planifica tus bloques de mañana</span>`;
   return `<button class="tira-bloque" onclick="ir('dia')"><span class="tb-ico">⏱</span><span class="tb-txt">${txt}</span><span class="flecha">›</span></button>`;
 }
+/* 4.51 (Gustavo): en el círculo de Focus, una flecha medio curva y de punta fina que se va dibujando por el rojo
+   hasta donde empieza el verde (el lado que avanza) y desaparece, en bucle. Se dibuja con la raya en lo alto y se gira con --p */
+const FLECHA_ARO = '<svg class="flecha-aro" viewBox="0 0 86 86" aria-hidden="true"><defs><mask id="flecha-m" maskUnits="userSpaceOnUse" x="0" y="0" width="86" height="86"><path class="fl-m" d="M69.85 27.50 A31 31 0 0 0 38.15 12.38" fill="none" stroke="#fff" stroke-width="14" pathLength="100"/></mask></defs><g class="fl-g" mask="url(#flecha-m)"><path d="M68.99 25.47 L67.77 23.70 L66.45 22.01 L65.02 20.40 L63.48 18.87 L61.85 17.45 L60.12 16.13 L58.30 14.93 L56.39 13.84 L54.41 12.88 L52.36 12.05 L50.26 11.36 L48.10 10.80 L48.57 7.84 L40.30 12.12 L47.13 16.93 L47.60 13.96 L49.60 14.21 L51.59 14.61 L53.55 15.14 L55.48 15.82 L57.37 16.63 L59.20 17.58 L60.96 18.66 L62.64 19.86 L64.24 21.19 L65.75 22.64 L67.14 24.20 L68.41 25.86Z" fill="#fff"/></g></svg>';
+/* 4.51 (Gustavo): los rayos de Focus llegan hasta los bordes de la pantalla. Capa fija detrás de todo, centrada en el bloque */
+function pintarRayos(){
+  const blk = vista === 'inicio' ? document.querySelector('#app .ahora-blk:not(.fuera)') : null;
+  let r = document.getElementById('foco-rayos');
+  if(!blk){ if(r) r.remove(); return; }
+  if(!r){ r = document.createElement('div'); r.id = 'foco-rayos'; r.setAttribute('aria-hidden', 'true'); document.body.prepend(r); }
+  const b = blk.getBoundingClientRect();
+  r.style.setProperty('--cx', (b.left + b.width / 2).toFixed(0) + 'px');
+  r.style.setProperty('--cy', (b.top + b.height / 2).toFixed(0) + 'px');
+}
+addEventListener('scroll', pintarRayos, {passive: true});
+addEventListener('resize', pintarRayos);
 /* Una vez al día: pasar a los bloques lo que hay en el calendario */
 function avisoCalendario(){
   if(D.calRevisado === hoyK()) return '';
@@ -4685,7 +4805,9 @@ function vDia(){
     </div><div class="dia-der">
     ${panelArea()}
     <div class="tira-blk" id="tiraBlk">${tira}</div>
-    <input type="range" class="blk-barra" min="0" max="${BLOQUES.length - 1}" step="1" value="${bSel}" aria-label="Mover a otro bloque" oninput="verBloqueBarra(+this.value)" onchange="elegirBloque(+this.value)">
+    <div class="blk-barra-caja"><div class="blk-riel">${BLOQUES.map((x, i) => `<i class="${i === cur ? 'ya' : ''}" style="left:${(posBarra(i, cur) * 100).toFixed(2)}%"></i>`).join('')}</div>
+      <input type="range" class="blk-barra" min="0" max="1000" step="1" value="${Math.round(posBarra(bSel, cur) * 1000)}" aria-label="Mover a otro bloque" oninput="barraMueve(this)" onchange="elegirBloque(blkDeBarra(+this.value))" onkeydown="barraTecla(event)"></div>
+    ${(cur >= 0 && bSel !== cur) ? `<button class="link volver-ahora" onclick="bDia=0; bSel=bloqueAhora(); render(); centrarBloque()">↺ Volver al bloque de ahora</button>` : ''}
     <section class="tarjeta bloque-sel" data-drop="bloque">
       <div class="bs-cab"><b>${hm(b.ini)} – ${hm(b.fin)}</b><span>${estado}</span></div>
       ${bSel === cur ? `<div class="mini-barra"><i style="width:${(m - b.ini) / 90 * 100}%"></i></div>` : ''}
@@ -4697,7 +4819,6 @@ function vDia(){
         <button class="btn prim ancho" style="margin-top:10px" onclick="anadirAct()">Añadir al bloque</button>
         ${sugeridas.length ? `<button class="flor-btn" onclick="abrirTareasAreas()"><span class="fb-flor">${logoSVG()}</span>
           <span class="fb-t"><b>Añadir tarea de tus áreas</b><small>${pendientes().filter(x => !ya.has(x.id)).length} pendientes · toca para elegir</small></span><span class="fb-fl">›</span></button>` : ''}`}
-      ${(cur >= 0 && (bDia !== 0 || bSel !== cur)) ? `<button class="link" style="display:block;margin:10px auto 0" onclick="bDia=0; bSel=bloqueAhora(); render(); centrarBloque()">↺ Volver al bloque de ahora</button>` : ''}
     </section>
     ${petalosSinTareas()}
     <section class="tarjeta">
@@ -4708,6 +4829,30 @@ function vDia(){
         <p class="peq suave" style="margin:6px 0 0">Las actividades sin terminar pasan solas al bloque siguiente. Los avisos suenan con la app abierta.</p>
       </details>
     </section></div></div>`;
+}
+/* 4.51 (Gustavo): en la barra, el bloque de ahora está en el medio; los de antes, a la izquierda, y los de después, a la derecha,
+   cada uno en su puntito. El punto salta de puntito en puntito */
+function posBarra(i, cur){
+  const n = BLOQUES.length - 1;
+  if(cur < 0) return i / n;
+  if(i === cur) return .5;
+  return i < cur ? .5 * i / cur : .5 + .5 * (i - cur) / (n - cur);
+}
+function blkDeBarra(v){
+  const cur = bloqueAhora(); let m = 0, d = 9;
+  BLOQUES.forEach((x, i) => { const z = Math.abs(posBarra(i, cur) - v / 1000); if(z < d){ d = z; m = i; } });
+  return m;
+}
+function barraMueve(el){
+  const i = blkDeBarra(+el.value);
+  el.value = Math.round(posBarra(i, bloqueAhora()) * 1000);
+  verBloqueBarra(i);
+}
+function barraTecla(e){
+  const d = {ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1}[e.key];
+  if(!d) return;
+  e.preventDefault(); moverBloque(d);
+  const b = document.querySelector('input.blk-barra'); if(b) b.focus();
 }
 /* Barra con punto bajo los círculos: al mover el punto, la fila acompaña; al soltar, se elige ese bloque */
 function verBloqueBarra(i){
@@ -4986,18 +5131,24 @@ function txtAvisos(){
   const q = Math.round((t - Date.now()) / 1000);
   return `Avisos activados · próximo en ${Math.floor(q / 60)}:${String(q % 60).padStart(2, '0')}`;
 }
-function abrirAvisos(){
-  hojaAbierta = abrirAvisos;
+/* 4.51 (Gustavo): el botón gris de los avisos (donde estaba «Nueva tarea»): dice si están activados y cuándo es el próximo,
+   y abre lo mismo que abría el lápiz */
+const botonAvisosHTML = () => `<button class="btn sec ancho btn-avisos" type="button" onclick="abrirAvisos()"><span id="av-estado" class="${pausa.tareas ? 'off' : 'on'}">${txtAvisos()}</span>${ICO_LAPIZ}</button>`;
+/* Los cuatro deslizables; el primero, el recordatorio de la tarea en la que estás (Gustavo) */
+function avisosFocusHTML(){
   const B = B_(), sw = (clave, txt) => `<label class="desliz"><input type="checkbox" ${B[clave] ? 'checked' : ''} onchange="ajBloque('${clave}', this)"><i></i><span>${txt}</span></label>`;
-  mostrarHoja(`<div class="hoja-cab"><div><h2>Avisos de Focus</h2></div></div>
-    <div class="av-lista">
-      <label class="desliz"><input type="checkbox" ${pausa.tareas ? '' : 'checked'} onchange="alternarPausa('tareas')"><i></i><span>Avisos de Focus ${pausa.tareas ? 'desactivados' : 'activados'}</span></label>
+  return `<div class="av-lista">
       <div class="av-lista ${pausa.tareas ? 'av-dim' : ''}">
-        ${sw('startVoice', 'Avisar con voz al empezar cada bloque')}
         <div class="av-cada">${sw('remindOn', 'Recordarme la tarea en la que estoy cada')}<input type="number" min="1" max="60" inputmode="numeric" aria-label="Minutos" value="${B.remindMin}" onchange="ajBloqueMin(this)"><span>min</span></div>
+        ${sw('startVoice', 'Avisar con voz al empezar cada bloque')}
         ${sw('sleepOn', 'A las 22:00, recordarme ir a dormir')}
       </div>
-    </div>`, '#8b5cf6');
+      <label class="desliz av-todos"><input type="checkbox" ${pausa.tareas ? '' : 'checked'} onchange="alternarPausa('tareas')"><i></i><span>Avisos de Focus ${pausa.tareas ? 'desactivados' : 'activados'}</span></label>
+    </div>`;
+}
+function abrirAvisos(){
+  hojaAbierta = abrirAvisos;
+  mostrarHoja(`<div class="hoja-cab"><div><h2>Avisos de Focus</h2></div></div>${avisosFocusHTML()}`, '#8b5cf6');
 }
 function botonPausa(tipo){
   const on = tipo === 'todo' ? pausa.salud && pausa.tareas : pausa[tipo];
@@ -5032,6 +5183,12 @@ function hablar(texto, tipo){
   const u = new SpeechSynthesisUtterance(texto); u.lang = 'es-ES';
   const v = speechSynthesis.getVoices().find(x => x.lang === 'es-ES'); if(v) u.voice = v;
   speechSynthesis.speak(u);
+}
+/* Iconos dibujados de Cuerpo (los mismos de la tira de Focus) */
+function icoSalud(k, cls = 'ts-ico'){
+  if(k === 'pasos') return ((document.querySelector('#nav [data-v="salud"] svg') || {}).outerHTML || '').replace('class="nav-ico"', `class="${cls}"`);
+  if(k === 'agua') return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.2 4.2 6.5 8.2 6.5 12a6.5 6.5 0 0 1-13 0c0-3.8 3.3-7.8 6.5-12z" fill="#60a5fa"/><path d="M9 15.5a3 3 0 0 0 3 3" stroke="#dbeafe" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`;
+  return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="14.5" cy="4.2" r="2.3" fill="#22a35a"/><path d="M13 8l-3.2 4.6 3 1.8-1.6 6.4M13 8l3.5 3 3.2-.6M10.6 10.6L6.2 9.6" stroke="#15803d" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.8 14.4l3.4 2.4-.6 4" stroke="#15803d" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 function tiraSalud(){
   const h = saludHoy(), p = pasosHoy(), S = S_();
@@ -5120,11 +5277,11 @@ function vSalud(){
   </section>`};
   return `<h2 style="margin-top:18px">Tu cuerpo hoy</h2>${botonPausa('salud')}
   <div class="salud-tiles">
-    ${tile('pasos', '👣', fmtN(p.steps), 'pasos', estPasos, subPasos, '#f08a24', desliz('pasosOn'))}${saludAbierta === 'pasos' ? secciones.pasos : ''}
-    ${tile('agua', '💧', fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', 'vasos', estAgua, prox(S.aguaOn, S.aguaNext), '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}${saludAbierta === 'agua' ? secciones.agua : ''}
-    ${tile('mov', '🤸', h.mov, h.mov === 1 ? 'pausa' : 'pausas', estMov, prox(S.movOn, S.movNext), '#22a35a', desliz('movOn', 'movNext', 'movMin'))}${saludAbierta === 'mov' ? secciones.mov : ''}
+    ${tile('pasos', icoSalud('pasos', 's-svg'), fmtN(p.steps), 'pasos', estPasos, subPasos, '#f08a24', desliz('pasosOn'))}${saludAbierta === 'pasos' ? secciones.pasos : ''}
+    ${tile('agua', icoSalud('agua', 's-svg'), fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', 'vasos', estAgua, prox(S.aguaOn, S.aguaNext), '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}${saludAbierta === 'agua' ? secciones.agua : ''}
+    ${tile('mov', icoSalud('mov', 's-svg'), h.mov, h.mov === 1 ? 'pausa' : 'pausas', estMov, prox(S.movOn, S.movNext), '#22a35a', desliz('movOn', 'movNext', 'movMin'))}${saludAbierta === 'mov' ? secciones.mov : ''}
   </div>
-  ${saludAbierta ? '' : '<p class="peq suave" style="text-align:center;margin:6px 0 14px">Toca una fila para ver el detalle.</p>'}
+  ${saludAbierta ? '' : `<p class="peq suave" style="text-align:center;margin:6px 0 14px">${ESCRITORIO.matches ? 'Toca un recuadro' : 'Toca una fila'} para ver el detalle.</p>`}
   <p class="peq suave" style="text-align:center">Los avisos de agua y movimiento suenan entre las 5:30 y las 22:00, con la app abierta.</p>`;
 }
 let saludAbierta = null;
