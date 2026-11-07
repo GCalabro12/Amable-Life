@@ -549,6 +549,8 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .desp{position:relative}
 .desp-btn{width:100%;display:flex;align-items:center;gap:10px;border:0;border-radius:14px;padding:13px 14px;background:rgba(var(--bl),.08);color:var(--tinta);font:inherit;font-weight:800;font-size:15px;text-align:left}
 .desp-btn > svg:first-child{flex:none;color:var(--oro)}
+/* todos los iconos de la hoja del mismo color y tamaño, grandecitos como los de arriba (Gustavo) */
+.desp-btn > svg:first-child,.ev-res > svg,.ev-fecha > svg,.ev-desc > svg{width:22px;height:22px;color:var(--oro)}
 .desp-t{flex:none}
 .desp-v{flex:1;min-width:0;text-align:right;font-weight:600;font-size:13px;color:var(--suave);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .desp-v .ico{width:13px;height:13px;vertical-align:-2px}
@@ -567,16 +569,16 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .ev-tipo.ev-tabs{gap:6px;margin-top:14px}
 .ev-tipo.ev-tabs button{flex:none;flex-direction:row;padding:9px 18px;border-radius:10px;background:none;font-size:15px;font-weight:700}
 .ev-tipo.ev-tabs button.sel{background:color-mix(in srgb,var(--oro) 28%,transparent);color:var(--tinta)}
-.ev-res{display:flex;align-items:flex-start;gap:14px;width:100%;border:0;background:none;color:var(--tinta);text-align:left;padding:12px 6px;margin-top:8px;border-radius:12px;cursor:pointer;font:inherit}
-.ev-res:hover,.ev-res.abierto{background:rgba(var(--bl),.06)}
-.ev-res > svg{flex:none;color:var(--suave);margin-top:1px}
+.ev-res{display:flex;align-items:center;gap:12px;width:100%;border:0;background:rgba(var(--bl),.08);color:var(--tinta);text-align:left;padding:12px 14px;margin-top:10px;border-radius:14px;cursor:pointer;font:inherit}
+.ev-res:hover,.ev-res.abierto{background:rgba(var(--bl),.13)}
+.ev-res > svg{flex:none}
 .ev-res span{display:flex;flex-direction:column;gap:2px}
 .ev-res b{font-size:16px;font-weight:600}
 .ev-res small{font-size:13px;color:var(--suave)}
 .ev-res small:empty{display:none}
-.ev-fecha{display:flex;align-items:flex-start;gap:14px;padding:10px 6px 6px;margin-top:8px}
+.ev-fecha{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;margin-top:10px;border-radius:14px;background:rgba(var(--bl),.08)}
 .ev-fecha[hidden],.ev-res[hidden],.ev-horas[hidden]{display:none}
-.ev-fecha > svg{flex:none;color:var(--suave);margin-top:11px}
+.ev-fecha > svg{flex:none;margin-top:8px}
 .ev-fecha-c{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
 .ev-fila1{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .ev-horas{display:inline-flex;align-items:center;gap:8px}
@@ -595,10 +597,10 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .ev-tipo.ev-tabs .ev-prio:hover{opacity:.75}
 .ev-tipo.ev-tabs .ev-prio.sel{opacity:1;background:color-mix(in srgb,var(--c) 22%,transparent);box-shadow:inset 0 0 0 1.5px var(--c)}
 .ev-prio svg{width:19px;height:19px}
-.ev-desc{display:flex;gap:14px;align-items:flex-start;padding:6px 6px 4px}
-.ev-desc > svg{flex:none;color:var(--suave);margin-top:10px}
+.ev-desc{display:flex;gap:12px;align-items:flex-start;padding:4px 6px 4px 14px;margin-top:8px;border-radius:14px;background:rgba(var(--bl),.08)}
+.ev-desc > svg{flex:none;margin-top:9px}
 .ev-desc-c{flex:1;min-width:0;display:flex;flex-direction:column;border-radius:10px}
-.ev-desc-c:focus-within{background:rgba(var(--bl),.06)}
+.ev-desc-c:focus-within{background:rgba(var(--bl),.05)}
 .rt-barra{display:none;align-items:center;gap:2px;flex-wrap:wrap;padding:4px 6px;border-bottom:1px solid var(--linea)}
 .ev-desc-c:focus-within .rt-barra,.ev-desc-c.con .rt-barra{display:flex}
 .rt-barra button{width:34px;height:32px;border:0;border-radius:8px;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;font-size:16px;padding:0;font-family:Georgia,serif}
@@ -1435,7 +1437,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.15';
+const VERSION = 'v4.16';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3361,6 +3363,7 @@ function opcionesRep(){
     {k: 'anio', t: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`}, {k: 'lab', t: 'De lunes a viernes'}];
 }
 const durEv = () => { const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin')); return i != null && f != null && f > i ? f - i : 0; };
+const ICO_CALENDARIO = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2"/></svg>';
 const ICO_ALTAVOZ = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
 function despOpciones(id){
   if(id === 'son') return alarmaNativa() ? [{k: 'tel', t: 'El sonido de alarma del teléfono', sel: true}, {k: 'elegir', t: 'Elegir otro sonido del teléfono…', sel: false}, {k: 'probar', t: 'Probar', sel: false}]
@@ -3471,8 +3474,8 @@ function pintarEvento(e){
       <div id="frec-intervalo" ${evEd.frec === 'intervalo' ? '' : 'hidden'}><label class="frec-l">Cada <input type="number" id="frec-cada" min="2" max="60" value="${evEd.cada || 2}" oninput="evEd.cada = Math.max(2, Math.min(60, +this.value || 2)); pintarDias()"> días</label></div>
       </div></div></div>
     </div>
-    <button type="button" class="ev-res" id="ev-res" onclick="evAbrirFecha()">${ICO_RELOJ.replace('width="12" height="12"', 'width="20" height="20"')}<span><b id="ev-res-t"></b><small id="ev-res-s"></small></span></button>
-    <div class="ev-fecha" id="ev-fecha" hidden>${ICO_RELOJ.replace('width="12" height="12"', 'width="20" height="20"')}<div class="ev-fecha-c">
+    <button type="button" class="ev-res" id="ev-res" onclick="evAbrirFecha()">${ICO_CALENDARIO}<span><b id="ev-res-t"></b><small id="ev-res-s"></small></span></button>
+    <div class="ev-fecha" id="ev-fecha" hidden>${ICO_CALENDARIO}<div class="ev-fecha-c">
       <span id="ev-dia-t" hidden></span>
       <input type="hidden" id="ev-ini" value="${hhmm(e.ini != null ? e.ini : 540)}"><input type="hidden" id="ev-fin" value="${hhmm(e.fin != null ? e.fin : 600)}">
       <div class="ev-fila1">
