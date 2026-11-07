@@ -1292,16 +1292,18 @@ body.pip .ev-mini{pointer-events:none}
 .s-tile .s-svg{width:30px;height:30px;flex:none}
 @media (min-width:900px){
   body.v-salud .envoltura{max-width:1100px}
-  body.v-salud .salud-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:18px 0 12px}
-  body.v-salud .s-tile{order:0;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:12px;padding:28px 22px 18px;min-height:300px;border:2px solid var(--c);border-radius:26px}
-  body.v-salud .s-tile .s-svg{width:56px;height:56px}
-  body.v-salud .s-tile b{font-size:38px}
-  body.v-salud .s-tile small{font-size:13px}
-  body.v-salud .s-tile .s-txt{align-items:center;flex:none;gap:6px}
-  body.v-salud .s-tile .s-est{font-size:16px}
-  body.v-salud .s-tile .desliz{align-self:center;margin-top:8px}
-  body.v-salud .s-tile .s-flecha{margin-top:auto}
-  body.v-salud .salud-tiles .salud-sec{order:1;grid-column:1/-1}
+  body.v-salud .salud-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:18px 0 12px;align-items:start}
+  .s-col{border:2px solid var(--c);border-radius:26px;padding:18px 16px 12px;background:color-mix(in srgb,var(--c) 10%,var(--tarjeta))}
+  .s-col-tit{margin:0;text-align:center;font-size:30px;font-weight:900;color:color-mix(in srgb,var(--c) 70%,var(--tinta))}
+  .s-col-fila{display:flex;align-items:center;gap:12px;margin:12px 0 4px}
+  .s-col-ico .s-svg{width:46px;height:46px;display:block}
+  .s-col-num{flex:1;font-size:40px;font-weight:900;line-height:1}
+  .s-col-num i{font-style:normal;font-size:18px;color:var(--suave)}
+  .s-col .desliz{margin:0;flex:none;align-self:center}
+  .s-col-est{margin:8px 0 2px;font-size:16px;font-weight:700;color:color-mix(in srgb,var(--c) 55%,var(--tinta))}
+  .s-col-sub{margin:0 0 4px;font-size:13px;color:var(--suave)}
+  .s-col .salud-sec{margin:10px -6px 0;padding:12px 10px;background:transparent;box-shadow:none}
+  .s-col .salud-sec h3{display:none}
 }
 .asa{flex:none;align-self:stretch;display:flex;align-items:center;padding:0 6px;margin:0 -8px 0 -10px;color:rgba(255,255,255,.42);cursor:grab;touch-action:none}
 .otra .asa{margin:0 2px 0 -6px}
@@ -1636,7 +1638,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.54';
+const VERSION = 'v4.55';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5291,13 +5293,29 @@ function vSalud(){
     <p class="peq suave" style="text-align:center;margin:0 0 8px">${prox(S.movOn, S.movNext)}</p>
     <label class="fila-aj"><span><input type="checkbox" ${S.movOn ? 'checked' : ''} onchange="ajCheck('movOn', this, 'movNext', 'movMin')"> Avisarme para moverme cada</span><input type="number" min="10" max="240" inputmode="numeric" value="${S.movMin}" onchange="ajSalud('movMin', this, 10, 240, 'movNext')"></label>
   </section>`};
+  // 4.55 (Gustavo): en el ordenador, tres columnas siempre abiertas (nada que plegar): arriba en grande «Pasos», «Vasos» o «Pausas»;
+  // debajo el dibujo, el número y el interruptor de sus avisos; luego cómo vas y todo su detalle
+  if(ESCRITORIO.matches){
+    const col = (k, tit, ico, valor, est, sub, c, sw) => `<div class="s-col" style="--c:${c}">
+      <h3 class="s-col-tit">${tit}</h3>
+      <div class="s-col-fila"><span class="s-col-ico">${ico}</span><b class="s-col-num">${valor}</b>${sw}</div>
+      <p class="s-col-est">${est}</p>${sub ? `<p class="s-col-sub">${sub}</p>` : ''}
+      ${secciones[k]}</div>`;
+    return `<h2 style="margin-top:18px">Tu cuerpo hoy</h2>${botonPausa('salud')}
+    <div class="salud-cols">
+      ${col('pasos', 'Pasos', icoSalud('pasos', 's-svg'), fmtN(p.steps), estPasos, subPasos, '#f08a24', desliz('pasosOn'))}
+      ${col('agua', 'Vasos', icoSalud('agua', 's-svg'), fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', estAgua, '', '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}
+      ${col('mov', 'Pausas', icoSalud('mov', 's-svg'), h.mov, estMov, '', '#22a35a', desliz('movOn', 'movNext', 'movMin'))}
+    </div>
+    <p class="peq suave" style="text-align:center">Los avisos de agua y movimiento suenan entre las 5:30 y las 22:00, con la app abierta.</p>`;
+  }
   return `<h2 style="margin-top:18px">Tu cuerpo hoy</h2>${botonPausa('salud')}
   <div class="salud-tiles">
     ${tile('pasos', icoSalud('pasos', 's-svg'), fmtN(p.steps), 'pasos', estPasos, subPasos, '#f08a24', desliz('pasosOn'))}${saludAbierta === 'pasos' ? secciones.pasos : ''}
     ${tile('agua', icoSalud('agua', 's-svg'), fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', 'vasos', estAgua, prox(S.aguaOn, S.aguaNext), '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}${saludAbierta === 'agua' ? secciones.agua : ''}
     ${tile('mov', icoSalud('mov', 's-svg'), h.mov, h.mov === 1 ? 'pausa' : 'pausas', estMov, prox(S.movOn, S.movNext), '#22a35a', desliz('movOn', 'movNext', 'movMin'))}${saludAbierta === 'mov' ? secciones.mov : ''}
   </div>
-  ${saludAbierta ? '' : `<p class="peq suave" style="text-align:center;margin:6px 0 14px">${ESCRITORIO.matches ? 'Toca un recuadro' : 'Toca una fila'} para ver el detalle.</p>`}
+  ${saludAbierta ? '' : '<p class="peq suave" style="text-align:center;margin:6px 0 14px">Toca una fila para ver el detalle.</p>'}
   <p class="peq suave" style="text-align:center">Los avisos de agua y movimiento suenan entre las 5:30 y las 22:00, con la app abierta.</p>`;
 }
 let saludAbierta = null;
