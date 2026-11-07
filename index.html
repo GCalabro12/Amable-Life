@@ -527,6 +527,14 @@ nav.abajo button{font-size:11px}
 .rj-m{position:absolute;left:44px;right:0;height:1px;background:repeating-linear-gradient(90deg,rgba(var(--bl),.32) 0 2px,transparent 2px 6px)}
 .rj-cols{position:absolute;top:0;bottom:0;left:44px;right:0;display:grid}
 .rj-col{position:relative;border-left:1px solid rgba(var(--bl),.06);cursor:pointer}
+.rj-ev{cursor:pointer}
+.rj-tir{position:absolute;left:0;right:0;bottom:0;height:7px;cursor:ns-resize}
+@media (hover:none){ .rj-tir{display:none} }
+.rj-ev.rj-mov{z-index:6;opacity:.92;box-shadow:0 10px 26px rgba(0,0,0,.45);transition:none}
+.rj-ev.rj-mov > span:not(.rj-hora){display:none}
+.rj-hora{font-weight:700}
+body.rj-moviendo, body.rj-moviendo *{cursor:grabbing!important;user-select:none}
+body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:none}
 .rj-blk{position:absolute;left:0;right:0;background:rgba(247,195,91,.07);pointer-events:none}
 .rj-ev{position:absolute;margin-left:1px;border:0;border-radius:8px;padding:3px 6px;background:color-mix(in srgb,var(--c) 58%,var(--tarjeta));border-left:3px solid var(--c);color:var(--tinta);text-align:left;overflow:hidden;font-size:13px;line-height:1.2;display:flex;flex-direction:column;gap:1px;z-index:1}
 .bandera{vertical-align:-2px;flex:none}
@@ -1402,7 +1410,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.11';
+const VERSION = 'v4.12';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3084,11 +3092,63 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
-    return `<div class="rj-col" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
+    return `<div class="rj-col" data-k="${k}" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   return `<div class="rj ${sem ? 'sem' : ''}"><div class="rj-cuerpo" style="height:${(h1 - h0) * AG_PX}px">${lineas}<div class="rj-cols" style="grid-template-columns:repeat(${dias.length},1fr)">${cols}</div></div></div>`;
 }
+/* Arrastrar en la rejilla con el ratón (Gustavo, 4.12, como Google Calendar): sobre la tarea sale la mano y, con el botón
+   izquierdo pulsado, se lleva a otra hora (y a otro día en Semana, 3 días o 7 días, si no se repite); en el borde de abajo sale
+   la flecha arriba-abajo y se estira para alargarla o acortarla. De 15 en 15 minutos, con la hora a la vista y «Deshacer».
+   Un clic sin mover sigue abriendo la tarjeta. Lo que se repite cambia de hora todas las veces; los hábitos, como mucho 2 h. */
+let rjArr = null;
+document.addEventListener('pointerdown', ev => {
+  if(ev.button !== 0 || ev.pointerType === 'touch') return;
+  const el = ev.target.closest && ev.target.closest('.rj-ev'); if(!el) return;
+  const e = AG_().eventos.find(x => x.id === el.dataset.ev); if(!e || e.todo) return;
+  const estirar = !!ev.target.closest('.rj-tir');
+  rjArr = {el, e, k: el.dataset.k, estirar, x0: ev.clientX, y0: ev.clientY, ini: e.ini, fin: e.fin, nIni: e.ini, nFin: e.fin, movido: false, col: el.closest('.rj-col'), colN: el.closest('.rj-col')};
+  ev.preventDefault();   // que no se seleccione el texto
+});
+document.addEventListener('pointermove', ev => {
+  const a = rjArr; if(!a) return;
+  const dx = ev.clientX - a.x0, dy = ev.clientY - a.y0;
+  if(!a.movido){
+    if(Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+    a.movido = true; clearTimeout(popT); if(typeof cerrarPop === 'function') cerrarPop();
+    a.el.classList.add('rj-mov'); document.body.classList.add(a.estirar ? 'rj-estirando' : 'rj-moviendo');
+  }
+  const paso = Math.round(dy / AG_PX * 4) * 15;
+  if(a.estirar){
+    const max = a.e.tipo === 'habito' ? 120 : 24 * 60;
+    a.nIni = a.ini; a.nFin = Math.min(24 * 60, a.ini + max, Math.max(a.ini + 15, a.fin + paso));
+    a.el.style.height = Math.max(20, (a.nFin - a.ini) / 60 * AG_PX - 2) + 'px';
+  } else {
+    const dur = a.fin - a.ini;
+    a.nIni = Math.max(0, Math.min(24 * 60 - dur, a.ini + paso)); a.nFin = a.nIni + dur;
+    if(!repite(a.e)){ const c = document.elementsFromPoint(ev.clientX, ev.clientY).find(x => x.classList && x.classList.contains('rj-col')); if(c) a.colN = c; }
+    const dxc = a.colN.getBoundingClientRect().left - a.col.getBoundingClientRect().left;
+    a.el.style.transform = `translate(${dxc}px, ${(a.nIni - a.ini) / 60 * AG_PX}px)`;
+  }
+  let h = a.el.querySelector('.rj-hora'); if(!h){ h = document.createElement('span'); h.className = 'rj-hora'; a.el.insertBefore(h, a.el.querySelector('.rj-tir')); }
+  h.textContent = `${hm(a.nIni)} – ${hm(a.nFin)}`;
+});
+function rjSoltar(cancelar){
+  const a = rjArr; rjArr = null; if(!a) return;
+  document.body.classList.remove('rj-moviendo', 'rj-estirando');
+  if(!a.movido) return;   // fue un clic: abre la tarjeta como siempre
+  finArrastre = Date.now();
+  const kN = (a.colN && a.colN.dataset.k) || a.k;
+  if(cancelar || (a.nIni === a.ini && a.nFin === a.fin && kN === a.k)){ rerenderDia(); return; }
+  const e = a.e, antes = {ini: e.ini, fin: e.fin, dia: e.dia};
+  e.ini = a.nIni; e.fin = a.nFin; if(kN !== a.k && !repite(e)) e.dia = kN; e.mod = ahoraISO();
+  guardar(); rerenderDia();
+  const t = a.estirar ? `«${e.t}» ahora es de ${hm(e.ini)} a ${hm(e.fin)}` : `«${e.t}» movida a ${kN !== a.k ? fechaLarga(kN) + ', ' : ''}${hm(e.ini)} – ${hm(e.fin)}`;
+  avisoDeshacer(t, () => { Object.assign(e, antes, {mod: ahoraISO()}); guardar(); rerenderDia(); }, 5000);
+}
+document.addEventListener('pointerup', () => rjSoltar(false));
+document.addEventListener('pointercancel', () => rjSoltar(true));
+document.addEventListener('keydown', ev => { if(ev.key === 'Escape' && rjArr) rjSoltar(true); });
 /* Tocar un hueco de la rejilla: algo nuevo a esa media hora */
 function agClicRejilla(ev, k, h0){
   if(ev.target !== ev.currentTarget) return;
