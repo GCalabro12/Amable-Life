@@ -351,6 +351,8 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .hist-exp{margin:12px 0 10px;font-size:15px;line-height:1.4}
 .saludo{margin:18px 0 0;font-size:17px;font-weight:700;color:var(--oro)}
 .tit-acc{font-size:30px;font-weight:800;margin-top:22px;line-height:1.1}
+.tit-bloques{text-align:center;font-size:34px}
+.pan-vacio{display:none}
 .avisos-btn{display:flex;align-items:center;gap:8px;margin-top:4px;padding:6px 0;border:0;background:none;color:var(--suave);font-size:14px;font-weight:800;text-align:left;font-variant-numeric:tabular-nums}
 .avisos-btn .on{color:#4ade80}
 .av-fila{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -681,8 +683,19 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
 @media (min-width:900px){
   .cab-in:has(.cab-secc){max-width:1240px}
   body.v-dia .envoltura{max-width:1100px}
-  body.v-dia .dia-cols{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:32px;align-items:start}
-  body.v-dia .dia-izq{position:sticky;top:76px}
+  body.v-dia .dia-cols{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);grid-template-areas:"izq der" "pan der";gap:20px 32px;align-items:start}
+  body.v-dia .dia-izq{grid-area:izq}
+  body.v-dia .dia-pan{grid-area:pan}
+  body.v-dia .dia-der{grid-area:der}
+  .pan-vacio{display:block;margin:6px 0 0;padding:18px;border-radius:16px;border:2px dashed rgba(var(--bl),.18);color:var(--suave);font-size:14px;text-align:center}
+  body.v-dia .dia-pan .panel-area{margin-top:0}
+}
+@media (min-width:1200px){
+  body.v-dia .envoltura{max-width:1480px}
+  body.v-dia .dia-cols{grid-template-columns:minmax(250px,1fr) minmax(380px,440px) minmax(0,1.6fr);grid-template-areas:"pan izq der";gap:28px}
+  body.v-dia .dia-izq,body.v-dia .dia-pan{position:sticky;top:76px}
+  body.v-dia .dia-pan{max-height:calc(100vh - 92px);overflow-y:auto;scrollbar-width:thin}
+  .tit-bloques{font-size:40px}
 }
 .ml-secc.cab-secc button{flex-direction:row;gap:6px;padding:6px 10px;font-size:13.5px}
 .ml-secc.cab-secc .nav-ico{width:24px;height:24px}
@@ -1621,7 +1634,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.51';
+const VERSION = 'v4.52';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4796,14 +4809,15 @@ function vDia(){
   const ya = new Set(acts.map(a => a.acc).filter(Boolean));
   const sugeridas = pendientes().filter(x => !ya.has(x.id)).slice(0, 4);
   const lleno = acts.length >= MAX_ACT;
-  return `${unirHTML()}<div class="dia-cols"><div class="dia-izq"><h1 class="tit-acc">Bloques de tareas</h1>${botonPausa('tareas')}
+  // 4.52 (Gustavo): «Tareas por bloques», grande y en el centro; en el ordenador, las tareas del pétalo a la izquierda,
+  // la flor en medio y los bloques a la derecha (así, al pasar por los pétalos, la flor no se mueve)
+  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Tareas por bloques</h1><div class="dia-cols"><div class="dia-izq">${botonPausa('tareas')}
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0)}</div>
     <div class="fn-fila"><button class="fn-flecha" onclick="moverBloque(-1)" aria-label="Bloque anterior">‹</button>
       <p class="peq suave">Desliza el centro para pasar de bloque · toca un pétalo para ver sus tareas · <button class="link" onclick="empezar()">revisar toda la flor</button> · <button class="link" onclick="ir('historial')">ver el historial</button></p>
       <button class="fn-flecha" onclick="moverBloque(1)" aria-label="Bloque siguiente">›</button></div>
-    </div><div class="dia-der">
-    ${panelArea()}
+    </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div><div class="dia-der">
     <div class="tira-blk" id="tiraBlk">${tira}</div>
     <div class="blk-barra-caja"><div class="blk-riel">${BLOQUES.map((x, i) => `<i class="${i === cur ? 'ya' : ''}" style="left:${(posBarra(i, cur) * 100).toFixed(2)}%"></i>`).join('')}</div>
       <input type="range" class="blk-barra" min="0" max="1000" step="1" value="${Math.round(posBarra(bSel, cur) * 1000)}" aria-label="Mover a otro bloque" oninput="barraMueve(this)" onchange="elegirBloque(blkDeBarra(+this.value))" onkeydown="barraTecla(event)"></div>
