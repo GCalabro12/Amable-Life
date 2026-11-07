@@ -516,7 +516,15 @@ html:not(.claro) .btn-avisos .off{color:#f87171}
 .av-todos{padding-top:12px;border-top:1px solid rgba(var(--bl),.14)}
 .ahora-blk.fuera{border:0;background:rgba(139,92,246,.1)}
 .ahora-blk.drop-ok{background:rgba(247,195,91,.22);box-shadow:inset 0 0 0 3px var(--oro)}
-.ah-cab{display:flex;align-items:center;gap:12px}
+.ah-cab{display:flex;align-items:center;justify-content:center;gap:12px}
+.ahora-blk .ah-tit{font-size:24px;letter-spacing:.06em}
+.aro-col{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px}
+.aro-col .disco.grande{margin-right:0}
+.aro-blk{font-size:12.5px;font-weight:800;color:#dc2626;white-space:nowrap}
+.prox-prio{margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--tarjeta);box-shadow:0 0 0 1px rgba(var(--bl),.1)}
+.prox-prio h3{display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:14px;font-weight:800;color:#dc2626}
+.prox-prio .ev-blk{margin:4px 0 0}
+body.pip .prox-prio{zoom:.72;margin-top:8px;padding:8px 10px}
 .ah-cab>div{flex:1;display:flex;flex-direction:column}
 .ah-cab b{font-size:19px;color:var(--oro)}
 .ah-cab small{font-size:13px;color:var(--suave)}
@@ -555,12 +563,12 @@ html:not(.claro) .btn-avisos .off{color:#f87171}
 .disco.grande b{font-size:15px;font-weight:800;color:#1d1636;background:rgba(255,255,255,.88);border-radius:999px;padding:1px 7px}
 .disco.grande.aro{width:86px;height:86px;background:conic-gradient(#e0323a calc(var(--p,0)*1%),#22a35a 0)}   /* 4.53: el rojo avanza en el sentido del reloj, como el aro de Áreas */
 .disco.grande.aro::before{display:none}
-.cuenta-col .tic-btn{align-self:flex-start;margin-top:6px}
+.cuenta-col .tic-btn{align-self:center;margin-top:6px}
 .prox .asa-hueco{width:12px;flex:none}
 .prox.ok .texto-p{text-decoration:line-through;opacity:.55}
 .prox.ok{opacity:.8}
 .reloj-arena{flex:none;width:66px;height:104px}
-.cuenta-col{flex:1;display:flex;flex-direction:column}
+.cuenta-col{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center}   /* 4.59: centrada entre el reloj de arena y el círculo */
 .cuenta-atras{font-size:40px;line-height:1.05;font-weight:800;color:var(--oro);font-variant-numeric:tabular-nums;min-width:74px}
 .cuenta-txt{font-size:13px;font-weight:700;color:var(--oro)}
 .tic-btn{flex:none;border:0;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800;background:rgba(var(--bl),.08);color:var(--suave)}
@@ -1656,7 +1664,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.58';
+const VERSION = 'v4.59';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2295,21 +2303,39 @@ function seccionAhora(pip){
   // arriba solo la tarea en la que estás (la primera sin hacer); debajo las demás pendientes; las hechas al final, tachadas
   const orden = acts.map((a, i) => ({a, i})), pend = orden.filter(o => !hechaAct(o.a)), hechas = orden.filter(o => hechaAct(o.a));
   const lista = pend.map((o, k) => fila(o.a, o.i, k === 0)).join('');   // 4.51: las hechas van fuera del recuadro (hechasBloqueHTML)
-  const evPend = evsBloqueHTML(hoyK(), b, 'pend');
   const p = progresoBloque(b.ini, b.fin).toFixed(1);
   return `<section class="ahora-blk" data-drop="ahora">
-    <div class="ah-cab"><b class="ah-tit">FOCUS · bloque · ${hm(b.ini)} – ${hm(b.fin)}</b></div>
+    <div class="ah-cab"><b class="ah-tit">FOCUS</b></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
-      <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span></div>
-    ${pend.length || evPend ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
-    ${evPend}
+      <div class="aro-col"><span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span>
+        <span class="aro-blk">bloque ${hm(b.ini)} – ${hm(b.fin)}</span></div></div>
+    ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${pend.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}
     ${pip ? compromisoHTML(pend) : ''}
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
-  </section>${hechasBloqueHTML(c)}`;
+  </section>${proximaHTML()}${hechasBloqueHTML(c)}`;
+}
+/* 4.59 (Gustavo): lo del calendario ya no sale dentro del recuadro (distrae): debajo, «Próxima tarea prioritaria» con la bandera
+   roja: la tarea del calendario sin hacer que toca antes, de más prioridad (alta, media, baja) y, entre iguales, la más temprana.
+   Hoy (lo que aún no ha acabado) y, si hoy no queda nada, los 7 días siguientes. Los hábitos no cuentan */
+function proximaPrioritaria(){
+  const hoy = hoyK(), m = minutosHoy();
+  for(let n = 0; n <= 7; n++){
+    const k = sumarDias(hoy, n);
+    const es = eventosDe(k).filter(e => e.tipo !== 'habito' && !hechoEv(e, k) && (n > 0 || e.todo || e.fin > m))
+      .sort((x, y) => ((y.prio || 0) - (x.prio || 0)) || (x.todo - y.todo) || ((x.ini || 0) - (y.ini || 0)));
+    if(es.length) return {e: es[0], k};
+  }
+  return null;
+}
+function proximaHTML(){
+  const x = proximaPrioritaria(); if(!x) return '';
+  const {e, k} = x, hoy = hoyK(), dia = k === hoy ? '' : k === sumarDias(hoy, 1) ? 'Mañana · ' : fechaLarga(k) + ' · ';
+  return `<section class="prox-prio"><h3>${ICO_BANDERA('#ef4444').replace('width="14" height="14"', 'width="18" height="18"')} Próxima tarea prioritaria</h3>
+    <div class="ev-blk"><button class="ev-mini" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${dia}${e.todo ? 'Todo el día' : `${hm(e.ini)}–${hm(e.fin)}`}</b><span>${campEv(e)}${esc(e.t)}</span></button></div></section>`;
 }
 /* 4.51 (Gustavo): lo completado en el bloque de ahora sale debajo, fuera del recuadro rojo: las tareas tachadas
    (también las que ya se archivaron) y lo del calendario hecho. Tocar la casilla lo vuelve a dejar pendiente */
