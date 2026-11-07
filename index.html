@@ -643,6 +643,9 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 @media (min-width:900px){ nav.abajo{display:none!important} .envoltura{padding-bottom:48px} }
 /* Cuerpo en el modo Día: el texto de cada fila, oscuro (salía muy claro sobre el fondo de color) */
 html.claro .s-tile .s-est{color:color-mix(in srgb,var(--c) 55%,#1f1838)}
+/* el nombre siempre en una línea; en el móvil, sin la versión en la cabecera (está en el menú) ni Día/Semana/Mes arriba (se cambia en el menú) */
+.marca{white-space:nowrap}
+@media (max-width:899px){ .cab-in .ver{display:none} .ag-modos{display:none} .ag-fijo{margin-top:4px} }
 /* ---- Suscripción (Premium) ---- */
 .prem-hero{display:flex;align-items:center;gap:16px;margin:14px 0 16px}
 .prem-logo{position:relative;flex:none;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(247,195,91,.28),transparent 70%)}
@@ -767,7 +770,9 @@ html.claro .frec-sel,html.claro .frec-l select,html.claro .frec-l input,html.cla
 .ml-in{position:absolute;top:0;bottom:0;left:0;width:min(330px,86vw);background:var(--fondo2);border-radius:0 22px 22px 0;overflow:auto;padding:14px 0 calc(16px + env(safe-area-inset-bottom));transform:translateX(-100%);transition:transform .25s ease;box-shadow:8px 0 30px rgba(0,0,0,.4)}
 .ml.ver .ml-in{transform:none}
 .ml-cab{display:flex;align-items:center;gap:10px;padding:4px 10px 12px 22px}
-.ml-cab b{font-size:21px;font-weight:800;flex:1}
+.ml-cab b{font-size:21px;font-weight:800}
+.ml-tv{flex:1;display:flex;flex-direction:column;min-width:0}
+.ml-tv small{font-size:12px;color:var(--suave);font-weight:700}
 .ml-g{padding:6px 0;border-top:1px solid var(--linea)}
 .ml-cab + .ml-g{border-top:0}
 .ml-f{display:flex;align-items:center;gap:20px;width:calc(100% - 16px);margin:1px 0;border:0;background:none;color:var(--tinta);font:inherit;font-size:16px;font-weight:600;padding:12px 22px;border-radius:0 99px 99px 0;text-align:left;cursor:pointer}
@@ -1301,7 +1306,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.93';
+const VERSION = 'v3.94';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3543,8 +3548,8 @@ const MENU_SECC = [['agenda', 'Calendario', mIco('<rect x="3.5" y="5" width="17"
 function menuHTML(){
   const u = nube.usuario, foto = u && /^https:\/\//.test(u.photoURL || '') ? u.photoURL : '';
   const fila = (ico, t, fn, sel) => `<button type="button" class="ml-f ${sel ? 'sel' : ''}" onclick="${fn}">${ico}<span>${t}</span></button>`;
-  return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><b>Amable Life</b><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
-    <div class="ml-g">${MENU_VISTAS.map(([k, t, ico]) => fila(ico, t, `menuVista('${k}')`, vista === 'agenda' && agModo === k)).join('')}</div>
+  return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><span class="ml-tv"><b>Amable Life</b><small>web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</small></span><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
+    ${ESCRITORIO.matches ? '' : `<div class="ml-g">${MENU_VISTAS.map(([k, t, ico]) => fila(ico, t, `menuVista('${k}')`, vista === 'agenda' && agModo === k)).join('')}</div>`}
     <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), 'Actualizar', 'menuActualizar()')}
       ${fila(temaClaro() ? ICO_LUNA.replace('width="20" height="20"', 'width="24" height="24"') : ICO_SOL.replace('width="20" height="20"', 'width="24" height="24"'), temaClaro() ? 'Modo noche' : 'Modo día', "ponerTema(temaClaro() ? 'oscuro' : 'claro'); abrirMenu()")}</div>
     <div class="ml-g ml-cuenta">${u ? `<div class="ml-u">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<span class="ml-ini">${esc((u.displayName || u.email || '?').trim().charAt(0).toUpperCase())}</span>`}
@@ -3553,7 +3558,7 @@ function menuHTML(){
         ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta y cambiar de cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
       : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
     <div class="ml-g">${MENU_SECC.map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
-    <p class="ml-ver">web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</p>`;
+`;
 }
 function abrirMenu(){
   let m = $('#menu-lat');
