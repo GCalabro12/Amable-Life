@@ -575,6 +575,17 @@ nav.abajo button{font-size:11px}
 .hora-btn:hover{background:rgba(var(--bl),.13)}
 .desp-lista.hl{position:absolute;top:48px;left:0;z-index:30;width:190px;max-height:260px;overflow:auto;margin:0}
 .hl small{font-weight:600;color:var(--suave)}
+/* varias semanas: una fila por semana, con su número a la izquierda */
+.ag-sems .ag-wn{display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--suave)}
+.ag-sems .ag-dia{aspect-ratio:auto;min-height:64px}
+@media (min-width:900px){
+  body.ancho .ag-sems{margin-top:0}
+  body.ancho .ag-sems .ag-wn{place-items:start center;padding-top:8px;border-right:1px solid rgba(var(--bl),.08);border-bottom:1px solid rgba(var(--bl),.08)}
+  body.ancho .ag-sems .ag-dia{min-height:max(130px,var(--fila))}
+  body.ancho .ag-sems .ag-ds{font-size:0}
+  body.ancho .ag-sems .ag-ds::after{content:attr(data-l);font-size:12px;letter-spacing:.6px}
+  body.ancho .ag-sems > span:first-child{border-right:1px solid rgba(var(--bl),.08);border-bottom:1px solid rgba(var(--bl),.08)}
+}
 #dl-dur:not([hidden]){display:grid;grid-template-rows:repeat(7,auto);grid-auto-flow:column;grid-auto-columns:1fr;column-gap:4px;width:min(92%,330px)}
 #dl-dur .desp-op{padding:8px 10px;font-size:14px}
 .rj-ev .bandera{width:11px;height:11px;margin-right:2px;vertical-align:-1px}
@@ -842,7 +853,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   body.ancho nav.abajo{display:none!important}
   body.ancho .envoltura{max-width:none;padding:0 16px 16px 0;display:grid;grid-template-columns:264px minmax(0,1fr);grid-template-areas:"top top" "lado main";align-items:start}
   body.ancho .gc-top{grid-area:top;display:flex;align-items:center;gap:4px;position:sticky;top:0;z-index:9;height:64px;padding:0 4px 0 10px;background:rgba(20,15,38,.97);backdrop-filter:blur(8px)}
-  body.ancho .gc-lado{grid-area:lado;display:flex;flex-direction:column;gap:20px;position:sticky;top:64px;max-height:calc(100vh - 64px);overflow:auto;padding:6px 14px 24px 14px}
+  body.ancho .gc-lado{grid-area:lado;display:flex;flex-direction:column;gap:20px;position:sticky;top:64px;max-height:calc(100vh - 64px);overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(var(--bl),.2) transparent;padding:6px 14px 24px 14px}
   body.ancho .gc-main{grid-area:main;background:var(--fondo2);border-radius:24px;padding:4px 14px 18px 6px;min-height:calc(100vh - 80px)}
   body.ancho .gc-main > .tit-acc,body.ancho .ag-modos,body.ancho .ag-nav,body.ancho .ag-acc,body.ancho .ag-fab,body.ancho .ag-esp,body.ancho .ag-vacio{display:none}
   .gc-ico{width:44px;height:44px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
@@ -1020,7 +1031,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.71';
+const VERSION = 'v3.72';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2521,13 +2532,14 @@ const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.are
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
     <button class="check ${ok ? 'hecho' : ''}" ${e.prio ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
     <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
-let agModo = 'dia', agK = null, agN = 7;   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
+let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al arrastrar más de 7 días   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
 const CON_COLS = ['semana', '7dias', 'rango'];
 function colsDias(){
   const base = agModo === 'semana' ? lunesDe(agK) : agK, n = agModo === 'rango' ? agN : 7;
   return Array.from({length: n}, (_, i) => sumarDias(base, i));
 }
+const semsDias = () => Array.from({length: 7 * agW}, (_, i) => sumarDias(lunesDe(agK), i));
 const rangoTxt = (a, b) => { const x = fechaDe(a), y = fechaDe(b);
   return x.getMonth() === y.getMonth() ? `${x.getDate()} – ${y.getDate()} de ${MESES[y.getMonth()]}` : `${x.getDate()} de ${MESES[x.getMonth()]} – ${y.getDate()} de ${MESES[y.getMonth()]}`; };
 /* Mostrar fines de semana y tareas completadas (como en Google Calendar): se guarda en este aparato */
@@ -2543,7 +2555,7 @@ const evsVer = k => eventosDe(k).filter(e => verHechas() || !hechoEv(e, k));
 function mesPeq(m0, conSem){
   const hoy = hoyK(), primero = claveDia(m0), ini = lunesDe(primero), mes = primero.slice(0, 7);
   const filas = Math.ceil((diaSem(primero) + new Date(m0.getFullYear(), m0.getMonth() + 1, 0).getDate()) / 7);
-  const franja = new Set(CON_COLS.includes(agModo) ? colsDias() : []);
+  const franja = new Set(CON_COLS.includes(agModo) ? colsDias() : agModo === 'semanas' ? semsDias() : []);
   let g = (conSem ? '<span></span>' : '') + DIAS_CORTO.map(x => `<span>${x}</span>`).join('');
   for(let f = 0; f < filas; f++){
     const l = sumarDias(ini, f * 7);
@@ -2572,6 +2584,16 @@ function vAgenda(){
     cuerpo = `<div class="rj-cab" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`
       + (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${dias[n]}')">${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
+  } else if(agModo === 'semanas'){
+    const ds = semsDias(), nCols = verFinde() ? 7 : 5;
+    tit = rangoTxt(ds[0], ds[ds.length - 1]); conHoy = hoy >= ds[0] && hoy <= ds[ds.length - 1];
+    let g = '<span></span>' + DIAS_CORTO.slice(0, nCols).map((x, i) => `<span class="ag-ds" data-l="${DIAS_3[i]}">${x}</span>`).join('');
+    for(let w = 0; w < agW; w++){
+      g += `<span class="ag-wn">${semanaISO(ds[w * 7])}</span>`;
+      for(let n = 0; n < nCols; n++){ const k = ds[w * 7 + n], es = evsVer(k);
+        g += `<button class="ag-dia ${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><span>${fechaDe(k).getDate()}${fechaDe(k).getDate() === 1 ? ' ' + MESES[fechaDe(k).getMonth()].slice(0, 3) : ''}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 6).map(e => `<small style="--c:${colorEv(e)}">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 6 ? `<em>${es.length - 6} más</em>` : ''}</span></button>`; }
+    }
+    cuerpo = `<div class="ag-mes ag-sems" style="grid-template-columns:30px repeat(${nCols},minmax(0,1fr));--fila:calc((100vh - 150px) / ${agW})">${g}</div>`;
   } else if(agModo === 'anio'){
     const y = d0.getFullYear();
     tit = String(y); conHoy = hoy.slice(0, 4) === String(y);
@@ -2593,7 +2615,7 @@ function vAgenda(){
       if(nCols === 5 && diaSem(k) >= 5) continue;
       g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
     const evs = evsVer(agK);
-    cuerpo = `<div class="ag-mes" style="grid-template-columns:repeat(${nCols},1fr)">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
+    cuerpo = `<div class="ag-mes" style="grid-template-columns:repeat(${nCols},minmax(0,1fr))">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
   }
   return gcTop() + gcLado() + `<div class="gc-main"><h1 class="tit-acc">Calendario</h1>
     <div class="ag-modos">${[['dia', 'Día'], ['semana', 'Semana'], ['mes', 'Mes']].map(([k, t]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${t}</button>`).join('')}</div>
@@ -2652,6 +2674,7 @@ function agMover(dir){
   if(agModo === 'dia') agK = sumarDias(agK, dir);
   else if(agModo === 'semana' || agModo === '7dias') agK = sumarDias(agK, 7 * dir);
   else if(agModo === 'rango') agK = sumarDias(agK, agN * dir);
+  else if(agModo === 'semanas') agK = sumarDias(lunesDe(agK), 7 * agW * dir);
   else if(agModo === 'agenda') agK = sumarDias(agK, 30 * dir);
   else if(agModo === 'anio'){ const d = fechaDe(agK); agK = claveDia(new Date(d.getFullYear() + dir, d.getMonth(), 1)); }
   else { const d = fechaDe(agK); agK = claveDia(new Date(d.getFullYear(), d.getMonth() + dir, 1)); }
@@ -2691,14 +2714,14 @@ function gcTop(){
   let t;
   if(agModo === 'dia') t = `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
   else if(agModo === 'anio') t = String(d.getFullYear());
-  else if(CON_COLS.includes(agModo) || agModo === 'agenda'){
-    const ds = agModo === 'agenda' ? [agK, sumarDias(agK, 29)] : colsDias(), a = fechaDe(ds[0]), b = fechaDe(ds[ds.length - 1]);
+  else if(CON_COLS.includes(agModo) || agModo === 'agenda' || agModo === 'semanas'){
+    const ds = agModo === 'agenda' ? [agK, sumarDias(agK, 29)] : agModo === 'semanas' ? semsDias() : colsDias(), a = fechaDe(ds[0]), b = fechaDe(ds[ds.length - 1]);
     t = a.getMonth() === b.getMonth() ? `${capi(MESES[a.getMonth()])} de ${a.getFullYear()}`
       : a.getFullYear() === b.getFullYear() ? `${capi(MESES[a.getMonth()].slice(0, 3))} – ${MESES[b.getMonth()].slice(0, 3)} de ${b.getFullYear()}`
       : `${capi(MESES[a.getMonth()].slice(0, 3))} de ${a.getFullYear()} – ${MESES[b.getMonth()].slice(0, 3)} de ${b.getFullYear()}`;
   }
   else t = `${capi(MESES[d.getMonth()])} de ${d.getFullYear()}`;
-  const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año', agenda: 'Agenda', '7dias': '7 días', rango: `${agN} días`}[agModo];
+  const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año', agenda: 'Agenda', '7dias': '7 días', rango: `${agN} días`, semanas: `${agW} semanas`}[agModo];
   return `<div class="gc-top">
     <div class="gc-menu-w"><button class="gc-ico" aria-label="Menú" aria-haspopup="true" onclick="gcPop('gc-menu', event)">${ICO_MENU}</button>
       <div class="gc-pop izq" id="gc-menu" hidden>${[['agenda', 'Calendario'], ['dia', 'Áreas'], ['inicio', 'Focus'], ['salud', 'Cuerpo'], ['ajustes', 'Ajustes']].map(([v, x]) => `<button class="${v === 'agenda' ? 'sel' : ''}" onclick="ir('${v}')">${x}</button>`).join('')}</div></div>
@@ -2748,9 +2771,10 @@ document.addEventListener('mouseup', () => {
   if(!gcArr) return;
   const [x, y] = [gcArr.a, gcArr.b].sort(); gcArr = null;
   if(x === y){ agElegir(x); return; }
-  agN = Math.min(14, Math.round((fechaDe(y) - fechaDe(x)) / 864e5) + 1);
-  if(agN > 13 && y > sumarDias(x, 13)) aviso('Como mucho, 14 días seguidos');
-  agK = x; agModo = 'rango'; gcMiniDes = 0;
+  const n = Math.round((fechaDe(y) - fechaDe(x)) / 864e5) + 1;
+  if(n <= 7){ agN = n; agK = x; agModo = 'rango'; }
+  else { agK = lunesDe(x); agW = Math.min(6, Math.round((fechaDe(lunesDe(y)) - fechaDe(agK)) / (7 * 864e5)) + 1); agModo = 'semanas'; }
+  gcMiniDes = 0;
   render(); agVerAhora();
 });
 /* Los desplegables de arriba (menú y vista) */
