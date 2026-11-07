@@ -633,6 +633,40 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
 .ep .ico{width:14px;height:14px;vertical-align:-2px}
 .ag-dia-evs small[data-ev]{cursor:pointer}
+/* la portada siempre es oscura: sus letras, siempre claras (en el modo Día salía el título negro) */
+#splash{--tinta:#f4f0fb;--suave:#cfc6ec;--bl:255,255,255;color:#f4f0fb}
+#splash h1{color:#fff}
+/* ---- Suscripción (Premium) ---- */
+.prem-hero{display:flex;align-items:center;gap:16px;margin:14px 0 16px}
+.prem-logo{position:relative;flex:none;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(247,195,91,.28),transparent 70%)}
+.prem-corona{position:absolute;top:-6px;right:-4px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#f7c35b;color:#2a1d05;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.prem-corona svg{width:20px;height:20px}
+.prem-hero h2{margin:0 0 4px;font-size:24px}
+.prem-hero p{margin:0;color:var(--suave);font-size:14.5px;line-height:1.4}
+.prem-precio{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:18px;background:color-mix(in srgb,#f7c35b 14%,var(--tarjeta));border:1px solid color-mix(in srgb,#f7c35b 40%,transparent);margin-bottom:12px}
+.prem-precio b{font-size:28px;font-weight:800}
+.prem-precio span{font-size:15px;font-weight:700}
+.prem-precio small{display:block;color:var(--suave);font-size:12.5px;margin-top:2px}
+.prem-chip{flex:none;font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;background:rgba(var(--bl),.1);color:var(--tinta)}
+.prem-sec{padding:14px 16px;border-radius:18px;background:var(--tarjeta);border:1px solid var(--linea);margin-bottom:12px}
+.prem-sec h3{margin:0 0 6px;font-size:16px}
+.prem-p{margin:0 0 8px;color:var(--suave);font-size:14px}
+.prem-ok{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.prem-ok li{display:flex;align-items:center;gap:10px;font-size:14.5px}
+.prem-ok svg{flex:none;color:#16a34a}
+.prem-lista{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.prem-f{display:flex;gap:14px;align-items:flex-start}
+.prem-ic{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}
+.prem-f b{font-size:15px}
+.prem-f p{margin:3px 0 0;color:var(--suave);font-size:13.5px;line-height:1.4}
+.prem-pasos{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.prem-pasos li{display:grid;grid-template-columns:5.5em 1fr;gap:10px;font-size:14px;align-items:baseline}
+.prem-pasos b{color:var(--oro)}
+.prem-pasos span{color:var(--suave)}
+@media (min-width:900px){
+  body.v-premium .envoltura{max-width:760px}
+  .prem-lista{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+}
 /* ---- Estadísticas ---- */
 .est-cab{margin-top:12px}
 .est-volver{display:inline-flex;align-items:center;gap:4px;font-weight:700}
@@ -1258,7 +1292,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.89';
+const VERSION = 'v3.90';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1507,14 +1541,15 @@ function ir(v){
 }
 function render(){
   const cabH = $('.cab'); if(cabH && cabH.offsetHeight) document.documentElement.style.setProperty('--cab-h', cabH.offsetHeight + 'px');
-  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad};
+  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad, premium:vPremium};
   app.innerHTML = (vistas[vista] || vInicio)();
-  const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad'].includes(vista);
+  const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad','premium'].includes(vista);
   $('#nav').style.display = conNav ? '' : 'none';
   document.body.classList.toggle('ancho', vista === 'agenda');
-  document.body.classList.toggle('v-ajustes', vista === 'ajustes' || vista === 'estad');
+  document.body.classList.toggle('v-ajustes', vista === 'ajustes' || vista === 'estad' || vista === 'premium');
+  document.body.classList.toggle('v-premium', vista === 'premium');
   document.body.classList.toggle('v-estad', vista === 'estad');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || (vista === 'estad' && b.dataset.v === 'ajustes')));
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || ((vista === 'estad' || vista === 'premium') && b.dataset.v === 'ajustes')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
   ponerVersiones();
@@ -4624,6 +4659,37 @@ async function buscarActualizacion(manual){
 }
 /* Ajustes ordenados: una fila por tema; al tocarla se despliega (solo una abierta a la vez) */
 let ajAbierto = null;
+/* ---------- Suscripción: Amable Life Premium (Gustavo, 3.90; parecida a la de TickTick) ----------
+   Siguiendo la guía de cobro de Práctica Integral: lo esencial gratis para siempre, precio claro con IVA, sin trucos,
+   y primero usuarios, luego cobro. Por eso de momento solo explica lo que incluirá y no cobra nada. */
+const PREMIUM_PRECIO = '25 €';   // al año, IVA incluido (Gustavo)
+const ICO_PREMIUM = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8l4.2 3.6L12 5l4.3 6.6L20.5 8l-1.8 10H5.3z"/><path d="M5.3 18h13.4"/></svg>';
+const pIco = d => `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const PREMIUM_EXTRAS = [
+  ['#8b5cf6', pIco('<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>'), 'Estadísticas completas', 'Mira tus tareas, tu enfoque y tus hábitos de los últimos 30 días: por área, a qué hora rindes más y la racha de cada hábito.'],
+  ['#16a34a', pIco('<path d="M12 21v-8"/><path d="M12 13c0-4 3-6.5 7.5-6.5 0 4-3 6.5-7.5 6.5z"/><path d="M12 15.5c0-3.3-2.5-5.5-6.5-5.5 0 3.3 2.5 5.5 6.5 5.5z"/>'), 'Hábitos sin límite', 'Tantos hábitos como quieras, con frecuencia diaria, semanal o cada pocos días, y recordatorios a la hora que elijas.'],
+  ['#2b7fd4', pIco('<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M9.2 4.5v15M14.8 4.5v15"/>'), 'Todas las vistas del calendario', 'Además de Día, Semana y Mes: Año, Agenda, 3 días, 7 días y varias semanas seguidas, arrastrando en el mes pequeño.'],
+  ['#d9731c', pIco('<path d="M12 4v11M7 10.5l5 5 5-5"/><path d="M5 19.5h14"/>'), 'Importar y exportar', 'Trae tu calendario de Google, Outlook o Apple, llévate el tuyo en .ics o .csv, e importa tus hábitos de Metas Amables.'],
+  ['#e2456b', pIco('<rect x="3" y="4" width="18" height="13" rx="2"/><rect x="12" y="9" width="7" height="6" rx="1"/><path d="M8 21h8"/>'), 'Ventana flotante de Focus', 'Tu bloque de ahora, su cuenta atrás y sus tareas siempre a la vista, encima de lo que estés haciendo, en el ordenador y en el móvil.'],
+  ['#0f766e', pIco('<path d="M4 7h16M4 12h16M4 17h11"/><path d="M17 15.5l2 2 3-3.5"/>'), 'Descripciones con formato', 'Negrita, colores, listas y enlaces en tus tareas y hábitos, como en un documento.']];
+const PREMIUM_GRATIS = ['Tu flor de las áreas y todas tus tareas', 'Focus: bloques del día, cuenta atrás y compromiso', 'Calendario Día, Semana y Mes con recordatorios', 'Hasta 3 hábitos', 'Cuerpo: pasos, agua y movimiento', 'Lo mismo en el móvil y en el ordenador, con tu cuenta', 'Modo día y modo noche'];
+function vPremium(){
+  const nom = nombrePila ? nombrePila() : '';
+  return `<div class="prem">
+    <div class="est-cab"><button class="link est-volver" onclick="ir('ajustes')">${ICO_IZQ.replace('width="24" height="24"', 'width="18" height="18"')} Ajustes</button></div>
+    <div class="prem-hero"><div class="prem-logo"><svg viewBox="-100 -100 200 200" width="76" height="76" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1P')}</svg><span class="prem-corona">${ICO_PREMIUM}</span></div>
+      <div><h2>Amable Life Premium</h2><p>${nom ? esc(nom) + ', de' : 'De'} momento tienes <b>todo gratis</b>: eres de las primeras personas en usar Amable Life.</p></div></div>
+    <div class="prem-precio"><div><b>${PREMIUM_PRECIO}</b><span> al año</span><small>IVA incluido · unos 2 € al mes · cancelas cuando quieras</small></div><span class="prem-chip">Aún no se cobra</span></div>
+    <section class="prem-sec"><h3>Siempre gratis</h3><p class="prem-p">Lo esencial de Amable Life es tuyo para siempre, sin tarjeta.</p>
+      <ul class="prem-ok">${PREMIUM_GRATIS.map(t => `<li>${svgT('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 18)}${t}</li>`).join('')}</ul></section>
+    <section class="prem-sec"><h3>Con Premium, además</h3>
+      <div class="prem-lista">${PREMIUM_EXTRAS.map(([c, ic, t, d]) => `<div class="prem-f"><span class="prem-ic" style="--c:${c}">${ic}</span><div><b>${t}</b><p>${d}</p></div></div>`).join('')}</div></section>
+    <section class="prem-sec"><h3>Cuando empiece el cobro</h3>
+      <ol class="prem-pasos"><li><b>Antes</b><span>Te avisaremos con tiempo. Nunca se cobra sin que lo sepas.</span></li>
+        <li><b>Prueba</b><span>7 días de Premium gratis. Te recordamos 2 días antes de que acabe.</span></li>
+        <li><b>Después</b><span>${PREMIUM_PRECIO} al año. Si no sigues, te quedas con todo lo gratis y tus datos, igual que ahora.</span></li></ol></section>
+  </div>`;
+}
 /* ---------- Estadísticas (Gustavo, 3.89; idea de las de TickTick, sin lo que sobra): Resumen, Tareas, Enfoque y Hábitos ----------
    Gráficas en SVG hechas aquí (sin librerías): barras finas con la punta redondeada, rejilla suave, una sola serie por gráfica
    (sin leyenda; el título dice qué es) o dos con leyenda, y al pasar el ratón o tocar una barra, su valor. */
@@ -4784,6 +4850,7 @@ function vEstad(){
 })();
 function abrirAj(k){
   if(k === 'estad'){ ir('estad'); return; }
+  if(k === 'premium'){ ir('premium'); return; }
   ajAbierto = ajAbierto === k ? null : k;
   const y = window.scrollY; render(); window.scrollTo(0, y);
   const el = ajAbierto && $('#aj-' + ajAbierto);
@@ -4829,6 +4896,7 @@ function vAjustes(){
         ${vieja ? `<a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar la app ${APK_ULTIMA}</a>` : ''}</div>
         ${!mia && enAndroidWeb() ? `<p class="suave" style="margin-top:12px">Instala la app de Android para que suene la música al abrir y cuente tus pasos.</p>${pasosInstalar}<div class="bots"><a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar Amable Life ${APK_ULTIMA}</a></div>` : ''}`;
       }},
+    {k: 'premium', ico: ICO_PREMIUM, t: 'Suscripción', sub: 'Amable Life Premium · 25 €/año · de momento, todo gratis', html: () => ''},
     {k: 'estad', ico: ICO_ESTAD, t: 'Estadísticas', sub: 'Tus tareas, tu enfoque y tus hábitos, con gráficas', html: () => ''},
     {k: 'calendario', ico: ICO_CAL_AJ, t: 'Importar y exportar el calendario',
       sub: 'Google Calendar, Outlook y Apple (.ics) · Excel (.csv)',
