@@ -351,7 +351,9 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .hist-exp{margin:12px 0 10px;font-size:15px;line-height:1.4}
 .saludo{margin:18px 0 0;font-size:17px;font-weight:700;color:var(--oro)}
 .tit-acc{font-size:30px;font-weight:800;margin-top:22px;line-height:1.1}
-.tit-bloques{text-align:center;font-size:34px}
+.tit-bloques{text-align:center;font-size:34px;margin-bottom:0}
+.sub-bloques{text-align:center;font-size:15px;font-weight:600;opacity:.75;margin:4px 0 6px}
+.flor-ayuda{text-align:center;margin:2px 0 0}
 .pan-vacio{display:none}
 .avisos-btn{display:flex;align-items:center;gap:8px;margin-top:4px;padding:6px 0;border:0;background:none;color:var(--suave);font-size:14px;font-weight:800;text-align:left;font-variant-numeric:tabular-nums}
 .avisos-btn .on{color:#4ade80}
@@ -1255,7 +1257,7 @@ body.pip .ev-mini{pointer-events:none}
 .flor.girasol{width:calc(100% + 32px);max-width:480px;margin-left:-16px!important;margin-right:-16px!important;margin:10px auto 4px;overflow:visible}
 .girasol .g-hora{font-size:30px;font-weight:800;fill:#3a2208}
 .girasol .g-sub{font-size:10px;font-weight:800;fill:#5a3810}
-.girasol .g-ahora{font-size:9px;font-weight:800;fill:#5a3810;letter-spacing:1.5px}
+.girasol .g-ahora{font-size:8px;font-weight:800;fill:#5a3810;letter-spacing:.8px}
 .girasol .g-nom{font-size:12.5px;font-weight:800;fill:#fff;paint-order:stroke;stroke:rgba(20,12,40,.55);stroke-width:3px;stroke-linejoin:round}
 .girasol .g-nom.largo{font-size:11px}
 .girasol .g-cuenta{font-size:15px;font-weight:800;fill:#fff;paint-order:stroke;stroke:rgba(20,12,40,.5);stroke-width:3px}
@@ -1664,19 +1666,19 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.59';
+const VERSION = 'v4.60';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
 /* Las 8 áreas = los 8 pétalos (decididas con Gustavo el 19/10/2026). Orden = sentido de las agujas del reloj desde arriba. */
 const AREAS = [
-  {id:'salud', corto:'Salud',       nombre:'Salud', etiqueta:'Salud',                   color:'#22a35a',
+  {id:'salud', corto:'Salud',       nombre:'Salud', etiqueta:'Salud',                   color:'#2b7fd4',
    pregunta:'¿Cómo te sientes con tu cuerpo, tu energía y tu descanso?', ejemplos:['caminar 20 minutos el martes y el jueves', 'acostarme antes de las 23 h tres noches', 'beber 2 litros de agua al día']},
   {id:'pareja', corto:'Pareja',      nombre:'Pareja', etiqueta:'Pareja',                  color:'#e2456b',
    pregunta:'¿Cómo estás en tu vida de pareja o con tu situación sentimental?', ejemplos:['una cena sin móviles el viernes', 'decirle algo que valoro de mi pareja', 'planear juntos una salida para el finde']},
   {id:'familia', corto:'Familia',     nombre:'Familia y amigos', etiqueta:'Familia y|amigos',        color:'#f08a24',
    pregunta:'¿Qué tan cuidados y presentes están tus vínculos cercanos?', ejemplos:['llamar a un amigo que hace tiempo no veo', 'comer con mi familia el domingo', 'escribir a alguien para quedar']},
-  {id:'trabajo', corto:'Trabajo',     nombre:'Trabajo y dinero', etiqueta:'Trabajo y|dinero',        color:'#2b7fd4',
+  {id:'trabajo', corto:'Trabajo',     nombre:'Trabajo y dinero', etiqueta:'Trabajo y|dinero',        color:'#22a35a',
    dobles:[{id:'gusta', texto:'¿Te gusta tu trabajo?', corto:'Te gusta'},
            {id:'dinero',texto:'¿Te da el dinero que necesitas?', corto:'Dinero'}],
    ejemplos:['revisar mis gastos del mes el domingo', 'dedicar 1 hora a la tarea que más me gusta', 'buscar una forma de ganar algo más este mes']},
@@ -1848,6 +1850,18 @@ function alternarSonido(){
 /* ---------- Dibujos: la flor (v2: pétalos iguales; la intensidad dice el nivel) ---------- */
 function pt(r, ang){ const a = ang*Math.PI/180; return [r*Math.cos(a), r*Math.sin(a)]; }
 /* Pétalo apuntando hacia arriba (eje -y), de largo L */
+/* 4.60 (Gustavo): en la flor, Trabajo va abajo del todo y Crecimiento donde estaba Trabajo (las listas siguen en el orden de AREAS) */
+function areasFlor(){
+  const o = AREAS.slice(), t = o.findIndex(a => a.id === 'trabajo'), c = o.findIndex(a => a.id === 'crecimiento');
+  [o[t], o[c]] = [o[c], o[t]]; return o;
+}
+/* 4.60: tareas o hábitos de un área esta semana (pendientes, hechas esta semana y lo del calendario de esta semana) */
+function tareasSemanaArea(id){
+  const lun = lunesDe(hoyK()), dias = [0, 1, 2, 3, 4, 5, 6].map(n => sumarDias(lun, n)), t0 = lunes(new Date()).getTime(), ids = new Set();
+  D.acciones.forEach(x => { if(x.area === id && (!x.hecha || (x.hechaEn && new Date(x.hechaEn).getTime() >= t0))) ids.add(x.id); });
+  dias.forEach(k => eventosDe(k).forEach(e => { if(areasEv(e).some(a => a.id === id) && !(e.acc && ids.has(e.acc))) ids.add('ev:' + e.id); }));
+  return ids.size;
+}
 function petalo(L, W){
   const w = W != null ? W : Math.min(34, 14 + L*0.2);
   return `M0 0C${w} ${-L*.28} ${w*.92} ${-L*.78} 0 ${-L}C${-w*.92} ${-L*.78} ${-w} ${-L*.28} 0 0Z`;
@@ -1860,7 +1874,7 @@ function flor(niveles, opc = {}){
   <defs><filter id="brillo${n}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <radialGradient id="centro${n}"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient>
   <pattern id="semi${n}" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.4" fill="#7a4310" fill-opacity=".38"/></pattern></defs>`;
-  AREAS.forEach((a,i) => {
+  areasFlor().forEach((a,i) => {
     const nv = niveles && niveles[a.id];
     const op = !nv ? .18 : nv === 'bien' ? .42 : nv === 'una' ? .78 : 1;
     const extra = !nv ? `stroke="${a.color}" stroke-width="1.5" stroke-dasharray="4 4"` : '';
@@ -1870,7 +1884,7 @@ function flor(niveles, opc = {}){
   if(!mini && opc.centro != null) s += `<text class="centro-num" y="-3" text-anchor="middle" dominant-baseline="central">${opc.centro}</text><text class="centro-txt" y="14" text-anchor="middle" dominant-baseline="central">${opc.centroTxt || ''}</text>`;
   s += '</g>';
   if(!mini){
-    AREAS.forEach((a,i) => {
+    areasFlor().forEach((a,i) => {
       const nv = niveles && niveles[a.id], ang = i*paso - 90;
       const [xm,ym] = pt(base + Lp*.54, ang), giro = (ang > 90 || ang < -90) ? ang + 180 : ang;
       s += `<text class="eti-nom" x="${xm.toFixed(1)}" y="${ym.toFixed(1)}" transform="rotate(${giro} ${xm.toFixed(1)} ${ym.toFixed(1)})" text-anchor="middle" dominant-baseline="central">${a.corto}</text>`;
@@ -1883,7 +1897,7 @@ function flor(niveles, opc = {}){
       }
     });
   }
-  if(opc.clic) AREAS.forEach((a,i) => { s += `<path d="${petalo(L + 20, 46)}" transform="rotate(${i*paso})" fill="transparent" style="cursor:pointer" onclick="abrirPetalo('${a.id}')"/>`; });
+  if(opc.clic) areasFlor().forEach((a,i) => { s += `<path d="${petalo(L + 20, 46)}" transform="rotate(${i*paso})" fill="transparent" style="cursor:pointer" onclick="abrirPetalo('${a.id}')"/>`; });
   return s + '</svg>';
 }
 const LEYENDA = `<div class="leyenda-niv"><span><i class="pt2"></i><i class="pt2"></i> Necesita más acción</span><span><i class="pt2"></i> Una acción a la semana</span><span><b>✓</b> Estoy bien</span></div>`;
@@ -1891,7 +1905,7 @@ const LEYENDA = `<div class="leyenda-niv"><span><i class="pt2"></i><i class="pt2
 function logoInterior(){
   let s = '<defs><radialGradient id="lc"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient>'
     + '<pattern id="lsem" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.5" fill="#7a4310" fill-opacity=".4"/></pattern></defs>';
-  AREAS.forEach((a,i) => { s += `<g transform="rotate(${i*45}) translate(0 -36)"><path class="petalo" style="animation-delay:${i*110}ms" d="${petalo(60, 26)}" fill="${a.color}"/></g>`; });
+  areasFlor().forEach((a,i) => { s += `<g transform="rotate(${i*45}) translate(0 -36)"><path class="petalo" style="animation-delay:${i*110}ms" d="${petalo(60, 26)}" fill="${a.color}"/></g>`; });
   return s + '<g class="centro"><circle r="44" fill="url(#lc)"/><circle r="44" fill="url(#lsem)"/></g>';
 }
 function logoSVG(){ return `<svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">${logoInterior()}</svg>`; }
@@ -2797,7 +2811,9 @@ function quitarDeBloques(id, soloElegido){
 /* Girasol: centro grande = bloque de ahora; pétalos más pequeños alrededor */
 function florGirasol(niveles, bloque, pendientesN){
   // pétalos más grandes, con el nombre y el nº de tareas dentro
-  const paso = 360/AREAS.length, R0 = 68, Lp = 92, vb = 158, n = ++idFlor;
+  const paso = 360/AREAS.length, R0 = 68, vb = 166, n = ++idFlor;
+  // 4.60 (Gustavo): sin tareas ni hábitos esta semana, pétalo más estrecho y corto; con 1, normal; con 2 o más, un poco más grande
+  const FL = areasFlor(), TAM = FL.map(a => { const c = tareasSemanaArea(a.id); return c === 0 ? {L: 78, W: 31} : c === 1 ? {L: 92, W: 38} : {L: 104, W: 44}; });
   const corta = (t, k) => t.length > k ? t.slice(0, k - 1).trimEnd() + '…' : t;
   // el nombre de la tarea en dos renglones (cortando por palabras)
   const dosRenglones = (t, k) => {
@@ -2809,11 +2825,11 @@ function florGirasol(niveles, bloque, pendientesN){
   <defs><filter id="brillo${n}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <radialGradient id="centro${n}"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient>
   <pattern id="semillas${n}" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.3" fill="#7a4310" fill-opacity=".35"/></pattern></defs>`;
-  AREAS.forEach((a, i) => {
-    const nv = niveles && niveles[a.id], sel = panelAbierto === a.id;
+  FL.forEach((a, i) => {
+    const nv = niveles && niveles[a.id], sel = panelAbierto === a.id, {L: Lp, W} = TAM[i];
     const op = !nv ? .6 : 1;   // cada pétalo con su color de verdad
     const extra = sel ? 'stroke="#fff" stroke-width="3.5"' : !nv ? `stroke="${a.color}" stroke-width="1.5" stroke-dasharray="4 4"` : '';
-    s += `<g transform="rotate(${i*paso}) translate(0 ${-R0 + 8})"><path d="${petalo(Lp, 38)}" fill="${a.color}" fill-opacity="${sel && !nv ? .5 : op}" ${extra}/></g>`;
+    s += `<g transform="rotate(${i*paso}) translate(0 ${-R0 + 8})"><path d="${petalo(Lp, W)}" fill="${a.color}" fill-opacity="${sel && !nv ? .5 : op}" ${extra}/></g>`;
   });
   s += `<circle r="${R0}" fill="url(#centro${n})"/><circle r="${R0}" fill="url(#semillas${n})"/>`;
   // 4.51 (Gustavo): lo que falta del bloque, en verde; lo pasado, en rojo; y un punto rojo que parpadea donde va el tiempo
@@ -2824,7 +2840,7 @@ function florGirasol(niveles, bloque, pendientesN){
   if(bloque){
     // BLOQUE · 16:00 – 17:30 (en una línea) · primera tarea · +N con el icono de tarea
     const tareas = bloque.tareas || [], resto = tareas.length - 1;
-    s += `<text class="g-ahora" y="-44" text-anchor="middle" dominant-baseline="central">BLOQUE</text>
+    s += `<text class="g-ahora" y="-44" text-anchor="middle" dominant-baseline="central">BLOQUE DE TIEMPO</text>
       <text class="g-rango" y="-23" text-anchor="middle" dominant-baseline="central">${hm(bloque.ini)} – ${hm(bloque.fin)}</text>
       ${tareas.length ? dosRenglones(tareas[0], 18).map((l, k, arr) => `<text class="g-tarea" y="${arr.length === 1 ? 6 : k ? 17 : 3}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`).join('')
         : '<text class="g-tarea" y="6" text-anchor="middle" dominant-baseline="central">Sin tareas</text>'}`;
@@ -2833,18 +2849,18 @@ function florGirasol(niveles, bloque, pendientesN){
   }
   else s += `<text class="g-hora" y="-6" text-anchor="middle" dominant-baseline="central">${pendientesN}</text><text class="g-sub" y="18" text-anchor="middle" dominant-baseline="central">pendientes</text>`;
   const conBloque = idsEnBloquesHoy();
-  AREAS.forEach((a, i) => {
-    const ang = i*paso - 90, giro = (ang > 90 || ang < -90) ? ang + 180 : ang;
+  FL.forEach((a, i) => {
+    const ang = i*paso - 90, giro = (ang > 90 || ang < -90) ? ang + 180 : ang, Lp = TAM[i].L;
     // nº de tareas de esa área que aún no tienen bloque hoy
     const nTar = D.acciones.filter(x => x.area === a.id && !x.hecha && !conBloque.has(x.id)).length;
     // en el centro del pétalo: el nombre y, debajo, el número
-    const [xm, ym] = pt(R0 - 8 + Lp*.52, ang), largo = a.corto.length > 8 ? ' largo' : '';
+    const [xm, ym] = pt(R0 - 8 + Lp*.52, ang), largo = a.corto.length > 8 || Lp < 80 ? ' largo' : '';
     s += `<g transform="translate(${xm.toFixed(1)} ${ym.toFixed(1)}) rotate(${giro})">
       <text class="g-nom${largo}" y="${nTar ? -7 : 0}" text-anchor="middle" dominant-baseline="central">${a.corto}</text>
       ${nTar ? `<text class="g-cuenta" y="10" text-anchor="middle" dominant-baseline="central">${nTar}</text>` : ''}</g>`;
   });
   // zonas para tocar: pétalos (ver sus tareas) y centro (soltar tareas en el bloque)
-  AREAS.forEach((a, i) => { s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="abrirPanelArea('${a.id}')" onmouseenter="if(matchMedia('(hover: hover)').matches) abrirPanelArea('${a.id}', true)"/>`; });
+  FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="abrirPanelArea('${a.id}')" onmouseenter="if(matchMedia('(hover: hover)').matches) abrirPanelArea('${a.id}', true)"/>`; });
   s += `<circle class="g-centro" r="${R0}" fill="transparent" ${bloque ? 'data-drop="ahora"' : ''} style="cursor:pointer" onclick="${bloque && bloque.clic ? bloque.clic : "ir('dia')"}"/>`;
   return s + '</svg>';
 }
@@ -4893,12 +4909,10 @@ function vDia(){
   const lleno = acts.length >= MAX_ACT;
   // 4.52 (Gustavo): «Tareas por bloques», grande y en el centro; en el ordenador, las tareas del pétalo a la izquierda,
   // la flor en medio y los bloques a la derecha (así, al pasar por los pétalos, la flor no se mueve)
-  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Tareas por bloques</h1><div class="dia-cols"><div class="dia-izq">${botonPausa('tareas')}
+  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Tareas por áreas</h1><p class="sub-bloques">Trabajo en bloques de tiempo de 1,5 horas</p><div class="dia-cols"><div class="dia-izq">${botonPausa('tareas')}
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0)}</div>
-    <div class="fn-fila"><button class="fn-flecha" onclick="moverBloque(-1)" aria-label="Bloque anterior">‹</button>
-      <p class="peq suave">Desliza el centro para pasar de bloque · toca un pétalo para ver sus tareas · <button class="link" onclick="empezar()">revisar toda la flor</button> · <button class="link" onclick="ir('historial')">ver el historial</button></p>
-      <button class="fn-flecha" onclick="moverBloque(1)" aria-label="Bloque siguiente">›</button></div>
+    <p class="peq suave flor-ayuda">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo · <button class="link" onclick="empezar()">revisar toda la flor</button> · <button class="link" onclick="ir('historial')">ver el historial</button></p>
     </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div><div class="dia-der">
     <div class="tira-blk" id="tiraBlk">${tira}</div>
     <div class="blk-barra-caja"><div class="blk-riel">${BLOQUES.map((x, i) => `<i class="${i === cur ? 'ya' : ''}" style="left:${(posBarra(i, cur) * 100).toFixed(2)}%"></i>`).join('')}</div>
@@ -6652,10 +6666,6 @@ app.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - toque.x, dy = e.changedTouches[0].clientY - toque.y, dt = Date.now() - toque.t;
   const enFlor = toque.flor; toque = null;
   if(arrastre || Date.now() - finArrastre < 400) return;
-  if(enFlor && vista === 'dia'){   // deslizar el centro del girasol: siguiente / anterior bloque
-    if(Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.2 && dt <= 800) moverBloque(dx < 0 ? 1 : -1);
-    return;
-  }
   if(enFlor) return;
   if(Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.6 || dt > 800) return;
   deslizar(dx < 0 ? 1 : -1);
