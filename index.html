@@ -1469,7 +1469,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.21';
+const VERSION = 'v4.22';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2738,9 +2738,9 @@ function cerrarHojaX(){
   if(edicion) salirEdicion();
   else if(evEd) salirEvento();
   else if(avisoSalud) responderAviso(false);
-  else if(document.getElementById('hoja-permisos')){   // 4.21 (Gustavo): no se puede dejar sin activar
-    cerrarHoja(); aviso('Es necesario activar estos permisos para usar la aplicación', 3500);
-    setTimeout(() => window.revisarPermisos(), 4000);
+  else if(document.getElementById('hoja-permisos')){   // 4.22 (Gustavo): la cruz la cierra; se vuelve a recordar al día siguiente, cada día
+    cerrarHoja(); aviso('Es necesario activar estos permisos para usar la aplicación. Te lo recordaré mañana.', 4000);
+    try{ localStorage.setItem('equilibra.permisosCerrada', hoyK()); }catch(e){}
   }
   else cerrarHoja();
 }
@@ -4760,6 +4760,8 @@ window.revisarPermisos = (intentos = 0) => {
   const abierta = !!document.getElementById('hoja-permisos');
   if(p.notif && p.sobre && p.pantalla){ if(abierta){ cerrarHoja(); aviso('Permisos activados ✓', 2500); } return; }
   if(abierta){ hojaPermisos(p); return; }   // al volver de Ajustes: se pinta con lo que ya está activado
+  let cerradaHoy = false; try{ cerradaHoy = localStorage.getItem('equilibra.permisosCerrada') === hoyK(); }catch(e){}
+  if(cerradaHoy) return;   // cerrada con la cruz hoy: vuelve mañana
   if($('#splash') || $('#hoja') || $('#menu-lat') || $('#alarma-full')){ if(intentos < 40) setTimeout(() => window.revisarPermisos(intentos + 1), 1500); return; }
   hojaPermisos(p);
 };
