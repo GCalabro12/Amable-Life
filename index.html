@@ -883,6 +883,7 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .af-ok{background:#16a34a}
 .af-pos{background:#8b5cf6}
 .af-ent{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.35)}
+.af-ent-txt{margin:-4px 0 4px;font-size:13px;color:#cfc6ec;text-align:center}
 .af-sinson{display:block;margin:0 auto 14px;border:0;border-radius:99px;padding:10px 18px;background:#f7c35b;color:#2a1f52;font:inherit;font-weight:800;cursor:pointer;animation:alarmaMueve .6s ease-in-out infinite alternate}
 .af-nosuena{display:block;margin:18px auto 0;border:0;background:none;color:#c9c2ea;font:inherit;font-size:15px;text-decoration:underline;cursor:pointer}
 .af-ayuda{margin:12px 0 0;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.08);text-align:left;font-size:15px;line-height:1.45}
@@ -1655,7 +1656,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.57';
+const VERSION = 'v4.58';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4643,7 +4644,14 @@ function cuandoTxt(e, k, ref){
 /* lo que necesita la ventana del teléfono para escribir lo mismo (APK 2.49) */
 const extraAlarma = (e, k, at) => ({ini: fechaDe(k).getTime() + (e.todo ? 0 : e.ini * 60000), todo: !!e.todo,
   cuando: cuandoTxt(e, k, claveDia(new Date(at))), col: colorEv(e)});
-function hojaAlarma(e, k, txt, ultima){
+/* 4.58 (Gustavo): debajo de «Enterado», en pequeño, qué quita: solo este aviso (el de 1 hora antes, el de 5 minutos antes…) */
+function entTxt(e, a){
+  if(a == null) return 'Solo quita este aviso pospuesto';
+  if(e.tipo === 'habito' && a !== 0 && !e.todo) return `Solo quita este aviso de las ${hm(((e.ini - a) % 1440 + 1440) % 1440)}`;
+  if(a === 0) return e.todo ? 'Solo quita el aviso de hoy' : 'Solo quita este aviso de la hora de empezar';
+  return `Solo quita este aviso de ${largoMin(a)} antes`;
+}
+function hojaAlarma(e, k, txt, ultima, a){
   // 4.25: antes llamaba a alarmaCerrar(), que paraba el sonido que se acababa de empezar (la ventana salía en silencio)
   const vieja = $('#alarma-full'); if(vieja){ vieja.id = ''; vieja.remove(); }
   const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full'; d.style.setProperty('--c', colorEv(e));
@@ -4656,6 +4664,7 @@ function hojaAlarma(e, k, txt, ultima){
     <p class="af-cuando">${esc(cuandoTxt(e, k, hoyK()))}</p>
     <div class="af-bots">
       <button type="button" class="af-b af-ent" onclick="alarmaCerrar()">Enterado</button>
+      <p class="af-ent-txt">${esc(entTxt(e, a))}</p>
       <button type="button" class="af-b af-pos" onclick="const l = document.getElementById('af-pos-l'); l.hidden = !l.hidden">Posponer</button>
       <div class="af-pos-l" id="af-pos-l" hidden>${POSPONER_MIN.map(m => `<button type="button" onclick="posponerAlarma('${e.id}','${k}',${m},${ultima ? 1 : 0})">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div>
       ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">Tarea completada</button>` : ''}
@@ -4701,7 +4710,7 @@ function posponerAlarma(id, k, min = 5, ultima = 1){
   const at = Date.now() + min * 60000, txt = `Pospuesto · ${horaEv(e)}`;
   aviso(`Te lo vuelvo a recordar ${min < 60 ? `en ${min} minutos` : min === 60 ? 'en 1 hora' : `en ${min / 60} horas`}`, 3000);
   if(esApp && window.AndroidEquilibra && typeof AndroidEquilibra.posponerAlarma === 'function'){
-    try{ AndroidEquilibra.posponerAlarma(JSON.stringify(Object.assign({id: `${id}|${k}|pos`, at, tit: e.t, txt, ev: id, k, ul: !!ultima, dur: alarmaDur(), gr: alarmaGradual()}, extraAlarma(e, k, at)))); return; }catch(x){}
+    try{ AndroidEquilibra.posponerAlarma(JSON.stringify(Object.assign({id: `${id}|${k}|pos`, at, tit: e.t, txt, ev: id, k, ul: !!ultima, dur: alarmaDur(), gr: alarmaGradual()}, extraAlarma(e, k, at), {ent: entTxt(e, null)}))); return; }catch(x){}
   }
   let l; try{ l = JSON.parse(localStorage.getItem('equilibra.pospuestos')) || []; }catch(x){ l = []; }
   l = l.filter(p => !(p.ev === id && p.k === k)); l.push({ev: id, k, at, ul: !!ultima});
@@ -4745,7 +4754,7 @@ function enviarRecordatorios(){
     const k = sumarDias(hoy, n);
     eventosDe(k).forEach(e => { if(hechoEv(e, k)) return; (e.avisos || []).forEach(a => {
       const at = fechaDe(k).getTime() + (e.todo ? 540 : e.ini) * 60000 - a * 60000;
-      if(at > ahora) lista.push(Object.assign({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : ''), ev: e.id, k, ul: a === Math.min(...e.avisos), dur: alarmaDur(), gr: alarmaGradual()}, extraAlarma(e, k, at)));
+      if(at > ahora) lista.push(Object.assign({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : ''), ev: e.id, k, ul: a === Math.min(...e.avisos), dur: alarmaDur(), gr: alarmaGradual()}, extraAlarma(e, k, at), {ent: entTxt(e, a)}));
     }); });
   }
   lista.sort((x, y) => x.at - y.at);
@@ -4768,7 +4777,7 @@ function avisarEventos(){
       vistos.push(clave); cambio = true;
       if(esApp && document.visibilityState !== 'visible' && recordNativo()) return;   // la notificación del teléfono ya avisa
       const txt = `${textoRecord(e, a, Math.max(1, Math.round((base - ahora) / 60000)))}: ${e.t}`;   // con lo que falta de verdad
-      sonarAlarma(); hojaAlarma(e, k, txt, a === Math.min(...e.avisos));
+      sonarAlarma(); hojaAlarma(e, k, txt, a === Math.min(...e.avisos), a);
       notifWeb(e.t, txt.replace(': ' + e.t, ''), clave, false, {requireInteraction: true, renotify: true, silent: false});
       setTimeout(() => hablar(txt.replace(/\(en (\d+) min\)/, 'dentro de $1 minutos').replace('(en 1 hora)', 'dentro de una hora') + '.', 'tareas'), 3500);
     }));
@@ -5090,7 +5099,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.49';   // última app Android publicada
+const APK_ULTIMA = '2.50';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
