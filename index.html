@@ -722,6 +722,12 @@ nav.abajo button{font-size:11px}
 body.rj-moviendo, body.rj-moviendo *{cursor:grabbing!important;user-select:none}
 body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:none}
 .rj-blk{position:absolute;left:0;right:0;background:rgba(247,195,91,.07);pointer-events:none}
+.rj-b{position:absolute;left:3px;right:3px;border-radius:10px;background:rgba(var(--bl),.045);pointer-events:none;z-index:0;overflow:hidden}
+.rj-b.ya{background:rgba(247,195,91,.13);box-shadow:inset 0 0 0 2px rgba(224,168,16,.6)}
+.rj-b-pas{position:absolute;left:0;right:0;top:0;background:rgba(239,68,68,.1)}
+.rj-b em{position:absolute;right:8px;top:4px;font-style:normal;font-size:10px;font-weight:800;color:#b07a08;white-space:nowrap}
+.rj.sem .rj-b em{display:none}
+.rj-b + .rj-b{}
 .rj-ev{position:absolute;margin-left:1px;border:0;border-radius:8px;padding:3px 6px;background:color-mix(in srgb,var(--c) 58%,var(--tarjeta));border-left:3px solid var(--c);color:var(--tinta);text-align:left;overflow:hidden;font-size:13px;line-height:1.2;display:flex;flex-direction:column;gap:1px;z-index:1}
 .bandera{vertical-align:-2px;flex:none}
 .campanita{flex:none;vertical-align:-2px;margin-right:3px;color:var(--tinta);width:14px;height:14px;stroke-width:2.6}
@@ -1738,7 +1744,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.67';
+const VERSION = 'v4.68';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3678,14 +3684,15 @@ function rejillaHTML(dias){
   const [h0, h1] = rangoHoras(dias), hoy = hoyK(), sem = dias.length > 1, y = m => (m - h0 * 60) / 60 * AG_PX;
   let lineas = '';
   for(let h = h0; h <= h1; h++){
-    lineas += `<div class="rj-h" style="top:${(h - h0) * AG_PX}px"><span>${horaEje(h)}</span></div>`;
-    if(h < h1) lineas += `<div class="rj-m" style="top:${(h - h0 + .5) * AG_PX}px"></div>`;
+    lineas += `<div class="rj-h" style="top:${(h - h0) * AG_PX}px"><span>${horaEje(h)}</span></div>`;   // 4.68: sin la raya de la media hora
   }
   const cols = dias.map(k => {
     let h = '';
     if(k === hoy){
-      const c = bloqueAhora(), m = minutosHoy();
-      if(c >= 0) h += `<div class="rj-blk" style="top:${y(BLOQUES[c].ini)}px;height:${90 / 60 * AG_PX}px"></div>`;
+      const c = bloqueAhora(), m = minutosHoy(), alto = 90 / 60 * AG_PX;
+      BLOQUES.forEach((b, i) => { if(b.fin <= h0 * 60 || b.ini >= h1 * 60) return;
+        const ya = i === c, pas = ya ? Math.max(0, Math.min(alto, (m - b.ini) / 60 * AG_PX)) : 0;
+        h += `<div class="rj-b ${ya ? 'ya' : ''}" style="top:${y(b.ini) + 2}px;height:${alto - 4}px">${ya ? `<i class="rj-b-pas" style="height:${pas.toFixed(1)}px"></i><em>Bloque ${hm(b.ini)} – ${hm(b.fin)}</em>` : ''}</div>`; });
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
