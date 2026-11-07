@@ -633,6 +633,29 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
 .ep .ico{width:14px;height:14px;vertical-align:-2px}
 .ag-dia-evs small[data-ev]{cursor:pointer}
+.cab-menu{width:42px;height:42px;border:0;border-radius:50%;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0;margin-right:-8px}
+.cab-menu:hover{background:rgba(var(--bl),.1)}
+.ml{position:fixed;inset:0;z-index:45;background:rgba(8,5,20,0);transition:background .25s}
+.ml.ver{background:rgba(8,5,20,.55)}
+.ml-in{position:absolute;top:0;bottom:0;left:0;width:min(330px,86vw);background:var(--fondo2);border-radius:0 22px 22px 0;overflow:auto;padding:14px 0 calc(16px + env(safe-area-inset-bottom));transform:translateX(-100%);transition:transform .25s ease;box-shadow:8px 0 30px rgba(0,0,0,.4)}
+.ml.ver .ml-in{transform:none}
+.ml-cab{display:flex;align-items:center;gap:10px;padding:4px 10px 12px 22px}
+.ml-cab b{font-size:21px;font-weight:800;flex:1}
+.ml-g{padding:6px 0;border-top:1px solid var(--linea)}
+.ml-cab + .ml-g{border-top:0}
+.ml-f{display:flex;align-items:center;gap:20px;width:calc(100% - 16px);margin:1px 0;border:0;background:none;color:var(--tinta);font:inherit;font-size:16px;font-weight:600;padding:12px 22px;border-radius:0 99px 99px 0;text-align:left;cursor:pointer}
+.ml-f:hover{background:rgba(var(--bl),.07)}
+.ml-f.sel{background:color-mix(in srgb,var(--oro) 26%,transparent)}
+.ml-f svg{flex:none;color:var(--suave)}
+.ml-f.sel svg{color:var(--tinta)}
+.ml-u{display:flex;align-items:center;gap:14px;padding:10px 22px}
+.ml-u img,.ml-ini{width:46px;height:46px;border-radius:50%;flex:none;object-fit:cover}
+.ml-ini{display:grid;place-items:center;background:var(--oro);color:#2a1d05;font-weight:800;font-size:20px}
+.ml-u span{display:flex;flex-direction:column;min-width:0}
+.ml-u b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-u small{color:var(--suave);font-size:12.5px}
+.ml-nota{margin:2px 22px 6px;font-size:13px;color:var(--suave)}
+.ml-ver{margin:10px 22px 0;font-size:12px;color:var(--suave)}
 /* el mes y los días se quedan fijos arriba al bajar por las horas (Gustavo) */
 .ag-fijo{position:sticky;top:var(--cab-h,58px);z-index:4;margin:0 -16px;padding:2px 16px 4px;background:rgba(20,15,38,.97);backdrop-filter:blur(8px)}
 html.claro .ag-fijo{background:rgba(243,240,249,.97)}
@@ -1129,7 +1152,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
   <div class="cab-in">
     <div class="marca"><svg id="logo-cab"></svg>Amable Life</div>
     <span class="ver" id="ver"></span>
-    <div class="der"><span id="grow-panel-boton"></span></div>
+    <div class="der"><span id="grow-panel-boton"></span><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
   </div>
 </header>
 
@@ -1149,7 +1172,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.83';
+const VERSION = 'v3.84';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2673,9 +2696,9 @@ const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.are
     <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${broteEv(e)}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al arrastrar más de 7 días   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
-const CON_COLS = ['semana', '7dias', 'rango'];
+const CON_COLS = ['semana', '7dias', '3dias', 'rango'];
 function colsDias(){
-  const base = agModo === 'semana' ? lunesDe(agK) : agK, n = agModo === 'rango' ? agN : 7;
+  const base = agModo === 'semana' ? lunesDe(agK) : agK, n = agModo === 'rango' ? agN : agModo === '3dias' ? 3 : 7;
   return Array.from({length: n}, (_, i) => sumarDias(base, i));
 }
 const semsDias = () => Array.from({length: 7 * agW}, (_, i) => sumarDias(lunesDe(agK), i));
@@ -2685,7 +2708,7 @@ const rangoTxt = (a, b) => { const x = fechaDe(a), y = fechaDe(b);
 const gcPref = (() => { try{ return JSON.parse(localStorage.getItem('equilibra.vistaCal') || '{}') || {}; }catch(e){ return {}; } })();
 const verFinde = () => gcPref.finde !== false, verHechas = () => gcPref.hechas !== false;
 /* La vista del calendario se recuerda (Gustavo): la última que usaste; si no hay ninguna guardada, Semana */
-const MODOS_CAL = ['dia', 'semana', 'mes', 'anio', 'agenda', '7dias', 'rango', 'semanas'];
+const MODOS_CAL = ['dia', 'semana', 'mes', 'anio', 'agenda', '7dias', '3dias', 'rango', 'semanas'];
 agModo = MODOS_CAL.includes(gcPref.modo) ? gcPref.modo : 'semana';
 if(gcPref.n >= 2 && gcPref.n <= 7) agN = gcPref.n;
 if(gcPref.w >= 2 && gcPref.w <= 6) agW = gcPref.w;
@@ -2824,6 +2847,7 @@ function agMover(dir){
   gcMiniDes = 0;
   if(agModo === 'dia') agK = sumarDias(agK, dir);
   else if(agModo === 'semana' || agModo === '7dias') agK = sumarDias(agK, 7 * dir);
+  else if(agModo === '3dias') agK = sumarDias(agK, 3 * dir);
   else if(agModo === 'rango') agK = sumarDias(agK, agN * dir);
   else if(agModo === 'semanas') agK = sumarDias(lunesDe(agK), 7 * agW * dir);
   else if(agModo === 'agenda') agK = sumarDias(agK, 30 * dir);
@@ -2872,15 +2896,14 @@ function gcTop(){
       : `${capi(MESES[a.getMonth()].slice(0, 3))} de ${a.getFullYear()} – ${MESES[b.getMonth()].slice(0, 3)} de ${b.getFullYear()}`;
   }
   else t = `${capi(MESES[d.getMonth()])} de ${d.getFullYear()}`;
-  const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año', agenda: 'Agenda', '7dias': '7 días', rango: `${agN} días`, semanas: `${agW} semanas`}[agModo];
+  const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año', agenda: 'Agenda', '7dias': '7 días', '3dias': '3 días', rango: `${agN} días`, semanas: `${agW} semanas`}[agModo];
   return `<div class="gc-top">
-    <div class="gc-menu-w"><button class="gc-ico" aria-label="Menú" aria-haspopup="true" onclick="gcPop('gc-menu', event)">${ICO_MENU}</button>
-      <div class="gc-pop izq" id="gc-menu" hidden>${[['agenda', 'Calendario'], ['dia', 'Áreas'], ['inicio', 'Focus'], ['salud', 'Cuerpo'], ['ajustes', 'Ajustes']].map(([v, x]) => `<button class="${v === 'agenda' ? 'sel' : ''}" onclick="ir('${v}')">${x}</button>`).join('')}</div></div>
+    <div class="gc-menu-w"><button class="gc-ico" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()">${ICO_MENU}</button></div>
     <div class="gc-marca"><svg viewBox="-100 -100 200 200" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1G')}</svg><b>Amable Life</b><span class="gc-ver"></span></div>
     <button class="gc-hoy" onclick="agHoy()" title="Ir a hoy (T)">Hoy</button>
     <button class="gc-ico" aria-label="Anterior" title="Anterior" onclick="agMover(-1)">${ICO_IZQ}</button>
     <button class="gc-ico" aria-label="Siguiente" title="Siguiente" onclick="agMover(1)">${ICO_DER}</button>
-    <h1 class="gc-tit">${t}</h1>${['dia', 'semana', '7dias', 'rango'].includes(agModo) ? `<span class="gc-chip">Semana ${semanaISO(agK)}</span>` : ''}
+    <h1 class="gc-tit">${t}</h1>${['dia', 'semana', '7dias', '3dias', 'rango'].includes(agModo) ? `<span class="gc-chip">Semana ${semanaISO(agK)}</span>` : ''}
     <span class="gc-hueco"></span>
     <button class="gc-ico" aria-label="Buscar" title="Buscar (/)" onclick="gcBuscar()">${ICO_LUPA}</button>
     <button class="gc-ico" aria-label="${temaClaro() ? 'Modo noche' : 'Modo día'}" title="${temaClaro() ? 'Modo noche' : 'Modo día'}" onclick="ponerTema(temaClaro() ? 'oscuro' : 'claro')">${temaClaro() ? ICO_LUNA : ICO_SOL}</button>
@@ -3343,6 +3366,49 @@ function metaImportar(){
   guardar(); sonarHecho(); aviso(n === 1 ? 'Hábito de Metas Amables en tu calendario' : `${n} hábitos de Metas Amables en tu calendario`);
   cerrarHoja(); if(vista === 'agenda') agK = hoyK(); rerenderDia();
 }
+/* ---------- Menú lateral (Gustavo, 3.84, como el de Google Calendar): tu cuenta, las vistas, Actualizar y las secciones ---------- */
+const mIco = d => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const MENU_VISTAS = [
+  ['agenda', 'Agenda', mIco('<rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/>')],
+  ['dia', 'Día', mIco('<rect x="4" y="6" width="16" height="12" rx="2"/><path d="M4 3.5h16M4 20.5h16"/>')],
+  ['3dias', '3 días', mIco('<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M9.2 5v14M14.8 5v14"/>')],
+  ['semana', 'Semana', mIco('<path d="M5 5v14M9.5 5v14M14 5v14M18.5 5v14"/>')],
+  ['mes', 'Mes', mIco('<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.2 4.5v15M14.8 4.5v15"/>')],
+  ['anio', 'Año', mIco('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>')]];
+const MENU_SECC = [['agenda', 'Calendario', mIco('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>')],
+  ['dia', 'Áreas', mIco('<circle cx="12" cy="12" r="3"/><path d="M12 9c-1.5-3-1.5-5 0-6.5 1.5 1.5 1.5 3.5 0 6.5zM12 15c1.5 3 1.5 5 0 6.5-1.5-1.5-1.5-3.5 0-6.5zM9 12c-3 1.5-5 1.5-6.5 0 1.5-1.5 3.5-1.5 6.5 0zM15 12c3-1.5 5-1.5 6.5 0-1.5 1.5-3.5 1.5-6.5 0z"/>')],
+  ['inicio', 'Focus', mIco('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>')],
+  ['salud', 'Cuerpo', mIco('<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 10h8M12 14l-3 6.5M12 14l3 6.5"/>')],
+  ['ajustes', 'Ajustes', ICO_RUEDA]];
+function menuHTML(){
+  const u = nube.usuario, foto = u && /^https:\/\//.test(u.photoURL || '') ? u.photoURL : '';
+  const fila = (ico, t, fn, sel) => `<button type="button" class="ml-f ${sel ? 'sel' : ''}" onclick="${fn}">${ico}<span>${t}</span></button>`;
+  return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><b>Amable Life</b><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
+    <div class="ml-g">${MENU_VISTAS.map(([k, t, ico]) => fila(ico, t, `menuVista('${k}')`, vista === 'agenda' && agModo === k)).join('')}</div>
+    <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), 'Actualizar', 'menuActualizar()')}
+      ${fila(temaClaro() ? ICO_LUNA.replace('width="20" height="20"', 'width="24" height="24"') : ICO_SOL.replace('width="20" height="20"', 'width="24" height="24"'), temaClaro() ? 'Modo noche' : 'Modo día', "ponerTema(temaClaro() ? 'oscuro' : 'claro'); abrirMenu()")}</div>
+    <div class="ml-g ml-cuenta">${u ? `<div class="ml-u">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<span class="ml-ini">${esc((u.displayName || u.email || '?').trim().charAt(0).toUpperCase())}</span>`}
+        <span><b>${esc(u.email || u.displayName || 'Tu cuenta')}</b><small>Google · tus datos se guardan en la nube</small></span></div>
+        <p class="ml-nota">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
+        ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta y cambiar de cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
+      : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
+    <div class="ml-g">${MENU_SECC.map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+    <p class="ml-ver">web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</p>`;
+}
+function abrirMenu(){
+  let m = $('#menu-lat');
+  if(!m){ m = document.createElement('div'); m.id = 'menu-lat'; m.className = 'ml'; m.onclick = e => { if(e.target === m) cerrarMenu(); }; document.body.appendChild(m); }
+  m.innerHTML = `<nav class="ml-in" aria-label="Menú">${menuHTML()}</nav>`;
+  requestAnimationFrame(() => m.classList.add('ver'));
+}
+function cerrarMenu(){ const m = $('#menu-lat'); if(!m) return; m.classList.remove('ver'); m.id = ''; setTimeout(() => m.remove(), 260); }
+function menuVista(k){ cerrarMenu(); if(vista !== 'agenda') ir('agenda'); agVer(k); }
+async function menuActualizar(){
+  cerrarMenu();
+  if(!nube.ref){ aviso('Entra con tu cuenta para tenerlo igual en el móvil y en el ordenador', 3500); return; }
+  aviso('Actualizando…'); await traerNube(); rerenderDia(); aviso('Al día ✓');
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('#menu-lat')) cerrarMenu(); });
 function evPrioB(k, b){ evEd.prio = k; b.parentNode.querySelectorAll('.ev-prio').forEach(x => x.classList.toggle('sel', x === b)); }
 function evAbrirFecha(){ $('#ev-res').hidden = true; $('#ev-fecha').hidden = false; }
 /* El día: el botón abre el calendario del sistema */
