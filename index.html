@@ -1399,7 +1399,8 @@ html.claro .aj-aviso{color:#a16207}
 html.claro .btn.peligro{color:#e11d48}
 html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 </style>
-<script>try{ if(localStorage.getItem('equilibra.tema') === 'claro') document.documentElement.classList.add('claro'); }catch(e){}</script>
+<script>/* 4.17 (Gustavo): de entrada, modo Día (claro); el oscuro solo si lo elegiste */
+try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentElement.classList.add('claro'); const m = document.querySelector('meta[name="theme-color"]'); if(m) m.content = '#f3f0f9'; } }catch(e){}</script>
 </head>
 <body>
 
@@ -1437,7 +1438,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.16';
+const VERSION = 'v4.17';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1674,7 +1675,7 @@ function sellosHTML(){
 /* ---------- Navegación ---------- */
 let vista = 'inicio', E = null, P = null, detalleId = null, histModo = 'acciones', hojaAbierta = null;
 /* Pestaña de arranque: Tareas (sin datos todavía, la bienvenida) */
-const vistaInicial = () => tieneDatos() ? 'agenda' : 'inicio';   // se abre en el Calendario, el primero de abajo
+const vistaInicial = () => 'agenda';   // 4.17 (Gustavo): se abre siempre en el Calendario, también la primera vez
 let vistaPrevia = 'agenda';   // a dónde vuelven «Volver» y la cruz de Ajustes
 /* «Volver» (Gustavo): cada pantalla recuerda de dónde vienes; sin nada detrás, vuelve al Calendario */
 const vistaHist = [];
@@ -4649,8 +4650,8 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
   'Gira los hombros hacia atrás diez veces.', 'Sube y baja unas escaleras un par de minutos.', 'Camina mientras haces una llamada.', 'Ponte de puntillas veinte veces.'];
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
-const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Equilibra/main/Amable-Life.apk' : 'Amable-Life.apk';
-const APK_ULTIMA = '2.42';   // última app Android publicada
+const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
+const APK_ULTIMA = '2.43';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
@@ -5029,7 +5030,8 @@ async function iniciarNube(){
       if(authInicial){
         authInicial = false;
         let saltada = false; try{ saltada = sessionStorage.getItem('equilibra.sinCuenta') === '1'; }catch(e){}
-        if(!u && !saltada && ['inicio', 'dia'].includes(vista)){ cuentaAlInicio = true; cuentaModo = tieneDatos() ? 'entrar' : 'crear'; vista = 'cuenta'; }
+        // sin cuenta y sin datos: primero la cuenta (4.17)
+        if(!u && !saltada && (['inicio', 'dia'].includes(vista) || vista === 'agenda' && !tieneDatos())){ cuentaAlInicio = true; cuentaModo = tieneDatos() ? 'entrar' : 'crear'; vista = 'cuenta'; }
       }
       if(u && cuentaAlInicio){ cuentaAlInicio = false; if(vista === 'cuenta') vista = vistaInicial(); }
       if(['inicio','dia','salud','historial','ajustes','cuenta'].includes(vista)) render();
