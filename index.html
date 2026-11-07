@@ -594,6 +594,9 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .perm-ayuda .btn{margin:0}
 .perm-aviso{margin:6px 0 4px;padding:10px 12px;border-radius:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#b91c1c;font-weight:700;font-size:14px}
 html:not(.claro) .perm-aviso{color:#fca5a5}
+.aj-sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px;font-weight:700;cursor:pointer;border-bottom:1px solid rgba(var(--bl),.07)}
+.aj-sw.sub{padding-left:18px;font-weight:600;font-size:15px}
+.aj-sw .desliz{margin:0;align-self:center}
 .aj-sub{margin-top:10px}
 .aj-sub > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-radius:14px;background:rgba(var(--bl),.08);font-weight:800;cursor:pointer}
 .aj-sub > summary::-webkit-details-marker{display:none}
@@ -1491,7 +1494,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.29';
+const VERSION = 'v4.30';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4346,6 +4349,8 @@ function pararAlarma(){
 }
 function elegirAlarma(k){ try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); const y = window.scrollY; render(); window.scrollTo(0, y); }
 function probarAlarma(){ if(alarmaGain || alarmaApp){ pararAlarma(); const y = window.scrollY; render(); window.scrollTo(0, y); return; } sonarAlarma(6); }
+/* 4.30 (Gustavo): interruptores deslizables a la derecha en Sonidos y avisos (antes casilla y botones) */
+const ajSw = (t, on, fn, sub) => `<label class="aj-sw ${sub ? 'sub' : ''}"><span>${t}</span><span class="desliz" style="--c:#8b5cf6"><input type="checkbox" ${on ? 'checked' : ''} onchange="${fn}"><i></i></span></label>`;
 /* Desplegables dentro de una fila de Ajustes (4.28): se recuerda cuál está abierto aunque se vuelva a pintar */
 let ajSub = null;
 const ajSubHTML = (k, t, html) => `<details class="aj-sub" ${ajSub === k ? 'open' : ''} ontoggle="if(this.open) ajSub = '${k}'; else if(ajSub === '${k}') ajSub = null"><summary><span>${t}</span>${FLECHA_ABAJO}</summary><div class="aj-sub-c">${html}</div></details>`;
@@ -4376,12 +4381,12 @@ function hojaAlarma(e, k, txt, ultima){
     <div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="64" height="64"')}</div>
     <h1>${broteEv(e)}${esc(e.t)}</h1>
     <p class="af-cuando">${esc(txt.replace(': ' + e.t, ''))}</p>
-    <p class="af-dia">${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>
+    <p class="af-dia">${capi(fechaLarga(k)).replace(' ', ', ')}</p>
     <div class="af-bots">
-      ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">Completado</button>` : ''}
+      <button type="button" class="af-b af-ent" onclick="alarmaCerrar()">Enterado</button>
       <button type="button" class="af-b af-pos" onclick="const l = document.getElementById('af-pos-l'); l.hidden = !l.hidden">Posponer</button>
       <div class="af-pos-l" id="af-pos-l" hidden>${POSPONER_MIN.map(m => `<button type="button" onclick="posponerAlarma('${e.id}','${k}',${m},${ultima ? 1 : 0})">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div>
-      <button type="button" class="af-b af-ent" onclick="alarmaCerrar()">Enterado</button>
+      ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">Tarea completada</button>` : ''}
     </div>
     <button type="button" class="af-nosuena" onclick="ayudaSonido(this)">¿No te suena la alarma?</button>
     </div>`;
@@ -4771,7 +4776,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.46';   // última app Android publicada
+const APK_ULTIMA = '2.48';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
@@ -5798,9 +5803,11 @@ function vAjustes(){
       html: () => cuentaHTML()},
     {k: 'sonidos', ico: '🔊', t: 'Sonidos y avisos',
       sub: (sonidoOn ? 'Música y efectos activados' : 'Música y efectos apagados') + (pausa.salud && pausa.tareas ? ' · todos los avisos en pausa' : pausa.salud ? ' · cuerpo en pausa' : pausa.tareas ? ' · tareas en pausa' : ''),
-      html: () => `<label class="interruptor">🔊 Música y efectos de la app<input type="checkbox" ${sonidoOn ? 'checked' : ''} onchange="alternarSonido()"></label>
-        ${ajSubHTML('pausa', 'Pausar avisos', `<p class="peq suave" style="margin:2px 0 0">Para dejar de recibir avisos un rato (los pasos se siguen contando):</p>${botonPausa('todo')}
-          <p class="peq suave" style="margin:12px 0 0">O solo una parte:</p>${botonPausa('salud')}${botonPausa('tareas')}`)}
+      html: () => `${ajSw('Música y efectos de la app', sonidoOn, 'alternarSonido()')}
+        ${ajSubHTML('pausa', 'Pausar avisos', `<p class="peq suave" style="margin:2px 0 6px">Para dejar de recibir avisos un rato (los pasos se siguen contando).</p>
+          ${ajSw('Pausar todos los avisos', pausa.salud && pausa.tareas, "alternarPausa('todo')")}
+          ${ajSw('Pausar los avisos del cuerpo', pausa.salud, "alternarPausa('salud')", true)}
+          ${ajSw('Pausar los avisos de tareas', pausa.tareas, "alternarPausa('tareas')", true)}`)}
         ${ajSubHTML('alarma', 'Sonido de la alarma', alarmaHTML(true))}${avisosWebHTML()}`},
     {k: 'versiones', ico: '📲', t: 'Versiones y actualizaciones',
       sub: (miAppVieja() ? `<span class="aj-aviso">Hay una app nueva: ${APK_ULTIMA}</span> · ` : !miApp() && enAndroidWeb() ? '<span class="aj-aviso">Instala la app de Android</span> · ' : '')
