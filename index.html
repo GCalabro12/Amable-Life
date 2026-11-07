@@ -375,6 +375,9 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .tit-bloques{text-align:center;font-size:34px;margin-bottom:0}
 .sub-bloques{text-align:center;font-size:15px;font-weight:600;opacity:.75;margin:4px 0 6px}
 .flor-ayuda{text-align:center;margin:2px 0 0}
+.btn-definir{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;font-size:17px;line-height:1.25;padding:14px 16px;text-align:center}
+.btn-definir .brote{flex:none;color:#fff!important;width:24px;height:24px}
+.dia-izq .pausa-fila{margin-top:10px}
 .pan-vacio{display:none}
 .avisos-btn{display:flex;align-items:center;gap:8px;margin-top:4px;padding:6px 0;border:0;background:none;color:var(--suave);font-size:14px;font-weight:800;text-align:left;font-variant-numeric:tabular-nums}
 .avisos-btn .on{color:#4ade80}
@@ -540,6 +543,8 @@ html:not(.claro) .btn-avisos .off{color:#f87171}
 .ahora-blk.fuera{border:0;background:rgba(139,92,246,.1)}
 .ahora-blk.drop-ok{background:rgba(247,195,91,.22);box-shadow:inset 0 0 0 3px var(--oro)}
 .ah-cab{display:flex;align-items:center;justify-content:center;gap:12px}
+.ahora-blk:not(.fuera) .ah-cab{flex-direction:column;gap:2px}
+.ah-sub{font-size:clamp(11px,3.4vw,14px);font-weight:700;color:var(--suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .ahora-blk .ah-tit{font-size:24px;letter-spacing:.06em}
 .aro-col{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px}
 .aro-col .disco.grande{margin-right:0}
@@ -1693,7 +1698,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
   <!-- 4.35 (Gustavo): iconos rellenos, cada uno de un color y del mismo tamaño; todas las palabras en dorado -->
   <div class="in">
     <button data-v="agenda" onclick="ir('agenda')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="3.2" fill="#3b82f6"/><path d="M3 9.5V7.7a3.2 3.2 0 0 1 3.2-3.2h11.6A3.2 3.2 0 0 1 21 7.7v1.8z" fill="#1d4ed8"/><path d="M8 2.6v3.8M16 2.6v3.8" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round"/></svg>Calendario</button>
-    <button data-v="dia" onclick="ir('dia')"><svg class="nav-ico" viewBox="-12 -12 24 24" aria-hidden="true"><g fill="#4ade80"><path transform="rotate(0) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(45) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(90) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(135) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(180) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(225) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(270) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(315) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/></g><circle r="5.6" fill="#15803d"/><g fill="#4ade80" opacity=".55"><circle cx="0" cy="0" r=".55"/><circle cx="-2" cy="-1.2" r=".55"/><circle cx="2" cy="-1.2" r=".55"/><circle cx="-2" cy="1.2" r=".55"/><circle cx="2" cy="1.2" r=".55"/><circle cx="0" cy="-2.4" r=".55"/><circle cx="0" cy="2.4" r=".55"/></g></svg>Áreas</button>
+    <button data-v="dia" onclick="ir('dia')"><svg class="nav-ico" viewBox="-12 -12 24 24" aria-hidden="true"><g fill="#4ade80"><path transform="rotate(0) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(45) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(90) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(135) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(180) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(225) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(270) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/><path transform="rotate(315) translate(0 -4.9)" d="M0 0C2.5 -1.5 2.4 -4.6 0 -6.3C-2.4 -4.6 -2.5 -1.5 0 0Z"/></g><circle r="5.6" fill="#15803d"/><g fill="#4ade80" opacity=".55"><circle cx="0" cy="0" r=".55"/><circle cx="-2" cy="-1.2" r=".55"/><circle cx="2" cy="-1.2" r=".55"/><circle cx="-2" cy="1.2" r=".55"/><circle cx="2" cy="1.2" r=".55"/><circle cx="0" cy="-2.4" r=".55"/><circle cx="0" cy="2.4" r=".55"/></g></svg>Hábitos</button>
     <button data-v="inicio" onclick="ir('inicio')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#ef4444"/><circle cx="12" cy="12" r="7.2" fill="#fecaca"/><circle cx="12" cy="12" r="4.6" fill="#ef4444"/><circle cx="12" cy="12" r="1.9" fill="#fecaca"/></svg>Focus</button>
     <button data-v="salud" onclick="ir('salud')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><g transform="translate(12.6 .3) scale(.9)"><path d="M3.2 6.5C5 5.2 8.4 5.4 9.2 7.2C10 9 9.6 11.5 8.8 13.5C8.2 15 8.6 16.5 8.4 17.8C8.1 19.6 6.4 20.3 5 19.9C3.6 19.5 3.1 18.1 3.6 16.6C4.1 15.2 4.6 13.6 3.9 12.1C3.2 10.6 1.8 8 3.2 6.5Z" fill="#f2b48a"/><g fill="#b4704a"><ellipse cx="3.7" cy="3.4" rx="1.45" ry="1.85"/><circle cx="6.1" cy="2.5" r="1"/><circle cx="7.7" cy="2.9" r=".9"/><circle cx="9" cy="3.8" r=".8"/><circle cx="9.9" cy="5" r=".68"/></g></g><g transform="translate(11.4 4.3) scale(-.9 .9)"><path d="M3.2 6.5C5 5.2 8.4 5.4 9.2 7.2C10 9 9.6 11.5 8.8 13.5C8.2 15 8.6 16.5 8.4 17.8C8.1 19.6 6.4 20.3 5 19.9C3.6 19.5 3.1 18.1 3.6 16.6C4.1 15.2 4.6 13.6 3.9 12.1C3.2 10.6 1.8 8 3.2 6.5Z" fill="#f2b48a"/><g fill="#b4704a"><ellipse cx="3.7" cy="3.4" rx="1.45" ry="1.85"/><circle cx="6.1" cy="2.5" r="1"/><circle cx="7.7" cy="2.9" r=".9"/><circle cx="9" cy="3.8" r=".8"/><circle cx="9.9" cy="5" r=".68"/></g></g></svg>Cuerpo</button>
     <button data-v="ajustes" onclick="abrirMenu()" aria-label="Menú"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.6" width="18" height="3.4" rx="1.7" fill="#2dd4bf"/><rect x="3" y="10.3" width="18" height="3.4" rx="1.7" fill="#0f766e"/><rect x="3" y="16" width="18" height="3.4" rx="1.7" fill="#2dd4bf"/></svg>Menú</button>
@@ -1704,7 +1709,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.63';
+const VERSION = 'v4.64';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2365,7 +2370,7 @@ function seccionAhora(pip){
   const lista = pend.map((o, k) => fila(o.a, o.i, k === 0)).join('');   // 4.51: las hechas van fuera del recuadro (hechasBloqueHTML)
   const p = progresoBloque(b.ini, b.fin).toFixed(1);
   return `<section class="ahora-blk" data-drop="ahora">
-    <div class="ah-cab"><b class="ah-tit">FOCUS</b></div>
+    <div class="ah-cab"><b class="ah-tit">FOCUS</b><span class="ah-sub">Trabajo en bloques de tiempo de 1,5 horas</span></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
@@ -3206,7 +3211,7 @@ function vEvaluar(){
       ${nv === 'bien' && n < 6 ? `<button class="link" onclick="masHabito('${a.id}')">＋ Otro hábito</button>` : ''}</div>`;
   }
   return `<div class="ev-pant" style="--c:${a.color}">
-    <div class="ev-top"><button class="ev-volver" onclick="salirRevision()" aria-label="Volver a Áreas">${ICO_ATRAS}</button>
+    <div class="ev-top"><button class="ev-volver" onclick="salirRevision()" aria-label="Volver a Hábitos">${ICO_ATRAS}</button>
       <h1 class="ev-area">${a.nombre}</h1><span class="ev-n">${E.i+1} de ${FL.length}</span></div>
     <div class="progreso">${FL.map((x,j) => `<i class="${j<E.i?'hecho':j===E.i?'actual':''}" style="--c:${x.color}"></i>`).join('')}</div>
     <section class="tarjeta eval">
@@ -3273,9 +3278,9 @@ function vPlanHab(){
     return `<div class="plan-area" style="--c:${a.color}"><h3>${ico(a)} ${a.nombre} ${nv === 'mas' || !nv ? '' : '<span class="ph-ok">✓</span>'}</h3><ul class="ph-lista">${items}</ul></div>`; }).join('');
   return `<div class="res-tit"><h1>Tu flor de hábitos</h1><p class="suave">Áreas con hábitos establecidos: <b>${con} de ${FL.length}</b></p></div>
     <section class="tarjeta flor-sec">${flor(D.niveles, {hab: true, centro: con, centroTxt: con === 1 ? 'área con hábitos' : 'áreas con hábitos'})}${LEYENDA_HAB}</section>
-    ${nuevas ? `<p class="suave peq" style="text-align:center;margin:0 0 10px">Lo que te falta ya está como tarea en su pétalo, en Áreas.</p>` : ''}
+    ${nuevas ? `<p class="suave peq" style="text-align:center;margin:0 0 10px">Lo que te falta ya está como tarea en su pétalo, en Hábitos.</p>` : ''}
     ${filas}
-    <div class="bots-eval"><button class="btn prim" onclick="P = null; ir('dia')">Ir a Áreas</button></div>`;
+    <div class="bots-eval"><button class="btn prim" onclick="P = null; ir('dia')">Ir a Hábitos</button></div>`;
 }
 function vPlanViejo(){
   if(!P) P = {textos:{}};
@@ -3703,7 +3708,7 @@ function gcLado(){
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
       ${mesPeq(m0, true)}</div>
     <div class="gc-hora">${fPref.zona ? 'Hora de ' + nombreZona() : 'Hora de aquí'} <b>${horaEspana()}</b>${h >= 7 && h < 20 ? ICO_SOL : ICO_LUNA}</div>
-    <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Áreas"><span class="gc-flor-t">Tus tareas por áreas</span>${florGirasol(D.niveles, null, pendientes().length)}<span class="gc-flor-s">Toca la flor para ver las tareas de cada área</span></button>
+    <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Hábitos"><span class="gc-flor-t">Tus hábitos semanales</span>${florGirasol(D.niveles, null, pendientes().length)}<span class="gc-flor-s">Toca la flor para ver las tareas de cada área</span></button>
   </aside>`;
 }
 setInterval(() => document.querySelectorAll('.gc-hora b').forEach(b => b.textContent = horaEspana()), 20000);
@@ -4278,7 +4283,7 @@ const MENU_VISTAS = [
   ['mes', 'Mes', mIco('<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.2 4.5v15M14.8 4.5v15"/>')],
   ['anio', 'Año', mIco('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>')]];
 const MENU_SECC = [['agenda', 'Calendario', mIco('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>')],
-  ['dia', 'Áreas', mIco('<circle cx="12" cy="12" r="3"/><path d="M12 9c-1.5-3-1.5-5 0-6.5 1.5 1.5 1.5 3.5 0 6.5zM12 15c1.5 3 1.5 5 0 6.5-1.5-1.5-1.5-3.5 0-6.5zM9 12c-3 1.5-5 1.5-6.5 0 1.5-1.5 3.5-1.5 6.5 0zM15 12c3-1.5 5-1.5 6.5 0-1.5 1.5-3.5 1.5-6.5 0z"/>')],
+  ['dia', 'Hábitos', mIco('<circle cx="12" cy="12" r="3"/><path d="M12 9c-1.5-3-1.5-5 0-6.5 1.5 1.5 1.5 3.5 0 6.5zM12 15c1.5 3 1.5 5 0 6.5-1.5-1.5-1.5-3.5 0-6.5zM9 12c-3 1.5-5 1.5-6.5 0 1.5-1.5 3.5-1.5 6.5 0zM15 12c3-1.5 5-1.5 6.5 0-1.5 1.5-3.5 1.5-6.5 0z"/>')],
   ['inicio', 'Focus', mIco('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>')],
   ['salud', 'Cuerpo', mIco('<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 10h8M12 14l-3 6.5M12 14l3 6.5"/>')],
   ['estad', 'Estadísticas', mIco('<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>')],
@@ -4997,10 +5002,14 @@ function vDia(){
   const lleno = acts.length >= MAX_ACT;
   // 4.52 (Gustavo): «Tareas por bloques», grande y en el centro; en el ordenador, las tareas del pétalo a la izquierda,
   // la flor en medio y los bloques a la derecha (así, al pasar por los pétalos, la flor no se mueve)
-  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Tareas por áreas</h1><p class="sub-bloques">Trabajo en bloques de tiempo de 1,5 horas</p><div class="dia-cols"><div class="dia-izq">${botonPausa('tareas')}
+  // 4.64 (Gustavo): la flor representa hábitos: «Hábitos semanales»; la frase de la flor equilibrada, bajo el título;
+  // debajo de la flor, el botón grande para revisarla y, después, pausar avisos
+  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Hábitos semanales</h1><p class="sub-bloques">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo</p><div class="dia-cols"><div class="dia-izq">
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0)}</div>
-    <p class="peq suave flor-ayuda">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo · <button class="link" onclick="empezar()">revisar mi flor</button> · <button class="link" onclick="ir('historial')">ver el historial</button></p>
+    <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos un hábito en cada área por semana</button>
+    <p class="peq suave flor-ayuda"><button class="link" onclick="ir('historial')">ver el historial</button></p>
+    ${botonPausa('tareas')}
     </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div><div class="dia-der">
     <div class="tira-blk" id="tiraBlk">${tira}</div>
     <div class="blk-barra-caja"><div class="blk-riel">${BLOQUES.map((x, i) => `<i class="${i === cur ? 'ya' : ''}" style="left:${(posBarra(i, cur) * 100).toFixed(2)}%"></i>`).join('')}</div>
