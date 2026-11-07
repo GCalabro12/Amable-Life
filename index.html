@@ -1525,7 +1525,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.42';
+const VERSION = 'v4.43';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3959,8 +3959,8 @@ function menuSeccionesHTML(){
 function menuExtraHTML(fila){
   const nueva = miAppVieja() || !miApp() && enAndroidWeb();
   return fila(ICO_PREMIUM, 'Suscripción', "cerrarMenu(); abrirSeccion('premium')")
-    + fila(ICO_CAL_AJ, 'Importar y exportar', "cerrarMenu(); abrirSeccion('calendario')")
     + fila(svgT('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>', 24), `Actualizaciones${nueva ? ' <span class="aj-nueva">nueva</span>' : ''}`, "cerrarMenu(); abrirSeccion('versiones')")
+    + fila(ICO_CAL_AJ, 'Importar y exportar', "cerrarMenu(); abrirSeccion('calendario')")
     + fila(svgT('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3"/><circle cx="12" cy="16.8" r=".7" fill="currentColor"/>', 24), 'Cómo funciona la app', "cerrarMenu(); abrirSeccion('ayuda')");
 }
 function menuHTML(){
@@ -3971,8 +3971,9 @@ function menuHTML(){
     ${ESCRITORIO.matches ? menuSeccionesHTML() : ''}
     <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}
       <div class="ml-tema"><div class="seg-tema"><button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro'); abrirMenu()">${ICO_SOL} Día</button><button class="${temaClaro() ? '' : 'sel'}" onclick="ponerTema('oscuro'); abrirMenu()">${ICO_LUNA} Noche</button></div></div>
-      ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}</div>
-    <div class="ml-g">${menuExtraHTML(fila)}${MENU_SECC.filter(([v]) => ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+      ${MENU_SECC.filter(([v]) => v === 'estad').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}
+      ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}${MENU_SECC.filter(([v]) => v === 'ajustes').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+    <div class="ml-g">${menuExtraHTML(fila)}</div>
 `;
 }
 /* Móvil: botón de la vista en la cabecera («Semana ▾») con Agenda, Día, 3 días, Semana, Mes y Año (Gustavo) */
