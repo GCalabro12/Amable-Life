@@ -180,7 +180,7 @@ textarea:focus,input[type=text]:focus{outline:none;border-color:var(--acento)}
 nav.abajo{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(20,15,38,.94);backdrop-filter:blur(10px);border-top:1px solid var(--linea);padding-bottom:env(safe-area-inset-bottom)}
 nav.abajo .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
 nav.abajo button{background:none;border:0;padding:8px 0 9px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--oro)}
-nav.abajo .nav-ico{width:26px;height:26px;flex:none;opacity:.75;transition:transform .15s,opacity .15s}
+nav.abajo .nav-ico{width:26px;height:26px;flex:none;opacity:.92;transition:transform .15s,opacity .15s}
 nav.abajo button.act .nav-ico{opacity:1;transform:scale(1.12)}
 nav.abajo button.act{font-weight:800}
 nav.abajo button.act::after{content:'';width:18px;height:3px;border-radius:2px;background:var(--oro);margin-top:1px}
@@ -197,6 +197,8 @@ nav.abajo button.act .nav-flor{color:var(--oro);opacity:1}
 .pi-seal::before{content:"";width:7px;height:7px;border-radius:50%;background:#4ADE80}
 .gp-seal svg{width:14px;height:14px;flex:none}
 .pi-seal:hover{border-color:#4ADE80}
+html.en-app nav.abajo{padding-bottom:0}
+html.en-app .ag-fab{bottom:80px}
 .sellos.sellos-fila{flex-wrap:nowrap;gap:6px;margin-top:22px}
 .sellos-fila .pi-seal,.sellos-fila .gp-seal{font-size:11px;padding:5px 9px;gap:6px;letter-spacing:0}
 .gp-seal:hover{border-color:#8b5cf6}
@@ -1472,6 +1474,7 @@ html.claro .aj-aviso{color:#a16207}
 html.claro .btn.peligro{color:#e11d48}
 html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 </style>
+<script>/* 4.37: dentro de la app de Android (que ya deja el sitio de la barra del sistema) */ try{ if(window.AndroidEquilibra) document.documentElement.classList.add('en-app'); }catch(e){}</script>
 <script>/* 4.17 (Gustavo): de entrada, modo Día (claro); el oscuro solo si lo elegiste */
 try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentElement.classList.add('claro'); const m = document.querySelector('meta[name="theme-color"]'); if(m) m.content = '#f3f0f9'; } }catch(e){}</script>
 </head>
@@ -1501,10 +1504,10 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
   <!-- 4.35 (Gustavo): iconos rellenos, cada uno de un color y del mismo tamaño; todas las palabras en dorado -->
   <div class="in">
     <button data-v="agenda" onclick="ir('agenda')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="3.2" fill="#3b82f6"/><path d="M3 9.5V7.7a3.2 3.2 0 0 1 3.2-3.2h11.6A3.2 3.2 0 0 1 21 7.7v1.8z" fill="#1d4ed8"/><path d="M8 2.6v3.8M16 2.6v3.8" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round"/><g fill="#fff"><rect x="6.3" y="12" width="3.1" height="2.6" rx=".7"/><rect x="10.45" y="12" width="3.1" height="2.6" rx=".7"/><rect x="14.6" y="12" width="3.1" height="2.6" rx=".7"/><rect x="6.3" y="16" width="3.1" height="2.6" rx=".7"/><rect x="10.45" y="16" width="3.1" height="2.6" rx=".7"/></g></svg>Calendario</button>
-    <button data-v="dia" onclick="ir('dia')"><svg class="nav-ico" viewBox="-12 -12 24 24" aria-hidden="true"><g fill="#ec4899" stroke="#be185d" stroke-width=".6" stroke-linejoin="round"><path transform="rotate(0) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(45) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(90) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(135) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(180) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(225) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(270) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(315) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/></g><circle r="3.3" fill="#f59e0b" stroke="#b45309" stroke-width=".6"/></svg>Áreas</button>
-    <button data-v="inicio" onclick="ir('inicio')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#ef4444"/><circle cx="12" cy="12" r="7.2" fill="#fff"/><circle cx="12" cy="12" r="4.6" fill="#ef4444"/><circle cx="12" cy="12" r="1.9" fill="#fff"/></svg>Focus</button>
-    <button data-v="salud" onclick="ir('salud')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="#22c55e"><path d="M7.6 10.2c2.1-.2 3.4 1.6 3.3 4.4-.1 2.3-.6 4.7-1.6 6.1-.8 1.1-2.4 1.1-3.2 0-1-1.4-1.6-3.7-1.5-6 .1-2.6 1-4.3 3-4.5z"/><circle cx="5.1" cy="7.6" r="1.25"/><circle cx="7.2" cy="6.5" r="1.3"/><circle cx="9.4" cy="6.9" r="1.2"/><circle cx="10.9" cy="8.3" r="1"/><path d="M16.4 5.2c-2.1-.2-3.4 1.6-3.3 4.4.1 2.3.6 4.7 1.6 6.1.8 1.1 2.4 1.1 3.2 0 1-1.4 1.6-3.7 1.5-6-.1-2.6-1-4.3-3-4.5z" transform="translate(0 -1.2)"/></g></svg>Cuerpo</button>
-    <button data-v="ajustes" onclick="ir('ajustes')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="#14b8a6"><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(0 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(45 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(90 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(135 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(180 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(225 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(270 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7.3"/></g><circle cx="12" cy="12" r="3.1" fill="#fff"/></svg>Ajustes</button>
+    <button data-v="dia" onclick="ir('dia')"><svg class="nav-ico" viewBox="-12 -12 24 24" aria-hidden="true"><g fill="#4ade80"><path transform="rotate(0) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(45) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(90) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(135) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(180) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(225) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(270) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/><path transform="rotate(315) translate(0 -3.4)" d="M0 0C2.90 -2.13 2.67 -5.93 0 -7.60C-2.67 -5.93 -2.90 -2.13 0 0Z"/></g><circle r="3.5" fill="#15803d"/></svg>Áreas</button>
+    <button data-v="inicio" onclick="ir('inicio')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="13" r="9.5" fill="#ef4444"/><circle cx="11" cy="13" r="6.8" fill="#fff"/><circle cx="11" cy="13" r="4.3" fill="#ef4444"/><circle cx="11" cy="13" r="1.8" fill="#fff"/><path d="M11 13L20.5 3.5" stroke="#991b1b" stroke-width="2" stroke-linecap="round"/><path d="M18.4 2.2l2.2 1.3 1.3 2.2-2.4.2z" fill="#b91c1c"/><path d="M11 13l2.4-.6-1.8-1.8z" fill="#b91c1c"/></svg>Focus</button>
+    <button data-v="salud" onclick="ir('salud')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="#f2b48a"><path d="M7.4 11c2 -.2 3.2 1.5 3.1 4.1-.1 2.2-.6 4.4-1.5 5.7-.8 1-2.2 1-3 0-.9-1.3-1.5-3.5-1.4-5.6.1-2.4.9-4 2.8-4.2z"/><path d="M16.6 5.8c-2-.2-3.2 1.5-3.1 4.1.1 2.2.6 4.4 1.5 5.7.8 1 2.2 1 3 0 .9-1.3 1.5-3.5 1.4-5.6-.1-2.4-.9-4-2.8-4.2z"/></g><g fill="#b4704a"><circle cx="5.2" cy="8.7" r="1.15"/><circle cx="7.1" cy="7.7" r="1.2"/><circle cx="9.1" cy="8" r="1.1"/><circle cx="10.6" cy="9.2" r=".95"/><circle cx="18.8" cy="3.5" r="1.15"/><circle cx="16.9" cy="2.5" r="1.2"/><circle cx="14.9" cy="2.8" r="1.1"/><circle cx="13.4" cy="4" r=".95"/></g></svg>Cuerpo</button>
+    <button data-v="ajustes" onclick="ir('ajustes')"><svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="#2dd4bf"><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(0 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(45 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(90 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(135 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(180 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(225 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(270 12 12)"/><rect x="10.3" y="1.6" width="3.4" height="5" rx="1.1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7.3"/></g><circle cx="12" cy="12" r="3.6" fill="#0f766e"/></svg>Ajustes</button>
   </div>
 </nav>
 
@@ -1512,7 +1515,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.36';
+const VERSION = 'v4.37';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
