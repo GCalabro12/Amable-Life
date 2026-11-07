@@ -1638,7 +1638,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.55';
+const VERSION = 'v4.56';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2401,6 +2401,9 @@ function apuntarBloquesConTareas(){
   if(r.bloques.length){ D.focoDias = D.focoDias || {}; if((D.focoDias[k] || 0) < r.bloques.length) D.focoDias[k] = r.bloques.length; }
   return nuevo;
 }
+/* Hábitos del calendario marcados como hechos ese día, y áreas que piden acción ahora */
+const habitosHechos = k => AG_().eventos.filter(e => e.tipo === 'habito' && (e.hechos || []).includes(k)).length;
+const areasAccion = () => AREAS.filter(a => nivel(a.id) && nivel(a.id) !== 'bien').length;
 /* Los números de un día (AAAA-MM-DD) */
 function resumenDia(k){
   const dia = (B_().days || {})[k] || {}, hechas = D.acciones.filter(a => a.hecha && a.hechaEn && claveDia(a.hechaEn) === k).length;
@@ -2410,7 +2413,10 @@ function resumenDia(k){
   Object.keys(dia).forEach(i => { if((dia[i] || []).some(Boolean)) conTareas.add(+i); });
   const p = (S_().pasos || {})[k];
   return {bloques_con_tareas: conTareas.size, bloques_total: BLOQUES.length, tareas_hechas: hechas + sinArchivar,
-    tareas_total: hechas + sinArchivar + pendientesDia, pasos: p ? Math.round(p.steps || 0) : 0, ...agendaDia(k)};
+    tareas_total: hechas + sinArchivar + pendientesDia, pasos: p ? Math.round(p.steps || 0) : 0, ...agendaDia(k),
+    // 4.56: para la tarjeta de Grow Panel. tareas_pendientes = todas las pendientes de tus áreas (solo se sabe la de hoy:
+    // en un día pasado no se manda y Grow Panel usa tareas_total − tareas_hechas); áreas que piden acción, las de ahora
+    ...(k === hoyK() ? {tareas_pendientes: pendientes().length} : {}), habitos_hechos: habitosHechos(k), areas_accion: areasAccion()};
 }
 /* Pide algo al registro con la cuenta de Google (token de Firebase) y, si no vale (401) o no hay, con la clave de Grow Panel */
 async function fetchRegistro(ruta, opts){
@@ -2439,7 +2445,7 @@ function actualizarAjustesReg(pronto){
   })();
 }
 /* «Firma» de los números de un día: si no cambia, no hace falta volver a mandarlos (los pasos cuentan de 100 en 100) */
-const firmaReg = (k, r) => [k, r.bloques_con_tareas, r.tareas_hechas, r.tareas_total, Math.floor((r.pasos || 0) / 100), r.eventos_hoy, r.horas_agenda_hoy, r.eventos_hechos].join('|');
+const firmaReg = (k, r) => [k, r.bloques_con_tareas, r.tareas_hechas, r.tareas_total, Math.floor((r.pasos || 0) / 100), r.eventos_hoy, r.horas_agenda_hoy, r.eventos_hechos, r.tareas_pendientes, r.habitos_hechos, r.areas_accion].join('|');
 const todoCero = r => !r.bloques_con_tareas && !r.tareas_hechas && !r.tareas_total && !r.pasos && !r.eventos_hoy;
 let regUltimoIntento = 0;
 const regEnCurso = new Set();
@@ -6671,9 +6677,11 @@ function enviarResumen(){
     let msg = prox ? `Siguiente: ${prox.texto}` : f.length ? `Añade acciones para ${f[0].area.nombre}` : 'Todo en equilibrio ✓';
     if(msg.length > 90) msg = msg.slice(0, 89) + '…';
     r = {estado: (f.length || (ult && diasDesde(ult.fecha) > 35)) ? 'aviso' : 'ok', mensaje: msg, version: VERSION, cifras:[
-      {valor: pendientes().length, etiqueta:'acciones pendientes'},
-      {valor: fmtN(pasosHoy().steps), etiqueta:'pasos hoy'},
-      {valor: AREAS.filter(a => nivel(a.id) && nivel(a.id) !== 'bien').length, etiqueta:'áreas que piden acción'}]};
+      // 4.56 (Gustavo, vía Grow Panel): estas cuatro y en este orden. Pendientes = todas las de tus áreas; realizadas y hábitos = hoy
+      {valor: pendientes().length, etiqueta:'tareas pendientes'},
+      {valor: resumenDia(hoyK()).tareas_hechas, etiqueta:'tareas realizadas'},
+      {valor: habitosHechos(hoyK()), etiqueta:'hábitos realizados'},
+      {valor: areasAccion(), etiqueta:'áreas que piden acción'}]};
   }
   window.growPanelResumen = r;
   try{ if(window.GrowPanel && GrowPanel.resumen) GrowPanel.resumen(r); }catch(e){}
