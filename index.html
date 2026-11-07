@@ -1491,7 +1491,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.28';
+const VERSION = 'v4.29';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2760,6 +2760,7 @@ function cerrarHojaX(){
   if(edicion) salirEdicion();
   else if(evEd) salirEvento();
   else if(avisoSalud) responderAviso(false);
+  else if(document.querySelector('#hoja-permisos[data-menu]')) cerrarHoja();
   else if(document.getElementById('hoja-permisos')){   // 4.28 (Gustavo): la 1.ª vez avisa y no se cierra; la 2.ª se cierra y vuelve mañana
     if(!permX){
       permX = 1;
@@ -3928,7 +3929,7 @@ function menuHTML(){
         <p class="ml-nota">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
         ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta y cambiar de cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
       : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
-    <div class="ml-g">${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+    <div class="ml-g">${hayConfigAlarma() ? fila(mIco('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>'), 'Configuración de la alarma', 'cerrarMenu(); abrirConfigAlarma()') : ''}${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
 `;
 }
 /* Móvil: botón de la vista en la cabecera («Semana ▾») con Agenda, Día, 3 días, Semana, Mes y Año (Gustavo) */
@@ -4812,19 +4813,24 @@ window.revisarPermisos = (intentos = 0) => {
   if(!esApp || !window.AndroidEquilibra || typeof AndroidEquilibra.permisos !== 'function') return;
   const p = permisosApp(); if(!p) return;
   const abierta = !!document.getElementById('hoja-permisos');
-  if(p.notif && p.sobre && p.pantalla){ if(abierta){ cerrarHoja(); aviso('Permisos activados ✓', 2500); } return; }
-  if(abierta){ hojaPermisos(p); return; }   // al volver de Ajustes: se pinta con lo que ya está activado
+  const menu = !!document.querySelector('#hoja-permisos[data-menu]');
+  if(p.notif && p.sobre && p.pantalla){ if(abierta && !menu){ cerrarHoja(); aviso('Permisos activados ✓', 2500); } else if(menu) hojaPermisos(p, true); return; }
+  if(abierta){ hojaPermisos(p, menu); return; }   // al volver de Ajustes: se pinta con lo que ya está activado
   let cerradaHoy = false; try{ cerradaHoy = localStorage.getItem('equilibra.permisosCerrada') === hoyK(); }catch(e){}
   if(cerradaHoy) return;   // cerrada con la cruz hoy: vuelve mañana
   if($('#splash') || $('#hoja') || $('#menu-lat') || $('#alarma-full')){ if(intentos < 40) setTimeout(() => window.revisarPermisos(intentos + 1), 1500); return; }
   permX = 0; hojaPermisos(p);
 };
 let permX = 0;   // veces que se ha tocado la cruz de la ventana de permisos
-function hojaPermisos(p){
+/* 4.29 (Gustavo): en el menú de tres rayas, «Configuración de la alarma» abre siempre esta ventana (también si ya está todo activado) */
+const hayConfigAlarma = () => { try{ return esApp && typeof AndroidEquilibra.permisos === 'function'; }catch(e){ return false; } };
+function abrirConfigAlarma(){ const p = permisosApp(); if(!p) return; permX = 1; hojaPermisos(p, true); }
+function hojaPermisos(p, desdeMenu){
   hojaAbierta = null;
   const fila = (k, ok, t, d) => `<div class="perm-fila ${ok ? 'ok' : ''}"><div class="perm-t"><b>${t}</b><small>${d}</small></div>${ok
     ? '<span class="perm-ok">✓ Activado</span>' : `<button type="button" class="btn prim" onclick="AndroidEquilibra.abrirPermiso('${k}')">Activar</button>`}</div>`;
-  mostrarHoja(`<div id="hoja-permisos"><div class="hoja-cab"><h2>Activa estos permisos</h2></div>
+  const todos = p.notif && p.sobre && p.pantalla;
+  mostrarHoja(`<div id="hoja-permisos" ${desdeMenu ? 'data-menu="1"' : ''}><div class="hoja-cab"><h2>${todos ? 'Configuración de la alarma' : 'Activa estos permisos'}</h2></div>
     <p class="peq suave" style="margin:4px 0 12px">Son necesarios para que Amable Life funcione bien: sin ellos, las alarmas de tus recordatorios no suenan ni salen en grande con la app cerrada.</p>
     ${fila('notif', p.notif, 'Notificaciones', 'Para avisarte a la hora de tus recordatorios.')}
     ${fila('sobre', p.sobre, 'Mostrar sobre otras aplicaciones', 'Para que la alarma salga a pantalla completa aunque estés usando el móvil. En la lista, busca Amable Life y actívalo.')}
@@ -4834,7 +4840,7 @@ function hojaPermisos(p){
       <button type="button" class="btn sec" onclick="try{ AndroidEquilibra.openAppSettings(); }catch(e){}">Abrir la información de la app</button></div>`}
     ${p.hayPantalla ? fila('pantalla', p.pantalla, 'Alarmas a pantalla completa', 'Para que la alarma se vea con el móvil bloqueado.') : ''}
     <p class="peq suave" style="margin:12px 0 0">Cuando lo actives, vuelve a Amable Life: esta ventana se pone al día sola.</p></div>`, '#8b5cf6');
-  if(permX){ const h = document.getElementById('hoja-permisos'); if(h) h.querySelector('.hoja-cab').insertAdjacentHTML('afterend', '<p class="perm-aviso">Es necesario activar estos permisos para que funcionen bien los recordatorios. Si aun así quieres cerrar, vuelve a tocar la cruz.</p>'); }
+  if(permX && !desdeMenu){ const h = document.getElementById('hoja-permisos'); if(h) h.querySelector('.hoja-cab').insertAdjacentHTML('afterend', '<p class="perm-aviso">Es necesario activar estos permisos para que funcionen bien los recordatorios. Si aun así quieres cerrar, vuelve a tocar la cruz.</p>'); }
 }
 document.addEventListener('visibilitychange', () => { if(!document.hidden) setTimeout(() => window.revisarPermisos(), 600); });
 const S_ = () => D.salud;
