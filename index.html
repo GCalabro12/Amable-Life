@@ -1494,7 +1494,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.30';
+const VERSION = 'v4.31';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4356,7 +4356,7 @@ let ajSub = null;
 const ajSubHTML = (k, t, html) => `<details class="aj-sub" ${ajSub === k ? 'open' : ''} ontoggle="if(this.open) ajSub = '${k}'; else if(ajSub === '${k}') ajSub = null"><summary><span>${t}</span>${FLECHA_ABAJO}</summary><div class="aj-sub-c">${html}</div></details>`;
 function alarmaHTML(dentro){
   const app = esApp, nueva = alarmaNativa(), sel = alarmaTipo();
-  return `<div class="${dentro ? 'aj-sub-in' : 'cta-b'}">${dentro ? '' : '<h4>Sonido de la alarma</h4>'}
+  return `<div class="${dentro ? 'aj-sub-in' : 'cta-b'}">${dentro ? '' : '<h4>Sonido del aviso de tarea</h4>'}
     <p class="peq suave">Suena a la hora de tus recordatorios, con la ventana para pararla o posponerla.</p>
     ${app ? (nueva ? `<p class="peq suave">En el móvil suena el sonido de alarma que elijas en el teléfono.</p>
       <div class="bots"><button class="btn sec" onclick="AndroidEquilibra.elegirSonidoAlarma()">Elegir el sonido de la alarma</button><button class="btn sec" onclick="probarAlarma()">Probar</button></div>`
@@ -5808,7 +5808,7 @@ function vAjustes(){
           ${ajSw('Pausar todos los avisos', pausa.salud && pausa.tareas, "alternarPausa('todo')")}
           ${ajSw('Pausar los avisos del cuerpo', pausa.salud, "alternarPausa('salud')", true)}
           ${ajSw('Pausar los avisos de tareas', pausa.tareas, "alternarPausa('tareas')", true)}`)}
-        ${ajSubHTML('alarma', 'Sonido de la alarma', alarmaHTML(true))}${avisosWebHTML()}`},
+        ${ajSubHTML('alarma', 'Sonido del aviso de tarea', alarmaHTML(true))}${avisosWebHTML()}`},
     {k: 'versiones', ico: '📲', t: 'Versiones y actualizaciones',
       sub: (miAppVieja() ? `<span class="aj-aviso">Hay una app nueva: ${APK_ULTIMA}</span> · ` : !miApp() && enAndroidWeb() ? '<span class="aj-aviso">Instala la app de Android</span> · ' : '')
         + `web ${VERSION.replace(/^v/, '')} · app ${miApp() ? esc(miApp()) : '—'}`,
