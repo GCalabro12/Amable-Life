@@ -611,6 +611,28 @@ nav.abajo button{font-size:11px}
 .rt a{color:#60a5fa;text-decoration:underline}
 html.claro .rt a{color:#2563eb}
 .ev-d.rt a{pointer-events:none}
+.ep-flot{position:fixed;z-index:40;width:400px;max-width:calc(100vw - 20px);max-height:calc(100vh - 90px);overflow:auto;background:var(--tarjeta);border:1px solid var(--linea);border-radius:22px;box-shadow:0 18px 50px rgba(0,0,0,.5);padding:8px 18px 16px;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
+html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
+.ep-flot.ver{opacity:1;transform:none}
+.ep-bar{display:flex;justify-content:flex-end;gap:2px;margin-bottom:2px}
+.ep-en-hoja .ep-bar{justify-content:flex-start;margin-right:44px}
+.ep-ico{width:40px;height:40px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0}
+.ep-ico:hover{background:rgba(var(--bl),.1)}
+.ep-fila{display:flex;gap:16px;align-items:flex-start;padding:7px 0;font-size:14.5px}
+.ep-fila > svg{flex:none;margin-top:1px;color:var(--suave)}
+.ep-cuad{flex:none;width:16px;height:16px;border-radius:4px;margin:8px 2px 0}
+.ep-tit h3{margin:0;font-size:22px;font-weight:600;line-height:1.25;word-break:break-word}
+.ep-tit h3.ok{text-decoration:line-through;opacity:.7}
+.ep-tit p{margin:3px 0 0;font-size:14px;color:var(--suave)}
+.ep-hecho{margin:4px 0 6px 36px;border:1px solid var(--linea);background:none;color:var(--tinta);border-radius:99px;padding:7px 16px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.ep-hecho:hover{background:rgba(var(--bl),.07)}
+.ep-hecho.sel{background:color-mix(in srgb,var(--sube) 20%,transparent);border-color:var(--sube)}
+.ep-desc{max-height:200px;overflow:auto;min-width:0;word-break:break-word}
+.ep-conf{margin:6px 0 4px 36px;display:flex;flex-direction:column;gap:8px}
+.ep-conf p{margin:0;font-weight:700}
+.ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
+.ep .ico{width:14px;height:14px;vertical-align:-2px}
+.ag-dia-evs small[data-ev]{cursor:pointer}
 .ev-desc textarea{flex:1;border:0;background:none;border-radius:10px;padding:9px 10px;color:var(--tinta);font:inherit;font-size:15px;resize:none;min-height:40px;margin:0;overflow:hidden}
 .ev-desc textarea:hover{background:rgba(var(--bl),.05)}
 .ev-desc textarea:focus{outline:none;background:rgba(var(--bl),.07)}
@@ -1079,7 +1101,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.77';
+const VERSION = 'v3.78';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2575,12 +2597,12 @@ function agendaDia(k){
 /* Lo del calendario que cae dentro de un bloque (en Tareas y en Focus) */
 function evsBloqueHTML(k, b){
   const es = eventosDe(k).filter(e => !e.todo && e.ini < b.fin && e.fin > b.ini); if(!es.length) return '';
-  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}" style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${k}')">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${campEv(e)}${esc(e.t)}</span></button>`).join('')}</div>`;
+  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${campEv(e)}${esc(e.t)}</span></button>`).join('')}</div>`;
 }
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
     <button class="check ${ok ? 'hecho' : ''}" ${e.prio ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
-    <button class="ev-cuerpo" onclick="editarEvento('${e.id}','${k}')"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
+    <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al arrastrar más de 7 días   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
 const CON_COLS = ['semana', '7dias', 'rango'];
@@ -2642,7 +2664,7 @@ function vAgenda(){
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo));
     cuerpo = `<div class="rj-cab" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`
-      + (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" onclick="editarEvento('${e.id}','${dias[n]}')">${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
+      + (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
     const ds = semsDias(), nCols = verFinde() ? 7 : 5;
@@ -2651,7 +2673,7 @@ function vAgenda(){
     for(let w = 0; w < agW; w++){
       g += `<span class="ag-wn">${semanaISO(ds[w * 7])}</span>`;
       for(let n = 0; n < nCols; n++){ const k = ds[w * 7 + n], es = evsVer(k);
-        g += `<button class="ag-dia ${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><span>${fechaDe(k).getDate()}${fechaDe(k).getDate() === 1 ? ' ' + MESES[fechaDe(k).getMonth()].slice(0, 3) : ''}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 6).map(e => `<small style="--c:${colorEv(e)}">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 6 ? `<em>${es.length - 6} más</em>` : ''}</span></button>`; }
+        g += `<button class="ag-dia ${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><span>${fechaDe(k).getDate()}${fechaDe(k).getDate() === 1 ? ' ' + MESES[fechaDe(k).getMonth()].slice(0, 3) : ''}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 6).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 6 ? `<em>${es.length - 6} más</em>` : ''}</span></button>`; }
     }
     cuerpo = `<div class="ag-mes ag-sems" style="grid-template-columns:30px repeat(${nCols},minmax(0,1fr));--fila:calc((100vh - 150px) / ${agW})">${g}</div>`;
   } else if(agModo === 'anio'){
@@ -2673,7 +2695,7 @@ function vAgenda(){
     let g = DIAS_CORTO.slice(0, nCols).map(x => `<span class="ag-ds">${x}</span>`).join('');
     for(let n = 0; n < celdas; n++){ const k = sumarDias(ini, n), es = evsVer(k);
       if(nCols === 5 && diaSem(k) >= 5) continue;
-      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
+      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
     const evs = evsVer(agK);
     cuerpo = `<div class="ag-mes" style="grid-template-columns:repeat(${nCols},minmax(0,1fr))">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
   }
@@ -2716,7 +2738,7 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" onclick="editarEvento('${e.id}','${k}')"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</b>${!sem && alto > 34 ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</b>${!sem && alto > 34 ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
     return `<div class="rj-col" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   return `<div class="rj ${sem ? 'sem' : ''}"><div class="rj-cuerpo" style="height:${(h1 - h0) * AG_PX}px">${lineas}<div class="rj-cols" style="grid-template-columns:repeat(${dias.length},1fr)">${cols}</div></div></div>`;
@@ -3080,6 +3102,93 @@ function rtEstado(){
 }
 document.addEventListener('selectionchange', () => { rtGuardarRango(); rtEstado(); });
 document.addEventListener('click', e => { if(!e.target.closest || !e.target.closest('.rt-w')) document.querySelectorAll('.rt-pop').forEach(x => x.hidden = true); });
+/* ---------- Tarjeta de una tarea del calendario (Gustavo, como Google): al clicarla o con el ratón encima un segundo ----------
+   Editar, borrar, duplicar, marcar como hecha; el día y la hora, si se repite, la descripción, el recordatorio, la prioridad y el área.
+   En el ordenador, flotando al lado; en el móvil, como hoja desde abajo. */
+const ICO_EP_LAPIZ = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
+const ICO_PAPELERA = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
+const ICO_COPIA = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>';
+const ICO_LINEAS = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h11"/></svg>';
+function repTxt(e){
+  if(e.tipo === 'habito') return 'Hábito · ' + txtHabito(e).toLowerCase() + ((e.dias || []).length < 7 ? ': ' + (e.dias || []).slice().sort().map(d => DIAS_CORTO[d]).join(' · ') : '');
+  const d = fechaDe(e.dia);
+  return {dia: 'Cada día', semana: `Cada semana, el ${DIAS_LARGO[diaSem(e.dia)]}`, mes: `Cada mes, el día ${d.getDate()}`, anio: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`, lab: 'De lunes a viernes'}[e.rep] || '';
+}
+function popHTML(e, k, enHoja){
+  const ok = hechoEv(e, k), ars = areasEv(e), rep = repTxt(e);
+  const rec = (e.todo ? RECORD_DIA : RECORD_HORA).filter(r => (e.avisos || []).includes(r.k)).map(r => r.t).join(', ');
+  const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
+  const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
+  return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
+    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div><h3 class="${ok ? 'ok' : ''}">${esc(e.t)}</h3>
+      <p>${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
+    <div id="ep-conf"></div>
+    <button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? '✓ Hecho · desmarcar' : 'Marcar como hecho'}</button>
+    ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc">${desc}</div></div>` : ''}
+    ${rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : ''}
+    ${e.prio ? `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div>Prioridad ${prioDe(e).t.toLowerCase()}</div></div>` : ''}
+    ${ars.length ? `<div class="ep-fila">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<div>${ars.map(a => `${ico(a)} ${a.nombre}`).join(' · ')}</div></div>` : ''}`;
+}
+let popInfo = null, popT = null, popCierreT = null;
+function verEvento(id, k, el, hover){
+  const e = AG_().eventos.find(x => x.id === id); if(!e) return;
+  clearTimeout(popT); clearTimeout(popCierreT);
+  if(!ESCRITORIO.matches){ cerrarPop(); mostrarHoja(`<div class="ep ep-en-hoja">${popHTML(e, k, true)}</div>`, colorEv(e)); return; }
+  cerrarPop();
+  const p = document.createElement('div'); p.id = 'ev-pop'; p.className = 'ep ep-flot'; p.setAttribute('role', 'dialog'); p.innerHTML = popHTML(e, k, false);
+  document.body.appendChild(p);
+  const r = el.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight, W = innerWidth, H = innerHeight;
+  let x = r.right + 10; if(x + w > W - 10) x = r.left - w - 10; if(x < 10) x = Math.max(10, Math.min(W - w - 10, r.left));
+  let y = r.top; if(y + h > H - 10) y = H - h - 10; y = Math.max(74, y);
+  p.style.left = x + 'px'; p.style.top = y + 'px';
+  popInfo = {id, k, hover: !!hover};
+  p.addEventListener('mouseenter', () => clearTimeout(popCierreT));
+  p.addEventListener('mouseleave', () => { if(popInfo && popInfo.hover) popCierreT = setTimeout(cerrarPop, 350); });
+  requestAnimationFrame(() => p.classList.add('ver'));
+}
+function cerrarPop(){ const p = $('#ev-pop'); if(p) p.remove(); popInfo = null; }
+function popCerrarTodo(){ cerrarPop(); if($('#hoja .ep')) cerrarHoja(); }
+function popEditar(id, k){ popCerrarTodo(); setTimeout(() => editarEvento(id, k), $('#hoja') ? 320 : 0); }
+function popHecho(id, k){ popCerrarTodo(); alternarEv(id, k); }
+function popDuplicar(id, k){
+  const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
+  const c = JSON.parse(JSON.stringify(e)); Object.assign(c, {id: uid(), creada: ahoraISO(), mod: ahoraISO(), hechos: [], saltar: []});
+  A.eventos.push(c); guardar(); aviso('Duplicado: ya puedes cambiarlo');
+  popCerrarTodo(); rerenderDia(); setTimeout(() => editarEvento(c.id, k), 330);
+}
+function popBorrar(id, k){
+  const e = AG_().eventos.find(x => x.id === id), box = $('#ep-conf'); if(!e || !box) return;
+  if(!repite(e)){ popBorrar2(id, k, true); return; }
+  const hab = e.tipo === 'habito', d = fechaDe(k);
+  box.innerHTML = `<div class="ep-conf"><p>${hab ? 'Es un hábito' : 'Se repite'}. ¿Qué quieres borrar?</p><div>
+    <button class="btn peligro" onclick="popBorrar2('${id}','${k}', false)">Solo el ${d.getDate()} de ${MESES[d.getMonth()]}</button>
+    <button class="btn peligro" onclick="popBorrar2('${id}','${k}', true)">${hab ? 'Todo el hábito' : 'Todas las veces'}</button>
+    <button class="btn sec" onclick="this.closest('#ep-conf').innerHTML = ''">Cancelar</button></div></div>`;
+}
+function popBorrar2(id, k, todo){
+  const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
+  if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas = (D.borradas || []).concat(e.id); aviso('Borrado del calendario'); }
+  else { e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO(); aviso('Quitado ese día'); }
+  guardar(); popCerrarTodo(); rerenderDia();
+}
+/* con el ratón encima de una tarea durante un segundo, también sale su tarjeta */
+document.addEventListener('mouseover', e => {
+  if(!ESCRITORIO.matches || !matchMedia('(hover: hover)').matches) return;
+  const el = e.target.closest && e.target.closest('[data-ev]');
+  if(!el){ return; }
+  if(el.contains(e.relatedTarget)) return;
+  clearTimeout(popT); clearTimeout(popCierreT);
+  if(popInfo && !popInfo.hover) return;   // una abierta con clic se queda hasta cerrarla
+  popT = setTimeout(() => { if(!$('#hoja') && document.body.contains(el)) verEvento(el.dataset.ev, el.dataset.k, el, true); }, 1000);
+});
+document.addEventListener('mouseout', e => {
+  const el = e.target.closest && e.target.closest('[data-ev]'); if(!el || el.contains(e.relatedTarget)) return;
+  clearTimeout(popT);
+  if(popInfo && popInfo.hover && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('#ev-pop'))) popCierreT = setTimeout(cerrarPop, 350);
+});
+document.addEventListener('mousedown', e => { if(popInfo && !e.target.closest('#ev-pop') && !e.target.closest('[data-ev]')) cerrarPop(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && popInfo) cerrarPop(); });
+addEventListener('scroll', () => { if(popInfo) cerrarPop(); }, {passive: true});
 function evPrioB(k, b){ evEd.prio = k; b.parentNode.querySelectorAll('.ev-prio').forEach(x => x.classList.toggle('sel', x === b)); }
 function evAbrirFecha(){ $('#ev-res').hidden = true; $('#ev-fecha').hidden = false; }
 /* El día: el botón abre el calendario del sistema */
