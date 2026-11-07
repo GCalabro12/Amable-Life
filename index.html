@@ -668,6 +668,12 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .alarma-cuando{margin:6px 0 2px;font-size:14px;color:var(--suave)}
 .alarma h2{margin:0 0 16px;font-size:22px}
 .alarma .ed-bots{margin-top:10px}
+#splash .splash-ver{flex-basis:100%;margin:10px 0 0;font-size:13px;letter-spacing:.3px;color:rgba(233,228,255,.6);text-align:center}
+.rec-pers{margin:6px 0 4px;padding:12px;border-radius:14px;background:rgba(var(--bl),.05);border:1px solid var(--linea)}
+.rec-pers .rp-fila{display:flex;gap:8px;align-items:center}
+.rec-pers input{width:84px;margin:0;text-align:center;font-size:17px}
+.rec-pers select{flex:1;margin:0}
+.rec-pers .rp-ver{margin:8px 0 10px;font-size:13px;color:#f59e0b}
 .ml-sinc{display:block;font-size:12px;font-weight:500;color:#16a34a;margin-top:1px}
 .ml-sinc.mal{color:#ef4444}
 button.na-pie{display:block;width:100%;border:0;background:none;font-family:inherit;text-align:left;cursor:pointer;border-radius:0 0 12px 12px}
@@ -1385,7 +1391,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.09';
+const VERSION = 'v4.10';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3267,15 +3273,17 @@ function despOpciones(id){
     const ha = evEd.horasAviso || [];
     return [{k: 'no', t: 'Sin recordatorio', sel: !evEd.avisos.length && !ha.length}, {k: 0, t: 'A la hora', sel: evEd.avisos.includes(0)}, ...hs.map(T => ({k: 'h' + T, t: 'A las ' + hm(T), sel: ha.includes(T)}))];
   }
-  if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked);
-    return [{k: 'no', t: 'Sin recordatorio', sel: !evEd.avisos.length}, ...(todo ? RECORD_DIA : RECORD_HORA).map(r => ({k: r.k, t: r.t, sel: evEd.avisos.includes(r.k)}))]; }
+  if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked), L = todo ? RECORD_DIA : RECORD_HORA;
+    const propios = evEd.avisos.filter(a => !L.some(r => r.k === a)).sort((a, b) => a - b);   // los personalizados, para poder quitarlos
+    return [{k: 'no', t: 'Sin recordatorio', sel: !evEd.avisos.length}, ...L.map(r => ({k: r.k, t: r.t, sel: evEd.avisos.includes(r.k)})),
+      ...propios.map(a => ({k: a, t: recEtq(a, todo), sel: true})), {k: 'pers', t: 'Personalizado…', sel: false}]; }
   return [{k: 'no', t: 'Sin área', sel: !evEd.areas.length}, ...AREAS.map(a => ({k: a.id, t: `${ico(a)} ${a.nombre}`, sel: evEd.areas.includes(a.id)}))];
 }
 function despValor(id){
   if(id === 'dur'){ const d = durEv(); return d ? fmtDur(d) : '—'; }
   if(id === 'rep') return (opcionesRep().find(o => o.k === (evEd.rep || 'no')) || {t: 'No se repite'}).t;
   if(id === 'rec' && evEd.tipo === 'habito'){ const l = [...(evEd.avisos.includes(0) ? ['A la hora'] : []), ...(evEd.horasAviso || []).slice().sort((a, b) => a - b).map(T => 'A las ' + hm(T))]; return l.length ? l.join(', ') : 'Sin recordatorio'; }
-  if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked), l = (todo ? RECORD_DIA : RECORD_HORA).filter(r => evEd.avisos.includes(r.k)).map(r => r.t);
+  if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked), l = evEd.avisos.slice().sort((a, b) => a - b).map(a => recEtq(a, todo));
     return l.length ? l.join(', ') : 'Sin recordatorio'; }
   return evEd.areas.length ? evEd.areas.map(a => `${ico(areaDe(a))} ${areaDe(a).corto}`).join(' ') : 'Sin área';
 }
@@ -3291,10 +3299,43 @@ function despTocar(id){
   document.querySelectorAll('#hoja .desp-btn').forEach(b => b.classList.remove('abierto'));
   if(abrir){ pintarDesp(id); l.hidden = false; l.previousElementSibling.classList.add('abierto'); }
 }
+/* Nombre de un recordatorio (los de TickTick o uno personalizado): 90 → «1 h 30 min antes»; todo el día: días antes a las 9:00 */
+function recEtq(m, todo){
+  const L = (todo ? RECORD_DIA : RECORD_HORA).find(r => r.k === m); if(L) return L.t;
+  if(todo){ const d = Math.round(m / 1440); return `${d} ${d === 1 ? 'día' : 'días'} antes (9:00)`; }
+  if(m % 1440 === 0){ const d = m / 1440; return `${d} ${d === 1 ? 'día' : 'días'} antes`; }
+  if(m >= 60) return `${Math.floor(m / 60)} h${m % 60 ? ' ' + (m % 60) + ' min' : ''} antes`;
+  return `${m} min antes`;
+}
+/* «Personalizado…»: un número y minutos / horas / días, con la fecha y hora a la que avisará, Guardar y Cancelar */
+function recPers(){
+  const l = $('#dl-rec'); if(!l) return;
+  const todo = !!($('#ev-todo') && $('#ev-todo').checked);
+  l.innerHTML = `<div class="rec-pers"><div class="rp-fila"><input type="number" id="rp-n" min="1" max="${todo ? 60 : 999}" value="${todo ? 3 : 30}" inputmode="numeric" oninput="recPersVista()">
+    <select id="rp-u" onchange="recPersVista()">${todo ? '<option value="1440">días antes (a las 9:00)</option><option value="10080">semanas antes (a las 9:00)</option>'
+      : '<option value="1">minutos antes</option><option value="60">horas antes</option><option value="1440">días antes</option>'}</select></div>
+    <p class="rp-ver" id="rp-ver"></p>
+    <div class="ed-bots"><button type="button" class="btn prim" onclick="recPersGuardar()">Guardar</button><button type="button" class="btn sec" onclick="pintarDesp('rec')">Cancelar</button></div></div>`;
+  recPersVista(); const n = $('#rp-n'); if(n){ n.focus(); n.select(); }
+}
+function recPersMin(){ const n = Math.max(0, Math.round(+valor('rp-n') || 0)), u = +(($('#rp-u') || {}).value || 1); return n * u; }
+function recPersVista(){
+  const v = $('#rp-ver'); if(!v) return;
+  const m = recPersMin(), todo = !!($('#ev-todo') && $('#ev-todo').checked), k = valor('ev-dia') || evEd.k, ini = minDeHora(valor('ev-ini'));
+  if(!m){ v.textContent = 'Escribe un número'; return; }
+  const base = fechaDe(k).getTime() + (todo ? 540 : (ini == null ? 540 : ini)) * 60000, d = new Date(base - m * 60000);
+  v.textContent = `${recEtq(m, todo)} · te avisará el ${capi(fechaLarga(claveDia(d))).replace(' ', ', ')} a las ${hm(d.getHours() * 60 + d.getMinutes())}`;
+}
+function recPersGuardar(){
+  const m = recPersMin(); if(!m){ aviso('Escribe cuántos'); return; }
+  if(!evEd.avisos.includes(m)) evEd.avisos = [...evEd.avisos, m];
+  pintarDesp('rec');
+}
 function despElegir(id, k){
   if(id === 'rep'){ evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
   if(id === 'dur'){ const i = minDeHora(valor('ev-ini')); if(i != null) $('#ev-fin').value = hhmm(Math.min(i + +k, 1439)); pintarDesp(id); despTocar(id); return; }
   if(id === 'rec' && typeof k === 'string' && k[0] === 'h'){ const T = +k.slice(1), h = evEd.horasAviso || []; evEd.horasAviso = h.includes(T) ? h.filter(x => x !== T) : [...h, T]; pintarDesp(id); return; }
+  if(id === 'rec' && k === 'pers'){ recPers(); return; }
   if(id === 'rec' && k === 'no') evEd.horasAviso = [];
   const lista = id === 'rec' ? 'avisos' : 'areas';
   if(id === 'rec' && k !== 'no') k = +k;
@@ -3952,7 +3993,7 @@ function avisosFinal(e0, todo, ini){
 }
 const recTxtEv = e => e.tipo === 'habito'
   ? [...((e.avisos || []).includes(0) && !(e.horasAviso || []).includes(baseAviso(e.todo, e.ini)) ? ['A la hora'] : []), ...(e.horasAviso || []).map(T => 'A las ' + hm(T))].join(', ')
-  : (e.todo ? RECORD_DIA : RECORD_HORA).filter(r => (e.avisos || []).includes(r.k)).map(r => r.t).join(', ');
+  : (e.avisos || []).slice().sort((a, b) => a - b).map(a => recEtq(a, e.todo)).join(', ');
 /* ---------- Avisos del navegador (Gustavo, 4.00, como Google Calendar en la web) ----------
    En el ordenador, los recordatorios salen también en la esquina de la pantalla si Amable Life está abierta pero en otra ventana o pestaña.
    El permiso se pide la primera vez que pones un recordatorio (no al entrar), con una explicación antes. En la app de Android no: avisa el teléfono. */
@@ -4037,10 +4078,12 @@ function posponerAlarma(id, k){
 }
 function textoRecord(e, a, falta){
   if(e.tipo === 'habito' && a !== 0) return e.todo ? 'Tu hábito de hoy' : `Tu hábito de las ${hm(e.ini)}`;
-  if(e.todo) return a === 0 ? 'Hoy' : a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : 'Dentro de una semana';
+  if(e.todo) return a === 0 ? 'Hoy' : a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : a === 10080 ? 'Dentro de una semana' : `Dentro de ${Math.round(a / 1440)} días`;
   if(a === 0) return `Ahora · ${hm(e.ini)} – ${hm(e.fin)}`;
   if(a === 1440) return `Mañana a las ${hm(e.ini)}`;
-  return `A las ${hm(e.ini)} (${(falta || a) >= 55 ? 'en 1 hora' : `en ${falta || a} min`})`;
+  if(a > 1440) return `Dentro de ${Math.round(a / 1440)} días, a las ${hm(e.ini)}`;
+  const f = falta || a;
+  return `A las ${hm(e.ini)} (${f < 55 ? `en ${f} min` : f <= 65 ? 'en 1 hora' : `en ${fmtDur(f)}`})`;
 }
 function enviarRecordatorios(){
   if(!recordNativo() || !D || !D.agenda) return;
@@ -5887,7 +5930,7 @@ addEventListener('growpanel-listo', enviarResumen);
   // Al abrir, siempre arriba del todo (el navegador recordaba la posición y el aviso de arriba quedaba oculto)
   try{ if('scrollRestoration' in history) history.scrollRestoration = 'manual'; }catch(e){}
   window.scrollTo(0, 0); addEventListener('load', () => window.scrollTo(0, 0));
-  $('#sellos-splash').innerHTML = sellosHTML();
+  $('#sellos-splash').innerHTML = sellosHTML().split('<a class="gp-seal"')[0] + `<p class="splash-ver">web ${VERSION.replace(/^v/, '')}${esApp && versionApp() ? ' · app ' + esc(versionApp()) : ''}</p>`;
   vista = vistaInicial();
   render();
   if(vista === 'dia') centrarBloque();
