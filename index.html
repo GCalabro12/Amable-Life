@@ -808,6 +808,23 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<style>
+/* Calendario a todo el ancho en el ordenador (Gustavo): solo en pantallas de 900 px o más; en el móvil no cambia nada */
+@media (min-width:900px){
+  body.ancho .envoltura,body.ancho .cab-in{max-width:1240px;padding-left:28px;padding-right:28px}
+  body.ancho .ag-fab{right:max(24px,calc(50% - 596px))}
+  body.ancho .ag-nav,body.ancho .ag-modos{max-width:620px;margin-left:auto;margin-right:auto}
+  body.ancho .rj-h span{font-size:12px}
+  body.ancho .rj.sem .rj-ev{font-size:13px;padding:3px 6px;border-radius:7px;border-left-width:3px}
+  body.ancho .rj.sem .rj-ev b{font-weight:800}
+  body.ancho .rj-cab button b{font-size:13px}
+  body.ancho .rj-cab button span{font-size:18px;width:36px;height:36px}
+  body.ancho .rj-todo button{font-size:12.5px;padding:3px 6px}
+  body.ancho .rj-todo em{font-size:11.5px}
+  body.ancho .ag-mes{gap:6px}
+  body.ancho .ag-dia{aspect-ratio:auto;height:68px;font-size:17px}
+}
+</style>
 </head>
 <body>
 
@@ -844,7 +861,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
 
 <script>
 'use strict';
-const VERSION = 'v3.67';
+const VERSION = 'v3.68';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1094,6 +1111,7 @@ function render(){
   app.innerHTML = (vistas[vista] || vInicio)();
   const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes'].includes(vista);
   $('#nav').style.display = conNav ? '' : 'none';
+  document.body.classList.toggle('ancho', vista === 'agenda');   // en el ordenador, el Calendario a todo el ancho
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
