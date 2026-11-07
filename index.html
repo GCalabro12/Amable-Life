@@ -1375,7 +1375,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.04';
+const VERSION = 'v4.05';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3631,7 +3631,7 @@ function menuHTML(){
     <div class="ml-g ml-cuenta">${u ? `<div class="ml-u">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<span class="ml-ini">${esc((u.displayName || u.email || '?').trim().charAt(0).toUpperCase())}</span>`}
         <span><b>${esc(u.email || u.displayName || 'Tu cuenta')}</b><small>Google · tus datos se guardan en la nube</small></span></div>
         <p class="ml-nota">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
-        ${txtNube() ? `<p class="ml-nota" style="color:${nube.error ? '#ef4444' : '#16a34a'}">${txtNube()}</p>` : ''}
+        ${txtNube() ? `<p class="ml-nota" style="color:${nube.error ? '#ef4444' : '#16a34a'}">${txtNube()}</p><p class="ml-nota">${cuentaNube()}</p>` : ''}
         ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta y cambiar de cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
       : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
     <div class="ml-g">${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
@@ -4737,6 +4737,7 @@ async function traerNube(){
   nube.sincronizando = true;
   try{
     const doc = await nube.ref.get(), r = doc.exists ? doc.data() : null;
+    notaRemota(r);
     const antes = JSON.stringify(D);
     D = fusionar(D, r);
     const ahora = JSON.stringify(D);
@@ -4760,6 +4761,19 @@ function errorNube(e, que){
   nube.error = {que, c, at: Date.now()};
   if(!nube.avisado){ nube.avisado = true; aviso(que === 'subir' ? `No se han podido guardar tus cambios en la nube (${c}). Se reintentará solo.` : `No se ha podido leer la nube (${c}).`, 6000); }
 }
+/* Diagnóstico (Gustavo, 4.05: «¿qué otra causa puede ser?»): en el menú, cuántas cosas hay en este aparato y quién guardó
+   lo último en la nube, para comparar el móvil y el ordenador */
+const nombreAparato = () => esApp ? 'la app del móvil' : ESCRITORIO.matches ? 'el ordenador' : 'el navegador del móvil';
+function notaRemota(r){ if(r && r.actualizado) nube.remoto = {at: r.actualizado, aparato: r.aparato || '', version: r.version || '', ev: ((r.agenda || {}).eventos || []).length, acc: (r.acciones || []).length}; }
+function cuentaNube(){
+  const ev = (D.agenda && D.agenda.eventos || []).length, pend = D.acciones.filter(a => !a.hecha).length, hech = D.acciones.length - pend;
+  const n = x => x.toLocaleString('es-ES');
+  let t = `En este aparato: ${n(ev)} en el calendario · ${n(pend)} tareas pendientes · ${n(hech)} hechas`;
+  const r = nube.remoto;
+  if(r){ const d = new Date(r.at), hoy = d.toDateString() === new Date().toDateString();
+    t += `<br>En la nube: ${n(r.ev)} en el calendario · ${n(r.acc)} tareas. Lo último lo guardó ${r.aparato ? esc(r.aparato) : 'una versión anterior'} ${hoy ? 'hoy' : 'el ' + d.toLocaleDateString('es-ES')} a las ${hm(d.getHours() * 60 + d.getMinutes())}${r.version ? ` (web ${esc(String(r.version).replace(/^v/, ''))})` : ''}`; }
+  return t;
+}
 function txtNube(){
   if(!nube.ref) return '';
   if(nube.error) return `No sincronizado: ${nube.error.que === 'subir' ? 'no se pudo guardar' : 'no se pudo leer'} (${esc(nube.error.c)}) a las ${hm(new Date(nube.error.at).getHours() * 60 + new Date(nube.error.at).getMinutes())}`;
@@ -4772,7 +4786,7 @@ function escucharNube(){
   if(!nube.ref || nube.escucha) return;
   nube.escucha = nube.ref.onSnapshot(doc => {
     if(doc.metadata.hasPendingWrites || !doc.exists) return;   // es lo que acabo de subir yo
-    const r = doc.data(); if(!r || r.actualizado === nube.subido) return;
+    const r = doc.data(); notaRemota(r); if(!r || r.actualizado === nube.subido) return;
     const antes = JSON.stringify(D);
     D = fusionar(D, r);
     if(JSON.stringify(D) === antes) return;
@@ -4795,7 +4809,7 @@ async function subirNube(){
   if(!nube.ref) return;
   try{
     const actualizado = new Date().toISOString(); nube.subido = actualizado;
-    const datos = JSON.stringify(Object.assign({}, D, {actualizado, version: VERSION}));
+    const datos = JSON.stringify(Object.assign({}, D, {actualizado, version: VERSION, aparato: nombreAparato()}));
     if(datos.length > 1000000) throw {code: 'tus datos ocupan demasiado para la nube'};   // límite de Firestore: 1 MB por documento
     await nube.ref.set(JSON.parse(datos));
     nube.ok = Date.now(); nube.error = null;
