@@ -1348,7 +1348,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.01';
+const VERSION = 'v4.02';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3634,10 +3634,10 @@ function ctxEv(id, k, x, y){
   const ok = hechoEv(e, k), m = document.createElement('div');
   m.id = 'ev-ctx'; m.className = 'ev-ctx'; m.setAttribute('role', 'menu');
   m.innerHTML = `<button role="menuitem" class="ctx-hecho" onclick="cerrarCtx(); alternarEv('${id}','${k}')">${svgT('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 20)}<span>${ok ? 'Desmarcar como hecho' : 'Marcar como hecho'}</span></button>
-    <button role="menuitem" onclick="cerrarCtx(); popEditar('${id}','${k}')">${ICO_EP_LAPIZ}<span>Editar</span></button>
-    <div class="ctx-prio"><span>Prioridad</span>${[1, 2, 3].map(p => `<button class="${(e.prio || 0) === p ? 'sel' : ''}" title="Prioridad ${PRIO[p].t.toLowerCase()}" aria-label="Prioridad ${PRIO[p].t.toLowerCase()}" style="--c:${PRIO[p].c}" onclick="ctxPrio('${id}', ${p})">${ICO_BANDERA(PRIO[p].c)}</button>`).join('')}</div>
+    <button role="menuitem" class="ctx-borrar" onclick="ctxBorrar('${id}','${k}')">${ICO_PAPELERA}<span>Eliminar</span></button>
     <hr>
-    <button role="menuitem" class="ctx-borrar" onclick="ctxBorrar('${id}','${k}')">${ICO_PAPELERA}<span>Eliminar</span></button>`;
+    <button role="menuitem" onclick="cerrarCtx(); popEditar('${id}','${k}')">${ICO_EP_LAPIZ}<span>Editar</span></button>
+    <div class="ctx-prio"><span>Prioridad</span>${[1, 2, 3].map(p => `<button class="${(e.prio || 0) === p ? 'sel' : ''}" title="Prioridad ${PRIO[p].t.toLowerCase()}" aria-label="Prioridad ${PRIO[p].t.toLowerCase()}" style="--c:${PRIO[p].c}" onclick="ctxPrio('${id}', ${p})">${ICO_BANDERA(PRIO[p].c)}</button>`).join('')}</div>`;
   document.body.appendChild(m);
   const w = m.offsetWidth, h = m.offsetHeight;
   m.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px'; m.style.top = Math.max(8, Math.min(innerHeight - h - 8, y)) + 'px';
