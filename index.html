@@ -1375,7 +1375,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.03';
+const VERSION = 'v4.04';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1456,6 +1456,9 @@ function guardar(){
 const ahoraISO = () => new Date().toISOString();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const areaDe = id => AREAS.find(a => a.id === id);
+/* Tareas sin área (p. ej. las de TickTick cuya lista no se llama como un área): se ven en gris como «Sin área» */
+const SIN_AREA = {id: 'sin', nombre: 'Sin área', corto: 'Sin área', color: '#94a3b8'};
+const areaO = id => areaDe(id) || SIN_AREA;
 const nivel = id => D.niveles[id] || null;
 const tieneDatos = () => D.revisiones.length > 0 || D.acciones.length > 0;
 const ultimaRevision = () => D.revisiones[D.revisiones.length-1] || null;
@@ -1865,7 +1868,7 @@ document.addEventListener('pointerup', soltarArrastre);
 document.addEventListener('click', e => { if(Date.now() - finArrastre < 350){ e.stopPropagation(); e.preventDefault(); } }, true);
 document.addEventListener('pointercancel', soltarArrastre);
 function tarjetaAccion(x, i){
-  const a = areaDe(x.area);
+  const a = areaO(x.area);
   return `<div class="prox" id="acc-${x.id}" data-ord="${x.id}" style="--c:${a.color};animation-delay:${i*70}ms">
     ${ASA}<span class="num">${i+1}</span>
     <div class="cuerpo-p"><div class="texto-p">${bandX(x)}${esc(x.texto)}${durX(x)}</div><div class="area-p">${ico(a)} ${a.nombre}</div></div>
@@ -2377,7 +2380,7 @@ let petaloAbierto = null;   // Focus: pétalos colapsados para que no distraigan
 function listaSinAsignar(){
   const asig = idsEnBloquesHoy(), lista = pendientes().filter(x => !asig.has(x.id)), c = bloqueAhora();
   const grupos = [];   // primero el pétalo de la tarea más arriba
-  lista.forEach(x => { let g = grupos.find(z => z.a.id === x.area); if(!g){ g = {a: areaDe(x.area), tareas: []}; grupos.push(g); } g.tareas.push(x); });
+  lista.forEach(x => { const ar = areaO(x.area); let g = grupos.find(z => z.a === ar); if(!g){ g = {a: ar, tareas: []}; grupos.push(g); } g.tareas.push(x); });
   if(!grupos.length) return '';
   return `<section class="sin-asig"><h2 class="pet-tit">Pétalos con tareas pendientes</h2>
     ${grupos.map(({a, tareas}) => { const abierto = petaloAbierto === a.id;
@@ -2395,7 +2398,7 @@ function petalosSinTareas(){
 }
 /* Fila de tarea arrastrable: con seis puntitos, casilla de hecha y «→ Ahora» */
 function filaTarea(x, hayBloque, ordenable){
-  const a = areaDe(x.area);
+  const a = areaO(x.area);
   return `<div class="sa-fila" ${ordenable ? `data-ord="${x.id}"` : `data-mover="${x.id}"`} style="--c:${a.color}">
     <div class="sa-l1">${ASA}<button class="check" aria-label="Marcar como hecha" onclick="alternarAccion('${x.id}')">✓</button>
       <span class="sa-t">${bandX(x)}${esc(x.texto)}${durX(x)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
@@ -3628,6 +3631,7 @@ function menuHTML(){
     <div class="ml-g ml-cuenta">${u ? `<div class="ml-u">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<span class="ml-ini">${esc((u.displayName || u.email || '?').trim().charAt(0).toUpperCase())}</span>`}
         <span><b>${esc(u.email || u.displayName || 'Tu cuenta')}</b><small>Google · tus datos se guardan en la nube</small></span></div>
         <p class="ml-nota">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
+        ${txtNube() ? `<p class="ml-nota" style="color:${nube.error ? '#ef4444' : '#16a34a'}">${txtNube()}</p>` : ''}
         ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta y cambiar de cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
       : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
     <div class="ml-g">${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
@@ -3650,7 +3654,7 @@ function menuVista(k){ cerrarMenu(); if(vista !== 'agenda') ir('agenda'); agVer(
 async function menuActualizar(){
   cerrarMenu();
   if(!nube.ref){ aviso('Entra con tu cuenta para tenerlo igual en el móvil y en el ordenador', 3500); return; }
-  aviso('Actualizando…'); await traerNube(); rerenderDia(); aviso('Al día ✓');
+  aviso('Actualizando…'); nube.avisado = false; await traerNube(); await subirNube(); rerenderDia(); aviso(nube.error ? 'No se ha podido sincronizar: ' + nube.error.c : 'Al día ✓', 4000);
 }
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('#menu-lat')) cerrarMenu(); });
 /* Botón derecho sobre algo del calendario (Gustavo, como Google): Editar, Marcar como hecho, prioridad y Eliminar */
@@ -4153,7 +4157,7 @@ function abrirTareasAreas(){
   const k = claveDia(fechaBloques()), b = BLOQUES[bSel], acts = actsDe(k, bSel);
   const ya = new Set(acts.map(a => a.acc).filter(Boolean)), lleno = acts.length >= MAX_ACT;
   const pend = pendientes(), escrito = $('#h-blq-nueva') ? $('#h-blq-nueva').value : '';
-  const grupos = AREAS.map(a => ({a, lista: pend.filter(x => x.area === a.id)})).filter(g => g.lista.length);
+  const grupos = [...AREAS, SIN_AREA].map(a => ({a, lista: pend.filter(x => areaO(x.area) === a)})).filter(g => g.lista.length);
   mostrarHoja(`<div class="hoja-cab"><div><h2>Bloque de ${hm(b.ini)} a ${hm(b.fin)}</h2></div></div>
     <p class="suave" style="margin:4px 0 10px">${acts.length} de ${MAX_ACT} tareas${lleno ? ' · ya está completo' : ''}</p>
     <section class="hoja-caja"><h3>Añadir nueva tarea</h3>
@@ -4725,18 +4729,42 @@ function fusionar(local, remoto){
   if(al || ar) r.appAndroid = (ar && (!al || (ar.visto || '') > (al.visto || ''))) ? ar : al;
   return r;
 }
+/* Gustavo (4.04, «no se actualizan tareas en mi móvil»): al abrir, lo de la nube se unía con lo de aquí pero el Calendario
+   (la pantalla de arranque) no se volvía a pintar, y se veía lo viejo hasta cambiar de pantalla. Ahora se pinta en cualquier pantalla,
+   y solo se sube a la nube si aquí había algo que allí no estaba. */
 async function traerNube(){
-  if(!nube.ref) return;
+  if(!nube.ref || nube.sincronizando) return;
   nube.sincronizando = true;
   try{
-    const doc = await nube.ref.get();
-    D = fusionar(D, doc.exists ? doc.data() : null);
-    try{ localStorage.setItem(CLAVE, JSON.stringify(D)); }catch(e){}
-    await subirNube();
+    const doc = await nube.ref.get(), r = doc.exists ? doc.data() : null;
+    const antes = JSON.stringify(D);
+    D = fusionar(D, r);
+    const ahora = JSON.stringify(D);
+    try{ localStorage.setItem(CLAVE, ahora); }catch(e){}
+    nube.leido = Date.now(); nube.ok = Date.now();
+    if(!r || ahora !== JSON.stringify(fusionar(vacio(), r))) await subirNube();
     enviarResumen();
-  }catch(e){ console.warn(e); aviso('No se pudo sincronizar con la nube'); }
+    if(ahora !== antes) pintarDesdeNube();
+  }catch(e){ console.warn(e); errorNube(e, 'leer'); }
   nube.sincronizando = false;
   escucharNube();
+}
+/* Al volver a la app (el móvil la congela en segundo plano y la escucha puede quedarse sin avisos), se vuelve a leer la nube */
+function refrescarNube(){ if(nube.ref && !document.hidden && Date.now() - (nube.leido || 0) > 20000) traerNube(); }
+document.addEventListener('visibilitychange', refrescarNube);
+window.addEventListener('focus', refrescarNube);
+window.addEventListener('online', () => { if(nube.ref){ nube.leido = 0; refrescarNube(); } });
+/* Si la nube falla, se dice (una vez por sesión) y queda escrito en el menú */
+function errorNube(e, que){
+  const c = (e && (e.code || e.message)) || 'sin conexión';
+  nube.error = {que, c, at: Date.now()};
+  if(!nube.avisado){ nube.avisado = true; aviso(que === 'subir' ? `No se han podido guardar tus cambios en la nube (${c}). Se reintentará solo.` : `No se ha podido leer la nube (${c}).`, 6000); }
+}
+function txtNube(){
+  if(!nube.ref) return '';
+  if(nube.error) return `No sincronizado: ${nube.error.que === 'subir' ? 'no se pudo guardar' : 'no se pudo leer'} (${esc(nube.error.c)}) a las ${hm(new Date(nube.error.at).getHours() * 60 + new Date(nube.error.at).getMinutes())}`;
+  if(nube.ok){ const d = new Date(nube.ok); return `Sincronizado a las ${hm(d.getHours() * 60 + d.getMinutes())}`; }
+  return 'Sincronizando…';
 }
 /* Tiempo real (Gustavo, 3.82: «añadí una tarea en el móvil y no la veo en el ordenador»): se escucha el documento de la nube;
    cuando otro aparato lo cambia, se une con lo de aquí y se vuelve a pintar (sin interrumpir si estás escribiendo). */
@@ -4749,8 +4777,12 @@ function escucharNube(){
     D = fusionar(D, r);
     if(JSON.stringify(D) === antes) return;
     try{ localStorage.setItem(CLAVE, JSON.stringify(D)); }catch(e){}
+    nube.ok = Date.now(); nube.leido = Date.now();
     pintarDesdeNube();
-  }, e => console.warn('nube en tiempo real', e));
+  }, e => {   // la escucha se corta (red, permisos…): se vuelve a enganchar a los 10 s
+    console.warn('nube en tiempo real', e);
+    nube.escucha = null; clearTimeout(nube.tEsc); nube.tEsc = setTimeout(() => { nube.leido = 0; refrescarNube(); escucharNube(); }, 10000);
+  });
 }
 function pintarDesdeNube(){
   const f = document.activeElement;
@@ -4763,8 +4795,11 @@ async function subirNube(){
   if(!nube.ref) return;
   try{
     const actualizado = new Date().toISOString(); nube.subido = actualizado;
-    await nube.ref.set(JSON.parse(JSON.stringify(Object.assign({}, D, {actualizado, version: VERSION}))));
-  }catch(e){ console.warn(e); }
+    const datos = JSON.stringify(Object.assign({}, D, {actualizado, version: VERSION}));
+    if(datos.length > 1000000) throw {code: 'tus datos ocupan demasiado para la nube'};   // límite de Firestore: 1 MB por documento
+    await nube.ref.set(JSON.parse(datos));
+    nube.ok = Date.now(); nube.error = null;
+  }catch(e){ console.warn(e); errorNube(e, 'subir'); clearTimeout(nube.tReintento); nube.tReintento = setTimeout(programarSubida, 60000); }
 }
 /* En la app Android, Google no deja iniciar sesión dentro de la web: el teléfono la hace y devuelve un token */
 window.nativeGoogle = (token, error) => {
