@@ -1560,7 +1560,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.49';
+const VERSION = 'v4.50';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5896,7 +5896,7 @@ function vEstad(){
 })();
 /* 4.40 (Gustavo): en Ajustes quedan solo estas filas; Suscripción, Actualizaciones, Importar y exportar y Cómo funciona
    están en el menú de tres rayas (se abren en su ventana con abrirSeccion); Estadísticas ya estaba en el menú */
-const AJ_DENTRO = ['cuenta', 'sonidos', 'fecha', 'datos'];
+const AJ_DENTRO = ['sonidos', 'fecha', 'datos'];   // 4.50 (Gustavo): Tu cuenta ya está en el menú
 let temasAjCache = null;
 function abrirSeccion(k){
   if(k === 'premium'){ ir('premium'); return; }
@@ -5980,7 +5980,7 @@ function vAjustes(){
       sub: u ? 'En este móvil y en la nube' : 'Solo en este móvil',
       html: () => `<p class="suave">${u ? 'Se guardan en este dispositivo y en tu cuenta.' : 'Ahora se guardan solo en este dispositivo. Entra con Google para tenerlas también en la nube.'} La copia de seguridad (guardar y recuperar) está en «Tu cuenta».</p>
         <div class="bots">
-          <button class="btn sec" onclick="abrirAj('cuenta')">Copia de seguridad y restauración</button>
+          <button class="btn sec" onclick="abrirCuenta()">Copia de seguridad y restauración</button>
           <button class="btn peligro" onclick="borrarTodo()">Borrar todos mis datos</button>
         </div>`},
     {k: 'ayuda', ico: svgT('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3"/><circle cx="12" cy="16.8" r=".7" fill="currentColor"/>', 24), t: 'Cómo funciona la app',
