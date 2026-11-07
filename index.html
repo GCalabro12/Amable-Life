@@ -679,6 +679,33 @@ html.claro .ev-ctx .ctx-borrar{color:#dc2626}
 .ev-ctx .ctx-borrar svg{color:inherit}
 .ev-ctx hr{border:0;border-top:1px solid var(--linea);margin:6px 0}
 .ctx-prio{display:flex;align-items:center;gap:6px;padding:6px 16px}
+.ctx-sub{position:relative}
+.ctx-sub > button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--tinta);padding:10px 16px;font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer}
+.ctx-sub > button:hover,.ctx-sub.abierto > button{background:rgba(var(--bl),.08)}
+.ctx-sub > button svg{color:var(--suave);flex:none}
+.ctx-fl{margin-left:auto;font-style:normal;font-size:18px;color:var(--suave)}
+.ctx-subm{display:none;position:absolute;left:100%;top:-6px;min-width:240px;padding:6px 0;border-radius:12px;background:var(--tarjeta);border:1px solid var(--linea);box-shadow:0 12px 32px rgba(0,0,0,.45)}
+.ctx-sub:hover .ctx-subm,.ctx-sub.abierto .ctx-subm{display:block}
+.ev-ctx.izq .ctx-subm{left:auto;right:100%}
+.ctx-subm button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;color:var(--tinta);padding:9px 14px;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.ctx-subm button:hover{background:rgba(var(--bl),.08)}
+.ctx-subm button span{flex:1}
+.ctx-subm button i{font-style:normal;color:var(--oro);font-weight:900}
+@media (max-width:599px){ .ctx-subm{position:static;box-shadow:none;border:0;border-radius:0;padding:0 0 0 18px} }
+/* notas adhesivas */
+.nota-ad{position:fixed;z-index:44;width:260px;min-height:200px;max-height:70vh;display:flex;flex-direction:column;background:var(--nc,#fff1a8);color:#2b2433;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
+.na-bar{position:relative;display:flex;justify-content:flex-end;gap:2px;padding:4px 4px 0;height:28px;cursor:grab;background:color-mix(in srgb,var(--nc,#fff1a8) 85%,#000)}
+.na-bar:active{cursor:grabbing}
+.na-b{width:26px;height:24px;border:0;border-radius:6px;background:none;color:#2b2433;display:grid;place-items:center;cursor:pointer;opacity:.6;padding:0}
+.na-b:hover{opacity:1;background:rgba(0,0,0,.08)}
+.na-cols{position:absolute;top:30px;right:4px;z-index:2;display:grid;grid-template-columns:repeat(4,26px);gap:6px;padding:8px;border-radius:10px;background:#fff;box-shadow:0 8px 22px rgba(0,0,0,.25)}
+.na-cols[hidden]{display:none}
+.na-cols button{width:26px;height:26px;border-radius:6px;border:1px solid rgba(0,0,0,.15);cursor:pointer}
+.na-t{padding:10px 14px 4px;font-size:16px;font-weight:700;outline:none;line-height:1.3}
+.na-d{flex:1;padding:4px 14px 8px;font-size:14px;outline:none;overflow:auto;line-height:1.45;min-height:60px}
+.na-t:empty::before,.na-d:empty::before{content:attr(data-ph);color:rgba(43,36,51,.45)}
+.na-d a{color:#1d4ed8}
+.na-pie{padding:6px 14px 8px;font-size:11.5px;color:rgba(43,36,51,.6)}
 .ctx-prio span{flex:1;font-size:14px;color:var(--suave);font-weight:600}
 .ctx-prio button{width:34px;height:34px;border-radius:9px;border:0;background:none;display:grid;place-items:center;cursor:pointer;opacity:.45}
 .ctx-prio button:hover{opacity:.8}
@@ -1348,7 +1375,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.02';
+const VERSION = 'v4.03';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3627,6 +3654,65 @@ async function menuActualizar(){
 }
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('#menu-lat')) cerrarMenu(); });
 /* Botón derecho sobre algo del calendario (Gustavo, como Google): Editar, Marcar como hecho, prioridad y Eliminar */
+/* ---------- Abrir como nota adhesiva (Gustavo, 4.03, como TickTick) ----------
+   Una nota de color encima de todo: se arrastra por la barra de arriba, se escribe el título y la descripción (se guarda sola),
+   se cambia el color y se cierra con la cruz. Las abiertas y su sitio se recuerdan en este aparato (localStorage equilibra.notas). */
+const NOTA_COL = ['#fff1a8', '#ffd6c2', '#ffb3b8', '#c9ecff', '#cdd5ff', '#e2d4ff', '#c8efc8', '#ffffff'];
+const notasLeer = () => { try{ return JSON.parse(localStorage.getItem('equilibra.notas') || '[]') || []; }catch(e){ return []; } };
+const notasGuardar = l => { try{ localStorage.setItem('equilibra.notas', JSON.stringify(l)); }catch(e){} };
+function abrirNota(id, k){
+  const l = notasLeer(); let n = l.find(x => x.id === id);
+  if(!n){ const i = l.length; n = {id, k, x: Math.min(innerWidth - 290, 120 + i * 30), y: 110 + i * 30, c: 0}; l.push(n); notasGuardar(l); }
+  pintarNotas(); const el = document.querySelector(`.nota-ad[data-id="${id}"]`); if(el) el.querySelector('.na-t').focus();
+}
+function pintarNotas(){
+  const l = notasLeer().filter(n => AG_().eventos.some(e => e.id === n.id));
+  document.querySelectorAll('.nota-ad').forEach(el => { if(!l.some(n => n.id === el.dataset.id)) el.remove(); });
+  l.forEach(n => {
+    const e = AG_().eventos.find(z => z.id === n.id); let el = document.querySelector(`.nota-ad[data-id="${n.id}"]`);
+    if(!el){
+      el = document.createElement('div'); el.className = 'nota-ad'; el.dataset.id = n.id;
+      el.innerHTML = `<div class="na-bar" title="Arrastra para mover la nota"><button type="button" class="na-b" title="Color" aria-label="Color" onclick="notaColores(this)">${svgT('<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.4 0 1.6-1.3.9-2.2-.7-.9-.4-2.3 1-2.3h2.4a3.2 3.2 0 0 0 3.2-3.2A9 9 0 0 0 12 3.5z"/><circle cx="8" cy="11" r="1" fill="currentColor"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/>', 16)}</button><button type="button" class="na-b" title="Cerrar la nota" aria-label="Cerrar la nota" onclick="cerrarNota('${n.id}')">${ICO_CRUZ.replace('width="20" height="20"', 'width="16" height="16"')}</button>
+        <div class="na-cols" hidden>${NOTA_COL.map((c, i) => `<button type="button" style="background:${c}" aria-label="Color ${i + 1}" onclick="notaColor('${n.id}', ${i})"></button>`).join('')}</div></div>
+        <div class="na-t" contenteditable="true" spellcheck="true" data-ph="Título"></div>
+        <div class="na-d rt" contenteditable="true" data-ph="Escribe aquí…"></div>
+        <div class="na-pie"></div>`;
+      document.body.appendChild(el);
+      el.querySelector('.na-t').addEventListener('input', () => notaGuardar(n.id));
+      el.querySelector('.na-d').addEventListener('input', () => notaGuardar(n.id));
+      el.querySelector('.na-d').addEventListener('paste', ev => { ev.preventDefault(); document.execCommand('insertText', false, (ev.clipboardData || window.clipboardData).getData('text/plain')); });
+      el.querySelector('.na-bar').addEventListener('pointerdown', ev => notaArrastrar(ev, el, n.id));
+      el.querySelector('.na-t').textContent = e.t === SIN_TITULO ? '' : e.t;
+      el.querySelector('.na-d').innerHTML = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
+    }
+    el.style.left = Math.max(0, Math.min(innerWidth - 120, n.x)) + 'px'; el.style.top = Math.max(0, Math.min(innerHeight - 60, n.y)) + 'px';
+    el.style.setProperty('--nc', NOTA_COL[n.c] || NOTA_COL[0]);
+    el.querySelector('.na-pie').textContent = `${capi(fechaLarga(n.k || e.dia))}${e.todo ? '' : ' · ' + hm(e.ini) + ' – ' + hm(e.fin)}`;
+  });
+}
+let notaT = null;
+function notaGuardar(id){
+  clearTimeout(notaT);
+  notaT = setTimeout(() => {
+    const el = document.querySelector(`.nota-ad[data-id="${id}"]`), e = AG_().eventos.find(z => z.id === id); if(!el || !e) return;
+    const t = el.querySelector('.na-t').innerText.replace(/\s+/g, ' ').trim(), d = el.querySelector('.na-d');
+    e.t = t || SIN_TITULO; e.desc = d.innerText.trim().slice(0, 2000); e.descH = e.desc ? limpiarHTML(d.innerHTML).slice(0, 8000) : ''; e.mod = ahoraISO();
+    guardar(); if(vista === 'agenda'){ const y = window.scrollY; render(); window.scrollTo(0, y); }
+  }, 700);
+}
+function cerrarNota(id){ notasGuardar(notasLeer().filter(n => n.id !== id)); const el = document.querySelector(`.nota-ad[data-id="${id}"]`); if(el) el.remove(); }
+function notaColores(b){ const c = b.parentNode.querySelector('.na-cols'); c.hidden = !c.hidden; }
+function notaColor(id, i){ const l = notasLeer(), n = l.find(x => x.id === id); if(n){ n.c = i; notasGuardar(l); } pintarNotas(); const c = document.querySelector(`.nota-ad[data-id="${id}"] .na-cols`); if(c) c.hidden = true; }
+function notaArrastrar(ev, el, id){
+  if(ev.target.closest('button')) return;
+  ev.preventDefault();
+  const r = el.getBoundingClientRect(), dx = ev.clientX - r.left, dy = ev.clientY - r.top;
+  document.querySelectorAll('.nota-ad').forEach(x => x.style.zIndex = 44); el.style.zIndex = 45;
+  const mover = e => { el.style.left = Math.max(0, Math.min(innerWidth - 80, e.clientX - dx)) + 'px'; el.style.top = Math.max(0, Math.min(innerHeight - 40, e.clientY - dy)) + 'px'; };
+  const soltar = () => { removeEventListener('pointermove', mover); removeEventListener('pointerup', soltar);
+    const l = notasLeer(), n = l.find(x => x.id === id); if(n){ n.x = parseFloat(el.style.left); n.y = parseFloat(el.style.top); notasGuardar(l); } };
+  addEventListener('pointermove', mover); addEventListener('pointerup', soltar);
+}
 function cerrarCtx(){ const m = $('#ev-ctx'); if(m) m.remove(); }
 function ctxEv(id, k, x, y){
   const e = AG_().eventos.find(z => z.id === id); if(!e) return;
@@ -3637,10 +3723,40 @@ function ctxEv(id, k, x, y){
     <button role="menuitem" class="ctx-borrar" onclick="ctxBorrar('${id}','${k}')">${ICO_PAPELERA}<span>Eliminar</span></button>
     <hr>
     <button role="menuitem" onclick="cerrarCtx(); popEditar('${id}','${k}')">${ICO_EP_LAPIZ}<span>Editar</span></button>
+    <div class="ctx-sub"><button role="menuitem" aria-haspopup="true" onclick="this.parentNode.classList.toggle('abierto')">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<span>Áreas</span><i class="ctx-fl">›</i></button>
+      <div class="ctx-subm" id="ctx-areas">${ctxAreasHTML(e)}</div></div>
+    <button role="menuitem" onclick="ctxFocus('${id}','${k}')">${svgT('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>', 20)}<span>Iniciar Focus</span></button>
+    <button role="menuitem" onclick="cerrarCtx(); popDuplicar('${id}','${k}')">${ICO_COPIA}<span>Duplicar</span></button>
+    <button role="menuitem" onclick="cerrarCtx(); abrirNota('${id}','${k}')">${svgT('<path d="M5 4h14v11l-5 5H5z"/><path d="M14 20v-5h5"/>', 20)}<span>Abrir como nota adhesiva</span></button>
     <div class="ctx-prio"><span>Prioridad</span>${[1, 2, 3].map(p => `<button class="${(e.prio || 0) === p ? 'sel' : ''}" title="Prioridad ${PRIO[p].t.toLowerCase()}" aria-label="Prioridad ${PRIO[p].t.toLowerCase()}" style="--c:${PRIO[p].c}" onclick="ctxPrio('${id}', ${p})">${ICO_BANDERA(PRIO[p].c)}</button>`).join('')}</div>`;
   document.body.appendChild(m);
   const w = m.offsetWidth, h = m.offsetHeight;
   m.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px'; m.style.top = Math.max(8, Math.min(innerHeight - h - 8, y)) + 'px';
+  if(x + w + 250 > innerWidth) m.classList.add('izq');   // sin sitio a la derecha: el desplegable de áreas sale a la izquierda
+}
+const ctxAreasHTML = e => AREAS.map(a => `<button role="menuitemcheckbox" aria-checked="${areasEv(e).some(x => x.id === a.id)}" onclick="ctxArea('${e.id}','${a.id}')">${ico(a)}<span>${a.nombre}</span><i>${areasEv(e).some(x => x.id === a.id) ? '✓' : ''}</i></button>`).join('');
+function ctxArea(id, a){   // varias a la vez, como en la hoja
+  const e = AG_().eventos.find(z => z.id === id); if(!e) return;
+  const l = areasEv(e).map(x => x.id), n = l.includes(a) ? l.filter(x => x !== a) : [...l, a];
+  e.areas = n; e.area = n[0] || null; e.mod = ahoraISO(); guardar(); rerenderDia();
+  const m = $('#ctx-areas'); if(m) m.innerHTML = ctxAreasHTML(e);
+}
+/* Iniciar Focus: la tarea entra arriba de tu bloque de ahora y se abre Focus (si no se repite, queda unida a una tarea de tus áreas) */
+function ctxFocus(id, k){
+  cerrarCtx();
+  const e = AG_().eventos.find(z => z.id === id); if(!e) return;
+  const c = bloqueAhora(); if(c < 0){ aviso('Ahora no hay bloque de Focus (van de 5:30 a 22:00)'); return; }
+  const acts = actsDe(hoyK(), c, true);
+  if(e.acc && acts.some(x => x.acc === e.acc)){ ir('inicio'); window.scrollTo(0, 0); return; }
+  if(acts.length >= MAX_ACT){ aviso(`Tu bloque de ahora ya tiene ${MAX_ACT} tareas`); return; }
+  if(!repite(e) && !e.acc){
+    const orden = Math.min(0, ...D.acciones.map(a => a.orden || 0)) - 1;
+    const a = {id: uid(), area: e.area || null, texto: e.t, hecha: false, creada: ahoraISO(), hechaEn: null, mod: ahoraISO(), prio: e.prio || 0, orden};
+    D.acciones.push(a); e.acc = a.id; e.mod = ahoraISO();
+  }
+  acts.unshift({t: e.t, d: false, acc: repite(e) ? null : e.acc});
+  guardarBloques(); sonarHecho(); aviso(`En tu bloque de ${hm(BLOQUES[c].ini)}`);
+  ir('inicio'); window.scrollTo(0, 0);
 }
 function ctxPrio(id, p){ const e = AG_().eventos.find(z => z.id === id); cerrarCtx(); if(!e) return; e.prio = p; e.mod = ahoraISO(); guardar(); rerenderDia(); }
 function ctxBorrar(id, k){
@@ -4024,7 +4140,7 @@ function centrarBloque(suave){
   t.scrollTo({left: el.offsetLeft - (t.clientWidth - el.offsetWidth) / 2, behavior: suave ? 'smooth' : 'auto'});
 }
 function elegirBloque(i){ bSel = i; rerenderDia(); }
-function rerenderDia(){ const y = window.scrollY; render(); window.scrollTo(0, y); }
+function rerenderDia(){ const y = window.scrollY; render(); window.scrollTo(0, y); if(document.querySelector('.nota-ad') && !document.activeElement.closest('.nota-ad')) pintarNotas(); }
 function anadirAct(){
   const t = valor('b-nueva'); if(!t){ aviso('Escribe la actividad'); return; }
   const acts = actsDe(claveDia(fechaBloques()), bSel, true);
@@ -5759,6 +5875,7 @@ addEventListener('growpanel-listo', enviarResumen);
   }
   setTimeout(() => buscarActualizacion(false), 4000);
   setTimeout(avisoAppNueva, 2000);
+  setTimeout(pintarNotas, 1200);
 })();
 </script>
 <script src="https://gcalabro12.github.io/Grow-Panel/grow-panel-boton.js" data-app="equilibra" data-nombre="Amable Life" defer></script>
