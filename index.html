@@ -646,6 +646,22 @@ html.claro .s-tile .s-est{color:color-mix(in srgb,var(--c) 55%,#1f1838)}
 /* el nombre siempre en una línea; en el móvil, sin la versión en la cabecera (está en el menú) ni Día/Semana/Mes arriba (se cambia en el menú) */
 .marca{white-space:nowrap}
 @media (max-width:899px){ .cab-in .ver{display:none} .ag-modos{display:none} .ag-fijo{margin-top:4px} }
+.fh{display:flex;flex-direction:column}
+.fh-f{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--linea);font-weight:600}
+.fh-f:last-of-type{border-bottom:0}
+.fh-sel{margin:0;min-width:0;max-width:60%}
+.cal-x{display:block;font-size:10px;font-weight:600;color:var(--suave);line-height:1.1;margin-top:1px}
+.rj-cab .cal-x{font-size:9.5px}
+body.ancho .rj-cab .cal-x{font-size:11px}
+.gc-mini.sin-sem{grid-template-columns:repeat(7,1fr)}
+body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
+#cab-vista{position:relative;display:flex}
+.cab-vbtn{display:flex;align-items:center;gap:4px;height:36px;padding:0 8px 0 14px;border-radius:99px;border:1px solid rgba(var(--bl),.3);background:none;color:var(--tinta);font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
+.cab-pop{position:absolute;top:calc(100% + 8px);right:0;z-index:30;min-width:190px;background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);padding:6px 0}
+.cab-pop[hidden]{display:none}
+.cab-pop button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--tinta);padding:11px 18px;font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer}
+.cab-pop button svg{color:var(--suave);width:22px;height:22px;flex:none}
+.cab-pop button.sel{background:color-mix(in srgb,var(--oro) 24%,transparent)}
 /* ---- Suscripción (Premium) ---- */
 .prem-hero{display:flex;align-items:center;gap:16px;margin:14px 0 16px}
 .prem-logo{position:relative;flex:none;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(247,195,91,.28),transparent 70%)}
@@ -1286,7 +1302,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
     <button type="button" class="cab-volver" id="cab-volver" aria-label="Volver" title="Volver" onclick="volver()" hidden><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="marca"><svg id="logo-cab"></svg>Amable Life</div>
     <span class="ver" id="ver"></span>
-    <div class="der"><span id="grow-panel-boton"></span><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
+    <div class="der"><span id="cab-vista"></span><span id="grow-panel-boton"></span><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
   </div>
 </header>
 
@@ -1306,7 +1322,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.94';
+const VERSION = 'v3.95';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1567,10 +1583,12 @@ function render(){
   app.innerHTML = (vistas[vista] || vInicio)();
   const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad','premium'].includes(vista);
   const bv = $('#cab-volver'); if(bv) bv.hidden = vista === 'agenda' && !vistaHist.length;
+  const cv = $('#cab-vista'); if(cv) cv.innerHTML = vista === 'agenda' && !ESCRITORIO.matches ? cabVistaHTML() : '';
   $('#nav').style.display = conNav ? '' : 'none';
   document.body.classList.toggle('ancho', vista === 'agenda');
   document.body.classList.toggle('v-ajustes', vista === 'ajustes' || vista === 'estad' || vista === 'premium');
   document.body.classList.toggle('v-premium', vista === 'premium');
+  document.body.classList.toggle('h12', !!fPref.h12);
   document.body.classList.toggle('v-estad', vista === 'estad');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || ((vista === 'estad' || vista === 'premium') && b.dataset.v === 'ajustes')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
@@ -2850,10 +2868,10 @@ let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al 
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
 const CON_COLS = ['semana', '7dias', '3dias', 'rango'];
 function colsDias(){
-  const base = agModo === 'semana' ? lunesDe(agK) : agK, n = agModo === 'rango' ? agN : agModo === '3dias' ? 3 : 7;
+  const base = agModo === 'semana' ? inicioSem(agK) : agK, n = agModo === 'rango' ? agN : agModo === '3dias' ? 3 : 7;
   return Array.from({length: n}, (_, i) => sumarDias(base, i));
 }
-const semsDias = () => Array.from({length: 7 * agW}, (_, i) => sumarDias(lunesDe(agK), i));
+const semsDias = () => Array.from({length: 7 * agW}, (_, i) => sumarDias(inicioSem(agK), i));
 const rangoTxt = (a, b) => { const x = fechaDe(a), y = fechaDe(b);
   return x.getMonth() === y.getMonth() ? `${x.getDate()} – ${y.getDate()} de ${MESES[y.getMonth()]}` : `${x.getDate()} de ${MESES[x.getMonth()]} – ${y.getDate()} de ${MESES[y.getMonth()]}`; };
 /* Mostrar fines de semana y tareas completadas (como en Google Calendar): se guarda en este aparato */
@@ -2877,19 +2895,19 @@ function gcCambiar(k){
 const evsVer = k => eventosDe(k).filter(e => verHechas() || !hechoEv(e, k));
 /* Mes pequeño (el de la izquierda en el ordenador y los doce del Año) */
 function mesPeq(m0, conSem){
-  const hoy = hoyK(), primero = claveDia(m0), ini = lunesDe(primero), mes = primero.slice(0, 7);
-  const filas = Math.ceil((diaSem(primero) + new Date(m0.getFullYear(), m0.getMonth() + 1, 0).getDate()) / 7);
+  const hoy = hoyK(), primero = claveDia(m0), ini = inicioSem(primero), mes = primero.slice(0, 7), cs = conSem && fPref.numSem;
+  const filas = Math.ceil((desdeInicio(primero) + new Date(m0.getFullYear(), m0.getMonth() + 1, 0).getDate()) / 7);
   const franja = new Set(CON_COLS.includes(agModo) ? colsDias() : agModo === 'semanas' ? semsDias() : []);
-  let g = (conSem ? '<span></span>' : '') + DIAS_CORTO.map(x => `<span>${x}</span>`).join('');
+  let g = (cs ? '<span></span>' : '') + ordenDias().map(i => `<span>${DIAS_CORTO[i]}</span>`).join('');
   for(let f = 0; f < filas; f++){
     const l = sumarDias(ini, f * 7);
-    if(conSem) g += `<span class="gc-msem">${semanaISO(l)}</span>`;
+    if(cs) g += `<span class="gc-msem">${semanaISO(sumarDias(l, 3))}</span>`;
     for(let n = 0; n < 7; n++){ const k = sumarDias(l, n), fuera = k.slice(0, 7) !== mes;
       g += conSem
         ? `<button data-k="${k}" class="${fuera ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''} ${franja.has(k) ? 'rango' : ''}">${fechaDe(k).getDate()}</button>`
         : `<button class="${fuera ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${!fuera && evsVer(k).length ? 'con' : ''}" ${fuera ? 'tabindex="-1"' : ''} onclick="agIrDia('${k}')">${fechaDe(k).getDate()}</button>`; }
   }
-  return `<div class="mm ${conSem ? 'gc-mini' : ''}">${g}</div>`;
+  return `<div class="mm ${conSem ? 'gc-mini' : ''} ${conSem && !cs ? 'sin-sem' : ''}">${g}</div>`;
 }
 function vAgenda(){
   if(!agK) agK = hoyK();
@@ -2897,7 +2915,7 @@ function vAgenda(){
   const hoy = hoyK(), d0 = fechaDe(agK);
   let tit, cuerpo, conHoy, fijo = '';   // fijo: la fila de los días, que se queda arriba con el mes al bajar por las horas
   if(agModo === 'dia'){
-    tit = fechaLarga(agK) + (agK === hoy ? ' · hoy' : ''); conHoy = agK === hoy;
+    tit = fechaLarga(agK) + (agK === hoy ? ' · hoy' : '') + (fPref.cal ? ` · ${calExtra(agK)}` : ''); conHoy = agK === hoy;
     const todo = evsVer(agK).filter(e => e.todo);
     cuerpo = (todo.length ? `<div class="ag-grupo"><p class="ag-gt">Todo el día</p>${todo.map(e => filaEv(e, agK)).join('')}</div>` : '')
       + `<p class="peq suave ag-vacio">Toca una hora para añadir algo a esa hora.</p>` + rejillaHTML([agK]);
@@ -2906,19 +2924,20 @@ function vAgenda(){
     tit = rangoTxt(todosD[0], todosD[todosD.length - 1]);
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo));
-    fijo = `<div class="rj-cab" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`;
+    fijo = `<div class="rj-cab" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span>${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
     cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
     const ds = semsDias(), nCols = verFinde() ? 7 : 5;
     tit = rangoTxt(ds[0], ds[ds.length - 1]); conHoy = hoy >= ds[0] && hoy <= ds[ds.length - 1];
-    let g = '<span></span>' + DIAS_CORTO.slice(0, nCols).map((x, i) => `<span class="ag-ds" data-l="${DIAS_3[i]}">${x}</span>`).join('');
+    const ns = fPref.numSem;
+    let g = (ns ? '<span></span>' : '') + ordenDias().filter(i => verFinde() || i < 5).map(i => `<span class="ag-ds" data-l="${DIAS_3[i]}">${DIAS_CORTO[i]}</span>`).join('');
     for(let w = 0; w < agW; w++){
-      g += `<span class="ag-wn">${semanaISO(ds[w * 7])}</span>`;
-      for(let n = 0; n < nCols; n++){ const k = ds[w * 7 + n], es = evsVer(k);
+      if(ns) g += `<span class="ag-wn">${semanaISO(ds[w * 7 + 3])}</span>`;
+      for(let n = 0; n < 7; n++){ const k = ds[w * 7 + n], es = evsVer(k); if(!verFinde() && diaSem(k) >= 5) continue;
         g += `<button class="ag-dia ${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><span>${fechaDe(k).getDate()}${fechaDe(k).getDate() === 1 ? ' ' + MESES[fechaDe(k).getMonth()].slice(0, 3) : ''}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 6).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${broteEv(e)}${esc(e.t)}</small>`).join('')}${es.length > 6 ? `<em>${es.length - 6} más</em>` : ''}</span></button>`; }
     }
-    cuerpo = `<div class="ag-mes ag-sems" style="grid-template-columns:30px repeat(${nCols},minmax(0,1fr));--fila:calc((100vh - 150px) / ${agW})">${g}</div>`;
+    cuerpo = `<div class="ag-mes ag-sems" style="grid-template-columns:${ns ? '30px ' : ''}repeat(${nCols},minmax(0,1fr));--fila:calc((100vh - 150px) / ${agW})">${g}</div>`;
   } else if(agModo === 'anio'){
     const y = d0.getFullYear();
     tit = String(y); conHoy = hoy.slice(0, 4) === String(y);
@@ -2932,13 +2951,13 @@ function vAgenda(){
     cuerpo = h || `<p class="suave" style="margin:18px 8px">No tienes nada en el calendario del ${rangoTxt(agK, fin)}.</p>`;
   } else {
     tit = MESES[d0.getMonth()].replace(/^./, c => c.toUpperCase()) + ' ' + d0.getFullYear();
-    const primero = claveDia(new Date(d0.getFullYear(), d0.getMonth(), 1)), ini = lunesDe(primero), nDias = new Date(d0.getFullYear(), d0.getMonth() + 1, 0).getDate();
+    const primero = claveDia(new Date(d0.getFullYear(), d0.getMonth(), 1)), ini = inicioSem(primero), nDias = new Date(d0.getFullYear(), d0.getMonth() + 1, 0).getDate();
     conHoy = hoy.slice(0, 7) === agK.slice(0, 7);
-    const celdas = Math.ceil((diaSem(primero) + nDias) / 7) * 7, nCols = verFinde() ? 7 : 5;
-    let g = DIAS_CORTO.slice(0, nCols).map(x => `<span class="ag-ds">${x}</span>`).join('');
+    const celdas = Math.ceil((desdeInicio(primero) + nDias) / 7) * 7, nCols = verFinde() ? 7 : 5;
+    let g = ordenDias().filter(i => verFinde() || i < 5).map(i => `<span class="ag-ds">${DIAS_CORTO[i]}</span>`).join('');
     for(let n = 0; n < celdas; n++){ const k = sumarDias(ini, n), es = evsVer(k);
       if(nCols === 5 && diaSem(k) >= 5) continue;
-      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${broteEv(e)}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
+      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span>${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}<i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${broteEv(e)}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
     const evs = evsVer(agK);
     cuerpo = `<div class="ag-mes" style="grid-template-columns:repeat(${nCols},minmax(0,1fr))">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
   }
@@ -2971,7 +2990,7 @@ function rejillaHTML(dias){
   const [h0, h1] = rangoHoras(dias), hoy = hoyK(), sem = dias.length > 1, y = m => (m - h0 * 60) / 60 * AG_PX;
   let lineas = '';
   for(let h = h0; h <= h1; h++){
-    lineas += `<div class="rj-h" style="top:${(h - h0) * AG_PX}px"><span>${h}:00</span></div>`;
+    lineas += `<div class="rj-h" style="top:${(h - h0) * AG_PX}px"><span>${horaEje(h)}</span></div>`;
     if(h < h1) lineas += `<div class="rj-m" style="top:${(h - h0 + .5) * AG_PX}px"></div>`;
   }
   const cols = dias.map(k => {
@@ -3001,7 +3020,7 @@ function agMover(dir){
   else if(agModo === 'semana' || agModo === '7dias') agK = sumarDias(agK, 7 * dir);
   else if(agModo === '3dias') agK = sumarDias(agK, 3 * dir);
   else if(agModo === 'rango') agK = sumarDias(agK, agN * dir);
-  else if(agModo === 'semanas') agK = sumarDias(lunesDe(agK), 7 * agW * dir);
+  else if(agModo === 'semanas') agK = sumarDias(inicioSem(agK), 7 * agW * dir);
   else if(agModo === 'agenda') agK = sumarDias(agK, 30 * dir);
   else if(agModo === 'anio'){ const d = fechaDe(agK); agK = claveDia(new Date(d.getFullYear() + dir, d.getMonth(), 1)); }
   else { const d = fechaDe(agK); agK = claveDia(new Date(d.getFullYear(), d.getMonth() + dir, 1)); }
@@ -3035,11 +3054,12 @@ function semanaISO(k){
   const e = new Date(Date.UTC(t.getUTCFullYear(), 0, 4));
   return 1 + Math.round(((t - e) / 864e5 - 3 + (e.getUTCDay() + 6) % 7) / 7);
 }
-const horaEspana = () => new Intl.DateTimeFormat('es-ES', {timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hour12: false}).format(new Date());
+const horaEspana = () => { const o = {hour: '2-digit', minute: '2-digit', hour12: !!fPref.h12}; if(fPref.zona) o.timeZone = fPref.zona; try{ return new Intl.DateTimeFormat('es-ES', o).format(new Date()); }catch(e){ delete o.timeZone; return new Intl.DateTimeFormat('es-ES', o).format(new Date()); } };
+const nombreZona = () => (ZONAS.find(z => z[0] === fPref.zona) || ['', 'este aparato'])[1];
 function gcTop(){
   const d = fechaDe(agK);
   let t;
-  if(agModo === 'dia') t = `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
+  if(agModo === 'dia') t = `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}` + (fPref.cal ? ` <span class="gc-chip">${calExtra(agK)}</span>` : '');
   else if(agModo === 'anio') t = String(d.getFullYear());
   else if(CON_COLS.includes(agModo) || agModo === 'agenda' || agModo === 'semanas'){
     const ds = agModo === 'agenda' ? [agK, sumarDias(agK, 29)] : agModo === 'semanas' ? semsDias() : colsDias(), a = fechaDe(ds[0]), b = fechaDe(ds[ds.length - 1]);
@@ -3055,7 +3075,7 @@ function gcTop(){
     <button class="gc-hoy" onclick="agHoy()" title="Ir a hoy (T)">Hoy</button>
     <button class="gc-ico" aria-label="Anterior" title="Anterior" onclick="agMover(-1)">${ICO_IZQ}</button>
     <button class="gc-ico" aria-label="Siguiente" title="Siguiente" onclick="agMover(1)">${ICO_DER}</button>
-    <h1 class="gc-tit">${t}</h1>${['dia', 'semana', '7dias', '3dias', 'rango'].includes(agModo) ? `<span class="gc-chip">Semana ${semanaISO(agK)}</span>` : ''}
+    <h1 class="gc-tit">${t}</h1>${fPref.numSem && ['dia', 'semana', '7dias', '3dias', 'rango'].includes(agModo) ? `<span class="gc-chip">Semana ${semanaISO(agK)}</span>` : ''}
     <span class="gc-hueco"></span>
     <button class="gc-ico" aria-label="Buscar" title="Buscar (/)" onclick="gcBuscar()">${ICO_LUPA}</button>
     <button class="gc-ico" aria-label="${temaClaro() ? 'Modo noche' : 'Modo día'}" title="${temaClaro() ? 'Modo noche' : 'Modo día'}" onclick="ponerTema(temaClaro() ? 'oscuro' : 'claro')">${temaClaro() ? ICO_LUNA : ICO_SOL}</button>
@@ -3070,13 +3090,13 @@ function gcTop(){
 let gcMiniDes = 0;
 function gcLado(){
   const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
-  const h = +horaEspana().slice(0, 2);
+  const h = +new Intl.DateTimeFormat('es-ES', Object.assign({hour: '2-digit', hour12: false}, fPref.zona ? {timeZone: fPref.zona} : {})).format(new Date()).slice(0, 2);
   return `<aside class="gc-lado">
     <button class="gc-crear" onclick="nuevoEvento()" title="Crear (C)">${ICO_MAS}Crear</button>
     <div><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
       ${mesPeq(m0, true)}</div>
-    <div class="gc-hora">Hora de España <b>${horaEspana()}</b>${h >= 7 && h < 20 ? ICO_SOL : ICO_LUNA}</div>
+    <div class="gc-hora">${fPref.zona ? 'Hora de ' + nombreZona() : 'Hora de aquí'} <b>${horaEspana()}</b>${h >= 7 && h < 20 ? ICO_SOL : ICO_LUNA}</div>
     <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Áreas"><span class="gc-flor-t">Tus tareas por áreas</span>${florGirasol(D.niveles, null, pendientes().length)}<span class="gc-flor-s">Toca la flor para ver las tareas de cada área</span></button>
   </aside>`;
 }
@@ -3099,7 +3119,7 @@ document.addEventListener('mouseup', () => {
   if(x === y){ agElegir(x); return; }
   const n = Math.round((fechaDe(y) - fechaDe(x)) / 864e5) + 1;
   if(n <= 7){ agN = n; agK = x; agModo = 'rango'; }
-  else { agK = lunesDe(x); agW = Math.min(6, Math.round((fechaDe(lunesDe(y)) - fechaDe(agK)) / (7 * 864e5)) + 1); agModo = 'semanas'; }
+  else { agK = inicioSem(x); agW = Math.min(6, Math.round((fechaDe(inicioSem(y)) - fechaDe(agK)) / (7 * 864e5)) + 1); agModo = 'semanas'; }
   gcMiniDes = 0;
   render(); agVerAhora();
 });
@@ -3549,7 +3569,7 @@ function menuHTML(){
   const u = nube.usuario, foto = u && /^https:\/\//.test(u.photoURL || '') ? u.photoURL : '';
   const fila = (ico, t, fn, sel) => `<button type="button" class="ml-f ${sel ? 'sel' : ''}" onclick="${fn}">${ico}<span>${t}</span></button>`;
   return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><span class="ml-tv"><b>Amable Life</b><small>web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</small></span><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
-    ${ESCRITORIO.matches ? '' : `<div class="ml-g">${MENU_VISTAS.map(([k, t, ico]) => fila(ico, t, `menuVista('${k}')`, vista === 'agenda' && agModo === k)).join('')}</div>`}
+
     <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), 'Actualizar', 'menuActualizar()')}
       ${fila(temaClaro() ? ICO_LUNA.replace('width="20" height="20"', 'width="24" height="24"') : ICO_SOL.replace('width="20" height="20"', 'width="24" height="24"'), temaClaro() ? 'Modo noche' : 'Modo día', "ponerTema(temaClaro() ? 'oscuro' : 'claro'); abrirMenu()")}</div>
     <div class="ml-g ml-cuenta">${u ? `<div class="ml-u">${foto ? `<img src="${esc(foto)}" alt="" referrerpolicy="no-referrer">` : `<span class="ml-ini">${esc((u.displayName || u.email || '?').trim().charAt(0).toUpperCase())}</span>`}
@@ -3557,8 +3577,14 @@ function menuHTML(){
         <p class="ml-nota">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
         ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta y cambiar de cuenta', "cerrarMenu(); ir('ajustes'); ajAbierto = 'cuenta'; render()")}`
       : `<p class="ml-nota">No has entrado con ninguna cuenta: lo que haces solo está en este aparato.</p>${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Entrar con Google', 'cerrarMenu(); entrar()')}`}</div>
-    <div class="ml-g">${MENU_SECC.map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+    <div class="ml-g">${MENU_SECC.filter(([v]) => ESCRITORIO.matches || ['estad', 'ajustes'].includes(v)).map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
 `;
+}
+/* Móvil: botón de la vista en la cabecera («Semana ▾») con Agenda, Día, 3 días, Semana, Mes y Año (Gustavo) */
+function cabVistaHTML(){
+  const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año', agenda: 'Agenda', '7dias': '7 días', '3dias': '3 días', rango: `${agN} días`, semanas: `${agW} semanas`}[agModo] || 'Vista';
+  return `<button type="button" class="cab-vbtn" aria-haspopup="true" onclick="gcPop('cab-vistas', event)">${nom}${ICO_BAJA}</button>
+    <div class="gc-pop cab-pop" id="cab-vistas" hidden>${MENU_VISTAS.map(([k, t, ic]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${ic}<span>${t}</span></button>`).join('')}</div>`;
 }
 function abrirMenu(){
   let m = $('#menu-lat');
@@ -3781,7 +3807,20 @@ function avisarEventos(){
 /* ---------- Día: bloques de tiempo de 5:30 a 22:00 (venidos de Amable PC) ---------- */
 const BLOQUES = []; for(let m = 330; m < 1320; m += 90) BLOQUES.push({ini: m, fin: m + 90});
 const MAX_ACT = 3;
-const hm = m => Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+/* Fecha y hora (Gustavo, 3.95, como en TickTick): formato 24/12 h, semana desde el lunes o el domingo, calendario adicional,
+   números de semana y la zona del reloj. Se guardan en este aparato (localStorage equilibra.fecha). */
+const FPREF0 = {h12: false, dom: false, cal: '', numSem: true, zona: 'Europe/Madrid'};
+const fPref = (() => { try{ return Object.assign({}, FPREF0, JSON.parse(localStorage.getItem('equilibra.fecha') || '{}')); }catch(e){ return Object.assign({}, FPREF0); } })();
+function fPrefPoner(k, v){ fPref[k] = v; try{ localStorage.setItem('equilibra.fecha', JSON.stringify(fPref)); }catch(e){} const y = window.scrollY; render(); window.scrollTo(0, y); }
+const hm = m => { const h = Math.floor(m / 60), mm = String(m % 60).padStart(2, '0'); return fPref.h12 ? `${h % 12 || 12}:${mm} ${h < 12 ? 'a. m.' : 'p. m.'}` : `${h}:${mm}`; };
+const horaEje = h => fPref.h12 ? `${h % 12 || 12} ${h % 24 < 12 ? 'a. m.' : 'p. m.'}` : `${h}:00`;
+/* la semana para ver (los hábitos «semanales» y Grow Panel siguen contando de lunes a domingo) */
+const inicioSem = k => fPref.dom ? sumarDias(k, -((diaSem(k) + 1) % 7)) : sumarDias(k, -diaSem(k));
+const desdeInicio = k => fPref.dom ? (diaSem(k) + 1) % 7 : diaSem(k);
+const ordenDias = () => fPref.dom ? [6, 0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4, 5, 6];
+const CAL_EXTRA = [['', 'Ninguno'], ['hebrew', 'Calendario hebreo'], ['islamic-umalqura', 'Calendario islámico (Arabia Saudí)'], ['chinese', 'Calendario lunar chino'], ['dangi', 'Calendario lunar coreano'], ['persian', 'Calendario persa'], ['indian', 'Era Saka'], ['islamic-civil', 'Hijri (civil)']];
+const calExtra = k => { if(!fPref.cal) return ''; try{ return new Intl.DateTimeFormat('es-u-ca-' + fPref.cal, {day: 'numeric', month: 'short'}).format(fechaDe(k)); }catch(e){ return ''; } };
+const ZONAS = [['Europe/Madrid', 'España'], ['Atlantic/Canary', 'Canarias'], ['Europe/Lisbon', 'Portugal'], ['Europe/London', 'Reino Unido'], ['America/Mexico_City', 'México'], ['America/Bogota', 'Colombia'], ['America/Lima', 'Perú'], ['America/Santiago', 'Chile'], ['America/Argentina/Buenos_Aires', 'Argentina'], ['America/New_York', 'Nueva York'], ['', 'este aparato']];
 const bloqueAhora = () => { const m = minutosHoy(); return BLOQUES.findIndex(b => m >= b.ini && m < b.fin); };
 const DIAS_SEM = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 let bDia = 0, bSel = null, bUltimo = null;
@@ -4939,6 +4978,9 @@ function vAjustes(){
       }},
     {k: 'premium', ico: ICO_PREMIUM, t: 'Suscripción', sub: 'Amable Life Premium · 25 €/año · de momento, todo gratis', html: () => ''},
     {k: 'estad', ico: ICO_ESTAD, t: 'Estadísticas', sub: 'Tus tareas, tu Focus y tus hábitos, con gráficas', html: () => ''},
+    {k: 'fecha', ico: ICO_RELOJ.replace('width="12" height="12"', 'width="24" height="24"'), t: 'Fecha y hora',
+      sub: `${fPref.h12 ? '12 horas' : '24 horas'} · la semana empieza el ${fPref.dom ? 'domingo' : 'lunes'}${fPref.cal ? ' · ' + (CAL_EXTRA.find(c => c[0] === fPref.cal) || ['', ''])[1].toLowerCase() : ''}`,
+      html: () => fechaAjHTML()},
     {k: 'calendario', ico: ICO_CAL_AJ, t: 'Importar y exportar el calendario',
       sub: 'Google Calendar, Outlook y Apple (.ics) · Excel (.csv)',
       html: () => calAjustesHTML()},
@@ -4970,6 +5012,16 @@ function vAjustes(){
    .ics (iCalendar): el formato con el que Google Calendar, Outlook y Apple pasan calendarios, con repeticiones, días quitados y avisos.
    .csv: el de Google Calendar (Subject, Start Date…), para Excel; lo que se repite sale día a día (de hace un mes a dentro de un año). */
 const ICO_CAL_AJ = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M12 13v5M9.5 15.5L12 18l2.5-2.5"/></svg>';
+function fechaAjHTML(){
+  const sel = (k, ops, val) => `<select class="frec-sel fh-sel" onchange="fPrefPoner('${k}', ${k === 'h12' || k === 'dom' ? "this.value === '1'" : 'this.value'})">${ops.map(([v, t]) => `<option value="${v}" ${String(val) === String(v) ? 'selected' : ''}>${t}</option>`).join('')}</select>`;
+  return `<div class="fh">
+    <div class="fh-f"><span>Formato de la hora</span>${sel('h12', [['0', '24 horas (13:00)'], ['1', '12 horas (1:00 p. m.)']], fPref.h12 ? '1' : '0')}</div>
+    <div class="fh-f"><span>Comenzar la semana en</span>${sel('dom', [['0', 'Lunes'], ['1', 'Domingo']], fPref.dom ? '1' : '0')}</div>
+    <div class="fh-f"><span>Calendario adicional</span>${sel('cal', CAL_EXTRA, fPref.cal)}</div>
+    <div class="fh-f"><span>Mostrar números de semana</span><label class="ev-chk"><input type="checkbox" ${fPref.numSem ? 'checked' : ''} onchange="fPrefPoner('numSem', this.checked)"><span>${fPref.numSem ? 'Sí' : 'No'}</span></label></div>
+    <div class="fh-f"><span>Zona horaria del reloj</span>${sel('zona', ZONAS.map(([z, t]) => [z, z ? t : 'La de este aparato']), fPref.zona)}</div>
+    <p class="peq suave" style="margin:8px 0 0">La zona es la del reloj del lado izquierdo del calendario en el ordenador; tus tareas y recordatorios siguen la hora de este aparato. Se guarda en este aparato.</p></div>`;
+}
 function calAjustesHTML(){
   const n = AG_().eventos.length;
   return `<p class="suave">Trae lo que tienes en otro calendario o llévate el de Amable Life.</p>
