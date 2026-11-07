@@ -633,6 +633,27 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-conf div{display:flex;gap:8px;flex-wrap:wrap}
 .ep .ico{width:14px;height:14px;vertical-align:-2px}
 .ag-dia-evs small[data-ev]{cursor:pointer}
+.brote{color:#4ade80;flex:none;vertical-align:-1px;margin-right:2px}
+html.claro .brote{color:#16a34a}
+.rj.sem .brote,.rj-todo .brote{width:10px;height:10px}
+.ep-tit .brote{width:18px;height:18px;vertical-align:-2px;margin-right:6px}
+.ev-meta{display:flex;align-items:center;gap:14px;margin:12px 0 4px;padding:10px 12px;border-radius:16px;background:color-mix(in srgb,#22c55e 12%,transparent);border:1px solid color-mix(in srgb,#22c55e 30%,transparent)}
+.ev-meta img{flex:none;width:84px;height:auto;border-radius:12px;background:#fff}
+.ev-meta p{margin:0 0 8px;font-size:15px;line-height:1.35}
+.ev-meta-b{display:inline-flex;align-items:center;gap:8px;font-size:14px;padding:8px 14px}
+.ev-meta-b .brote{color:inherit}
+.meta-cab p{margin:0}
+.meta-error{color:#f87171;min-height:1em;margin:8px 0}
+html.claro .meta-error{color:#dc2626}
+.meta-h{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;margin-top:8px;border-radius:14px;background:rgba(var(--bl),.06)}
+.meta-h label{display:flex;align-items:flex-start;gap:10px;cursor:pointer;min-width:0}
+.meta-h input[type=checkbox]{width:18px;height:18px;margin:2px 0 0;accent-color:#22c55e;flex:none}
+.meta-h span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.meta-h small{color:var(--suave);font-size:12.5px}
+.meta-h select{width:auto;flex:none;margin:0;padding:7px 8px}
+.meta-tiendas{margin-top:16px}
+.meta-tiendas > div{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.meta-tiendas .btn{font-size:13px;padding:8px 12px}
 .ev-desc textarea{flex:1;border:0;background:none;border-radius:10px;padding:9px 10px;color:var(--tinta);font:inherit;font-size:15px;resize:none;min-height:40px;margin:0;overflow:hidden}
 .ev-desc textarea:hover{background:rgba(var(--bl),.05)}
 .ev-desc textarea:focus{outline:none;background:rgba(var(--bl),.07)}
@@ -1101,7 +1122,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.78';
+const VERSION = 'v3.79';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2547,6 +2568,8 @@ function dictar(btn){
    Viajan por la nube por id (gana mod; borrar = id en D.borradas). Los recordatorios suenan con la app abierta. */
 const ICO_CAL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
 const ICO_CAMPANITA = '<svg class="campanita" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Con recordatorio"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>';
+const ICO_BROTE = '<svg class="brote" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Hábito"><path d="M12 21v-8"/><path d="M12 13c0-4 3-6.5 7.5-6.5 0 4-3 6.5-7.5 6.5z"/><path d="M12 15.5c0-3.3-2.5-5.5-6.5-5.5 0 3.3 2.5 5.5 6.5 5.5z"/></svg>';
+const broteEv = e => e && e.tipo === 'habito' ? ICO_BROTE : '';
 const campEv = e => e && e.avisos && e.avisos.length ? ICO_CAMPANITA : '';
 const ICO_REP = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
 const AG_ = () => { if(!D.agenda) D.agenda = {eventos: []}; return D.agenda; };
@@ -2597,12 +2620,12 @@ function agendaDia(k){
 /* Lo del calendario que cae dentro de un bloque (en Tareas y en Focus) */
 function evsBloqueHTML(k, b){
   const es = eventosDe(k).filter(e => !e.todo && e.ini < b.fin && e.fin > b.ini); if(!es.length) return '';
-  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${campEv(e)}${esc(e.t)}</span></button>`).join('')}</div>`;
+  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${broteEv(e)}${campEv(e)}${esc(e.t)}</span></button>`).join('')}</div>`;
 }
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
     <button class="check ${ok ? 'hecho' : ''}" ${e.prio ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
-    <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
+    <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${broteEv(e)}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al arrastrar más de 7 días   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
 const CON_COLS = ['semana', '7dias', 'rango'];
@@ -2664,7 +2687,7 @@ function vAgenda(){
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo));
     cuerpo = `<div class="rj-cab" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></button>`).join('')}</div>`
-      + (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
+      + (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>todo el día</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${broteEv(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
     const ds = semsDias(), nCols = verFinde() ? 7 : 5;
@@ -2673,7 +2696,7 @@ function vAgenda(){
     for(let w = 0; w < agW; w++){
       g += `<span class="ag-wn">${semanaISO(ds[w * 7])}</span>`;
       for(let n = 0; n < nCols; n++){ const k = ds[w * 7 + n], es = evsVer(k);
-        g += `<button class="ag-dia ${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><span>${fechaDe(k).getDate()}${fechaDe(k).getDate() === 1 ? ' ' + MESES[fechaDe(k).getMonth()].slice(0, 3) : ''}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 6).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 6 ? `<em>${es.length - 6} más</em>` : ''}</span></button>`; }
+        g += `<button class="ag-dia ${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><span>${fechaDe(k).getDate()}${fechaDe(k).getDate() === 1 ? ' ' + MESES[fechaDe(k).getMonth()].slice(0, 3) : ''}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 6).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${broteEv(e)}${esc(e.t)}</small>`).join('')}${es.length > 6 ? `<em>${es.length - 6} más</em>` : ''}</span></button>`; }
     }
     cuerpo = `<div class="ag-mes ag-sems" style="grid-template-columns:30px repeat(${nCols},minmax(0,1fr));--fila:calc((100vh - 150px) / ${agW})">${g}</div>`;
   } else if(agModo === 'anio'){
@@ -2695,7 +2718,7 @@ function vAgenda(){
     let g = DIAS_CORTO.slice(0, nCols).map(x => `<span class="ag-ds">${x}</span>`).join('');
     for(let n = 0; n < celdas; n++){ const k = sumarDias(ini, n), es = evsVer(k);
       if(nCols === 5 && diaSem(k) >= 5) continue;
-      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
+      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span><i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${broteEv(e)}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
     const evs = evsVer(agK);
     cuerpo = `<div class="ag-mes" style="grid-template-columns:repeat(${nCols},minmax(0,1fr))">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
   }
@@ -2738,7 +2761,7 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${campEv(e)}${esc(e.t)}</b>${!sem && alto > 34 ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) : ''}${broteEv(e)}${campEv(e)}${esc(e.t)}</b>${!sem && alto > 34 ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}</button>`; }).join('');
     return `<div class="rj-col" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   return `<div class="rj ${sem ? 'sem' : ''}"><div class="rj-cuerpo" style="height:${(h1 - h0) * AG_PX}px">${lineas}<div class="rj-cols" style="grid-template-columns:repeat(${dias.length},1fr)">${cols}</div></div></div>`;
@@ -2888,7 +2911,7 @@ function gcBuscarPintar(){
   const q = gcNorm(valor('gc-q'));
   if(!q){ box.innerHTML = '<p class="peq suave" style="margin:0">Busca por el nombre de lo que tienes en el calendario.</p>'; return; }
   const evs = AG_().eventos.filter(e => gcNorm(e.t).includes(q)).map(e => ({e, k: gcProximo(e)})).sort((a, b) => a.k.localeCompare(b.k)).slice(0, 40);
-  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · hábito' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
+  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${broteEv(e)}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · hábito' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
     : '<p class="peq suave" style="margin:0">No hay nada con esa palabra.</p>';
 }
 function gcIrA(id, k){ cerrarHoja(); agK = k; gcMiniDes = 0; render(); agVerAhora(); editarEvento(id, k); }
@@ -2970,6 +2993,9 @@ function pintarEvento(e){
     <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" onclick="evTipo('habito')">Hábito</button>
       <span class="ev-prios">${[1, 2, 3].map(k => `<button type="button" class="ev-prio ${evEd.prio === k ? 'sel' : ''}" style="--c:${PRIO[k].c}" title="Prioridad ${PRIO[k].t.toLowerCase()}" aria-label="Prioridad ${PRIO[k].t.toLowerCase()}" onclick="evPrioB(${k}, this)">${ICO_BANDERA(PRIO[k].c)}</button>`).join('')}</span></div>
     <div id="ev-hab" ${hab ? '' : 'hidden'}>
+      <div class="ev-meta"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92">
+        <div><p>Un hábito es como una planta: hay que <b>regarlo cada día</b>.</p>
+        <button type="button" class="btn sec ev-meta-b" onclick="metaAbrir()">${ICO_BROTE.replace('width="12" height="12"', 'width="18" height="18"')} Importar hábitos de Metas Amables</button></div></div>
       <p class="eti" style="margin-top:14px">¿Cuántas veces a la semana?</p>
       <div class="ev-veces">${[1, 2, 3, 4, 5, 6, 7].map(n => `<button data-n="${n}" class="${evEd.dias.length === n ? 'sel' : ''}" onclick="evVeces(${n})">${n}</button>`).join('')}</div>
       <p class="eti" style="margin-top:10px">¿Qué días?</p>
@@ -3120,7 +3146,7 @@ function popHTML(e, k, enHoja){
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
-    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div><h3 class="${ok ? 'ok' : ''}">${esc(e.t)}</h3>
+    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div><h3 class="${ok ? 'ok' : ''}">${broteEv(e)}${esc(e.t)}</h3>
       <p>${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
     <div id="ep-conf"></div>
     <button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? '✓ Hecho · desmarcar' : 'Marcar como hecho'}</button>
@@ -3189,6 +3215,93 @@ document.addEventListener('mouseout', e => {
 document.addEventListener('mousedown', e => { if(popInfo && !e.target.closest('#ev-pop') && !e.target.closest('[data-ev]')) cerrarPop(); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && popInfo) cerrarPop(); });
 addEventListener('scroll', () => { if(popInfo) cerrarPop(); }, {passive: true});
+/* ---------- Importar los hábitos de Metas Amables (Gustavo, 3.79) ----------
+   Se entra con el nombre y la contraseña de Metas Amables (su servidor ya deja llamar desde aquí) y se leen sus «metas sencillas»
+   (nombre, días de la semana o veces a la semana, días regados). Cada una se une a un hábito del calendario (metaId): si ya está, se pone al día. */
+const META_API = ['https://metas-amables-api.proud-hill-016b.workers.dev', 'https://rigid-thrush-3387.gcalabro12.deno.net'];
+const metaSesion = () => { try{ return localStorage.getItem('equilibra.metaSesion') || ''; }catch(e){ return ''; } };
+async function metaPedir(ruta, cuerpo){
+  const o = {headers: {}};
+  const t = metaSesion(); if(t && ruta !== '/login') o.headers['Authorization'] = 'Bearer ' + t;
+  if(cuerpo){ o.method = 'POST'; o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(cuerpo); }
+  let r = null;
+  for(const base of META_API){ try{ r = await fetch(base + ruta, o); break; }catch(e){} }
+  if(!r) throw {msg: 'No he podido conectar con Metas Amables. Prueba en un momento.'};
+  let d = {}; try{ d = await r.json(); }catch(e){}
+  if(!r.ok) throw {msg: d.error || d.mensaje || 'Metas Amables no ha respondido bien', status: r.status};
+  return d;
+}
+let metaK = null, metaLista = [];
+function metaAbrir(){
+  metaK = (evEd && (valor('ev-dia') || evEd.k)) || hoyK(); evEd = null;
+  mostrarHoja(`<div class="hoja-cab"><h2>Hábitos de Metas Amables</h2></div>
+    <div class="ev-meta meta-cab"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92"><div><p>Trae a tu calendario los hábitos que ya riegas en <b>Metas Amables</b>. Cada uno queda unido a su hábito de aquí.</p></div></div>
+    <div id="meta-cuerpo">${metaSesion() ? '<p class="suave">Buscando tus hábitos…</p>' : metaLoginHTML()}</div>
+    <div class="meta-tiendas"><p class="peq suave">¿Aún no tienes Metas Amables? Descárgala:</p><div>
+      <a class="btn sec" href="https://play.google.com/store/apps/details?id=club.practicaintegral.metasamables" target="_blank" rel="noopener">Google Play</a>
+      <a class="btn sec" href="https://apps.microsoft.com/detail/9P787TKFQXDH" target="_blank" rel="noopener">Microsoft Store</a>
+      <a class="btn sec" href="https://app.practicaintegral.club/" target="_blank" rel="noopener">Web (iPhone y ordenador)</a></div></div>
+    <div class="ed-bots"><button class="btn sec" onclick="metaVolver()">Volver</button></div>`, '#22c55e');
+  if(metaSesion()) metaCargar();
+}
+function metaVolver(){ const k = metaK || hoyK(); cerrarHoja(); setTimeout(() => { nuevoEvento(k); evTipo('habito'); }, 320); }
+function metaLoginHTML(msg){
+  return `<p class="peq" style="margin:4px 0 8px">Entra con el <b>nombre y la contraseña de Metas Amables</b>:</p>
+    <input type="text" id="meta-nom" autocomplete="username" placeholder="Tu nombre en Metas Amables">
+    <input type="password" id="meta-pass" autocomplete="current-password" placeholder="Tu contraseña" style="margin-top:8px" onkeydown="if(event.key === 'Enter') metaEntrar()">
+    <p class="peq meta-error" id="meta-error">${msg ? esc(msg) : ''}</p>
+    <button class="btn prim ancho" id="meta-entrar" onclick="metaEntrar()">Entrar y ver mis hábitos</button>`;
+}
+async function metaEntrar(){
+  const nombre = valor('meta-nom'), password = ($('#meta-pass') || {}).value || '';
+  if(!nombre || !password){ $('#meta-error').textContent = 'Escribe tu nombre y tu contraseña'; return; }
+  const b = $('#meta-entrar'); b.disabled = true; b.textContent = 'Entrando…';
+  try{
+    const d = await metaPedir('/login', {nombre, password});
+    if(!d.token) throw {msg: 'No he podido entrar'};
+    try{ localStorage.setItem('equilibra.metaSesion', d.token); }catch(e){}
+    $('#meta-cuerpo').innerHTML = '<p class="suave">Buscando tus hábitos…</p>';
+    metaCargar();
+  }catch(e){ b.disabled = false; b.textContent = 'Entrar y ver mis hábitos'; $('#meta-error').textContent = e.msg || 'No he podido entrar'; }
+}
+function metaSalir(){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(e){} const c = $('#meta-cuerpo'); if(c) c.innerHTML = metaLoginHTML(); }
+const metaDias = m => { const l = m.frecuencia === 'semana' ? (DIAS_VECES[Math.max(1, Math.min(7, m.vecesSemana || 3))] || []).slice() : (m.diasSemana || []).map(x => DIAS_CORTO.indexOf(x)).filter(i => i >= 0); return l.length ? l.sort() : [0, 1, 2, 3, 4, 5, 6]; };
+const metaFrec = m => m.frecuencia === 'semana' ? `${m.vecesSemana} ${m.vecesSemana === 1 ? 'vez' : 'veces'} a la semana` : (m.diasSemana || []).length && m.diasSemana.length < 7 ? m.diasSemana.join(' · ') : 'Cada día';
+async function metaCargar(){
+  const c = $('#meta-cuerpo'); if(!c) return;
+  try{
+    const d = await metaPedir('/datos');
+    const df = (d.gamifica && d.gamifica.datosFormulario) || d.datosFormulario || {};
+    metaLista = (df.metasSencillas || []).filter(m => m && m.nombre);
+    const ya = id => AG_().eventos.find(e => e.metaId === id);
+    const horas = []; for(let m = 300; m <= 1380; m += 15) horas.push(m);
+    if(!document.body.contains(c)) return;
+    c.innerHTML = metaLista.length ? `<p class="peq" style="margin:6px 0">Elige cuáles quieres en tu calendario y a qué hora:</p>
+      ${metaLista.map((m, i) => { const e = ya(m.id), ini = e && e.ini != null ? e.ini : 480;
+        return `<div class="meta-h"><label><input type="checkbox" id="meta-c${i}" checked><span><b>${ICO_BROTE} ${esc(m.nombre)}</b><small>${metaFrec(m)}${e ? ' · ya está en tu calendario: se pone al día' : ''}</small></span></label>
+          <select id="meta-h${i}" aria-label="Hora">${horas.map(h => `<option value="${h}" ${h === ini ? 'selected' : ''}>${hm(h)}</option>`).join('')}</select></div>`; }).join('')}
+      <button class="btn prim ancho" style="margin-top:12px" onclick="metaImportar()">Añadir a mi calendario</button>
+      <p class="peq suave" style="margin:10px 0 0">Los días que ya regaste en Metas Amables salen como hechos. <button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`
+      : `<p>En Metas Amables aún no tienes hábitos. Créalos allí (en «Tus metas sencillas») y vuelve aquí para traerlos.</p><p class="peq suave"><button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`;
+  }catch(e){
+    if(e.status === 401 || e.status === 403){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(x){} c.innerHTML = metaLoginHTML('Vuelve a entrar con tu contraseña de Metas Amables'); }
+    else c.innerHTML = `<p class="meta-error">${esc(e.msg || 'No he podido leer tus hábitos')}</p><button class="btn sec" onclick="metaCargar()">Probar otra vez</button>`;
+  }
+}
+function metaImportar(){
+  const A = AG_(), desde = sumarDias(hoyK(), -120); let n = 0;
+  metaLista.forEach((m, i) => {
+    const c = $('#meta-c' + i); if(!c || !c.checked) return;
+    const ini = +$('#meta-h' + i).value, hechos = (m.dias || []).filter(d => d >= desde);
+    let e = A.eventos.find(x => x.metaId === m.id);
+    if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: [], metaId: m.id, dia: m.desde && m.desde > desde ? m.desde : hoyK(), area: null, areas: [], prio: 1, avisos: [], rep: 'no', todo: false}; A.eventos.push(e); }
+    Object.assign(e, {t: m.nombre, tipo: 'habito', dias: metaDias(m), ini, fin: Math.min(ini + 30, 1439), hechos: [...new Set([...(e.hechos || []), ...hechos])], mod: ahoraISO()});
+    n++;
+  });
+  if(!n){ aviso('Elige al menos un hábito'); return; }
+  guardar(); sonarHecho(); aviso(n === 1 ? 'Hábito de Metas Amables en tu calendario' : `${n} hábitos de Metas Amables en tu calendario`);
+  cerrarHoja(); if(vista === 'agenda') agK = hoyK(); rerenderDia();
+}
 function evPrioB(k, b){ evEd.prio = k; b.parentNode.querySelectorAll('.ev-prio').forEach(x => x.classList.toggle('sel', x === b)); }
 function evAbrirFecha(){ $('#ev-res').hidden = true; $('#ev-fecha').hidden = false; }
 /* El día: el botón abre el calendario del sistema */
