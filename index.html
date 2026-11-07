@@ -522,7 +522,11 @@ html:not(.claro) .btn-avisos .off{color:#f87171}
 .ahora-blk .ah-tit{font-size:24px;letter-spacing:.06em}
 .aro-col{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px}
 .aro-col .disco.grande{margin-right:0}
-.aro-blk{font-size:12.5px;font-weight:800;color:#dc2626;white-space:nowrap}
+.aro-blk{font-size:12.5px;font-weight:800;color:#dc2626;white-space:nowrap;text-align:center;line-height:1.25}
+.aro-blk i{font-style:normal;display:block}
+/* 4.61 (Gustavo, captura del móvil): en pantallas estrechas el círculo y «bloque …» se salían por la derecha */
+.cuenta-col{min-width:0}
+.s-horario{text-align:center;margin:10px 0 0}
 .prox-prio{margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--tarjeta);box-shadow:0 0 0 1px rgba(var(--bl),.1)}
 .prox-prio h3{display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:14px;font-weight:800;color:#dc2626}
 .prox-prio .ev-blk{margin:4px 0 0}
@@ -572,6 +576,15 @@ body.pip .prox-prio{zoom:.72;margin-top:8px;padding:8px 10px}
 .reloj-arena{flex:none;width:66px;height:104px}
 .cuenta-col{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center}   /* 4.59: centrada entre el reloj de arena y el círculo */
 .cuenta-atras{font-size:40px;line-height:1.05;font-weight:800;color:var(--oro);font-variant-numeric:tabular-nums;min-width:74px}
+@media (max-width:520px){   /* 4.61: en el móvil, todo un poco más pequeño para que quepa (no en la ventana flotante) */
+  body:not(.pip) .cuenta-fila{gap:8px}
+  body:not(.pip) .reloj-arena{width:54px;height:85px}
+  body:not(.pip) .cuenta-atras{font-size:34px;min-width:0}
+  body:not(.pip) .cuenta-txt{font-size:13px}
+  body:not(.pip) .disco.grande.aro{width:74px;height:74px}
+  body:not(.pip) .aro-centro{width:32px;height:32px}
+  body:not(.pip) .aro-blk{font-size:11.5px}
+}
 .cuenta-txt{font-size:13px;font-weight:700;color:var(--oro)}
 .tic-btn{flex:none;border:0;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800;background:rgba(var(--bl),.08);color:var(--suave)}
 .tic-btn.on{background:rgba(247,195,91,.22);color:var(--oro)}
@@ -1318,6 +1331,8 @@ body.pip .ev-mini{pointer-events:none}
 .s-flecha.abierta svg{transform:rotate(180deg)}
 .salud-tiles .salud-sec{margin:0}
 .s-tile .s-svg{width:30px;height:30px;flex:none}
+.s-tile{flex-wrap:wrap;row-gap:8px}
+.s-tile .s-est-l{flex:0 0 100%;text-align:left;font-size:16px}
 @media (min-width:900px){
   body.v-salud .envoltura{max-width:1100px}
   body.v-salud .salud-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:18px 0 12px;align-items:start}
@@ -1666,7 +1681,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.60';
+const VERSION = 'v4.61';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2324,7 +2339,7 @@ function seccionAhora(pip){
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
       <div class="aro-col"><span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span>
-        <span class="aro-blk">bloque ${hm(b.ini)} – ${hm(b.fin)}</span></div></div>
+        <span class="aro-blk">bloque <i>${hm(b.ini)} – ${hm(b.fin)}</i></span></div></div>
     ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${pend.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}
@@ -5351,7 +5366,7 @@ function vSalud(){
   const desliz = (clave, sig, min) => `<label class="desliz" onclick="event.stopPropagation()"><input type="checkbox" ${S[clave] ? 'checked' : ''} onchange="ajCheck('${clave}', this${sig ? `, '${sig}', '${min}'` : ''})"><i></i><span>${S[clave] ? 'Activado' : 'Desactivado'}</span></label>`;
   const tile = (k, ico, valor, unidad, est, sub, c, sw) => `<div class="s-tile ${saludAbierta === k ? 'sel' : ''}" style="--c:${c}" role="button" tabindex="0" onclick="abrirSalud('${k}')" onkeydown="if(event.target === this && event.key === 'Enter')abrirSalud('${k}')" aria-expanded="${saludAbierta === k}">
     <span class="s-ico">${ico}</span><span class="s-num"><b>${valor}</b><small>${unidad}</small></span>
-    <span class="s-txt"><span class="s-est">${est}</span>${sub ? `<small>${sub}</small>` : ''}${sw || ''}</span>${flecha(saludAbierta === k)}</div>`;
+    <span class="s-txt">${sub ? `<small>${sub}</small>` : ''}${sw || ''}</span>${flecha(saludAbierta === k)}<span class="s-est s-est-l">${est}</span></div>`;
   const secciones = {pasos: `<section class="tarjeta salud-sec" id="sec-pasos">
     <h3>👣 Pasos</h3>
     <div class="anillo-caja">${anillo(p.steps, S.meta)}<div class="anillo-centro"><b>${fmtN(p.steps)}</b><span>de ${fmtN(S.meta)} pasos</span><small>${Math.round(Math.min(1, p.steps / S.meta) * 100)}%</small></div></div>
@@ -5376,6 +5391,7 @@ function vSalud(){
     <p class="peq suave" style="text-align:center;margin:8px 0">${prox(S.aguaOn, S.aguaNext)}</p>
     <label class="fila-aj"><span><input type="checkbox" ${S.aguaOn ? 'checked' : ''} onchange="ajCheck('aguaOn', this, 'aguaNext', 'aguaMin')"> Avisarme para beber agua cada</span><input type="number" min="10" max="240" inputmode="numeric" value="${S.aguaMin}" onchange="ajSalud('aguaMin', this, 10, 240, 'aguaNext')"></label>
     <label class="fila-aj">Meta (vasos al día) <input type="number" min="1" max="20" inputmode="numeric" value="${S.aguaGoal}" onchange="ajSalud('aguaGoal', this, 1, 20)"></label>
+    <p class="peq suave s-horario">Los avisos de agua salen entre las 5:30 y las 22:00, solo con la app abierta.</p>
   </section>`, mov: `<section class="tarjeta salud-sec" id="sec-mov" style="--c:#22a35a">
     <h3>🤸 Movimiento</h3>
     <div class="contador"><button class="cont-btn" onclick="sumarSalud('mov', -1)" aria-label="Quitar una pausa activa">−</button>
@@ -5384,6 +5400,7 @@ function vSalud(){
     <p class="peq" style="text-align:center;margin:8px 0">💡 ${MOV_TIPS[new Date().getHours() % MOV_TIPS.length]}</p>
     <p class="peq suave" style="text-align:center;margin:0 0 8px">${prox(S.movOn, S.movNext)}</p>
     <label class="fila-aj"><span><input type="checkbox" ${S.movOn ? 'checked' : ''} onchange="ajCheck('movOn', this, 'movNext', 'movMin')"> Avisarme para moverme cada</span><input type="number" min="10" max="240" inputmode="numeric" value="${S.movMin}" onchange="ajSalud('movMin', this, 10, 240, 'movNext')"></label>
+    <p class="peq suave s-horario">Los avisos de movimiento salen entre las 5:30 y las 22:00, solo con la app abierta.</p>
   </section>`};
   // 4.55 (Gustavo): en el ordenador, tres columnas siempre abiertas (nada que plegar): arriba en grande «Pasos», «Vasos» o «Pausas»;
   // debajo el dibujo, el número y el interruptor de sus avisos; luego cómo vas y todo su detalle
@@ -5398,8 +5415,7 @@ function vSalud(){
       ${col('pasos', 'Pasos', icoSalud('pasos', 's-svg'), fmtN(p.steps), estPasos, subPasos, '#f08a24', desliz('pasosOn'))}
       ${col('agua', 'Vasos', icoSalud('agua', 's-svg'), fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', estAgua, '', '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}
       ${col('mov', 'Pausas', icoSalud('mov', 's-svg'), h.mov, estMov, '', '#22a35a', desliz('movOn', 'movNext', 'movMin'))}
-    </div>
-    <p class="peq suave" style="text-align:center">Los avisos de agua y movimiento suenan entre las 5:30 y las 22:00, con la app abierta.</p>`;
+    </div>`;
   }
   return `<h2 style="margin-top:18px">Tu cuerpo hoy</h2>${botonPausa('salud')}
   <div class="salud-tiles">
@@ -5407,8 +5423,7 @@ function vSalud(){
     ${tile('agua', icoSalud('agua', 's-svg'), fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', 'vasos', estAgua, prox(S.aguaOn, S.aguaNext), '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}${saludAbierta === 'agua' ? secciones.agua : ''}
     ${tile('mov', icoSalud('mov', 's-svg'), h.mov, h.mov === 1 ? 'pausa' : 'pausas', estMov, prox(S.movOn, S.movNext), '#22a35a', desliz('movOn', 'movNext', 'movMin'))}${saludAbierta === 'mov' ? secciones.mov : ''}
   </div>
-  ${saludAbierta ? '' : '<p class="peq suave" style="text-align:center;margin:6px 0 14px">Toca una fila para ver el detalle.</p>'}
-  <p class="peq suave" style="text-align:center">Los avisos de agua y movimiento suenan entre las 5:30 y las 22:00, con la app abierta.</p>`;
+  ${saludAbierta ? '' : '<p class="peq suave" style="text-align:center;margin:6px 0 14px">Toca una fila para ver el detalle.</p>'}`;
 }
 let saludAbierta = null;
 function abrirSalud(k){
