@@ -1709,7 +1709,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.64';
+const VERSION = 'v4.65';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1743,9 +1743,9 @@ const app = $('#app');
    D = {v:2, niveles:{area:'bien'|'una'|'mas'}, detalle:{trabajo:{gusta,dinero}}, comentarios:{}, nivelesMod,
         revisiones:[{id, fecha, niveles, detalle, comentarios}], acciones:[{id, area, texto, hecha, creada, hechaEn, mod}], borradas:[] } */
 const NIVELES = {
-  bien: {marca:'2+', titulo:'Ya practico más de un hábito a la semana', sub:'En esta área tengo hábitos establecidos', n:0, peso:0},
-  una:  {marca:'1',  titulo:'Practico un hábito a la semana',           sub:'Tengo un hábito en esta área',            n:1, peso:1},
-  mas:  {marca:'0',  titulo:'No hago ningún hábito',                    sub:'Necesito hacer algún hábito',             n:2, peso:2},
+  bien: {marca:'2+', titulo:'Practico más de uno', sub:'Más de un hábito a la semana', n:0, peso:0},
+  una:  {marca:'1',  titulo:'Tengo uno',           sub:'Un hábito a la semana',        n:1, peso:1},
+  mas:  {marca:'0',  titulo:'Ninguno',             sub:'Necesito hacer algún hábito',  n:2, peso:2},
 };
 /* Salud (venido de Amable PC): agua, movimiento y pasos */
 const SALUD_DEF = {aguaOn:true, aguaMin:45, aguaGoal:8, movOn:true, movMin:60, aguaNext:0, movNext:0, days:{},
@@ -3187,6 +3187,11 @@ function empezar(){
   precargar(1);
 }
 function precargar(i){ const a = areasFlor()[i]; if(a) (new Image()).src = `img/${a.id}.jpg`; }
+/* 4.65 (Gustavo): la pregunta de cada área, en hábitos */
+const REL_HAB = {salud: 'tu cuerpo, tu energía y tu descanso', pareja: 'tu pareja o tu vida sentimental', familia: 'tu familia y tus amigos',
+  trabajo: 'tu trabajo y tu dinero', crecimiento: 'tu aprendizaje y tu crecimiento personal', ocio: 'tu ocio y tu disfrute',
+  proposito: 'tu propósito y tu espiritualidad', hogar: 'tu hogar y tu entorno'};
+const pregHab = a => `¿Cuántos hábitos a la semana practicas en relación a ${REL_HAB[a.id] || a.nombre.toLowerCase()}?`;
 function salirRevision(){ clearTimeout(tAvance); E = null; ir('dia'); }
 const ICO_ATRAS = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
 function masHabito(id){
@@ -3215,7 +3220,7 @@ function vEvaluar(){
       <h1 class="ev-area">${a.nombre}</h1><span class="ev-n">${E.i+1} de ${FL.length}</span></div>
     <div class="progreso">${FL.map((x,j) => `<i class="${j<E.i?'hecho':j===E.i?'actual':''}" style="--c:${x.color}"></i>`).join('')}</div>
     <section class="tarjeta eval">
-      <div class="ilus" style="background-image:url(img/${a.id}.jpg)" role="img" aria-label="Ilustración de ${a.nombre}"><p class="ilus-preg">${a.pregunta}</p></div>
+      <div class="ilus" style="background-image:url(img/${a.id}.jpg)" role="img" aria-label="Ilustración de ${a.nombre}"><p class="ilus-preg">${pregHab(a)}</p></div>
       <div class="cuerpo">
         ${opcionesNivel(nv, k => `elegirNivel('${k}')`)}
         ${preg}
