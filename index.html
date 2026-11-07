@@ -469,7 +469,15 @@ body.pip #toast{bottom:16px}
 .ahora-blk .prox .lapiz{width:30px;height:30px}
 .ahora-blk .prox .del{width:26px;padding:0}
 .cuenta-fila{display:flex;align-items:center;gap:12px;margin-top:10px}
-.ah-tit{font-size:19px;color:var(--oro);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ah-tit{font-size:19px;color:#dc2626;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ahora-blk:not(.fuera){position:relative;background:linear-gradient(rgba(247,195,91,.08),rgba(247,195,91,.08)),var(--fondo);box-shadow:0 0 0 4px rgba(239,68,68,.12),0 0 28px rgba(239,68,68,.35);animation:focoLate 3s ease-in-out infinite}
+.ahora-blk:not(.fuera)::before{content:'';position:absolute;inset:-30px -14px;z-index:-1;border-radius:40px;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(239,68,68,.6) 0deg 6deg,transparent 6deg 15deg);
+  -webkit-mask:radial-gradient(farthest-side,#000 78%,transparent 100%);mask:radial-gradient(farthest-side,#000 78%,transparent 100%)}
+@keyframes focoLate{0%,100%{box-shadow:0 0 0 4px rgba(239,68,68,.12),0 0 22px rgba(239,68,68,.3)}50%{box-shadow:0 0 0 7px rgba(239,68,68,.18),0 0 38px rgba(239,68,68,.5)}}
+.ahora-blk .ah-tit,html.claro .ahora-blk .ah-tit{color:#dc2626!important;font-weight:900}
+.pet-desp{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
+.pet-desp[aria-expanded="true"] .desp-f{transform:rotate(180deg)}
 .disco.grande{width:72px;height:72px;display:grid;place-items:center;margin-right:6px}
 .disco.grande b{font-size:15px;font-weight:800;color:#1d1636;background:rgba(255,255,255,.88);border-radius:999px;padding:1px 7px}
 .disco.grande.aro{width:86px;height:86px;background:conic-gradient(#22a35a calc((100 - var(--p,0))*1%),#e0323a 0)}
@@ -614,6 +622,18 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
 .ml-secc button:hover{background:rgba(var(--bl),.07)}
 .ml-secc button.act{background:rgba(247,195,91,.14);font-weight:800}
 .ml-secc .nav-ico{width:28px;height:28px}
+.tira-salud .ts-ico{width:20px;height:20px;vertical-align:-4px;margin-right:2px}
+.gc-secc{padding:0 0 12px;margin:0 0 6px}
+.gc-secc button{font-size:12px}
+.ml-secc.cab-secc{display:flex;gap:2px;padding:0;margin-left:10px}
+@media (min-width:900px){
+  .cab-in:has(.cab-secc){max-width:1240px}
+  body.v-dia .envoltura{max-width:1100px}
+  body.v-dia .dia-cols{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:32px;align-items:start}
+  body.v-dia .dia-izq{position:sticky;top:76px}
+}
+.ml-secc.cab-secc button{flex-direction:row;gap:6px;padding:6px 10px;font-size:13.5px}
+.ml-secc.cab-secc .nav-ico{width:24px;height:24px}
 .ml-tema .seg-tema{width:100%}
 .ml-tema .seg-tema button{flex:1;justify-content:center}
 .aj-eliminar{margin-top:4px}
@@ -1504,6 +1524,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
     <button type="button" class="cab-volver" id="cab-volver" aria-label="Volver" title="Volver" onclick="volver()" hidden><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="marca"><svg id="logo-cab"></svg>Amable Life</div>
     <span class="ver" id="ver"></span>
+    <span id="cab-secc"></span>
     <div class="der"><span id="cab-vista"></span><span id="grow-panel-boton"></span><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
   </div>
 </header>
@@ -1525,7 +1546,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.43';
+const VERSION = 'v4.45';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1794,12 +1815,14 @@ function render(){
   const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad','premium'].includes(vista);
   const bv = $('#cab-volver'); if(bv) bv.hidden = vista === 'agenda' && !vistaHist.length;
   const cv = $('#cab-vista'); if(cv) cv.innerHTML = vista === 'agenda' && !ESCRITORIO.matches ? cabVistaHTML() : '';
+  const cs = $('#cab-secc'); if(cs) cs.innerHTML = ESCRITORIO.matches && vista !== 'agenda' ? menuSeccionesHTML('cab-secc') : '';   // 4.44: en el ordenador, para pasar de una sección a otra
   $('#nav').style.display = conNav ? '' : 'none';
   document.body.classList.toggle('ancho', vista === 'agenda');
   document.body.classList.toggle('v-ajustes', vista === 'ajustes' || vista === 'estad' || vista === 'premium');
   document.body.classList.toggle('v-premium', vista === 'premium');
   document.body.classList.toggle('h12', !!fPref.h12);
-  document.body.classList.toggle('v-estad', vista === 'estad');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
+  document.body.classList.toggle('v-estad', vista === 'estad');
+  document.body.classList.toggle('v-dia', vista === 'dia');   // en el ordenador, Ajustes sin la barra de abajo   // en el ordenador, el Calendario a todo el ancho
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('act', b.dataset.v === vista || (vista === 'detalle' && b.dataset.v === 'historial') || ((vista === 'estad' || vista === 'premium') && b.dataset.v === 'ajustes')));
   if(hojaAbierta && $('#hoja')) hojaAbierta();
   if(document.querySelector('canvas.reloj-arena')) iniciarArena();
@@ -1930,7 +1953,7 @@ function dibujarArena(cv, dt){
     g.bezierCurveTo(cx - half, bot - 24, cx - nw - 3, neck + 11, cx - nw, neck);
     g.bezierCurveTo(cx - nw - 3, neck - 11, cx - half, top + 24, cx - half, top); g.closePath();
   };
-  vidrio(); g.fillStyle = 'rgba(255,255,255,.06)'; g.fill();
+  vidrio(); g.fillStyle = 'rgba(160,98,42,.07)'; g.fill();
   g.save(); vidrio(); g.clip();
   // la arena de arriba, verde; desde que cae por el cuello, roja
   const verde = g.createLinearGradient(0, top, 0, neck); verde.addColorStop(0, '#6ee7a0'); verde.addColorStop(1, '#22a35a');
@@ -1960,7 +1983,7 @@ function dibujarArena(cv, dt){
   cv._granos = granos;
   g.restore();
   // cristal y brillo
-  vidrio(); g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 1.4; g.stroke();
+  vidrio(); g.strokeStyle = '#a0622a'; g.lineWidth = 1.8; g.stroke();   // 4.45 (Gustavo): el cristal con borde marrón, como las tapas (en blanco no se veía)
   g.strokeStyle = 'rgba(255,255,255,.22)'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx - half + 6, top + 6); g.quadraticCurveTo(cx - half + 4, top + 22, cx - 7, neck - 9); g.stroke();
   // tapas de madera dorada
   const tapa = y => { g.fillStyle = '#b8661a'; g.beginPath(); if(g.roundRect) g.roundRect(cx - half - 5, y - 3.5, (half + 5) * 2, 7, 3.5); else g.rect(cx - half - 5, y - 3.5, (half + 5) * 2, 7); g.fill();
@@ -2063,16 +2086,12 @@ function vInicio(){
   const pend = pendientes(), hs = hechasEstaSemana(), c = bloqueAhora();
   const actsAhora = c >= 0 ? actsDe(hoyK(), c) : [];
   const tuNombre = nombrePila();
-  let h = `${bannerApp()}${tuNombre ? `<p class="saludo">Hola, ${esc(tuNombre)}</p>` : ''}
-    <p class="suave peq" style="margin:${tuNombre ? 4 : 18}px 0 0">${pend.length ? `${pend.length} ${pend.length === 1 ? 'pendiente' : 'pendientes'}` : 'Nada pendiente'}${hs ? ` · ${hs} ${hs === 1 ? 'hecha' : 'hechas'} esta semana` : ''}</p>
-    <div class="av-fila"><button class="avisos-btn" type="button" aria-label="Cambiar los avisos" onclick="abrirAvisos()"><span id="av-estado" class="${pausa.tareas ? 'off' : 'on'}">${txtAvisos()}</span>${ICO_LAPIZ}</button>
+  let h = `${bannerApp()}
+    <div class="av-fila" style="margin-top:14px"><button class="avisos-btn" type="button" aria-label="Cambiar los avisos" onclick="abrirAvisos()"><span id="av-estado" class="${pausa.tareas ? 'off' : 'on'}">${txtAvisos()}</span>${ICO_LAPIZ}</button>
       ${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
     ${seccionAhora()}
     <button class="btn sec ancho" style="margin-top:14px" onclick="abrirNueva()">＋ Nueva tarea</button>
-    ${listaSinAsignar()}
-    ${tiraSalud()}`;
-  h += `
-  <div class="sellos">${sellosHTML()}</div>`;
+    ${listaSinAsignar()}`;
   return h;
 }
 const hoyK = () => claveDia(new Date());
@@ -2536,13 +2555,14 @@ function listaSinAsignar(){
   const grupos = [];   // primero el pétalo de la tarea más arriba
   lista.forEach(x => { const ar = areaO(x.area); let g = grupos.find(z => z.a === ar); if(!g){ g = {a: ar, tareas: []}; grupos.push(g); } g.tareas.push(x); });
   if(!grupos.length) return '';
-  return `<section class="sin-asig"><h2 class="pet-tit">Pétalos con tareas pendientes</h2>
-    ${grupos.map(({a, tareas}) => { const abierto = petaloAbierto === a.id;
+  return `<section class="sin-asig"><button type="button" class="btn sec ancho pet-desp" aria-expanded="${verPetalosPend}" onclick="verPetalosPend = !verPetalosPend; const y = scrollY; render(); scrollTo(0, y)">Pétalos con tareas pendientes ${FLECHA_ABAJO}</button>
+    ${!verPetalosPend ? '' : grupos.map(({a, tareas}) => { const abierto = petaloAbierto === a.id;
       return `<button class="aj-fila pet-fila ${abierto ? 'sel' : ''}" style="--c:${a.color}" aria-expanded="${abierto}" onclick="petaloAbierto = petaloAbierto === '${a.id}' ? null : '${a.id}'; const y = scrollY; render(); scrollTo(0, y)">
         <span class="aj-ico">${ico(a)}</span><span class="aj-t"><b>${a.nombre}</b></span><span class="pet-n">${tareas.length}</span>${flecha(abierto)}</button>
       ${abierto ? `<div class="sa-lista">${tareas.map(x => filaTarea(x, c >= 0, true)).join('')}</div>` : ''}`; }).join('')}
   </section>`;
 }
+let verPetalosPend = false;   // 4.45: el desplegable de los pétalos con tareas, cerrado de entrada
 /* Tareas: los pétalos que se han quedado sin ninguna tarea */
 function petalosSinTareas(){
   const con = new Set(pendientes().map(x => x.area)), sin = AREAS.filter(a => !con.has(a.id));
@@ -3365,7 +3385,7 @@ let gcMiniDes = 0;
 function gcLado(){
   const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
   const h = +new Intl.DateTimeFormat('es-ES', Object.assign({hour: '2-digit', hour12: false}, fPref.zona ? {timeZone: fPref.zona} : {})).format(new Date()).slice(0, 2);
-  return `<aside class="gc-lado">
+  return `<aside class="gc-lado">${menuSeccionesHTML('gc-secc')}
     <button class="gc-crear" onclick="nuevoEvento()" title="Crear (C)">${ICO_MAS}Crear</button>
     <div><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
@@ -3952,8 +3972,8 @@ const MENU_SECC = [['agenda', 'Calendario', mIco('<rect x="3.5" y="5" width="17"
   ['estad', 'Estadísticas', mIco('<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>')],
   ['ajustes', 'Ajustes', ICO_RUEDA]];
 /* 4.42 (Gustavo): en el ordenador, arriba del menú, las cuatro secciones con los mismos iconos de colores de la barra de abajo del móvil */
-function menuSeccionesHTML(){
-  return `<div class="ml-secc">${['agenda', 'dia', 'inicio', 'salud'].map(v => { const b = document.querySelector(`#nav [data-v="${v}"]`); if(!b) return '';
+function menuSeccionesHTML(cls = ''){
+  return `<div class="ml-secc ${cls}">${['agenda', 'dia', 'inicio', 'salud'].map(v => { const b = document.querySelector(`#nav [data-v="${v}"]`); if(!b) return '';
     const svg = b.querySelector('svg'); return `<button type="button" class="${vista === v ? 'act' : ''}" onclick="cerrarMenu(); ir('${v}')">${svg ? svg.outerHTML : ''}<span>${esc(b.textContent.trim())}</span></button>`; }).join('')}</div>`;
 }
 function menuExtraHTML(fila){
@@ -3968,7 +3988,7 @@ function menuHTML(){
   const fila = (ico, t, fn, sel) => `<button type="button" class="ml-f ${sel ? 'sel' : ''}" onclick="${fn}">${ico}<span>${t}</span></button>`;
   return `<div class="ml-cab"><svg viewBox="-100 -100 200 200" width="30" height="30" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1M')}</svg><span class="ml-tv"><b>Amable Life</b><small>web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</small></span><button type="button" class="ep-ico ml-x" aria-label="Cerrar" onclick="cerrarMenu()">${ICO_CRUZ}</button></div>
 
-    ${ESCRITORIO.matches ? menuSeccionesHTML() : ''}
+
     <div class="ml-g">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}
       <div class="ml-tema"><div class="seg-tema"><button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro'); abrirMenu()">${ICO_SOL} Día</button><button class="${temaClaro() ? '' : 'sel'}" onclick="ponerTema('oscuro'); abrirMenu()">${ICO_LUNA} Noche</button></div></div>
       ${MENU_SECC.filter(([v]) => v === 'estad').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}
@@ -4610,12 +4630,13 @@ function vDia(){
   const ya = new Set(acts.map(a => a.acc).filter(Boolean));
   const sugeridas = pendientes().filter(x => !ya.has(x.id)).slice(0, 4);
   const lleno = acts.length >= MAX_ACT;
-  return `${unirHTML()}<h1 class="tit-acc">Bloques de tareas</h1>${botonPausa('tareas')}
+  return `${unirHTML()}<div class="dia-cols"><div class="dia-izq"><h1 class="tit-acc">Bloques de tareas</h1>${botonPausa('tareas')}
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0)}</div>
     <div class="fn-fila"><button class="fn-flecha" onclick="moverBloque(-1)" aria-label="Bloque anterior">‹</button>
       <p class="peq suave">Desliza el centro para pasar de bloque · toca un pétalo para ver sus tareas · <button class="link" onclick="empezar()">revisar toda la flor</button> · <button class="link" onclick="ir('historial')">ver el historial</button></p>
       <button class="fn-flecha" onclick="moverBloque(1)" aria-label="Bloque siguiente">›</button></div>
+    </div><div class="dia-der">
     ${panelArea()}
     <div class="tira-blk" id="tiraBlk">${tira}</div>
     <input type="range" class="blk-barra" min="0" max="${BLOQUES.length - 1}" step="1" value="${bSel}" aria-label="Mover a otro bloque" oninput="verBloqueBarra(+this.value)" onchange="elegirBloque(+this.value)">
@@ -4640,7 +4661,7 @@ function vDia(){
         <label class="fila-aj"><span><input type="checkbox" ${B_().sleepOn ? 'checked' : ''} onchange="ajBloque('sleepOn', this)"> A las 22:00, recordarme ir a dormir</span></label>
         <p class="peq suave" style="margin:6px 0 0">Las actividades sin terminar pasan solas al bloque siguiente. Los avisos suenan con la app abierta.</p>
       </details>
-    </section>`;
+    </section></div></div>`;
 }
 /* Barra con punto bajo los círculos: al mover el punto, la fila acompaña; al soltar, se elige ese bloque */
 function verBloqueBarra(i){
@@ -4968,7 +4989,11 @@ function hablar(texto, tipo){
 }
 function tiraSalud(){
   const h = saludHoy(), p = pasosHoy(), S = S_();
-  return `<button class="tira-salud" onclick="ir('salud')"><span>👣 <b>${fmtN(p.steps)}</b> pasos</span><span>💧 <b>${fmtVasos(h.agua)}</b>/${S.aguaGoal}</span><span>🤸 <b>${h.mov}</b></span></button>`;
+  // 4.45: iconos dibujados (como los de la barra de abajo) en vez de emojis
+  const pies = (document.querySelector('#nav [data-v="salud"] svg') || {}).outerHTML || '';
+  const gota = '<svg class="ts-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.2 4.2 6.5 8.2 6.5 12a6.5 6.5 0 0 1-13 0c0-3.8 3.3-7.8 6.5-12z" fill="#60a5fa"/><path d="M9 15.5a3 3 0 0 0 3 3" stroke="#dbeafe" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>';
+  const mov = '<svg class="ts-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="14.5" cy="4.2" r="2.3" fill="#f97316"/><path d="M13 8l-3.2 4.6 3 1.8-1.6 6.4M13 8l3.5 3 3.2-.6M10.6 10.6L6.2 9.6" stroke="#ea580c" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.8 14.4l3.4 2.4-.6 4" stroke="#ea580c" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return `<button class="tira-salud" onclick="ir('salud')"><span>${pies.replace('class="nav-ico"', 'class="ts-ico"')} <b>${fmtN(p.steps)}</b> pasos</span><span>${gota} <b>${fmtVasos(h.agua)}</b>/${S.aguaGoal}</span><span>${mov} <b>${h.mov}</b></span></button>`;
 }
 function anillo(v, meta){
   const r = 92, c = 2*Math.PI*r, f = Math.min(1, meta ? v/meta : 0);
