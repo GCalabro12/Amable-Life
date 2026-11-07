@@ -522,6 +522,8 @@ html:not(.claro) .btn-avisos .off{color:#f87171}
 @keyframes rayosLate{0%,100%{opacity:.75}50%{opacity:1}}
 .disco.grande.aro{position:relative}
 .disco.grande.aro b{position:relative;z-index:1}
+/* 4.54 (Gustavo): en el centro, el color del bloque (el disco dorado con puntitos) en vez del número */
+.aro-centro{position:relative;z-index:1;width:38px;height:38px;border-radius:50%;box-shadow:0 0 0 3px #fff,0 1px 4px rgba(0,0,0,.3);background:radial-gradient(circle at 50% 50%,rgba(122,67,16,.3) 1px,transparent 1.4px) 0 0/6px 6px,radial-gradient(circle,#ffe59a 0,#f7b733 55%,#c9741a 100%)}
 .flecha-aro{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:rotate(calc(var(--p,0) * 3.6deg))}
 .flecha-aro .fl-g{filter:drop-shadow(0 0 1.2px rgba(0,0,0,.6));animation:flechaSale 2.6s linear infinite}
 .flecha-aro .fl-m{stroke-dasharray:100;stroke-dashoffset:100;animation:flechaCrece 2.6s ease-in-out infinite}
@@ -1634,7 +1636,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.53';
+const VERSION = 'v4.54';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2276,7 +2278,7 @@ function seccionAhora(){
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
-      <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<b>${pend.length}</b></span></div>
+      <span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span></div>
     ${pend.length || evPend ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${evPend}
     ${pend.length ? `<div class="prox-lista">${lista}</div>`
