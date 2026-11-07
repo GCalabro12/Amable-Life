@@ -662,6 +662,11 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .cab-pop button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--tinta);padding:11px 18px;font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer}
 .cab-pop button svg{color:var(--suave);width:22px;height:22px;flex:none}
 .cab-pop button.sel{background:color-mix(in srgb,var(--oro) 24%,transparent)}
+.cta-b{margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(var(--bl),.05);border:1px solid var(--linea)}
+.cta-b h4{margin:0 0 4px;font-size:15px}
+.cta-b p{margin:0 0 8px}
+.cta-b .bots{margin-top:4px}
+.cta-peligro{border-color:color-mix(in srgb,#ef4444 40%,transparent)}
 /* ---- Suscripción (Premium) ---- */
 .prem-hero{display:flex;align-items:center;gap:16px;margin:14px 0 16px}
 .prem-logo{position:relative;flex:none;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(247,195,91,.28),transparent 70%)}
@@ -1326,7 +1331,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.96';
+const VERSION = 'v3.97';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4589,11 +4594,76 @@ function cuentaHTML(){
   const u = nube.usuario;
   if(u) return `<div class="cuenta">${u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : ''}<div><b>${esc(u.displayName || 'Tu cuenta')}</b><span>${esc(u.email || '')}</span></div></div>${unirHTML(true)}
     <p class="nube-ok" style="margin:0 0 12px">☁️ Tus acciones y tu flor se guardan en la nube y se ven en todos tus dispositivos.</p>
-    <button class="btn sec" onclick="salir()">Cerrar sesión</button>`;
+    ${copiaHTML()}
+    ${esCuentaPin(u) ? `<div class="cta-b"><h4>PIN</h4><p class="peq suave">El PIN de 4 números con el que entras con tu correo.</p><div class="bots"><button class="btn sec" onclick="abrirCambiarPin()">Cambiar el PIN</button></div></div>` : ''}
+    <div class="bots" style="margin-top:12px"><button class="btn sec" onclick="salir()">Cerrar sesión</button></div>
+    <div class="cta-b cta-peligro"><h4>Eliminar cuenta</h4><p class="peq suave">Borra tu cuenta y todos tus datos, de la nube y de este aparato. No se puede deshacer.</p><div class="bots"><button class="btn peligro" onclick="abrirEliminarCuenta()">Eliminar cuenta</button></div></div>`;
   return `<p class="suave" style="margin-top:0">Entra para no perder tus acciones y verlas en el móvil y en el ordenador.</p>
     <div class="bots"><button class="btn google ancho" onclick="entrar()">Entrar con Google</button>
     <button class="btn sec ancho" onclick="cuentaModo='entrar'; ir('cuenta')">Entrar con email y PIN</button>
-    <button class="link" onclick="cuentaModo='crear'; ir('cuenta')">Crear una cuenta con email</button></div>`;
+    <button class="link" onclick="cuentaModo='crear'; ir('cuenta')">Crear una cuenta con email</button></div>
+    ${copiaHTML()}`;
+}
+/* Copia de seguridad y restauración (Gustavo, 3.97, como en TickTick): todo Amable Life en un archivo, y recuperarlo */
+const copiaHTML = () => `<div class="cta-b"><h4>Copia de seguridad y restauración</h4><p class="peq suave">Guarda todo Amable Life en un archivo (tareas, flor, calendario, hábitos…) o recupera una copia que guardaste.</p>
+  <div class="bots"><button class="btn sec" onclick="exportar()">Generar copia de seguridad</button><button class="btn sec" onclick="$('#importar').click()">Importar una copia</button>
+  <input type="file" id="importar" accept=".json,application/json" hidden onchange="importar(this)"></div></div>`;
+const esCuentaPin = u => !!(u && (u.providerData || []).some(p => p.providerId === 'password'));
+/* Cambiar el PIN: se comprueba el de ahora y se pone el nuevo (la clave real es «equilibra-» + PIN) */
+function abrirCambiarPin(){
+  const campo = (id, ph) => `<input type="password" id="${id}" inputmode="numeric" maxlength="4" autocomplete="${id === 'pin-a' ? 'current-password' : 'new-password'}" placeholder="${ph}" style="margin-top:8px">`;
+  mostrarHoja(`<div class="hoja-cab"><h2>Cambiar el PIN</h2></div>
+    ${campo('pin-a', 'Tu PIN de ahora')}${campo('pin-n', 'PIN nuevo (4 números)')}${campo('pin-r', 'Repite el PIN nuevo')}
+    <p class="meta-error" id="pin-msg"></p>
+    <div class="ed-bots"><button class="btn prim" onclick="cambiarPinCuenta()">Cambiar el PIN</button><button class="btn sec" onclick="cerrarHoja()">Cancelar</button></div>`, '#8b5cf6');
+}
+async function cambiarPinCuenta(){
+  const a = valor('pin-a'), n = valor('pin-n'), r = valor('pin-r'), msg = t => { const m = $('#pin-msg'); if(m) m.textContent = t; };
+  if(!/^\d{4}$/.test(a) || !/^\d{4}$/.test(n)){ msg('Los PIN son 4 números'); return; }
+  if(n !== r){ msg('Los dos PIN nuevos no coinciden'); return; }
+  const u = nube.listo && firebase.auth().currentUser; if(!u){ msg('Entra primero con tu cuenta'); return; }
+  msg('Cambiando…');
+  try{ await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, SAL_PIN + a)); await u.updatePassword(SAL_PIN + n); cerrarHoja(); aviso('PIN cambiado'); }
+  catch(e){ msg(errorCuenta(e)); }
+}
+/* Eliminar la cuenta (obligatorio en Google Play para apps con cuenta): se confirma quién eres, se borra la nube y luego la cuenta.
+   Si la cuenta no se deja borrar, se vuelven a subir los datos: no se pierde nada. */
+function abrirEliminarCuenta(){
+  const u = nube.usuario; if(!u) return;
+  const pin = esCuentaPin(u);
+  mostrarHoja(`<div class="hoja-cab"><h2>Eliminar cuenta</h2></div>
+    <p>Se borrará <b>para siempre</b> tu cuenta (${esc(u.email || 'tu correo')}) y todo lo tuyo en Amable Life: tareas, flor, calendario, hábitos y estadísticas, en la nube y en este aparato.</p>
+    <p class="peq suave">Antes, si quieres, guarda una copia de seguridad.</p>
+    <div class="bots"><button class="btn sec" onclick="exportar()">Generar copia de seguridad</button></div>
+    <p class="peq suave">Los números que compartiste con Grow Panel se borran desde Grow Panel → Ajustes → Tus datos.</p>
+    ${pin ? '<input type="password" id="del-pin" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="Tu PIN, para confirmar que eres tú">' : `<p class="peq suave">${esApp ? 'Si hace mucho que entraste, puede que te pida cerrar sesión y volver a entrar antes.' : 'Te pediremos entrar otra vez con Google para confirmar que eres tú.'}</p>`}
+    <label class="ev-chk" style="margin:12px 0"><input type="checkbox" id="del-ok"><span>Entiendo que no se puede deshacer</span></label>
+    <p class="meta-error" id="del-msg"></p>
+    <div class="ed-bots"><button class="btn peligro" onclick="eliminarCuenta()">Eliminar mi cuenta para siempre</button><button class="btn sec" onclick="cerrarHoja()">Cancelar</button></div>`, '#ef4444');
+}
+async function eliminarCuenta(){
+  const msg = t => { const m = $('#del-msg'); if(m) m.textContent = t; };
+  if(!$('#del-ok') || !$('#del-ok').checked){ msg('Marca la casilla para confirmar'); return; }
+  const u = nube.listo && firebase.auth().currentUser; if(!u){ msg('Entra primero con tu cuenta'); return; }
+  msg('Comprobando que eres tú…');
+  try{
+    if(esCuentaPin(u)){ const pin = valor('del-pin'); if(!/^\d{4}$/.test(pin)){ msg('Escribe tu PIN (4 números)'); return; }
+      await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, SAL_PIN + pin)); }
+    else if(!esApp) await u.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());
+  }catch(e){ msg(errorCuenta(e)); return; }
+  msg('Eliminando…');
+  if(nube.escucha){ nube.escucha(); nube.escucha = null; }
+  try{ if(nube.ref) await nube.ref.delete(); }catch(e){ msg('No se han podido borrar tus datos de la nube. Prueba otra vez.'); escucharNube(); return; }
+  try{ await u.delete(); }
+  catch(e){
+    try{ if(nube.ref) await nube.ref.set(JSON.parse(JSON.stringify(Object.assign({}, D, {actualizado: new Date().toISOString(), version: VERSION})))); }catch(x){}
+    escucharNube();
+    msg(e && e.code === 'auth/requires-recent-login' ? 'Por seguridad, cierra sesión, vuelve a entrar y repite «Eliminar cuenta». No se ha borrado nada.' : errorCuenta(e) + '. No se ha borrado nada.');
+    return;
+  }
+  try{ Object.keys(localStorage).filter(k => k.startsWith('equilibra.') || k === CLAVE).forEach(k => localStorage.removeItem(k)); sessionStorage.clear(); }catch(e){}
+  mostrarHoja(`<div class="hoja-cab"><h2>Cuenta eliminada</h2></div><p>Tu cuenta y tus datos se han borrado. Gracias por haber usado Amable Life.</p>
+    <div class="bots"><button class="btn prim ancho" onclick="location.reload()">Volver al inicio</button></div>`, '#8b5cf6');
 }
 
 /* ---------- Cuenta con email + nombre + PIN de 4 cifras ----------
@@ -4990,11 +5060,9 @@ function vAjustes(){
       html: () => calAjustesHTML()},
     {k: 'datos', ico: '💾', t: 'Tus datos',
       sub: u ? 'En este móvil y en la nube' : 'Solo en este móvil',
-      html: () => `<p class="suave">${u ? 'Se guardan en este dispositivo y en tu cuenta.' : 'Ahora se guardan solo en este dispositivo. Entra con Google para tenerlas también en la nube.'} También puedes guardar una copia en un archivo.</p>
+      html: () => `<p class="suave">${u ? 'Se guardan en este dispositivo y en tu cuenta.' : 'Ahora se guardan solo en este dispositivo. Entra con Google para tenerlas también en la nube.'} La copia de seguridad (guardar y recuperar) está en «Tu cuenta».</p>
         <div class="bots">
-          <button class="btn sec" onclick="exportar()">⬇️ Guardar una copia (archivo)</button>
-          <button class="btn sec" onclick="$('#importar').click()">⬆️ Recuperar una copia</button>
-          <input type="file" id="importar" accept=".json,application/json" hidden onchange="importar(this)">
+          <button class="btn sec" onclick="abrirAj('cuenta')">Copia de seguridad y restauración</button>
           <button class="btn peligro" onclick="borrarTodo()">Borrar todos mis datos</button>
         </div>`},
     {k: 'ayuda', ico: '❓', t: '¿Cómo funciona Amable Life?',
@@ -5261,7 +5329,8 @@ function leerTickTick(txt){
     if(st === '-1'){ out.nohago++; return; }
     const pr = +v(f, 'Priority') || 0, prio = pr >= 5 ? 3 : pr >= 3 ? 2 : 1;
     const desc = v(f, 'Content').replace(/▫|▪/g, '• ').slice(0, 2000), area = ttArea(v(f, 'List Name'), v(f, 'Folder Name'));
-    const di = ttFecha(v(f, 'Start Date')) || ttFecha(v(f, 'Due Date')), df = ttFecha(v(f, 'Due Date')), todo = /^true$/i.test(v(f, 'Is All Day')) || !di;
+    const di = ttFecha(v(f, 'Start Date')) || ttFecha(v(f, 'Due Date')), df = ttFecha(v(f, 'Due Date'));
+    const todo = /^true$/i.test(v(f, 'Is All Day')) || !di || (di.getHours() === 0 && di.getMinutes() === 0 && (!df || +df === +di));   // a las 0:00 y sin fin: solo tiene fecha
     if(hecho){ const h = ttFecha(v(f, 'Completed Time')) || di || ttFecha(v(f, 'Created Time')) || new Date();
       out.hechas.push({uid: 'tt:' + id, t: t || SIN_TITULO, area, prio, creada: (ttFecha(v(f, 'Created Time')) || h).toISOString(), hechaEn: h.toISOString()}); return; }
     if(!di){ out.areas.push({uid: 'tt:' + id, t: t || SIN_TITULO, area, prio, creada: (ttFecha(v(f, 'Created Time')) || new Date()).toISOString()}); return; }
@@ -5272,15 +5341,19 @@ function leerTickTick(txt){
     const trig = (v(f, 'Reminder').match(/-?P(?:\d+W)?(?:\d+D)?T?(?:\d+H)?(?:\d+M)?(?:\d+S)?/g) || []).map(x => { const m = /^(-)?P(?:(\d+)W)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?/.exec(x); return m ? ((+m[2] || 0) * 10080 + (+m[3] || 0) * 1440 + (+m[4] || 0) * 60 + (+m[5] || 0)) * (m[1] ? 1 : -1) : null; }).filter(x => x != null);
     const avisos = [...new Set(trig.map(m => todo ? (m >= 7 * 1440 ? 10080 : m >= 2 * 1440 ? 2880 : m >= 1440 ? 1440 : 0) : RECORD_HORA.map(r => r.k).reduce((c, kk) => Math.abs(kk - Math.max(0, m)) < Math.abs(c - Math.max(0, m)) ? kk : c, 0)))];
     // repetición, como en el .ics
-    let rep = 'no', dias = null; const rr = v(f, 'Repeat').replace(/^RRULE:/i, '');
-    if(rr){ const R = Object.fromEntries(rr.toUpperCase().split(';').map(x => x.split('='))), hasta = R.UNTIL && icsLeerFecha(R.UNTIL);
-      if(!((R.INTERVAL && +R.INTERVAL > 1) || (hasta && hasta.k < hoyK()))){
+    let rep = 'no', dias = null, fechas = null; const rr = v(f, 'Repeat').replace(/^RRULE:/i, '');
+    if(/^ERULE:/i.test(rr)){ const m = /BYDATE=([\d,]+)/i.exec(rr); if(m) fechas = m[1].split(',').map(x => `${x.slice(0, 4)}-${x.slice(4, 6)}-${x.slice(6, 8)}`).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x)); }
+    else if(rr){ const R = Object.fromEntries(rr.toUpperCase().split(';').map(x => x.split('='))), hasta = R.UNTIL && icsLeerFecha(R.UNTIL);
+      const nb = Math.max(1, (R.BYDAY || '').split(',').filter(Boolean).length), cnt = +R.COUNT || 0;
+      const finCount = cnt ? (R.FREQ === 'DAILY' ? sumarDias(k, cnt) : R.FREQ === 'WEEKLY' ? sumarDias(k, Math.ceil(cnt / nb) * 7) : R.FREQ === 'MONTHLY' ? sumarDias(k, cnt * 31) : R.FREQ === 'YEARLY' ? sumarDias(k, cnt * 366) : k) : null;
+      if(!((R.INTERVAL && +R.INTERVAL > 1) || (hasta && hasta.k < hoyK()) || (finCount && finCount < hoyK()))){
         if(R.FREQ === 'DAILY') rep = 'dia';
         else if(R.FREQ === 'WEEKLY'){ const bd = [...new Set((R.BYDAY || BYDAY[diaSem(k)]).split(',').map(x => BYDAY.indexOf(x.slice(-2))).filter(i => i >= 0))].sort();
           if(bd.join() === '0,1,2,3,4') rep = 'lab'; else { rep = 'semana'; if(bd.length > 1 || bd[0] !== diaSem(k)) dias = bd; } }
         else if(R.FREQ === 'MONTHLY') rep = 'mes'; else if(R.FREQ === 'YEARLY') rep = 'anio'; } }
     const base = {uid: 'tt:' + id, t: t || SIN_TITULO, dia: k, todo, ini, fin, rep, saltar: [], avisos, prio, desc, area};
-    if(!dias) out.cal.push(base);
+    if(fechas && fechas.length) fechas.forEach(fx => out.cal.push(Object.assign({}, base, {uid: base.uid + '@' + fx, dia: fx})));
+    else if(!dias) out.cal.push(base);
     else dias.forEach(d => { let kk = k; while(diaSem(kk) !== d) kk = sumarDias(kk, 1); out.cal.push(Object.assign({}, base, {uid: base.uid + '#' + d, dia: kk})); });
   });
   return out;
