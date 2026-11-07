@@ -636,6 +636,13 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 /* la portada siempre es oscura: sus letras, siempre claras (en el modo Día salía el título negro) */
 #splash{--tinta:#f4f0fb;--suave:#cfc6ec;--bl:255,255,255;color:#f4f0fb}
 #splash h1{color:#fff}
+.cab-volver{flex:none;width:40px;height:40px;margin:0 -2px 0 -10px;border:0;border-radius:50%;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0}
+.cab-volver:hover{background:rgba(var(--bl),.1)}
+.cab-volver[hidden]{display:none}
+/* en el ordenador no hay barra de iconos abajo en ninguna pantalla (Gustavo): se va con el menú de tres rayas y con Volver */
+@media (min-width:900px){ nav.abajo{display:none!important} .envoltura{padding-bottom:48px} }
+/* Cuerpo en el modo Día: el texto de cada fila, oscuro (salía muy claro sobre el fondo de color) */
+html.claro .s-tile .s-est{color:color-mix(in srgb,var(--c) 55%,#1f1838)}
 /* ---- Suscripción (Premium) ---- */
 .prem-hero{display:flex;align-items:center;gap:16px;margin:14px 0 16px}
 .prem-logo{position:relative;flex:none;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(247,195,91,.28),transparent 70%)}
@@ -1270,6 +1277,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <header class="cab">
   <div class="cab-in">
+    <button type="button" class="cab-volver" id="cab-volver" aria-label="Volver" title="Volver" onclick="volver()" hidden><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="marca"><svg id="logo-cab"></svg>Amable Life</div>
     <span class="ver" id="ver"></span>
     <div class="der"><span id="grow-panel-boton"></span><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
@@ -1292,7 +1300,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.90';
+const VERSION = 'v3.91';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1528,7 +1536,15 @@ let vista = 'inicio', E = null, P = null, detalleId = null, histModo = 'acciones
 /* Pestaña de arranque: Tareas (sin datos todavía, la bienvenida) */
 const vistaInicial = () => tieneDatos() ? 'agenda' : 'inicio';   // se abre en el Calendario, el primero de abajo
 let vistaPrevia = 'agenda';   // a dónde vuelven «Volver» y la cruz de Ajustes
-function ir(v){
+/* «Volver» (Gustavo): cada pantalla recuerda de dónde vienes; sin nada detrás, vuelve al Calendario */
+const vistaHist = [];
+function volver(){
+  let v = vistaHist.pop();
+  while(v && v === vista) v = vistaHist.pop();
+  ir(v || 'agenda', true); window.scrollTo(0, 0);
+}
+function ir(v, sinHist){
+  if(!sinHist && vista && vista !== v && vista !== 'cuenta'){ vistaHist.push(vista); if(vistaHist.length > 40) vistaHist.shift(); }
   if(v === 'ajustes' && vista !== 'ajustes') vistaPrevia = vista;
   vista = v;
   if(v !== 'evaluar') E = null;
@@ -1544,6 +1560,7 @@ function render(){
   const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad, premium:vPremium};
   app.innerHTML = (vistas[vista] || vInicio)();
   const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad','premium'].includes(vista);
+  const bv = $('#cab-volver'); if(bv) bv.hidden = vista === 'agenda' && !vistaHist.length;
   $('#nav').style.display = conNav ? '' : 'none';
   document.body.classList.toggle('ancho', vista === 'agenda');
   document.body.classList.toggle('v-ajustes', vista === 'ajustes' || vista === 'estad' || vista === 'premium');
