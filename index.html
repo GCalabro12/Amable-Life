@@ -1057,7 +1057,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.75';
+const VERSION = 'v3.76';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2571,6 +2571,16 @@ const rangoTxt = (a, b) => { const x = fechaDe(a), y = fechaDe(b);
 /* Mostrar fines de semana y tareas completadas (como en Google Calendar): se guarda en este aparato */
 const gcPref = (() => { try{ return JSON.parse(localStorage.getItem('equilibra.vistaCal') || '{}') || {}; }catch(e){ return {}; } })();
 const verFinde = () => gcPref.finde !== false, verHechas = () => gcPref.hechas !== false;
+/* La vista del calendario se recuerda (Gustavo): la última que usaste; si no hay ninguna guardada, Semana */
+const MODOS_CAL = ['dia', 'semana', 'mes', 'anio', 'agenda', '7dias', 'rango', 'semanas'];
+agModo = MODOS_CAL.includes(gcPref.modo) ? gcPref.modo : 'semana';
+if(gcPref.n >= 2 && gcPref.n <= 7) agN = gcPref.n;
+if(gcPref.w >= 2 && gcPref.w <= 6) agW = gcPref.w;
+function recordarVista(){
+  if(gcPref.modo === agModo && gcPref.n === agN && gcPref.w === agW) return;
+  gcPref.modo = agModo; gcPref.n = agN; gcPref.w = agW;
+  try{ localStorage.setItem('equilibra.vistaCal', JSON.stringify(gcPref)); }catch(e){}
+}
 function gcCambiar(k){
   gcPref[k] = gcPref[k] === false;
   try{ localStorage.setItem('equilibra.vistaCal', JSON.stringify(gcPref)); }catch(e){}
@@ -2595,6 +2605,7 @@ function mesPeq(m0, conSem){
 }
 function vAgenda(){
   if(!agK) agK = hoyK();
+  recordarVista();
   const hoy = hoyK(), d0 = fechaDe(agK);
   let tit, cuerpo, conHoy;
   if(agModo === 'dia'){
