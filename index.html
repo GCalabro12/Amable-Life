@@ -1751,7 +1751,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.70';
+const VERSION = 'v4.71';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3577,7 +3577,8 @@ const rangoTxt = (a, b) => { const x = fechaDe(a), y = fechaDe(b);
   return x.getMonth() === y.getMonth() ? `${x.getDate()} – ${y.getDate()} de ${MESES[y.getMonth()]}` : `${x.getDate()} de ${MESES[x.getMonth()]} – ${y.getDate()} de ${MESES[y.getMonth()]}`; };
 /* Mostrar fines de semana y tareas completadas (como en Google Calendar): se guarda en este aparato */
 const gcPref = (() => { try{ return JSON.parse(localStorage.getItem('equilibra.vistaCal') || '{}') || {}; }catch(e){ return {}; } })();
-const verFinde = () => gcPref.finde !== false, verHechas = () => gcPref.hechas !== false;
+const verFinde = () => gcPref.finde !== false, verHechas = () => gcPref.verHechas === true;   // 4.71: de entrada, lo hecho no se ve
+function gcCambiarHechas(){ gcPref.verHechas = !verHechas(); try{ localStorage.setItem('equilibra.vistaCal', JSON.stringify(gcPref)); }catch(e){} render(); gcPop('gc-vistas'); }
 /* La vista del calendario se recuerda (Gustavo): la última que usaste; si no hay ninguna guardada, Semana */
 const MODOS_CAL = ['dia', 'semana', 'mes', 'anio', 'agenda', '7dias', '3dias', 'rango', 'semanas'];
 agModo = MODOS_CAL.includes(gcPref.modo) ? gcPref.modo : 'semana';
@@ -3839,7 +3840,7 @@ function gcTop(){
       <div class="gc-pop der" id="gc-vistas" hidden>${[['dia', 'Día', 'D'], ['semana', 'Semana', 'W'], ['mes', 'Mes', 'M'], ['anio', 'Año', 'Y'], ['agenda', 'Agenda', 'A'], ['7dias', '7 días', 'X']].map(([k, x, l]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')"><span>${x}</span><kbd>${l}</kbd></button>`).join('')}
         <hr class="gc-sep">
         <button class="gc-op" onclick="event.stopPropagation(); gcCambiar('finde')"><span class="gc-chk">${verFinde() ? ICO_CHECK : ''}</span>Mostrar fines de semana</button>
-        <button class="gc-op" onclick="event.stopPropagation(); gcCambiar('hechas')"><span class="gc-chk">${verHechas() ? ICO_CHECK : ''}</span>Mostrar tareas completadas</button></div></div>
+        <button class="gc-op" onclick="event.stopPropagation(); gcCambiarHechas()"><span class="gc-chk">${verHechas() ? ICO_CHECK : ''}</span>Mostrar tareas completadas</button></div></div>
   </div>`;
 }
 let gcMiniDes = 0;
@@ -4772,6 +4773,8 @@ function alternarEv(id, k, desdeHoja){
   if(e.acc && !repite(e)){ const x = D.acciones.find(z => z.id === e.acc); if(x){ x.hecha = !ya; x.hechaEn = ya ? null : ahoraISO(); x.mod = ahoraISO(); } }
   e.mod = ahoraISO(); guardar(); if(!ya) sonarHecho();
   if(desdeHoja){ evEd = null; cerrarHoja(); }
+  if(!ya && !verHechas()){ const pop = $('#ev-pop'); if(pop && typeof cerrarPop === 'function') cerrarPop();
+    avisoDeshacer(`«${e.t.length > 30 ? e.t.slice(0, 29) + '…' : e.t}» hecha: sale del calendario y queda en tu historial`, () => alternarEv(id, k), 5000); }
   rerenderDia();
 }
 /* «Editar tarea» → «Poner en el calendario»: la misma tarea, con su pétalo, ligada a la del calendario */
