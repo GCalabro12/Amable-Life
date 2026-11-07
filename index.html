@@ -1346,7 +1346,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.99';
+const VERSION = 'v4.00';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3756,6 +3756,7 @@ function guardarEvento(){
   aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
   if(vista === 'agenda' && !e0.id) agK = dia;
+  if((e.avisos || []).length) setTimeout(() => pedirAvisosWeb(false), 900);
   rerenderDia();
 }
 function borrarEvento(){
@@ -3815,6 +3816,52 @@ function avisosFinal(e0, todo, ini){
 const recTxtEv = e => e.tipo === 'habito'
   ? [...((e.avisos || []).includes(0) && !(e.horasAviso || []).includes(baseAviso(e.todo, e.ini)) ? ['A la hora'] : []), ...(e.horasAviso || []).map(T => 'A las ' + hm(T))].join(', ')
   : (e.todo ? RECORD_DIA : RECORD_HORA).filter(r => (e.avisos || []).includes(r.k)).map(r => r.t).join(', ');
+/* ---------- Avisos del navegador (Gustavo, 4.00, como Google Calendar en la web) ----------
+   En el ordenador, los recordatorios salen también en la esquina de la pantalla si Amable Life está abierta pero en otra ventana o pestaña.
+   El permiso se pide la primera vez que pones un recordatorio (no al entrar), con una explicación antes. En la app de Android no: avisa el teléfono. */
+const hayAvisosWeb = () => !esApp && 'Notification' in window;
+function pedirAvisosWeb(forzar){
+  if(!hayAvisosWeb()) return;
+  if(Notification.permission === 'granted'){ if(forzar) aviso('Los avisos ya están activados'); return; }
+  if(Notification.permission === 'denied'){ if(forzar) hojaAvisosBloqueados(); return; }
+  let no = ''; try{ no = localStorage.getItem('equilibra.avisosWeb') || ''; }catch(e){}
+  if(!forzar && no) return;
+  if($('#hoja')){ if(!forzar) setTimeout(() => pedirAvisosWeb(false), 1500); return; }
+  mostrarHoja(`<div class="aviso-salud"><div class="aviso-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="44" height="44"')}</div>
+    <h2>¿Te aviso aunque estés en otra ventana?</h2>
+    <p>Así tus recordatorios salen en la esquina de la pantalla, como los de Google Calendar, aunque tengas Amable Life detrás de otras ventanas.</p>
+    <p class="peq suave">Después, el navegador te preguntará: pulsa «Permitir». Mientras Amable Life esté abierta (aunque sea en otra pestaña), te llegarán.</p>
+    <button class="btn prim ancho" onclick="permitirAvisosWeb()">Sí, avísame</button>
+    <button class="btn sec ancho" style="margin-top:8px" onclick="noAvisosWeb()">Ahora no</button></div>`, '#f7c35b');
+}
+function permitirAvisosWeb(){
+  try{ localStorage.setItem('equilibra.avisosWeb', 'pedido'); }catch(e){}
+  cerrarHoja();
+  try{ Notification.requestPermission().then(p => { aviso(p === 'granted' ? 'Listo: te avisaré en la esquina de la pantalla' : 'No se han activado. Puedes hacerlo cuando quieras en Ajustes → Sonidos y avisos', 4500); if(p === 'granted') notifWeb('Amable Life', 'Así se verán tus recordatorios', 'prueba', true); const y = window.scrollY; render(); window.scrollTo(0, y); }); }catch(e){}
+}
+function noAvisosWeb(){ try{ localStorage.setItem('equilibra.avisosWeb', 'no'); }catch(e){} cerrarHoja(); aviso('Vale. Puedes activarlos cuando quieras en Ajustes → Sonidos y avisos', 4000); }
+function hojaAvisosBloqueados(){
+  mostrarHoja(`<div class="hoja-cab"><h2>Los avisos están bloqueados</h2></div>
+    <p>El navegador tiene bloqueados los avisos de Amable Life. Para activarlos: pulsa el <b>candado</b> (o el icono de ajustes) a la izquierda de la dirección, arriba, busca <b>Notificaciones</b> y elige <b>Permitir</b>. Después recarga la página.</p>
+    <div class="bots"><button class="btn sec" onclick="cerrarHoja()">Entendido</button></div>`, '#f7c35b');
+}
+function notifWeb(titulo, cuerpo, tag, siempre){
+  if(!hayAvisosWeb() || Notification.permission !== 'granted') return false;
+  if(!siempre && document.visibilityState === 'visible' && document.hasFocus()) return false;   // si estás mirando la app, ya lo ves dentro
+  const op = {body: cuerpo, icon: 'img/icono-192.png', badge: 'img/icono-192.png', tag: tag || 'amable-life', lang: 'es'};
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(titulo, op)).catch(() => { try{ new Notification(titulo, op); }catch(x){} });
+    else new Notification(titulo, op);
+    return true;
+  }catch(e){ return false; }
+}
+function avisosWebHTML(){
+  if(!hayAvisosWeb()) return '';
+  const p = Notification.permission;
+  return `<div class="cta-b"><h4>Avisos en la pantalla del ordenador</h4>
+    <p class="peq suave">${p === 'granted' ? 'Activados: tus recordatorios salen en la esquina de la pantalla aunque estés en otra ventana.' : p === 'denied' ? 'Bloqueados en este navegador.' : 'Aún no los has activado.'}</p>
+    <div class="bots">${p === 'granted' ? `<button class="btn sec" onclick="notifWeb('Amable Life', 'Así se verán tus recordatorios', 'prueba', true)">Probar un aviso</button>` : `<button class="btn sec" onclick="pedirAvisosWeb(true)">${p === 'denied' ? 'Cómo activarlos' : 'Activar los avisos'}</button>`}</div></div>`;
+}
 function textoRecord(e, a, falta){
   if(e.tipo === 'habito' && a !== 0) return e.todo ? 'Tu hábito de hoy' : `Tu hábito de las ${hm(e.ini)}`;
   if(e.todo) return a === 0 ? 'Hoy' : a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : 'Dentro de una semana';
@@ -3853,6 +3900,7 @@ function avisarEventos(){
       const txt = `${textoRecord(e, a, Math.max(1, Math.round((base - ahora) / 60000)))}: ${e.t}`;   // con lo que falta de verdad
       nota(ESCALA[5], 0, .15, .8, false); nota(ESCALA[7], .12, .15, .9, false);
       aviso(txt, 9000);
+      notifWeb(e.t, txt.replace(': ' + e.t, ''), clave);
       setTimeout(() => hablar(txt.replace(/\(en (\d+) min\)/, 'dentro de $1 minutos').replace('(en 1 hora)', 'dentro de una hora') + '.', 'tareas'), 700);
     }));
   }
@@ -5078,7 +5126,7 @@ function vAjustes(){
       sub: (sonidoOn ? 'Música y efectos activados' : 'Música y efectos apagados') + (pausa.salud && pausa.tareas ? ' · todos los avisos en pausa' : pausa.salud ? ' · cuerpo en pausa' : pausa.tareas ? ' · tareas en pausa' : ''),
       html: () => `<label class="interruptor">🔊 Música y efectos de la app<input type="checkbox" ${sonidoOn ? 'checked' : ''} onchange="alternarSonido()"></label>
         <p class="peq suave" style="margin:10px 0 0">Para dejar de recibir avisos un rato (los pasos se siguen contando):</p>${botonPausa('todo')}
-        <p class="peq suave" style="margin:12px 0 0">O solo una parte:</p>${botonPausa('salud')}${botonPausa('tareas')}`},
+        <p class="peq suave" style="margin:12px 0 0">O solo una parte:</p>${botonPausa('salud')}${botonPausa('tareas')}${avisosWebHTML()}`},
     {k: 'versiones', ico: '📲', t: 'Versiones y actualizaciones',
       sub: (miAppVieja() ? `<span class="aj-aviso">Hay una app nueva: ${APK_ULTIMA}</span> · ` : !miApp() && enAndroidWeb() ? '<span class="aj-aviso">Instala la app de Android</span> · ' : '')
         + `web ${VERSION.replace(/^v/, '')} · app ${miApp() ? esc(miApp()) : '—'}`,
