@@ -441,8 +441,20 @@ body.pip #toast{bottom:16px}
 .prox.saliendo{animation:sale .32s ease-in forwards}
 @keyframes sale{to{opacity:0;transform:translateX(70px)}}
 .aj-lista{display:flex;flex-direction:column;gap:8px;margin:12px 0 0}
-.aj-fila{border:0;border-radius:18px;padding:14px;background:rgba(139,92,246,.13);color:var(--tinta);display:flex;align-items:center;gap:12px;text-align:left;width:100%;transition:background .2s}
-.aj-fila.sel{background:rgba(139,92,246,.32)}
+.aj-fila{border:1.5px solid rgba(139,92,246,.35);border-radius:18px;padding:14px;background:none;color:var(--tinta);display:flex;align-items:center;gap:12px;text-align:left;width:100%;transition:background .2s}
+.aj-fila.sel{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.6)}
+.hoja-in:has(.hoja-plana){background:var(--tarjeta)}
+.hoja-plana .cta-b{background:none;border:1.5px solid rgba(139,92,246,.35)}
+.hoja-plana .hoja-cab h2{display:flex;align-items:center}
+.hoja-plana > :not(.hoja-cab){clear:both}
+.ver-tit{margin:4px 0 2px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--suave)}
+.ver-est{margin:10px 0 0;font-size:16px;font-weight:800}
+.ver-est.ok{color:#166534}
+html:not(.claro) .ver-est.ok{color:#4ade80}
+.ver-est.nueva{color:var(--oro)}
+.btn .bt-ico{display:inline-grid;vertical-align:-4px;margin-right:6px}
+.aj-tit-ico{display:inline-grid;place-items:center;margin-right:10px;vertical-align:-4px;color:var(--oro)}
+.aj-tit-ico svg{width:28px;height:28px}
 .aj-fila .aj-ico{font-size:24px;line-height:1;flex:none;width:30px;text-align:center}
 .aj-fila .aj-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .aj-fila .aj-t b{font-size:17px}
@@ -998,7 +1010,7 @@ html.claro .frec-sel,html.claro .frec-l select,html.claro .frec-l input,html.cla
 .cab-menu:hover{background:rgba(var(--bl),.1)}
 .ml{position:fixed;inset:0;z-index:45;background:rgba(8,5,20,0);transition:background .25s}
 .ml.ver{background:rgba(8,5,20,.55)}
-.ml-in{position:absolute;top:0;bottom:0;left:0;width:min(330px,86vw);background:var(--fondo2);border-radius:0 22px 22px 0;overflow:auto;padding:14px 0 calc(16px + env(safe-area-inset-bottom));transform:translateX(-100%);transition:transform .25s ease;box-shadow:8px 0 30px rgba(0,0,0,.4)}
+.ml-in{position:absolute;top:0;bottom:0;left:0;width:min(330px,86vw);background:linear-gradient(180deg,color-mix(in srgb,#8b5cf6 22%,var(--tarjeta)),var(--tarjeta) 55%);border-radius:0 22px 22px 0;overflow:auto;padding:14px 0 calc(16px + env(safe-area-inset-bottom));transform:translateX(-100%);transition:transform .25s ease;box-shadow:8px 0 30px rgba(0,0,0,.4)}
 .ml.ver .ml-in{transform:none}
 .ml-cab{display:flex;align-items:center;gap:10px;padding:4px 10px 12px 22px}
 .ml-cab b{font-size:21px;font-weight:800}
@@ -1006,10 +1018,10 @@ html.claro .frec-sel,html.claro .frec-l select,html.claro .frec-l input,html.cla
 .ml-tv small{font-size:12px;color:var(--suave);font-weight:700}
 .ml-g{padding:6px 0;border-top:1px solid var(--linea)}
 .ml-cab + .ml-g{border-top:0}
-.ml-f{display:flex;align-items:center;gap:20px;width:calc(100% - 16px);margin:1px 0;border:0;background:none;color:var(--tinta);font:inherit;font-size:16px;font-weight:600;padding:12px 22px;border-radius:0 99px 99px 0;text-align:left;cursor:pointer}
+.ml-f{display:flex;align-items:center;gap:20px;width:calc(100% - 24px);margin:5px 12px;border:0;background:rgba(139,92,246,.13);border-radius:16px!important;color:var(--tinta);font:inherit;font-size:16px;font-weight:600;padding:12px 22px;border-radius:0 99px 99px 0;text-align:left;cursor:pointer}
 .ml-f:hover{background:rgba(var(--bl),.07)}
 .ml-f.sel{background:color-mix(in srgb,var(--oro) 26%,transparent)}
-.ml-f svg{flex:none;color:var(--suave)}
+.ml-f svg{flex:none;color:var(--oro)}
 .ml-f.sel svg{color:var(--tinta)}
 .ml-u{display:flex;align-items:center;gap:14px;padding:10px 22px}
 .ml-u img,.ml-ini{width:46px;height:46px;border-radius:50%;flex:none;object-fit:cover}
@@ -1546,7 +1558,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.46';
+const VERSION = 'v4.47';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1790,14 +1802,18 @@ let vista = 'inicio', E = null, P = null, detalleId = null, histModo = 'acciones
 const vistaInicial = () => 'agenda';   // 4.17 (Gustavo): se abre siempre en el Calendario, también la primera vez
 let vistaPrevia = 'agenda';   // a dónde vuelven «Volver» y la cruz de Ajustes
 /* «Volver» (Gustavo): cada pantalla recuerda de dónde vienes; sin nada detrás, vuelve al Calendario */
-const vistaHist = [];
+/* 4.47 (Gustavo: «que vaya a la página anterior»): el historial se guarda en la sesión, así no se pierde
+   cuando la app se recarga sola (al actualizarse o al deslizar hacia abajo) */
+const vistaHist = (() => { try{ return JSON.parse(sessionStorage.getItem('equilibra.hist') || '[]').filter(x => typeof x === 'string'); }catch(e){ return []; } })();
+const guardarHist = () => { try{ sessionStorage.setItem('equilibra.hist', JSON.stringify(vistaHist.concat(vista && vista !== 'evaluar' ? [vista] : []).slice(-40))); }catch(e){} };   // también la pantalla de ahora
 function volver(){
   let v = vistaHist.pop();
   while(v && v === vista) v = vistaHist.pop();
+  guardarHist();
   ir(v || 'agenda', true); window.scrollTo(0, 0);
 }
 function ir(v, sinHist){
-  if(!sinHist && vista && vista !== v && vista !== 'cuenta'){ vistaHist.push(vista); if(vistaHist.length > 40) vistaHist.shift(); }
+  if(!sinHist && vista && vista !== v && vista !== 'cuenta' && vista !== 'evaluar'){ vistaHist.push(vista); if(vistaHist.length > 40) vistaHist.shift(); guardarHist(); }
   if(v === 'ajustes' && vista !== 'ajustes') vistaPrevia = vista;
   vista = v;
   if(v !== 'evaluar') E = null;
@@ -1813,7 +1829,8 @@ function render(){
   const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad, premium:vPremium};
   app.innerHTML = (vistas[vista] || vInicio)();
   const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad','premium'].includes(vista);
-  const bv = $('#cab-volver'); if(bv) bv.hidden = vista === 'agenda' && !vistaHist.length;
+  guardarHist();
+  const bv = $('#cab-volver'); if(bv) bv.hidden = !vistaHist.some(x => x !== vista) && vista === 'agenda';
   const cv = $('#cab-vista'); if(cv) cv.innerHTML = vista === 'agenda' && !ESCRITORIO.matches ? cabVistaHTML() : '';
   const cs = $('#cab-secc'); if(cs) cs.innerHTML = ESCRITORIO.matches && vista !== 'agenda' ? menuSeccionesHTML('cab-secc') : '';   // 4.44: en el ordenador, para pasar de una sección a otra
   $('#nav').style.display = conNav ? '' : 'none';
@@ -5633,7 +5650,10 @@ async function buscarActualizacion(manual){
         try{ sessionStorage.setItem('equilibra.sinPortada', '1'); }catch(e){}   // al volver, sin repetir la flor de entrada
         recargando = true; setTimeout(() => location.reload(), 600);
       }
-    } else if(manual && est) est.textContent = '✓ Tienes la última versión de la web (' + VERSION + ')' + (appVieja() ? ' · hay una app Android nueva: ' + APK_ULTIMA : '');
+    } else if(manual && est){
+      est.className = 'ver-est ok';
+      est.textContent = '✓ La web está al día (' + VERSION.replace(/^v/, 'web ') + ')' + (appVieja() ? ' · hay una app nueva: ' + APK_ULTIMA : '');
+    }
   }catch(e){ if(manual && est) est.textContent = 'No he podido comprobarlo (¿sin conexión?)'; }
 }
 /* Ajustes ordenados: una fila por tema; al tocarla se despliega (solo una abierta a la vez) */
@@ -5854,7 +5874,7 @@ function abrirSeccion(k){
   if(!temasAjCache) vAjustes();
   const T = (temasAjCache || []).find(x => x.k === k); if(!T) return;
   hojaAbierta = () => abrirSeccion(k);
-  mostrarHoja(`<div class="hoja-cab"><h2>${T.t}</h2></div><div class="ajustes aj-en-hoja" id="aj-${k}">${T.html()}</div>`, '#8b5cf6');
+  mostrarHoja(`<div class="hoja-plana"><div class="hoja-cab"><h2><span class="aj-tit-ico">${T.ico || ''}</span>${T.t}</h2></div><div class="ajustes aj-en-hoja" id="aj-${k}">${T.html()}</div></div>`, '#8b5cf6');
 }
 function abrirAj(k){
   if(k === 'estad'){ ir('estad'); return; }
@@ -5874,10 +5894,10 @@ function ponerTema(t){
 /* 4.38 (Gustavo): «Tu cuenta» del menú abre solo lo de la cuenta (el correo, copia, PIN, Cerrar sesión y Eliminar cuenta) */
 function abrirCuenta(){
   hojaAbierta = () => abrirCuenta();
-  mostrarHoja(`<div class="hoja-cab"><h2>Tu cuenta</h2></div>${cuentaHTML()}
+  mostrarHoja(`<div class="hoja-plana"><div class="hoja-cab"><h2><span class="aj-tit-ico">${svgT('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>', 28)}</span>Tu cuenta</h2></div>${cuentaHTML()}
     ${nube.usuario ? `<p class="peq suave" style="margin:12px 0 0">Para ver lo mismo en el móvil y en el ordenador, entra con esta cuenta en los dos.</p>
       <div class="bots aj-salir"><button class="btn sec ancho" onclick="cerrarHoja(); salir()">Cerrar sesión</button></div>
-      <div class="aj-eliminar">${ajSubHTML('eliminar', 'Eliminar cuenta', `<p class="peq suave" style="margin:2px 0 10px">Borra tu cuenta y todos tus datos, de la nube y de este aparato. No se puede deshacer.</p><div class="bots"><button class="btn peligro" onclick="abrirEliminarCuenta()">Eliminar mi cuenta</button></div>`)}</div>` : ''}`, '#8b5cf6');
+      <div class="aj-eliminar">${ajSubHTML('eliminar', 'Eliminar cuenta', `<p class="peq suave" style="margin:2px 0 10px">Borra tu cuenta y todos tus datos, de la nube y de este aparato. No se puede deshacer.</p><div class="bots"><button class="btn peligro" onclick="abrirEliminarCuenta()">Eliminar mi cuenta</button></div>`)}</div>` : ''}</div>`, '#8b5cf6');
 }
 function temaHTML(){
   return `<div class="aj-tema"><span>Aspecto</span><div class="seg-tema">
@@ -5904,17 +5924,20 @@ function vAjustes(){
         + `web ${VERSION.replace(/^v/, '')} · app ${miApp() ? esc(miApp()) : '—'}`,
       html: () => {
         const mia = miApp(), vieja = miAppVieja(), visto = !esApp && D.appAndroid && D.appAndroid.visto;
-        const estadoApp = esApp ? (vieja ? `⬇️ Hay una app más nueva (${APK_ULTIMA}): descárgala con el botón de abajo.` : '✓ Tu app del móvil está al día.')
-          : mia ? (vieja ? `⬇️ En tu móvil tienes la ${esc(mia)} y ya está la ${APK_ULTIMA}.` : `✓ Tu app del móvil está al día (vista el ${fecha(visto)}).`)
-          : 'Desde el navegador no puedo ver si tienes la app en el móvil. Si la tienes, ábrela una vez (con tu cuenta) y aquí saldrá su versión.';
-        return `<div class="ver-fila"><span>Amable Life (web)</span><b>web ${VERSION.replace(/^v/, '')}</b></div>
-        <div class="ver-fila"><span>App Android en tu móvil</span><b>${mia ? 'app ' + esc(mia) : '—'}</b></div>
-        <div class="ver-fila"><span>App Android más nueva</span><b>app ${APK_ULTIMA}</b></div>
-        <p class="peq" style="margin:8px 0 0">${estadoApp}</p>
-        <p class="peq suave" id="ver-estado" style="margin:6px 0 0">La web se actualiza sola al abrir Amable Life.</p>
-        <div class="bots"><button class="btn sec" onclick="buscarActualizacion(true)">🔄 Buscar actualizaciones de la web</button>
-        ${vieja ? `<a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar la app ${APK_ULTIMA}</a>` : ''}</div>
-        ${!mia && enAndroidWeb() ? `<p class="suave" style="margin-top:12px">Instala la app de Android para que suene la música al abrir y cuente tus pasos.</p>${pasosInstalar}<div class="bots"><a class="btn prim" href="${APK}" download="Amable Life.apk">⬇️ Descargar Amable Life ${APK_ULTIMA}</a></div>` : ''}`;
+        /* 4.47 (Gustavo): tus versiones actuales, el estado en verde oscuro y negrita, y un botón para buscar */
+        const icoBaja = `<span class="bt-ico">${svgT('<path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 20h14"/>', 20)}</span>`;
+        const estadoApp = mia ? (vieja ? `<p class="ver-est nueva">Hay una app más nueva: la ${APK_ULTIMA}.</p>`
+            : `<p class="ver-est ok">✓ Tu app del móvil está al día.</p>`)
+          : `<p class="peq suave" style="margin:8px 0 0">Desde el navegador no puedo ver si tienes la app en el móvil. Si la tienes, ábrela una vez (con tu cuenta) y aquí saldrá su versión.</p>`;
+        return `<p class="ver-tit">Tus versiones actuales</p>
+        <div class="ver-fila"><span>Web</span><b>web ${VERSION.replace(/^v/, '')}</b></div>
+        <div class="ver-fila"><span>App del móvil</span><b>${mia ? 'app ' + esc(mia) : '—'}</b></div>
+        ${vieja ? `<div class="ver-fila"><span>App más nueva</span><b>app ${APK_ULTIMA}</b></div>` : ''}
+        ${estadoApp}
+        <p class="peq suave" id="ver-estado" style="margin:8px 0 0">La web se pone al día sola al abrir Amable Life. Si quieres, búscalo ahora.</p>
+        <div class="bots"><button class="btn sec ancho" onclick="buscarActualizacion(true)"><span class="bt-ico">${svgT('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>', 20)}</span>Buscar actualizaciones</button>
+        ${vieja ? `<a class="btn prim ancho" href="${APK}" download="Amable Life.apk">${icoBaja}Descargar la app ${APK_ULTIMA}</a>` : ''}</div>
+        ${!mia && enAndroidWeb() ? `<p class="suave" style="margin-top:12px">Instala la app de Android para que suene la música al abrir y cuente tus pasos.</p>${pasosInstalar}<div class="bots"><a class="btn prim" href="${APK}" download="Amable Life.apk">${icoBaja}Descargar Amable Life ${APK_ULTIMA}</a></div>` : ''}`;
       }},
     {k: 'premium', ico: ICO_PREMIUM, t: 'Suscripción', sub: 'Amable Life Premium · 25 €/año · de momento, todo gratis', html: () => ''},
     {k: 'estad', ico: ICO_ESTAD, t: 'Estadísticas', sub: 'Tus tareas, tu Focus y tus hábitos, con gráficas', html: () => ''},
@@ -5939,13 +5962,13 @@ function vAjustes(){
   temasAjCache = temasTodos;
   const temas = temasTodos.filter(T => AJ_DENTRO.includes(T.k));
   return `<div class="aj-arriba"><button class="aj-volver" onclick="ir('agenda'); window.scrollTo(0, 0)">${svgT('<path d="M4 11l8-6.5 8 6.5"/><path d="M6 9.5V19.5h12V9.5"/><path d="M10 19.5v-5h4v5"/>', 20)} Inicio</button><button class="gc-ico" aria-label="Cerrar" title="Cerrar" onclick="ir(vistaPrevia)">${ICO_CRUZ}</button></div>
-  <h2 class="aj-tit" style="margin-top:18px">Ajustes <span class="aj-ver">web ${VERSION.replace(/^v/, '')}${miApp() ? ' · app ' + esc(miApp()) : ''}</span></h2>
+  <h2 class="aj-tit" style="margin-top:18px"><span class="aj-tit-ico">${ICO_RUEDA}</span>Ajustes</h2>
 
   <div class="aj-lista">${temas.map(T => `<button class="aj-fila ${ajAbierto === T.k ? 'sel' : ''}" onclick="abrirAj('${T.k}')" aria-expanded="${ajAbierto === T.k}">
       <span class="aj-ico">${T.ico}</span><span class="aj-t aj-t1"><b>${T.t}</b>${T.k === 'versiones' && (miAppVieja() || !miApp() && enAndroidWeb()) ? '<span class="aj-nueva">nueva</span>' : ''}</span>${flecha(ajAbierto === T.k)}</button>
     ${ajAbierto === T.k ? `<section class="aj-cont ajustes" id="aj-${T.k}">${T.html()}</section>` : ''}`).join('')}
   </div>
-  <div class="sellos sellos-fila">${sellosHTML()}</div>`;
+`;
 }
 /* ---------- Calendario: importar y exportar (Gustavo, 3.82) ----------
    .ics (iCalendar): el formato con el que Google Calendar, Outlook y Apple pasan calendarios, con repeticiones, días quitados y avisos.
@@ -6382,7 +6405,7 @@ function animarEntrada(dir){
 window.atrasNativo = () => {
   if($('#hoja')){ cerrarHoja(); return true; }
   if(vista === 'evaluar' && E){ atras(); return true; }
-  if(vista !== vistaInicial()){ ir(vistaInicial()); return true; }
+  if(vistaHist.length || vista !== vistaInicial()){ volver(); return true; }   // 4.47: a la página anterior
   return false;
 };
 
