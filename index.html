@@ -732,6 +732,7 @@ html.claro .meta-error{color:#dc2626}
 }
 #dl-dur:not([hidden]){display:grid;grid-template-rows:repeat(7,auto);grid-auto-flow:column;grid-auto-columns:1fr;column-gap:4px;width:min(92%,330px)}
 #dl-dur .desp-op{padding:8px 10px;font-size:14px}
+#dl-rec{max-height:330px;overflow:auto}
 .rj-ev .bandera{width:11px;height:11px;margin-right:2px;vertical-align:-1px}
 .rj-todo .bandera{width:9px;height:9px;margin-right:2px}
 .rj-ev b{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
@@ -1175,7 +1176,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v3.85';
+const VERSION = 'v3.86';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3006,13 +3007,13 @@ let evEd = null;
 function nuevoEvento(k, ini, pre){
   const dia = k || agK || hoyK(), m = minutosHoy();
   const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
-  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], avisos: [], acc: (pre && pre.acc) || null};
+  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], avisos: [], horasAviso: [], acc: (pre && pre.acc) || null};
   pintarEvento({t: (pre && pre.t) || '', dia, todo: false, ini: base, fin: Math.min(base + ((pre && pre.dur) || 60), 1439)});
 }
 function editarEvento(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
   evEd = {id, k, tipo: e.tipo || 'tarea', rep: e.rep || 'no', prio: e.prio || 0, areas: areasEv(e).map(a => a.id), dias: (e.dias || [diaSem(e.dia)]).slice(),
-    avisos: (e.avisos || []).slice(), acc: e.acc || null, armado: false};
+    ...avisosEditar(e), acc: e.acc || null, armado: false};
   pintarEvento(e);
 }
 const FLECHA_ABAJO = '<svg class="desp-f" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
@@ -3025,8 +3026,13 @@ function opcionesRep(){
 }
 const durEv = () => { const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin')); return i != null && f != null && f > i ? f - i : 0; };
 function despOpciones(id){
-  if(id === 'dur') return DURS.map(m => ({k: m, t: fmtDur(m), sel: durEv() === m}));
+  if(id === 'dur') return DURS.filter(m => evEd.tipo !== 'habito' || m <= 120).map(m => ({k: m, t: fmtDur(m), sel: durEv() === m}));   // hábitos: como mucho 2 horas
   if(id === 'rep') return opcionesRep().map(o => ({k: o.k, t: o.t, sel: (evEd.rep || 'no') === o.k}));
+  if(id === 'rec' && evEd.tipo === 'habito'){
+    const hs = []; for(let T = 300; T <= 1380; T += 30) hs.push(T);
+    const ha = evEd.horasAviso || [];
+    return [{k: 'no', t: 'Sin recordatorio', sel: !evEd.avisos.length && !ha.length}, {k: 0, t: 'A la hora', sel: evEd.avisos.includes(0)}, ...hs.map(T => ({k: 'h' + T, t: 'A las ' + hm(T), sel: ha.includes(T)}))];
+  }
   if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked);
     return [{k: 'no', t: 'Sin recordatorio', sel: !evEd.avisos.length}, ...(todo ? RECORD_DIA : RECORD_HORA).map(r => ({k: r.k, t: r.t, sel: evEd.avisos.includes(r.k)}))]; }
   return [{k: 'no', t: 'Sin área', sel: !evEd.areas.length}, ...AREAS.map(a => ({k: a.id, t: `${ico(a)} ${a.nombre}`, sel: evEd.areas.includes(a.id)}))];
@@ -3034,6 +3040,7 @@ function despOpciones(id){
 function despValor(id){
   if(id === 'dur'){ const d = durEv(); return d ? fmtDur(d) : '—'; }
   if(id === 'rep') return (opcionesRep().find(o => o.k === (evEd.rep || 'no')) || {t: 'No se repite'}).t;
+  if(id === 'rec' && evEd.tipo === 'habito'){ const l = [...(evEd.avisos.includes(0) ? ['A la hora'] : []), ...(evEd.horasAviso || []).slice().sort((a, b) => a - b).map(T => 'A las ' + hm(T))]; return l.length ? l.join(', ') : 'Sin recordatorio'; }
   if(id === 'rec'){ const todo = !!($('#ev-todo') && $('#ev-todo').checked), l = (todo ? RECORD_DIA : RECORD_HORA).filter(r => evEd.avisos.includes(r.k)).map(r => r.t);
     return l.length ? l.join(', ') : 'Sin recordatorio'; }
   return evEd.areas.length ? evEd.areas.map(a => `${ico(areaDe(a))} ${areaDe(a).corto}`).join(' ') : 'Sin área';
@@ -3053,6 +3060,8 @@ function despTocar(id){
 function despElegir(id, k){
   if(id === 'rep'){ evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
   if(id === 'dur'){ const i = minDeHora(valor('ev-ini')); if(i != null) $('#ev-fin').value = hhmm(Math.min(i + +k, 1439)); pintarDesp(id); despTocar(id); return; }
+  if(id === 'rec' && typeof k === 'string' && k[0] === 'h'){ const T = +k.slice(1), h = evEd.horasAviso || []; evEd.horasAviso = h.includes(T) ? h.filter(x => x !== T) : [...h, T]; pintarDesp(id); return; }
+  if(id === 'rec' && k === 'no') evEd.horasAviso = [];
   const lista = id === 'rec' ? 'avisos' : 'areas';
   if(id === 'rec' && k !== 'no') k = +k;
   evEd[lista] = k === 'no' ? [] : evEd[lista].includes(k) ? evEd[lista].filter(x => x !== k) : [...evEd[lista], k];   // varias a la vez
@@ -3217,7 +3226,7 @@ function repTxt(e){
 }
 function popHTML(e, k, enHoja){
   const ok = hechoEv(e, k), ars = areasEv(e), rep = repTxt(e);
-  const rec = (e.todo ? RECORD_DIA : RECORD_HORA).filter(r => (e.avisos || []).includes(r.k)).map(r => r.t).join(', ');
+  const rec = recTxtEv(e);
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
@@ -3455,6 +3464,9 @@ const chipsDur = (donde, actual) => `<div class="chips" style="justify-content:f
 const bandAct = a => { const x = a && a.acc && D.acciones.find(z => z.id === a.acc); return bandX(x || a); };
 function evTipo(t){
   evEd.tipo = t; const hab = t === 'habito';
+  if(hab){ evEd.avisos = evEd.avisos.filter(a => a === 0); if(!evEd.id && !evEd.avisos.length && !(evEd.horasAviso || []).length) evEd.avisos = [0];
+    const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin')); if(i != null && f != null && f - i > 120 && $('#ev-fin')) $('#ev-fin').value = hhmm(Math.min(i + 120, 1439)); }
+  if(typeof pintarDesp === 'function' && $('#dl-rec')){ pintarDesp('rec'); pintarDesp('dur'); }
   document.querySelectorAll('.ev-tipo > button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
   evResumen();
@@ -3495,7 +3507,7 @@ function guardarEvento(){
   const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.prio || 0, desc: rtTexto(), descH: rtHTML(), avisos: e0.avisos.slice().sort((a, b) => a - b), acc: e0.acc || null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.prio || 0, desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, mod: ahoraISO()});
   guardar(); sonarHecho();
   aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
@@ -3539,7 +3551,28 @@ function tareaAlCalendario(){
    los próximos 8 días ({id, at, tit, txt}) y el teléfono los deja programados (notificación con sonido). Solo si cambia. */
 const recordNativo = () => { try{ return esApp && typeof AndroidEquilibra.programarRecordatorios === 'function'; }catch(e){ return false; } };
 let recordUlt = null;
+const baseAviso = (todo, ini) => todo ? 540 : (ini || 0);
+/* los avisos «antes» de un evento, sin los que salen de sus horas del reloj */
+function avisosPropios(e){
+  const b = baseAviso(e.todo, e.ini), h = new Set((e.horasAviso || []).map(T => b - T));
+  return (e.avisos || []).filter(a => !h.has(a) || a === 0 && !(e.horasAviso || []).includes(b) );
+}
+/* al editar: en los hábitos de antes (sin horas del reloj), los «N min antes» pasan a su hora del reloj, para no perderlos */
+function avisosEditar(e){
+  if(e.tipo !== 'habito') return {avisos: (e.avisos || []).slice(), horasAviso: []};
+  if(e.horasAviso) return {avisos: avisosPropios(e).filter(a => a === 0), horasAviso: e.horasAviso.slice()};
+  const b = baseAviso(e.todo, e.ini), av = e.avisos || [];
+  return {avisos: av.includes(0) ? [0] : [], horasAviso: av.filter(a => a !== 0).map(a => b - a).filter(T => T >= 0 && T < 1440)};
+}
+function avisosFinal(e0, todo, ini){
+  const b = baseAviso(todo, ini), horas = e0.tipo === 'habito' ? (e0.horasAviso || []) : [];
+  return [...new Set([...(e0.tipo === 'habito' ? e0.avisos.filter(a => a === 0) : e0.avisos), ...horas.map(T => b - T)])].sort((x, y) => x - y);
+}
+const recTxtEv = e => e.tipo === 'habito'
+  ? [...((e.avisos || []).includes(0) && !(e.horasAviso || []).includes(baseAviso(e.todo, e.ini)) ? ['A la hora'] : []), ...(e.horasAviso || []).map(T => 'A las ' + hm(T))].join(', ')
+  : (e.todo ? RECORD_DIA : RECORD_HORA).filter(r => (e.avisos || []).includes(r.k)).map(r => r.t).join(', ');
 function textoRecord(e, a, falta){
+  if(e.tipo === 'habito' && a !== 0) return e.todo ? 'Tu hábito de hoy' : `Tu hábito de las ${hm(e.ini)}`;
   if(e.todo) return a === 0 ? 'Hoy' : a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : 'Dentro de una semana';
   if(a === 0) return `Ahora · ${hm(e.ini)} – ${hm(e.fin)}`;
   if(a === 1440) return `Mañana a las ${hm(e.ini)}`;
