@@ -861,7 +861,7 @@ html.claro .frec-sel,html.claro .frec-l select,html.claro .frec-l input,html.cla
 html.claro .ag-fijo{background:rgba(243,240,249,.97)}
 .ag-fijo .ag-nav{margin:2px 0}
 .ag-fijo .rj-cab{margin-top:0}
-@media (max-width:899px){ .ag-modos{margin-top:12px} .rj.sem .rj-ev .campanita{display:none} }
+@media (max-width:899px){ .ag-modos{margin-top:12px} .rj.sem .rj-ev .campanita{width:11px;height:11px;margin-right:1px;vertical-align:-1px} }
 @media (min-width:900px){ body.ancho .ag-fijo{top:64px;margin:0;padding:0;background:var(--fondo2);backdrop-filter:none} body.ancho .ag-fijo .rj-cab{position:static} }
 .aj-ico svg{display:block;margin:auto;color:var(--oro)}
 .cal-ayuda{margin-top:10px;font-size:13.5px;color:var(--suave)}
@@ -1379,7 +1379,7 @@ html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 
 <script>
 'use strict';
-const VERSION = 'v4.06';
+const VERSION = 'v4.07';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4760,8 +4760,13 @@ async function traerNube(){
   escucharNube();
 }
 /* Al volver a la app (el móvil la congela en segundo plano y la escucha puede quedarse sin avisos), se vuelve a leer la nube */
-function refrescarNube(){ if(nube.ref && !document.hidden && Date.now() - (nube.leido || 0) > 20000) traerNube(); }
-document.addEventListener('visibilitychange', refrescarNube);
+function refrescarNube(){ if(nube.ref && !document.hidden && Date.now() - (nube.leido || 0) > 5000) traerNube(); }
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden){ nube.oculta = Date.now(); return; }
+  // tras más de un minuto en segundo plano, el móvil puede haber cortado la escucha sin avisar: se rehace
+  if(nube.ref && nube.oculta && Date.now() - nube.oculta > 60000 && nube.escucha){ try{ nube.escucha(); }catch(e){} nube.escucha = null; nube.leido = 0; }
+  nube.oculta = 0; refrescarNube();
+});
 window.addEventListener('focus', refrescarNube);
 window.addEventListener('online', () => { if(nube.ref){ nube.leido = 0; refrescarNube(); } });
 /* Si la nube falla, se dice (una vez por sesión) y queda escrito en el menú */
