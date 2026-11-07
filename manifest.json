@@ -1,5 +1,5 @@
 {
-  "name": "Amable Life · Tus próximas acciones",
+  "name": "Amable Life",
   "short_name": "Amable Life",
   "description": "Ten claras tus próximas acciones para vivir en equilibrio. La flor de 8 áreas te dice dónde poner energía.",
   "lang": "es",
@@ -10,9 +10,7 @@
   "background_color": "#140f26",
   "theme_color": "#140f26",
   "icons": [
-    {"src": "img/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "img/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-    {"src": "img/icono-mask-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
-    {"src": "img/icono-mask-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    {"src": "img/icono-life-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "img/icono-life-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
   ]
 }
