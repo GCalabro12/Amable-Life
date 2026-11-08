@@ -759,6 +759,9 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .fx-t b{font-size:15px;font-weight:600;cursor:pointer;word-break:break-word}
 .fx-t small{font-size:12px;color:var(--suave);font-weight:600}
 .fx-t .fx-atr{color:#dc2626}
+.fx-emp{display:inline-flex;align-items:center;gap:6px}
+.fx-x{width:24px;height:24px;border:0;border-radius:50%;background:rgba(var(--bl),.1);color:var(--tinta);display:grid;place-items:center;padding:0;cursor:pointer}
+.fx-x svg{width:14px;height:14px}
 .fx-b{border:0;border-radius:999px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:800;background:rgba(var(--bl),.1);color:var(--tinta);cursor:pointer}
 .fx-b.fin{background:#16a34a;color:#fff}
 .fx-nueva{display:block;width:100%;margin-top:10px;border:0;border-radius:12px;padding:10px;font:inherit;font-weight:800;background:rgba(139,92,246,.12);color:#7c3aed;cursor:pointer}
@@ -1796,7 +1799,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.81';
+const VERSION = 'v4.82';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3838,7 +3841,7 @@ function flexHTML(){
       <div class="fx-t"><b onclick="cerrarFlex(); verEvento('${e.id}','${k}')">${esc(e.t)}</b>
         ${atras ? `<small class="fx-atr">${atras === 1 ? 'De ayer' : `De hace ${atras} días`}</small>` : ''}
         ${hecha ? `<small>Hecha${em ? ` de ${hm(minDe(em))}` : ''}${te ? ` ${em ? 'a' : 'a las'} ${hm(minDe(te))}` : ''}</small>`
-          : em ? `<small>Empezaste a las ${hm(minDe(em))}</small><button class="fx-b fin" onclick="flexTerminar('${e.id}','${k}')">Tarea terminada</button>`
+          : em ? `<small class="fx-emp">Empezaste a las ${hm(minDe(em))}<button class="fx-x" onclick="flexDesempezar('${e.id}','${k}')" aria-label="Quitar la hora de empezar">${ICO_CRUZ}</button></small><button class="fx-b fin" onclick="flexTerminar('${e.id}','${k}')">Tarea terminada</button>`
           : `<button class="fx-b" onclick="flexEmpezar('${e.id}','${k}')">Empiezo a hacerlo</button>`}</div></div>`; };
   // 4.80: sin ninguna, tres ejemplos inventados (en gris) que se añaden con ＋
   const ejemplos = ['Llamar al banco', 'Comprar pilas y bombillas', 'Contestar el correo pendiente'];
@@ -3866,6 +3869,11 @@ function flexEmpezar(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
   e.empezo = Object.assign({}, e.empezo, {[k]: ahoraISO()}); e.mod = ahoraISO(); guardar();
   aviso(`Empiezas «${e.t.length > 30 ? e.t.slice(0, 29) + '…' : e.t}» a las ${hm(minutosHoy())}`); flexPinta();
+}
+/* 4.82 (Gustavo): la ✕ junto a «Empezaste a las…» lo quita y vuelve a «Empiezo a hacerlo» */
+function flexDesempezar(id, k){
+  const e = AG_().eventos.find(x => x.id === id); if(!e || !e.empezo) return;
+  e.empezo = Object.assign({}, e.empezo); delete e.empezo[k]; e.mod = ahoraISO(); guardar(); flexPinta();
 }
 function flexTerminar(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
