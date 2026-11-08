@@ -993,6 +993,9 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .obj-op span{display:flex;flex-direction:column;gap:2px}
 .obj-op small{color:var(--suave);font-size:12.5px}
 .obj-cant{display:flex;align-items:center;gap:8px;padding:4px 6px 8px 34px;flex-wrap:wrap}
+.obj-cant[hidden]{display:none}
+#obj-p{height:38px;border-radius:10px;border:1px solid rgba(var(--bl),.25);background:var(--tarjeta);color:var(--tinta);padding:0 8px;font:inherit}
+.ep-obj-ok{align-self:center;font-weight:800;color:#15803d;padding:6px 4px}
 .obj-cant input{height:38px;border-radius:10px;border:1px solid rgba(var(--bl),.25);background:var(--tarjeta);color:var(--tinta);padding:0 10px;font:inherit}
 .obj-cant #obj-n{width:72px}
 .obj-cant #obj-u{width:130px}
@@ -1909,7 +1912,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.09';
+const VERSION = 'v5.10';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4736,7 +4739,8 @@ function popHTML(e, k, enHoja){
       <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p>${rep}</p>` : ''}${objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
-    <div class="ep-bots">${objDe(e) && !ok ? `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}</button>` : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
+    <div class="ep-bots">${objDe(e) && !ok ? (objHecho(e, k) ? `<span class="ep-obj-ok">✓ Objetivo ${objPer(objDe(e)) === 'semana' ? 'de la semana' : 'del mes'} cumplido</span>`
+      : `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}${objPer(objDe(e)) === 'dia' ? '' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</button>`) : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
       ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
     ${esMeta(e) ? metaTarjetaHTML(e) : ''}
@@ -5284,24 +5288,31 @@ function frecTipo(v){
 /* 5.08 (Gustavo, como el «Objetivo» de TickTick, en versión sencilla): un hábito es «Hecho o no hecho» (un toque) o «Una cantidad
    al día» (8 vasos, 2 tareas, 20 páginas…): cada «＋1» de la tarjeta suma y, al llegar, queda hecho ese día. Sin lo de «Al verificar». */
 const OBJ_UNID = ['veces', 'vasos', 'páginas', 'minutos', 'tareas', 'km', 'pasos'];
-const objDe = e => e && e.tipo === 'habito' && e.obj && e.obj.n > 1 ? e.obj : null;
-const objTxtO = o => o ? `${o.n} ${o.u} al día` : 'Hecho o no hecho';
-const objProg = (e, k) => Math.min(((e.prog || {})[k] || 0), objDe(e) ? objDe(e).n : 0);
-const objDia = (e, k) => { const o = objDe(e); return o ? ` · ${hechoEv(e, k) ? o.n : objProg(e, k)}/${o.n} ${o.u}` : ''; };
+const objDe = e => e && e.tipo === 'habito' && e.obj && (e.obj.n > 1 || (e.obj.p && e.obj.p !== 'dia' && e.obj.n >= 1)) ? e.obj : null;
+/* 5.10 (Gustavo): la cantidad puede ser al día, a la semana (de lunes a domingo) o al mes; se suma lo de todos los días del periodo */
+const OBJ_PER = {dia: ['al día', 'hoy'], semana: ['a la semana', 'esta semana'], mes: ['al mes', 'este mes']};
+const objPer = o => (o && OBJ_PER[o.p]) ? o.p : 'dia';
+const objTxtO = o => o ? `${o.n} ${o.u} ${OBJ_PER[objPer(o)][0]}` : 'Hecho o no hecho';
+const objDiasPer = (o, k) => { const p = objPer(o); if(p === 'dia') return [k]; const P = []; if(p === 'semana'){ const l = sumarDias(k, -diaSem(k)); for(let i = 0; i < 7; i++) P.push(sumarDias(l, i)); } else { let d = k.slice(0, 8) + '01'; while(d.slice(0, 7) === k.slice(0, 7)){ P.push(d); d = sumarDias(d, 1); } } return P; };
+const objProg = (e, k) => { const o = objDe(e); if(!o) return 0; const g = e.prog || {}; return Math.min(o.n, objDiasPer(o, k).reduce((t, d) => t + (g[d] || 0), 0)); };
+const objHecho = (e, k) => { const o = objDe(e); return !!o && objProg(e, k) >= o.n; };
+const objDia = (e, k) => { const o = objDe(e); if(!o) return ''; const per = objPer(o) === 'dia' ? '' : ' ' + OBJ_PER[objPer(o)][1]; return ` · ${objPer(o) === 'dia' && hechoEv(e, k) ? o.n : objProg(e, k)}/${o.n} ${o.u}${per}`; };
 function objHojaHTML(){
   const ev = evEd && evEd.id && AG_().eventos.find(x => x.id === evEd.id), o = objDe(ev);
   return `<div class="desp" id="dc-obj"><button type="button" class="desp-btn" onclick="objTocar(this)">${svgT('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>', 22)}<span class="desp-t">Objetivo</span><span class="desp-v" id="dv-obj">${objTxtO(o)}</span>${FLECHA_ABAJO}</button>
     <div class="frec-panel" id="obj-panel" hidden>
       <label class="obj-op"><input type="radio" name="obj-m" value="todo" ${o ? '' : 'checked'} onchange="objPintar()"><span><b>Hecho o no hecho</b><small>Un toque y ese día está hecho</small></span></label>
-      <label class="obj-op"><input type="radio" name="obj-m" value="cant" ${o ? 'checked' : ''} onchange="objPintar()"><span><b>Una cantidad al día</b><small>Por ejemplo, 8 vasos de agua o 2 tareas. Cada «＋1» suma, y al llegar queda hecho</small></span></label>
+      <label class="obj-op"><input type="radio" name="obj-m" value="cant" ${o ? 'checked' : ''} onchange="objPintar()"><span><b>Una cantidad</b><small>Por ejemplo, 8 vasos de agua al día, 3 entrenos a la semana o 2 libros al mes. Cada «＋1» suma, y al llegar queda hecho</small></span></label>
       <div class="obj-cant" id="obj-cant" ${o ? '' : 'hidden'}><input type="number" id="obj-n" min="2" max="999" value="${o ? o.n : 2}" aria-label="Cantidad" oninput="objPintar()">
-        <input type="text" id="obj-u" maxlength="20" list="obj-us" value="${esc(o ? o.u : 'veces')}" aria-label="Unidad" oninput="objPintar()"><datalist id="obj-us">${OBJ_UNID.map(u => `<option value="${u}">`).join('')}</datalist><span>al día</span></div>
+        <input type="text" id="obj-u" maxlength="20" list="obj-us" value="${esc(o ? o.u : 'veces')}" aria-label="Unidad" oninput="objPintar()"><datalist id="obj-us">${OBJ_UNID.map(u => `<option value="${u}">`).join('')}</datalist>
+        <select id="obj-p" aria-label="Cada cuánto" onchange="objPintar()">${Object.entries(OBJ_PER).map(([k, v]) => `<option value="${k}" ${objPer(o) === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select></div>
     </div></div>`;
 }
 function objLeer(){
   const m = document.querySelector('#hoja input[name="obj-m"]:checked');
   if(!m || m.value !== 'cant') return null;
-  return {n: Math.max(2, Math.min(999, Math.round(+valor('obj-n')) || 2)), u: (valor('obj-u') || 'veces').slice(0, 20)};
+  const per = valor('obj-p'), n = Math.round(+valor('obj-n')) || 2;
+  return {n: Math.max(per === 'dia' || !per ? 2 : 1, Math.min(999, n)), u: (valor('obj-u') || 'veces').slice(0, 20), p: OBJ_PER[per] ? per : 'dia'};
 }
 function objPintar(){
   const o = objLeer(), c = $('#obj-cant'), v = $('#dv-obj');
@@ -5318,9 +5329,11 @@ function objTocar(b){
 function habSumar(id, k){
   const e = AG_().eventos.find(x => x.id === id), o = objDe(e); if(!o) return;
   const lim = sumarDias(hoyK(), -120), P = {}; Object.entries(e.prog || {}).forEach(([d, n]) => { if(d >= lim) P[d] = n; });
-  P[k] = Math.min(o.n, (P[k] || 0) + 1); e.prog = P;
-  if(P[k] >= o.n && !hechoEv(e, k)){ e.hechos = [...(e.hechos || []).filter(d => d >= lim), k]; sonarHecho(); aviso(`¡Objetivo de hoy cumplido! ${o.n} ${o.u}`); }
-  else aviso(`${P[k]} de ${o.n} ${o.u}`);
+  if(objHecho(e, k)) return;
+  P[k] = (P[k] || 0) + 1; e.prog = P;
+  const per = OBJ_PER[objPer(o)], lleva = objProg(e, k);
+  if(lleva >= o.n && !hechoEv(e, k)){ e.hechos = [...(e.hechos || []).filter(d => d >= lim), k]; sonarHecho(); aviso(`¡Objetivo ${objPer(o) === 'dia' ? 'de hoy' : objPer(o) === 'semana' ? 'de la semana' : 'del mes'} cumplido! ${o.n} ${o.u}`); }
+  else aviso(`${lleva} de ${o.n} ${o.u} ${per[1]}`);
   e.mod = ahoraISO(); guardar(); rerenderDia(); popRepintar(e, k);
 }
 function popRepintar(e, k){
@@ -5392,7 +5405,7 @@ function alternarEv(id, k, desdeHoja){
   const ya = hechoEv(e, k);
   e.hechos = (e.hechos || []).filter(d => d !== k && d >= sumarDias(hoyK(), -120));
   if(!ya) e.hechos.push(k);
-  if(objDe(e)){ e.prog = Object.assign({}, e.prog || {}); if(ya) delete e.prog[k]; else e.prog[k] = objDe(e).n; }
+  if(objDe(e)){ e.prog = Object.assign({}, e.prog || {}); if(ya) delete e.prog[k]; else if(objPer(objDe(e)) === 'dia') e.prog[k] = objDe(e).n; }
   if(e.acc && !repite(e)){ const x = D.acciones.find(z => z.id === e.acc); if(x){ x.hecha = !ya; x.hechaEn = ya ? null : ahoraISO(); x.mod = ahoraISO(); } }
   e.mod = ahoraISO(); guardar(); if(!ya) sonarHecho();
   if(desdeHoja){ evEd = null; cerrarHoja(); }
