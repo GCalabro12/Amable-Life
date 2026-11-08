@@ -1857,7 +1857,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.96';
+const VERSION = 'v4.97';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3770,7 +3770,7 @@ function evsBloqueHTML(k, b, que){
 }
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
-    <button class="check ${ok ? 'hecho' : ''}" ${e.prio ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
+    <button class="check ${ok ? 'hecho' : ''}" ${e.prio && e.tipo !== 'habito' ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
     <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${broteEv(e)}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al arrastrar más de 7 días   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
@@ -4195,7 +4195,7 @@ function gcBuscarPintar(){
   const q = gcNorm(valor('gc-q'));
   if(!q){ box.innerHTML = '<p class="peq suave" style="margin:0">Busca por el nombre de lo que tienes en el calendario.</p>'; return; }
   const evs = AG_().eventos.filter(e => gcNorm(e.t).includes(q)).map(e => ({e, k: gcProximo(e)})).sort((a, b) => a.k.localeCompare(b.k)).slice(0, 40);
-  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${broteEv(e)}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · hábito' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
+  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio && e.tipo !== 'habito' ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${broteEv(e)}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · hábito' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
     : '<p class="peq suave" style="margin:0">No hay nada con esa palabra.</p>';
 }
 function gcIrA(id, k){ cerrarHoja(); agK = k; gcMiniDes = 0; render(); agVerAhora(); editarEvento(id, k); }
@@ -4356,7 +4356,7 @@ function pintarEvento(e){
   const hab = evEd.tipo === 'habito', todo = !!e.todo;
   mostrarHoja(`<div class="ev-hoja"><div class="ev-cols"><div class="ev-col">
     <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" data-ayuda="${AYUDA_TIPO.tarea}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" data-ayuda="${AYUDA_TIPO.habito}" onclick="evTipo('habito')">Hábito</button>
-      <span class="ev-prios">${[1, 2, 3].map(k => `<button type="button" class="ev-prio ${evEd.prio === k ? 'sel' : ''}" style="--c:${PRIO[k].c}" title="Prioridad ${PRIO[k].t.toLowerCase()}" aria-label="Prioridad ${PRIO[k].t.toLowerCase()}" onclick="evPrioB(${k}, this)">${ICO_BANDERA(PRIO[k].c)}</button>`).join('')}</span></div>
+      <span class="ev-prios"${hab ? ' style="display:none"' : ''}>${[1, 2, 3].map(k => `<button type="button" class="ev-prio ${evEd.prio === k ? 'sel' : ''}" style="--c:${PRIO[k].c}" title="Prioridad ${PRIO[k].t.toLowerCase()}" aria-label="Prioridad ${PRIO[k].t.toLowerCase()}" onclick="evPrioB(${k}, this)">${ICO_BANDERA(PRIO[k].c)}</button>`).join('')}</span></div>
     <p class="ev-tipo-ayuda" id="ev-tipo-ayuda">${hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea}</p>
     <div class="campo-voz ev-titulo"><textarea id="ev-t" rows="1" maxlength="120" placeholder="Añade un título" aria-label="Título" oninput="tituloEv(this)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"></textarea>${botonMic()}</div>
     <div class="ev-desc">${svgT('<path d="M4 7h16M4 12h16M4 17h11"/>', 20)}<div class="ev-desc-c">${rtBarra()}
@@ -4625,7 +4625,7 @@ function popHTML(e, k, enHoja){
     ${esMeta(e) ? metaTarjetaHTML(e) : ''}
     ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}">${desc}</div></div>` : ''}
     ${rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : ''}
-    ${e.prio ? `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div>Prioridad ${prioDe(e).t.toLowerCase()}</div></div>` : ''}
+    ${e.prio && !hab ? `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div>Prioridad ${prioDe(e).t.toLowerCase()}</div></div>` : ''}
     ${ars.length && !hab ? `<div class="ep-fila">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<div>${ars.map(a => `${ico(a)} ${a.nombre}`).join(' · ')}</div></div>` : ''}`;
 }
 let popInfo = null, popT = null, popCierreT = null;
@@ -4972,7 +4972,7 @@ function ctxEv(id, k, x, y){
     <button role="menuitem" onclick="ctxFocus('${id}','${k}')">${svgT('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>', 20)}<span>Iniciar Focus</span></button>
     <button role="menuitem" onclick="cerrarCtx(); popDuplicar('${id}','${k}')">${ICO_COPIA}<span>Duplicar</span></button>
     <button role="menuitem" onclick="cerrarCtx(); abrirNota('${id}','${k}')">${svgT('<path d="M5 4h14v11l-5 5H5z"/><path d="M14 20v-5h5"/>', 20)}<span>Abrir como nota adhesiva</span></button>
-    <div class="ctx-prio"><span>Prioridad</span>${[1, 2, 3].map(p => `<button class="${(e.prio || 0) === p ? 'sel' : ''}" title="Prioridad ${PRIO[p].t.toLowerCase()}" aria-label="Prioridad ${PRIO[p].t.toLowerCase()}" style="--c:${PRIO[p].c}" onclick="ctxPrio('${id}', ${p})">${ICO_BANDERA(PRIO[p].c)}</button>`).join('')}</div>`;
+    ${e.tipo === 'habito' ? '' : `<div class="ctx-prio"><span>Prioridad</span>${[1, 2, 3].map(p => `<button class="${(e.prio || 0) === p ? 'sel' : ''}" title="Prioridad ${PRIO[p].t.toLowerCase()}" aria-label="Prioridad ${PRIO[p].t.toLowerCase()}" style="--c:${PRIO[p].c}" onclick="ctxPrio('${id}', ${p})">${ICO_BANDERA(PRIO[p].c)}</button>`).join('')}</div>`}`;
   document.body.appendChild(m);
   const w = m.offsetWidth, h = m.offsetHeight;
   m.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px'; m.style.top = Math.max(8, Math.min(innerHeight - h - 8, y)) + 'px';
@@ -5062,6 +5062,7 @@ function evTipo(t){
   if(typeof pintarDesp === 'function' && $('#dl-rec')){ pintarDesp('rec'); pintarDesp('dur'); }
   document.querySelectorAll('.ev-tipo > button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
   if($('#ev-tipo-ayuda')) $('#ev-tipo-ayuda').textContent = hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea;
+  const prs = document.querySelector('.ev-prios'); if(prs) prs.style.display = hab ? 'none' : '';   // 4.97: los hábitos no tienen prioridad
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
   evResumen();
 }
@@ -5113,7 +5114,7 @@ function guardarEvento(){
   const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.prio || 0, desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, mod: ahoraISO()});
   guardar(); sonarHecho();
   aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
@@ -7057,7 +7058,7 @@ function calICS(){
     if(e.tipo === 'habito' && e.frec === 'semanal') L.push('X-AMABLE-VECES:' + (e.veces || 3));
     (e.saltar || []).forEach(k => L.push(e.todo ? 'EXDATE;VALUE=DATE:' + icsFecha(k) : 'EXDATE:' + icsHora(k, ini)));
     if(e.desc) L.push('DESCRIPTION:' + icsTxt(e.desc));
-    if(e.prio) L.push('PRIORITY:' + ({1: 9, 2: 5, 3: 1})[e.prio]);
+    if(e.prio && e.tipo !== 'habito') L.push('PRIORITY:' + ({1: 9, 2: 5, 3: 1})[e.prio]);
     const ars = areasEv(e); if(ars.length) L.push('CATEGORIES:' + ars.map(a => icsTxt(a.nombre)).join(','));
     (e.avisos || []).forEach(m => {
       const off = e.todo ? 540 - m : -m;   // todo el día: el aviso es a las 9:00
