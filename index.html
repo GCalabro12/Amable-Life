@@ -1857,7 +1857,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.97';
+const VERSION = 'v4.98';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4718,7 +4718,7 @@ const META_API = ['https://metas-amables-api.proud-hill-016b.workers.dev', 'http
 const metaSesion = () => { try{ return localStorage.getItem('equilibra.metaSesion') || ''; }catch(e){ return ''; } };
 async function metaPedir(ruta, cuerpo){
   const o = {headers: {}};
-  const t = metaSesion(); if(t && ruta !== '/login') o.headers['Authorization'] = 'Bearer ' + t;
+  const t = metaSesion(); if(t && !/^\/login/.test(ruta)) o.headers['Authorization'] = 'Bearer ' + t;
   if(cuerpo){ o.method = 'POST'; o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(cuerpo); }
   let r = null;
   for(const base of META_API){ try{ r = await fetch(base + ruta, o); break; }catch(e){} }
@@ -4748,13 +4748,36 @@ function metaAbrir(){
   metaK = (evEd && (valor('ev-dia') || evEd.k)) || hoyK(); evEd = null;
   mostrarHoja(`<div class="hoja-cab"><h2>Hábitos de Metas Amables</h2></div>
     <div class="ev-meta meta-cab"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92"><div><p>Trae a tu calendario los hábitos que ya riegas en <b>Metas Amables</b>. Cada uno queda unido a su hábito de aquí.</p></div></div>
-    <div id="meta-cuerpo">${metaSesion() ? '<p class="suave">Buscando tus hábitos…</p>' : metaLoginHTML()}</div>
-    <div class="meta-tiendas"><p class="peq suave">¿Aún no tienes Metas Amables? Descárgala:</p><div>
+    <div id="meta-cuerpo">${metaSesion() ? '<p class="suave">Buscando tus hábitos…</p>' : cuentaGoogle() ? metaBuscandoHTML() : metaLoginHTML()}</div>
+    <div class="meta-tiendas" id="meta-tiendas"${metaSesion() || cuentaGoogle() ? ' hidden' : ''}><p class="peq suave" id="meta-tiendas-t">¿Aún no tienes Amable Meta? Descárgala:</p><div>
       <a class="btn sec" href="https://play.google.com/store/apps/details?id=club.practicaintegral.metasamables" target="_blank" rel="noopener">Google Play</a>
       <a class="btn sec" href="https://apps.microsoft.com/detail/9P787TKFQXDH" target="_blank" rel="noopener">Microsoft Store</a>
       <a class="btn sec" href="https://app.practicaintegral.club/" target="_blank" rel="noopener">Web (iPhone y ordenador)</a></div></div>
     <div class="ed-bots"><button class="btn sec" onclick="metaVolver()">Volver</button></div>`, '#22c55e');
-  if(metaSesion()) metaCargar();
+  if(metaSesion()) metaCargar(); else if(cuentaGoogle()) metaConGmail();
+}
+/* 4.98 (Gustavo: «Sola, con mi Gmail»): si entraste en Amable Life con Google, se busca tu cuenta de Amable Meta con ese Gmail,
+   sin nombre ni contraseña (POST /login-firebase del Worker de Amable Meta con el token de Firebase). Si no hay cuenta con ese Gmail,
+   se dice y salen las tiendas para descargarla; si el Worker aún no tiene esa ruta o falla, el formulario de nombre y contraseña. */
+const metaCorreo = () => { try{ return (nube.usuario && nube.usuario.email) || ''; }catch(e){ return ''; } };
+const metaBuscandoHTML = () => `<p class="suave">Buscando tu cuenta de Amable Meta con tu Gmail${metaCorreo() ? ' <b>' + esc(metaCorreo()) + '</b>' : ''}…</p>`;
+function metaTiendas(ver, texto){ const t = $('#meta-tiendas'); if(!t) return; t.hidden = !ver; if(ver) $('#meta-tiendas-t').textContent = texto || '¿Aún no tienes Amable Meta? Descárgala:'; }
+function metaConClave(msg){ const c = $('#meta-cuerpo'); if(!c) return; c.innerHTML = metaLoginHTML(msg); metaTiendas(true); }
+async function metaConGmail(){
+  const c = $('#meta-cuerpo'); if(!c) return;
+  c.innerHTML = metaBuscandoHTML(); metaTiendas(false);
+  try{
+    const tok = await nube.usuario.getIdToken();
+    const d = await metaPedir('/login-firebase', {idToken: tok});
+    if(!document.body.contains(c)) return;
+    if(d.token){ try{ localStorage.setItem('equilibra.metaSesion', d.token); }catch(e){} c.innerHTML = '<p class="suave">Buscando tus hábitos…</p>'; metaCargar(); return; }
+    if(d.nuevo){
+      c.innerHTML = `<p>No hay ninguna cuenta de Amable Meta con tu Gmail <b>${esc(metaCorreo())}</b>.</p>
+        <p class="peq suave" style="margin:6px 0 0"><button class="link" onclick="metaConClave()">¿La tienes con otro correo? Entra con tu nombre y contraseña</button></p>`;
+      metaTiendas(true, 'Descárgala y entra con este mismo Gmail:'); return;
+    }
+    throw {};
+  }catch(e){ if(document.body.contains(c)) metaConClave(); }
 }
 function metaVolver(){ const k = metaK || hoyK(); cerrarHoja(); setTimeout(() => { nuevoEvento(k); evTipo('habito'); }, 320); }
 function metaLoginHTML(msg){
@@ -4772,11 +4795,11 @@ async function metaEntrar(){
     const d = await metaPedir('/login', {nombre, password});
     if(!d.token) throw {msg: 'No he podido entrar'};
     try{ localStorage.setItem('equilibra.metaSesion', d.token); }catch(e){}
-    $('#meta-cuerpo').innerHTML = '<p class="suave">Buscando tus hábitos…</p>';
+    metaTiendas(false); $('#meta-cuerpo').innerHTML = '<p class="suave">Buscando tus hábitos…</p>';
     metaCargar();
   }catch(e){ b.disabled = false; b.textContent = 'Entrar y ver mis hábitos'; $('#meta-error').textContent = e.msg || 'No he podido entrar'; }
 }
-function metaSalir(){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(e){} const c = $('#meta-cuerpo'); if(c) c.innerHTML = metaLoginHTML(); }
+function metaSalir(){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(e){} metaConClave(); }
 const metaDias = m => { const l = m.frecuencia === 'semana' ? (DIAS_VECES[Math.max(1, Math.min(7, m.vecesSemana || 3))] || []).slice() : (m.diasSemana || []).map(x => DIAS_CORTO.indexOf(x)).filter(i => i >= 0); return l.length ? l.sort() : [0, 1, 2, 3, 4, 5, 6]; };
 const metaFrec = m => m.frecuencia === 'semana' ? `${m.vecesSemana} ${m.vecesSemana === 1 ? 'vez' : 'veces'} a la semana` : (m.diasSemana || []).length && m.diasSemana.length < 7 ? m.diasSemana.join(' · ') : 'Cada día';
 async function metaCargar(){
@@ -4796,7 +4819,7 @@ async function metaCargar(){
       <p class="peq suave" style="margin:10px 0 0">Los días que ya regaste en Metas Amables salen como hechos. <button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`
       : `<p>En Metas Amables aún no tienes hábitos. Créalos allí (en «Tus metas sencillas») y vuelve aquí para traerlos.</p><p class="peq suave"><button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`;
   }catch(e){
-    if(e.status === 401 || e.status === 403){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(x){} c.innerHTML = metaLoginHTML('Vuelve a entrar con tu contraseña de Metas Amables'); }
+    if(e.status === 401 || e.status === 403){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(x){} if(cuentaGoogle()) metaConGmail(); else metaConClave('Vuelve a entrar con tu contraseña de Amable Meta'); }
     else c.innerHTML = `<p class="meta-error">${esc(e.msg || 'No he podido leer tus hábitos')}</p><button class="btn sec" onclick="metaCargar()">Probar otra vez</button>`;
   }
 }
