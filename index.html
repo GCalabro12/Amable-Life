@@ -1920,7 +1920,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.13';
+const VERSION = 'v5.14';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2761,6 +2761,9 @@ function apuntarBloquesConTareas(){
 }
 /* Hábitos del calendario marcados como hechos ese día, y áreas que piden acción ahora */
 const habitosHechos = k => AG_().eventos.filter(e => e.tipo === 'habito' && (e.hechos || []).includes(k)).length;
+/* 5.14 (Grow Panel, pedido por Gustavo): tareas del calendario saltadas ese día a propósito: las que se quitaron solo ese día
+   (de las que se repiten: «Solo el día X» o «Pasar a mañana») y las que se pasaron de ese día a mañana o a flexibles */
+const tareasSaltadas = k => AG_().eventos.filter(e => e.tipo !== 'habito' && ((e.saltar || []).includes(k) || (e.aplazadaDe || []).includes(k))).length;
 const areasAccion = () => AREAS.filter(a => nivel(a.id) && nivel(a.id) !== 'bien').length;
 /* Los números de un día (AAAA-MM-DD) */
 function resumenDia(k){
@@ -2770,11 +2773,15 @@ function resumenDia(k){
   const conTareas = new Set(D.registroDia && D.registroDia.dia === k ? D.registroDia.bloques : []);
   Object.keys(dia).forEach(i => { if((dia[i] || []).some(Boolean)) conTareas.add(+i); });
   const p = (S_().pasos || {})[k];
-  return {bloques_con_tareas: conTareas.size, bloques_total: BLOQUES.length, tareas_hechas: hechas + sinArchivar,
-    tareas_total: hechas + sinArchivar + pendientesDia, pasos: p ? Math.round(p.steps || 0) : 0, ...agendaDia(k),
+  // 5.14 (Grow Panel, pedido por Gustavo): también las tareas del calendario de ese día (no los hábitos). Las unidas a una tarea de
+  // tus áreas (acc) ya cuentan por la tarea; las flexibles sin hacer de días pasados cuentan en «Tareas flexibles» de hoy, no ahí
+  const cal = eventosDe(k).filter(e => e.tipo !== 'habito' && !flexMovida(e, k) && !(e.acc && !repite(e) && D.acciones.some(a => a.id === e.acc)));
+  const calHechas = cal.filter(e => hechoEv(e, k)).length;
+  return {bloques_con_tareas: conTareas.size, bloques_total: BLOQUES.length, tareas_hechas: hechas + sinArchivar + calHechas,
+    tareas_total: hechas + sinArchivar + pendientesDia + cal.length, pasos: p ? Math.round(p.steps || 0) : 0, ...agendaDia(k),
     // 4.56: para la tarjeta de Grow Panel. tareas_pendientes = todas las pendientes de tus áreas (solo se sabe la de hoy:
     // en un día pasado no se manda y Grow Panel usa tareas_total − tareas_hechas); áreas que piden acción, las de ahora
-    ...(k === hoyK() ? {tareas_pendientes: pendientes().length} : {}), habitos_hechos: habitosHechos(k), areas_accion: areasAccion()};
+    ...(k === hoyK() ? {tareas_pendientes: pendientes().length} : {}), habitos_hechos: habitosHechos(k), tareas_saltadas: tareasSaltadas(k), areas_accion: areasAccion()};
 }
 /* Pide algo al registro con la cuenta de Google (token de Firebase) y, si no vale (401) o no hay, con la clave de Grow Panel */
 async function fetchRegistro(ruta, opts){
@@ -2803,7 +2810,7 @@ function actualizarAjustesReg(pronto){
   })();
 }
 /* «Firma» de los números de un día: si no cambia, no hace falta volver a mandarlos (los pasos cuentan de 100 en 100) */
-const firmaReg = (k, r) => [k, r.bloques_con_tareas, r.tareas_hechas, r.tareas_total, Math.floor((r.pasos || 0) / 100), r.eventos_hoy, r.horas_agenda_hoy, r.eventos_hechos, r.tareas_pendientes, r.habitos_hechos, r.areas_accion].join('|');
+const firmaReg = (k, r) => [k, r.bloques_con_tareas, r.tareas_hechas, r.tareas_total, Math.floor((r.pasos || 0) / 100), r.eventos_hoy, r.horas_agenda_hoy, r.eventos_hechos, r.tareas_pendientes, r.habitos_hechos, r.areas_accion, r.tareas_saltadas].join('|');
 const todoCero = r => !r.bloques_con_tareas && !r.tareas_hechas && !r.tareas_total && !r.pasos && !r.eventos_hoy;
 let regUltimoIntento = 0;
 const regEnCurso = new Set();
@@ -4794,6 +4801,8 @@ function popMover(id, k, a){
     e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO();
     x = JSON.parse(JSON.stringify(e)); Object.assign(x, {id: uid(), creada: ahoraISO(), rep: 'no', saltar: [], hechos: []}); delete x.habRev; A.eventos.push(x);
   }
+  if(x === e && destino !== k) x.aplazadaDe = [...new Set([...(x.aplazadaDe || []), k])].slice(-30);   // 5.14: para «tareas saltadas» de ese día
+  else if(x !== e) delete x.aplazadaDe;
   x.dia = destino; x.mod = ahoraISO();
   if(a === 'flex'){ x.todo = true; x.ini = null; x.fin = null; }
   guardar(); popCerrarTodo(); rerenderDia();
