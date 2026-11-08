@@ -1766,7 +1766,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   .gc-hora svg{color:var(--oro)}
   .gc-flor{border:0;background:none;color:var(--tinta);padding:8px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:16px}
   .gc-flor:hover{background:rgba(var(--bl),.04)}
-  .gc-flor svg{pointer-events:none;width:100%!important;max-width:236px!important;margin:0!important}
+  .gc-flor svg{width:100%!important;max-width:236px!important;margin:0!important}   /* 5.12: sin pointer-events:none, para que el ratón llegue a los pétalos y al centro */
   .gc-flor-t{align-self:flex-start;font-weight:800;font-size:15px;padding:0 8px;border:0;background:none;color:var(--tinta);cursor:pointer;font-family:inherit;text-align:left}
   .gc-flor-t:hover{text-decoration:underline}
   .gc-flor{cursor:default}
@@ -1914,7 +1914,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.11';
+const VERSION = 'v5.12';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
