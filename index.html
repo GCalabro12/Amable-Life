@@ -1799,7 +1799,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.83';
+const VERSION = 'v4.84';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5226,6 +5226,8 @@ function posponerAlarma(id, k, min = 5, ultima = 1){
   try{ localStorage.setItem('equilibra.pospuestos', JSON.stringify(l)); }catch(x){}
   setTimeout(revisarPospuestos, min * 60000 + 500);
 }
+/* 4.84 / APK 2.51 (Gustavo): con el modo avión del teléfono puesto, las alarmas no suenan ni salen */
+function modoAvion(){ try{ return !!(esApp && window.AndroidEquilibra && typeof AndroidEquilibra.modoAvion === 'function' && AndroidEquilibra.modoAvion()); }catch(e){ return false; } }
 function revisarPospuestos(){
   let l; try{ l = JSON.parse(localStorage.getItem('equilibra.pospuestos')) || []; }catch(x){ return; }
   if(!l.length) return;
@@ -5233,12 +5235,12 @@ function revisarPospuestos(){
   if(!toca.length) return;
   try{ localStorage.setItem('equilibra.pospuestos', JSON.stringify(quedan)); }catch(x){}
   const p = toca[toca.length - 1], e = AG_().eventos.find(x => x.id === p.ev);
-  if(!e || hechoEv(e, p.k) || ahora - p.at > 6 * 3600000) return;
+  if(!e || hechoEv(e, p.k) || ahora - p.at > 6 * 3600000 || modoAvion()) return;
   sonarAlarma(); hojaAlarma(e, p.k, `Pospuesto · ${horaEv(e)}: ${e.t}`, p.ul);
   notifWeb(e.t, 'Pospuesto · ' + horaEv(e), 'pos-' + e.id, false, {requireInteraction: true, renotify: true, silent: false});
 }
 /* La app de Android avisa de un pospuesto con la app en pantalla (APK 2.41) */
-window.alarmaDesdeApp = o => { const e = AG_().eventos.find(x => x.id === o.ev); if(!e || hechoEv(e, o.k)) return; sonarAlarma(); hojaAlarma(e, o.k, `${o.txt}: ${e.t}`, !!o.ul); };
+window.alarmaDesdeApp = o => { const e = AG_().eventos.find(x => x.id === o.ev); if(!e || hechoEv(e, o.k) || modoAvion()) return; sonarAlarma(); hojaAlarma(e, o.k, `${o.txt}: ${e.t}`, !!o.ul); };
 /* «Completado» pulsado en la ventana del teléfono con la app cerrada: al volver, se marca aquí y viaja a la nube */
 window.aplicarAlarmas = () => {
   if(!esApp || !window.AndroidEquilibra || typeof AndroidEquilibra.pendientesAlarma !== 'function') return;
@@ -5284,6 +5286,7 @@ function avisarEventos(){
       const base = fechaDe(k).getTime() + (e.todo ? 540 : e.ini) * 60000, cuando = base - a * 60000, clave = `${e.id}|${k}|${a}`;
       if(ahora < cuando || ahora > cuando + 10 * 60000 || vistos.includes(clave) || hechoEv(e, k)) return;
       vistos.push(clave); cambio = true;
+      if(modoAvion()) return;   // en modo avión no suena (y no vuelve a sonar al quitarlo)
       if(esApp && document.visibilityState !== 'visible' && recordNativo()) return;   // la notificación del teléfono ya avisa
       const txt = `${textoRecord(e, a, Math.max(1, Math.round((base - ahora) / 60000)))}: ${e.t}`;   // con lo que falta de verdad
       sonarAlarma(); hojaAlarma(e, k, txt, a === Math.min(...e.avisos), a);
@@ -5585,7 +5588,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.50';   // última app Android publicada
+const APK_ULTIMA = '2.51';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
