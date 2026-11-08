@@ -1813,7 +1813,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.88';
+const VERSION = 'v4.89';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4681,9 +4681,19 @@ function menuSeccionesHTML(cls = ''){
   return `<div class="ml-secc ${cls}">${['agenda', 'dia', 'inicio', 'salud'].map(v => { const b = document.querySelector(`#nav [data-v="${v}"]`); if(!b) return '';
     const svg = b.querySelector('svg'); return `<button type="button" class="${vista === v ? 'act' : ''}" onclick="cerrarMenu(); ir('${v}')">${svg ? svg.outerHTML : ''}<span>${esc(b.textContent.trim())}</span></button>`; }).join('')}</div>`;
 }
+/* 4.89 (Gustavo): «Instalar en este ordenador» (Chrome y Edge la instalan como un programa, con su icono y su ventana) */
+let pedirInstalar = null;
+const enOrdenador = () => !esApp && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedirInstalar = e; });
+window.addEventListener('appinstalled', () => { pedirInstalar = null; aviso('Amable Life ya está instalada en este ordenador', 4500); });
+async function instalarPC(){
+  if(!pedirInstalar){ aviso('Ya está instalada, o tu navegador no lo permite. Usa Chrome o Edge: menú ⋮ → «Instalar Amable Life»', 6000); return; }
+  pedirInstalar.prompt(); try{ await pedirInstalar.userChoice; }catch(e){} pedirInstalar = null;
+}
 function menuExtraHTML(fila){
   const nueva = miAppVieja() || !miApp() && enAndroidWeb();
-  return fila(ICO_PREMIUM, 'Suscripción', "cerrarMenu(); abrirSeccion('premium')")
+  return (pedirInstalar && enOrdenador() ? fila(svgT('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M12 7v5M9.5 9.5 12 12l2.5-2.5"/>', 24), 'Instalar en este ordenador', 'cerrarMenu(); instalarPC()') : '')
+    + fila(ICO_PREMIUM, 'Suscripción', "cerrarMenu(); abrirSeccion('premium')")
     + fila(svgT('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>', 24), `Actualizaciones${nueva ? ' <span class="aj-nueva">nueva</span>' : ''}`, "cerrarMenu(); abrirSeccion('versiones')")
     + fila(ICO_CAL_AJ, 'Importar y exportar', "cerrarMenu(); abrirSeccion('calendario')")
     + fila(svgT('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3"/><circle cx="12" cy="16.8" r=".7" fill="currentColor"/>', 24), 'Cómo funciona la app', "cerrarMenu(); abrirSeccion('ayuda')");
