@@ -885,9 +885,15 @@ html:not(.claro) .aj-eliminar .aj-sub > summary{color:#f87171}
 .snd-tit:first-child{margin-top:4px}
 .desp-op i{font-style:normal;color:var(--oro);font-weight:900;width:16px;text-align:center}
 .desp-op.sel{background:rgba(247,195,91,.13)}
-.ev-titulo{margin-top:0;margin-right:44px}
-.ev-titulo input{font-size:22px;font-weight:600;border:0;border-bottom:2px solid var(--linea);border-radius:0;background:none;padding:10px 52px 8px 2px}
-.ev-titulo input:focus{outline:none;border-bottom-color:var(--oro)}
+.ev-titulo{margin-top:10px}
+.ev-titulo input,.ev-titulo textarea{font-size:22px;font-weight:600;line-height:1.3;border:0;border-bottom:2px solid var(--linea);border-radius:0;background:none;padding:10px 52px 8px 2px}
+.ev-titulo textarea{display:block;min-height:0;margin-top:0;resize:none;overflow-y:hidden}
+.ev-titulo input:focus,.ev-titulo textarea:focus{outline:none;border-bottom-color:var(--oro)}
+.ev-col > .ev-tipo:first-child{margin-top:0;margin-right:48px}   /* 4.90: arriba del todo, sin tapar la ✕ */
+.ev-tipo > button[data-ayuda]{position:relative}
+.ev-tipo-ayuda{display:none;margin:6px 0 0;font-size:13px;color:var(--suave)}
+@media (hover:hover){ .ev-tipo > button[data-ayuda]:hover::after{content:attr(data-ayuda);position:absolute;top:calc(100% + 8px);left:0;z-index:40;width:max-content;max-width:270px;white-space:normal;text-align:left;background:var(--tarjeta);color:var(--tinta);border:1.5px solid color-mix(in srgb,var(--oro) 50%,transparent);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 8px 22px rgba(0,0,0,.16);pointer-events:none} }
+@media (hover:none){ .ev-tipo-ayuda{display:block} }
 .ev-tipo.ev-tabs{gap:6px;margin-top:14px}
 .ev-tipo.ev-tabs button{flex:none;flex-direction:row;padding:9px 18px;border-radius:10px;background:none;font-size:15px;font-weight:700}
 .ev-tipo.ev-tabs button.sel{background:color-mix(in srgb,var(--oro) 28%,transparent);color:var(--tinta)}
@@ -1813,7 +1819,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.89';
+const VERSION = 'v4.90';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4242,13 +4248,25 @@ function despElegir(id, k){
   evEd[lista] = k === 'no' ? [] : evEd[lista].includes(k) ? evEd[lista].filter(x => x !== k) : [...evEd[lista], k];   // varias a la vez
   pintarDesp(id);
 }
+/* 4.90 (Gustavo): Tarea / Hábito arriba del todo, con lo que es cada uno; el título crece hasta 3 renglones */
+const AYUDA_TIPO = {tarea: 'Tarea: una acción con una hora o una fecha límite.', habito: 'Hábito: la práctica de una habilidad, que repites para que se quede contigo.'};
+function tituloEv(t){
+  if(!t) return;
+  if(/[\r\n]/.test(t.value)) t.value = t.value.replace(/[\r\n]+/g, ' ');
+  t.style.height = 'auto';
+  const cs = getComputedStyle(t), n = x => parseFloat(cs[x]) || 0, lh = n('lineHeight') || 28, borde = n('borderTopWidth') + n('borderBottomWidth');
+  const max = lh * 3 + n('paddingTop') + n('paddingBottom') + borde, hace = t.scrollHeight + borde;
+  t.style.height = Math.min(hace, max) + 'px';
+  t.style.overflowY = hace > max + 1 ? 'auto' : 'hidden';
+}
 function pintarEvento(e){
   hojaAbierta = null;
   const hab = evEd.tipo === 'habito', todo = !!e.todo;
   mostrarHoja(`<div class="ev-hoja"><div class="ev-cols"><div class="ev-col">
-    <div class="campo-voz ev-titulo"><input type="text" id="ev-t" maxlength="120" placeholder="Añade un título" aria-label="Título">${botonMic()}</div>
-    <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" onclick="evTipo('habito')">Hábito</button>
+    <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" data-ayuda="${AYUDA_TIPO.tarea}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" data-ayuda="${AYUDA_TIPO.habito}" onclick="evTipo('habito')">Hábito</button>
       <span class="ev-prios">${[1, 2, 3].map(k => `<button type="button" class="ev-prio ${evEd.prio === k ? 'sel' : ''}" style="--c:${PRIO[k].c}" title="Prioridad ${PRIO[k].t.toLowerCase()}" aria-label="Prioridad ${PRIO[k].t.toLowerCase()}" onclick="evPrioB(${k}, this)">${ICO_BANDERA(PRIO[k].c)}</button>`).join('')}</span></div>
+    <p class="ev-tipo-ayuda" id="ev-tipo-ayuda">${hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea}</p>
+    <div class="campo-voz ev-titulo"><textarea id="ev-t" rows="1" maxlength="120" placeholder="Añade un título" aria-label="Título" oninput="tituloEv(this)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"></textarea>${botonMic()}</div>
     <div id="ev-hab" ${hab ? '' : 'hidden'}>
       <div class="ev-meta"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92">
         <div><p>Un hábito es como una planta: hay que <b>regarlo cada día</b>.</p>
@@ -4290,7 +4308,7 @@ function pintarEvento(e){
     <div class="ed-bots"><button class="btn prim" onclick="guardarEvento()">Guardar</button>${evEd.id ? '<button class="btn peligro" id="ev-borrar" onclick="borrarEvento()">Borrar</button>' : ''}${evEd.id ? `<button class="btn sec ev-hecha-b" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar' : '✓ Hecha'}</button>` : ''}<button class="btn sec ev-cancelar" onclick="salirEvento()">Cancelar</button></div>
     </div></div>
     <div id="ev-borrar-rep"></div></div>`, evEd.areas.length ? areaDe(evEd.areas[0]).color : '#f7c35b');
-  $('#ev-t').value = e.t && e.t !== SIN_TITULO ? e.t : '';
+  $('#ev-t').value = e.t && e.t !== SIN_TITULO ? e.t : ''; tituloEv($('#ev-t'));
   const ds = $('#ev-desc'); if(ds) ds.innerHTML = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
   pintarDesp('dur');   // la duración ya con las horas puestas (y la línea del día)
   if(!evEd.id) setTimeout(() => { const t = $('#ev-t'); if(t && matchMedia('(hover: hover)').matches) t.focus(); }, 120);
@@ -4908,6 +4926,7 @@ function evTipo(t){
     const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin')); if(i != null && f != null && f - i > 120 && $('#ev-fin')) $('#ev-fin').value = hhmm(Math.min(i + 120, 1439)); }
   if(typeof pintarDesp === 'function' && $('#dl-rec')){ pintarDesp('rec'); pintarDesp('dur'); }
   document.querySelectorAll('.ev-tipo > button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
+  if($('#ev-tipo-ayuda')) $('#ev-tipo-ayuda').textContent = hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea;
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
   evResumen();
 }
