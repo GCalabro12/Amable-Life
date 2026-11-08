@@ -403,7 +403,7 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 .hist-exp{margin:12px 0 10px;font-size:15px;line-height:1.4}
 .saludo{margin:18px 0 0;font-size:17px;font-weight:700;color:var(--oro)}
 .tit-acc{font-size:30px;font-weight:800;margin-top:22px;line-height:1.1}
-.tit-bloques{text-align:center;font-size:34px;margin-bottom:0}
+.tit-bloques{text-align:center;font-size:30px;margin-bottom:0;line-height:1.15}
 .sub-bloques{text-align:center;font-size:15px;font-weight:600;opacity:.75;margin:4px 0 6px}
 .flor-ayuda{text-align:center;margin:2px 0 0}
 .btn-definir{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;font-size:17px;line-height:1.25;padding:14px 16px;text-align:center}
@@ -1342,6 +1342,7 @@ body.pip .ev-mini{pointer-events:none}
 .flor.girasol{width:calc(100% + 32px);max-width:480px;margin-left:-16px!important;margin-right:-16px!important;margin:10px auto 4px;overflow:visible}
 .girasol .g-hora{font-size:30px;font-weight:800;fill:#3a2208}
 .girasol .g-sub{font-size:10px;font-weight:800;fill:#5a3810}
+.girasol .g-frase{font-size:11px;font-weight:800;fill:#3a2208}
 .girasol .g-ahora{font-size:8px;font-weight:800;fill:#5a3810;letter-spacing:.8px}
 .girasol .g-nom{font-size:12.5px;font-weight:800;fill:#fff;paint-order:stroke;stroke:rgba(20,12,40,.55);stroke-width:3px;stroke-linejoin:round}
 .girasol .g-nom.largo{font-size:11px}
@@ -1754,7 +1755,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.75';
+const VERSION = 'v4.76';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2920,7 +2921,7 @@ function quitarDeBloques(id, soloElegido){
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
 /* Girasol: centro grande = bloque de ahora; pétalos más pequeños alrededor */
-function florGirasol(niveles, bloque, pendientesN){
+function florGirasol(niveles, bloque, pendientesN, opt = {}){
   // pétalos más grandes, con el nombre y el nº de tareas dentro
   const paso = 360/AREAS.length, R0 = 68, vb = 166, n = ++idFlor;
   // 4.60 (Gustavo): sin tareas ni hábitos esta semana, pétalo más estrecho y corto; con 1, normal; con 2 o más, un poco más grande
@@ -2944,11 +2945,16 @@ function florGirasol(niveles, bloque, pendientesN){
   });
   s += `<circle r="${R0}" fill="url(#centro${n})"/><circle r="${R0}" fill="url(#semillas${n})"/>`;
   // 4.51 (Gustavo): lo que falta del bloque, en verde; lo pasado, en rojo; y un punto rojo que parpadea donde va el tiempo
-  if(bloque && bloque.actual){ const pa = progresoBloque(bloque.ini, bloque.fin), pp = puntoAro(pa, R0 + 3);
+  if(opt.frase){   // 4.76 (Gustavo): en el centro, la frase de la flor equilibrada (sin lo del bloque)
+    const L = ['Para tener una flor', 'equilibrada, ten al', 'menos una tarea o', 'hábito a la semana', 'en cada pétalo'];
+    s += L.map((l, k) => `<text class="g-frase" y="${(k - 2) * 14}" text-anchor="middle" dominant-baseline="central">${l}</text>`).join('');
+  }
+  else if(bloque && bloque.actual){ const pa = progresoBloque(bloque.ini, bloque.fin), pp = puntoAro(pa, R0 + 3);
     s += `<circle r="${R0 + 3}" fill="none" stroke="#22a35a" stroke-width="6"/>
     <circle class="aro-tiempo" data-ini="${bloque.ini}" data-fin="${bloque.fin}" r="${R0 + 3}" fill="none" stroke="#e0323a" stroke-width="6" pathLength="100" stroke-dasharray="${pa.toFixed(2)} 100" transform="rotate(-90)"/>
     <circle class="aro-punto" data-ini="${bloque.ini}" data-fin="${bloque.fin}" data-r="${R0 + 3}" cx="${pp.x}" cy="${pp.y}" r="6" fill="#e0323a" stroke="#fff" stroke-width="2"/>`; }
-  if(bloque){
+  if(opt.frase){}
+  else if(bloque){
     // BLOQUE · 16:00 – 17:30 (en una línea) · primera tarea · +N con el icono de tarea
     const tareas = bloque.tareas || [], resto = tareas.length - 1;
     s += `<text class="g-ahora" y="-44" text-anchor="middle" dominant-baseline="central">BLOQUE DE TIEMPO</text>
@@ -5218,9 +5224,9 @@ function vDia(){
   // la flor en medio y los bloques a la derecha (así, al pasar por los pétalos, la flor no se mueve)
   // 4.64 (Gustavo): la flor representa hábitos: «Hábitos semanales»; la frase de la flor equilibrada, bajo el título;
   // debajo de la flor, el botón grande para revisarla y, después, pausar avisos
-  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Hábitos semanales</h1><p class="sub-bloques">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo</p><div class="dia-cols"><div class="dia-izq">
+  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Flor de hábitos semanales</h1><div class="dia-cols"><div class="dia-izq">
     <div class="flor-nav">
-      ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0)}</div>
+      ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0, {frase: true})}</div>
     <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos un hábito en cada área por semana</button>
     <p class="peq suave flor-ayuda"><button class="link" onclick="ir('historial')">ver el historial</button></p>
     ${botonPausa('tareas')}
