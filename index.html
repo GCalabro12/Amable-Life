@@ -1396,6 +1396,10 @@ html.claro .meta-error{color:#dc2626}
 .rj-cab button b{font-size:11px;color:var(--suave)}
 .rj-cab button span{font-size:15px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
 .rj-cab button.hoy span{background:var(--oro);color:#2a1d05}
+.rj-num{position:relative;display:inline-flex;align-items:center;gap:5px;font-style:normal}
+.rj-n{font-size:11px;font-weight:600;color:var(--suave);line-height:1.1;white-space:nowrap}
+.rj-n em{font-style:normal}
+@media (max-width:899px){ .rj-cab.muchas .rj-n{position:absolute;right:-9px;top:-1px;font-size:10px;font-weight:700} .rj-cab.muchas .rj-n em{display:none} }
 .rj-todo{display:grid;grid-template-columns:44px repeat(7,1fr);gap:2px;margin:2px 0 8px}
 .rj-todo em{font-style:normal;font-size:10px;line-height:1.1;color:var(--suave);align-self:center}
 .rj-todo div{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -1725,6 +1729,8 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   body.ancho .rj-cab button b{font-size:0}
   body.ancho .rj-cab button b::after{content:attr(data-l);font-size:12px;letter-spacing:.6px}
   body.ancho .rj-cab button span{font-size:24px;width:46px;height:46px;font-weight:600}
+  body.ancho .rj-num{gap:8px}
+  body.ancho .rj-n{font-size:13px}
   body.ancho .rj-h span{font-size:12px}
   body.ancho .rj.sem .rj-ev{font-size:13px;padding:3px 6px;border-radius:7px;border-left-width:3px}
   body.ancho .rj.sem .rj-ev b{font-weight:500}
@@ -1857,7 +1863,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.99';
+const VERSION = 'v5.00';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3818,6 +3824,11 @@ function mesPeq(m0, conSem){
   }
   return `<div class="mm ${conSem ? 'gc-mini' : ''} ${conSem && !cs ? 'sin-sem' : ''}">${g}</div>`;
 }
+/* 5.00 (Gustavo): a la derecha del número del día, en pequeño, cuántas cosas hay ese día (tareas y hábitos, todo junto; lo que se ve) */
+function numDiaHTML(k){
+  const n = evsVer(k).length;
+  return `<i class="rj-num"><span>${fechaDe(k).getDate()}</span>${n ? `<small class="rj-n" title="${n} ${n === 1 ? 'tarea o hábito' : 'tareas y hábitos'}">${n}<em> ${n === 1 ? 'tarea' : 'tareas'}</em></small>` : ''}</i>`;
+}
 function vAgenda(){
   if(!agK) agK = hoyK();
   if(!metaSyncHecho) setTimeout(metaSync, 1500);
@@ -3835,7 +3846,7 @@ function vAgenda(){
     tit = rangoTxt(todosD[0], todosD[todosD.length - 1]);
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !(k === hoy && esFlexible(e))));
-    fijo = `<div class="rj-cab" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span>${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
+    fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
     cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div>${es.map(e => `<button style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
