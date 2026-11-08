@@ -1754,7 +1754,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.73';
+const VERSION = 'v4.74';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3388,7 +3388,7 @@ function vDefHab(){
           <select onchange="dhHora('fin', this.value)" ${x.nodef ? 'disabled' : ''}>${opcHoras(x.fin, x.ini)}</select></div>
       </div>
       <button class="dh-nodef ${x.nodef ? 'sel' : ''}" onclick="dhNodef()"><span class="dh-cas">${x.nodef ? '✓' : ''}</span> No lo tengo definido</button>
-      ${x.nodef ? `<p class="dh-preg">Te pongo un recordatorio a las 10:00. ¿Qué día?</p>
+      ${x.nodef ? `<p class="dh-preg">Te pongo un recordatorio por la mañana, desde las 10:00 (una hora para cada hábito, sin pisarse). ¿Qué día?</p>
         <div class="dh-finde"><button class="${x.finde === 5 ? 'sel' : ''}" onclick="dhFinde(5)">Recordatorio el sábado por la mañana</button>
           <button class="${x.finde === 6 ? 'sel' : ''}" onclick="dhFinde(6)">Recordatorio el domingo por la mañana</button></div>` : ''}
     </section>
@@ -3426,8 +3426,13 @@ function dhSiguiente(){
 }
 function dhGuardar(){
   const A = AG_(), ahora = ahoraISO(); let n = 0;
+  // 4.74 (Gustavo): los «no definidos» duran 1 hora y van seguidos el mismo día (10:00, 11:00, 12:00…) para que no se pisen,
+  // saltando las horas que ya tienen otros hábitos sin definir de ese día que no están en esta lista
+  const mias = new Set(DH.items.map(x => x.clave0)), usadas = {5: new Set(), 6: new Set()};
+  A.eventos.forEach(e => { if(e.tipo === 'habito' && e.sinDefinir && !mias.has(e.habRev) && (e.dias || []).length === 1 && usadas[e.dias[0]]) usadas[e.dias[0]].add(e.ini); });
+  DH.items.forEach(x => { if(!x.nodef) return; let h = 600; while(usadas[x.finde].has(h) && h < 1260) h += 60; usadas[x.finde].add(h); x.hIni = h; });
   DH.items.forEach(x => {
-    const dias = x.nodef ? [x.finde] : x.dias.slice().sort(), ini = x.nodef ? 600 : x.ini, fin = x.nodef ? 630 : x.fin, k = claveHab(x.area, x.t);
+    const dias = x.nodef ? [x.finde] : x.dias.slice().sort(), ini = x.nodef ? x.hIni : x.ini, fin = x.nodef ? x.hIni + 60 : x.fin, k = claveHab(x.area, x.t);
     let e = A.eventos.find(z => z.tipo === 'habito' && (z.habRev === k || (x.clave0 && z.habRev === x.clave0)));
     if(!e){ e = {id: uid(), creada: ahora, saltar: [], hechos: [], dia: hoyK(), habRev: k}; A.eventos.push(e); }
     Object.assign(e, {t: x.t, habRev: k, tipo: 'habito', dias, frec: 'diario', veces: dias.length, cada: 2, todo: false, ini, fin, area: x.area, areas: [x.area],
@@ -3438,7 +3443,7 @@ function dhGuardar(){
   setTimeout(() => pedirAvisosWeb(false), 900);
 }
 function vDefHabFin(){
-  const fila = x => { const a = areaDe(x.area), d = x.nodef ? `${x.finde === 5 ? 'Sábado' : 'Domingo'} a las 10:00 (recordatorio)` : `${x.dias.map(k => DIAS_L[k]).join(' ')} · ${hm(x.ini)} – ${hm(x.fin)}`;
+  const fila = x => { const a = areaDe(x.area), d = x.nodef ? `${x.finde === 5 ? 'Sábado' : 'Domingo'} · ${hm(x.hIni)} – ${hm(x.hIni + 60)} (recordatorio)` : `${x.dias.map(k => DIAS_L[k]).join(' ')} · ${hm(x.ini)} – ${hm(x.fin)}`;
     return `<li style="--c:${a.color}">${ico(a)}<span><b>${esc(x.t)}</b><small>${d}</small></span></li>`; };
   return `<div class="res-tit"><h1>Hábitos en tu calendario</h1><p class="suave">${DH.n === 1 ? 'Tu hábito ya está' : `Tus ${DH.n} hábitos ya están`} en el calendario, con un aviso a la hora.</p></div>
     <ul class="dh-lista">${DH.items.map(fila).join('')}</ul>
