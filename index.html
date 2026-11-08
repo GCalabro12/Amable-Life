@@ -1725,6 +1725,11 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   .gc-flor svg{pointer-events:none;width:100%!important;max-width:236px!important;margin:0!important}
   .gc-flor-t{align-self:flex-start;font-weight:800;font-size:15px;padding:0 8px}
   .gc-flor-s{font-size:12px;color:var(--suave);padding:0 8px;text-align:center}
+  .gc-flor-s.cub{font-size:14px;font-weight:800}
+  .gc-flor-s.cub.ok{color:#15803d}
+  .gc-flor-s.cub.falta{color:#dc2626}
+  html:not(.claro) .gc-flor-s.cub.ok{color:#4ade80}
+  html:not(.claro) .gc-flor-s.cub.falta{color:#f87171}
   body.ancho .rj-cab{position:sticky;top:64px;z-index:4;background:var(--fondo2);padding:8px 0 6px;margin-top:0}
   body.ancho .rj-cab button b{font-size:0}
   body.ancho .rj-cab button b::after{content:attr(data-l);font-size:12px;letter-spacing:.6px}
@@ -1863,7 +1868,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.00';
+const VERSION = 'v5.01';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2061,6 +2066,19 @@ function tareasSemanaArea(id){
   return ids.size;
 }
 /* 4.75: hábitos de un área: los del calendario con esa área y los que dijiste en «Revisar mi flor» (sin contar dos veces) */
+/* 5.01 (Gustavo): la flor del calendario cuenta hábitos: en el centro, cuántos hábitos semanales tienes; debajo, si todas las áreas
+   tienen al menos uno (en verde) o cuántas faltan (en rojo) */
+function habitosTotal(){
+  const k = new Set();
+  AG_().eventos.forEach(e => { if(e.tipo === 'habito') k.add(e.habRev || 'ev:' + e.id); });
+  AREAS.forEach(a => (((D.habitosArea || {})[a.id] || {}).tengo || []).forEach(t => k.add(claveHab(a.id, t))));
+  return k.size;
+}
+function areasCubiertasHTML(){
+  const faltan = AREAS.filter(a => !habitosDeArea(a.id)).length;
+  return faltan ? `<span class="gc-flor-s cub falta">${faltan === 1 ? 'Falta 1 área por cubrir' : `Faltan ${faltan} áreas por cubrir`}</span>`
+    : '<span class="gc-flor-s cub ok">Todas las áreas cubiertas</span>';
+}
 function habitosDeArea(id){
   const k = new Set();
   AG_().eventos.forEach(e => { if(e.tipo === 'habito' && areasEv(e).some(a => a.id === id)) k.add(e.habRev || 'ev:' + e.id); });
@@ -3071,6 +3089,7 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
     if(resto > 0) s += `<g transform="translate(0 38)"><text class="g-mas" x="-4" text-anchor="end" dominant-baseline="central">+${resto}</text>
       <g transform="translate(-1 -8)"><rect x="1.5" y="1.5" width="13" height="13" rx="3" fill="none" stroke="#3a2208" stroke-width="1.8"/><path d="M4.5 8.3l2.3 2.3 4.5-4.6" fill="none" stroke="#3a2208" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g></g>`;
   }
+  else if(opt.habitos != null) s += `<text class="g-hora" y="-10" text-anchor="middle" dominant-baseline="central">${opt.habitos}</text><text class="g-sub" y="14" text-anchor="middle" dominant-baseline="central">${opt.habitos === 1 ? 'hábito' : 'hábitos'}</text><text class="g-sub" y="27" text-anchor="middle" dominant-baseline="central">semanal${opt.habitos === 1 ? '' : 'es'}</text>`;
   else s += `<text class="g-hora" y="-6" text-anchor="middle" dominant-baseline="central">${pendientesN}</text><text class="g-sub" y="18" text-anchor="middle" dominant-baseline="central">pendientes</text>`;
   const conBloque = idsEnBloquesHoy();
   FL.forEach((a, i) => {
@@ -4151,7 +4170,7 @@ function gcLado(){
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
       ${mesPeq(m0, true)}</div>
     <div class="gc-hora">${fPref.zona ? 'Hora de ' + nombreZona() : 'Hora de aquí'} <b>${horaEspana()}</b>${h >= 7 && h < 20 ? ICO_SOL : ICO_LUNA}</div>
-    <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Hábitos"><span class="gc-flor-t">Tus hábitos semanales</span>${florGirasol(D.niveles, null, pendientes().length)}<span class="gc-flor-s">Toca la flor para ver las tareas de cada área</span></button>
+    <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Hábitos"><span class="gc-flor-t">Tus hábitos semanales</span>${florGirasol(D.niveles, null, pendientes().length, {habitos: habitosTotal()})}${areasCubiertasHTML()}</button>
   </aside>`;
 }
 setInterval(() => document.querySelectorAll('.gc-hora b').forEach(b => b.textContent = horaEspana()), 20000);
