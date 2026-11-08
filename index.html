@@ -80,6 +80,12 @@ a.btn{text-decoration:none;box-sizing:border-box}
 .fila .em{display:flex;justify-content:center}
 .fila .em .ico{width:18px;height:18px}
 .ico{width:15px;height:15px;vertical-align:-2px;flex:none;display:inline-block}
+.ico.pet-ev{width:13px;height:13px;margin-right:3px;vertical-align:-2px}
+.hab-marca:not(.rj-ev){position:relative}
+.hab-marca{z-index:3!important;box-shadow:0 0 0 2px var(--fondo2,#fff)}
+.hab-marca::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;background:linear-gradient(90deg,var(--tinta) 50%,transparent 0) repeat-x 0 0/10px 2.5px,linear-gradient(90deg,var(--tinta) 50%,transparent 0) repeat-x 0 100%/10px 2.5px,linear-gradient(0deg,var(--tinta) 50%,transparent 0) repeat-y 0 0/2.5px 10px,linear-gradient(0deg,var(--tinta) 50%,transparent 0) repeat-y 100% 0/2.5px 10px;animation:hormigas .7s linear infinite}
+@keyframes hormigas{to{background-position:10px 0,-10px 100%,0 -10px,100% 10px}}
+@media (prefers-reduced-motion:reduce){.hab-marca::after{animation:none}}
 .ico.g{width:26px;height:26px}
 .fila .nom{font-weight:700;font-size:15px;line-height:1.2}
 .fila .nom small{display:block;font-weight:600;font-size:12px;color:var(--suave)}
@@ -1409,7 +1415,7 @@ html.claro .meta-error{color:#dc2626}
 .rj-num{position:relative;display:inline-flex;align-items:center;gap:5px;font-style:normal}
 .rj-n{font-size:11px;font-weight:600;color:var(--suave);line-height:1.1;white-space:nowrap}
 .rj-n em{font-style:normal}
-@media (max-width:899px){ .rj-cab.muchas .rj-n{position:absolute;right:-9px;top:-1px;font-size:10px;font-weight:700} .rj-cab.muchas .rj-n em{display:none} }
+@media (max-width:899px){ .rj-cab.muchas .rj-n{position:absolute;right:-9px;top:-1px;font-size:10px;font-weight:700} .rj-cab.muchas .rj-n em, .rj-cab.muchas .rj-n.cero{display:none} }
 .rj-todo{display:grid;grid-template-columns:44px repeat(7,1fr);gap:2px;margin:2px 0 8px}
 .rj-todo em{font-style:normal;font-size:10px;line-height:1.1;color:var(--suave);align-self:center}
 .rj-todo div{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -1734,7 +1740,9 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   .gc-flor{border:0;background:none;color:var(--tinta);padding:8px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:16px}
   .gc-flor:hover{background:rgba(var(--bl),.04)}
   .gc-flor svg{pointer-events:none;width:100%!important;max-width:236px!important;margin:0!important}
-  .gc-flor-t{align-self:flex-start;font-weight:800;font-size:15px;padding:0 8px}
+  .gc-flor-t{align-self:flex-start;font-weight:800;font-size:15px;padding:0 8px;border:0;background:none;color:var(--tinta);cursor:pointer;font-family:inherit;text-align:left}
+  .gc-flor-t:hover{text-decoration:underline}
+  .gc-flor{cursor:default}
   .gc-flor-s{font-size:12px;color:var(--suave);padding:0 8px;text-align:center}
   .gc-flor-s.cub{font-size:14px;font-weight:800}
   .gc-flor-s.cub.ok{color:#15803d}
@@ -1879,7 +1887,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.05';
+const VERSION = 'v5.06';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2225,6 +2233,7 @@ function render(){
   if(vista === 'dia') centrarBloque();
   pintarRayos();
   pintarFlotante();
+  if(habMarca && vista === 'agenda') habResaltar();
 }
 /* La tarea en la que te enfocas, siempre en un solo renglón: se achica la letra hasta que quepa */
 function ajustarFoco(doc = document){
@@ -3135,10 +3144,27 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
       <text class="g-cuenta" y="10" text-anchor="middle" dominant-baseline="central">${nTar}</text></g>`;
   });
   // zonas para tocar: pétalos (ver sus tareas) y centro (soltar tareas en el bloque)
+  if(opt.resaltar){
+    FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="habFijar('${a.id}')" onmouseenter="habResaltar('${a.id}')" onmouseleave="habResaltar()"><title>Marcar los hábitos de ${a.nombre}</title></path>`; });
+    s += `<circle class="g-centro" r="${R0}" fill="transparent" style="cursor:pointer" onclick="habFijar('*')" onmouseenter="habResaltar('*')" onmouseleave="habResaltar()"><title>Marcar todos tus hábitos</title></circle>`;
+    return s + '</svg>';
+  }
   FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="abrirPanelArea('${a.id}')" onmouseenter="if(matchMedia('(hover: hover)').matches) abrirPanelArea('${a.id}', true)"/>`; });
   s += `<circle class="g-centro" r="${R0}" fill="transparent" ${bloque ? 'data-drop="ahora"' : ''} style="cursor:pointer" onclick="${bloque && bloque.clic ? bloque.clic : "ir('dia')"}"/>`;
   return s + '</svg>';
 }
+/* 5.06 (Gustavo): en la flor del calendario, pasar el ratón por un pétalo marca con una línea de puntos que se mueve los hábitos de esa área
+   que se ven en el calendario; por el centro, todos los hábitos. Al clicar se quedan marcados (otro clic en lo mismo, se quitan). */
+let habMarca = null;
+function habResaltar(x){
+  const m = x === undefined ? habMarca : x, A = AG_().eventos;
+  document.querySelectorAll('#app [data-ev]').forEach(el => {
+    const e = A.find(z => z.id === el.dataset.ev);
+    el.classList.toggle('hab-marca', !!(m && e && e.tipo === 'habito' && (m === '*' || areasEv(e).some(a => a.id === m))));
+  });
+  document.querySelectorAll('.gc-flor').forEach(f => f.dataset.marca = habMarca || '');
+}
+function habFijar(x){ habMarca = habMarca === x ? null : x; habResaltar(habMarca); }
 /* Al tocar (o pasar el ratón por) un pétalo: sus tareas, para arrastrarlas al centro o crear nuevas */
 let panelAbierto = null;
 function abrirPanelArea(id, hover){
@@ -3762,7 +3788,8 @@ const ICO_BROTE = '<svg class="brote" viewBox="0 0 24 24" width="12" height="12"
 const ICO_FLOR_HAB = '<svg class="brote flor-hab" viewBox="0 0 24 24" width="12" height="12" aria-label="Hábito"><g fill="#fff" stroke="#15803d" stroke-width=".9"><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(0 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(45 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(90 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(135 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(180 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(225 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(270 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(315 12 12)"/></g><circle cx="12" cy="12" r="4.6" fill="#f5b301" stroke="#b45309" stroke-width=".8"/></svg>';
 const esMeta = e => !!(e && (e.metaId || e.metaReg));
 /* 4.96 (Gustavo): lo que viene de Amable Meta lleva en el calendario un rectangulito «Amable Meta» en lugar de la florecita, y en su tarjeta, Prácti regando en pequeño */
-const broteEv = e => esMeta(e) ? '<img class="tag-meta" src="img/meta-planta.jpg" alt="Amable Meta" title="Amable Meta" width="16" height="16">' : e && e.tipo === 'habito' ? ICO_FLOR_HAB : '';
+/* 5.06 (Gustavo): delante de un hábito con área, su pétalo de color (uno por área); sin área, la florecita */
+const broteEv = e => e && e.tipo === 'habito' && !esMeta(e) && areasEv(e).length ? areasEv(e).map(a => ico(a, 'pet-ev')).join('') : esMeta(e) ? '<img class="tag-meta" src="img/meta-planta.jpg" alt="Amable Meta" title="Amable Meta" width="16" height="16">' : e && e.tipo === 'habito' ? ICO_FLOR_HAB : '';
 const iconoTarjeta = e => esMeta(e) ? '<img class="mini-practi" src="img/meta-planta.jpg" alt="Prácti riega su planta" width="26" height="26">' : broteEv(e);
 const campEv = e => e && e.avisos && e.avisos.length ? ICO_CAMPANITA : '';
 const ICO_REP = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
@@ -3858,7 +3885,10 @@ function gcCambiar(k){
   try{ localStorage.setItem('equilibra.vistaCal', JSON.stringify(gcPref)); }catch(e){}
   render(); gcPop('gc-vistas');
 }
-const evsVer = k => eventosDe(k).filter(e => verHechas() || !hechoEv(e, k));
+/* 5.06 (Gustavo: «¿por qué se han puesto en el domingo todas agrupadas?»): una tarea flexible sin hacer de los últimos 14 días
+   pasa a «Tareas flexibles» de hoy (flexHoy), así que ya no sale también en «sin hora» de su día ni cuenta en ese día */
+const flexMovida = (e, k) => { const hoy = hoyK(); return k < hoy && k >= sumarDias(hoy, -14) && esFlexible(e) && !repite(e) && !hechoEv(e, k); };
+const evsVer = k => eventosDe(k).filter(e => (verHechas() || !hechoEv(e, k)) && !flexMovida(e, k));
 /* Mes pequeño (el de la izquierda en el ordenador y los doce del Año) */
 function mesPeq(m0, conSem){
   const hoy = hoyK(), primero = claveDia(m0), ini = inicioSem(primero), mes = primero.slice(0, 7), cs = conSem && fPref.numSem;
@@ -3878,7 +3908,7 @@ function mesPeq(m0, conSem){
 /* 5.00 (Gustavo): a la derecha del número del día, en pequeño, cuántas cosas hay ese día (tareas y hábitos, todo junto; lo que se ve) */
 function numDiaHTML(k){
   const n = evsVer(k).length;
-  return `<i class="rj-num"><span>${fechaDe(k).getDate()}</span>${n ? `<small class="rj-n" title="${n} ${n === 1 ? 'tarea o hábito' : 'tareas y hábitos'}">${n}<em> ${n === 1 ? 'tarea' : 'tareas'}</em></small>` : ''}</i>`;
+  return `<i class="rj-num"><span>${fechaDe(k).getDate()}</span><small class="rj-n${n ? '' : ' cero'}" title="${n} ${n === 1 ? 'tarea o hábito' : 'tareas y hábitos'}"><em>(</em>${n}<em> ${n === 1 ? 'tarea' : 'tareas'})</em></small></i>`;
 }
 function vAgenda(){
   if(!agK) agK = hoyK();
@@ -4202,8 +4232,9 @@ function gcLado(){
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
       ${mesPeq(m0, true)}</div>
     <div class="gc-hora">${fPref.zona ? 'Hora de ' + nombreZona() : 'Hora de aquí'} <b>${horaEspana()}</b>${h >= 7 && h < 20 ? ICO_SOL : ICO_LUNA}</div>
-    <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Hábitos"><span class="gc-flor-t">Tus hábitos semanales</span>${(() => { const nh = habitosTotal(), tod = AREAS.every(a => habitosDeArea(a.id));   // 5.04 (Gustavo): también aquí, la medalla con todas las áreas cubiertas
-      return florGirasol(D.niveles, null, pendientes().length, tod ? {medalla: {ok: true, faltan: 0, lineas: [`${nh} ${nh === 1 ? 'hábito' : 'hábitos'}`, nh === 1 ? 'semanal' : 'semanales']}} : {habitos: nh}); })()}${areasCubiertasHTML()}</button>
+    <div class="gc-flor"><button class="gc-flor-t" onclick="ir('dia')" title="Ir a Hábitos">Tus hábitos semanales</button>${(() => { const nh = habitosTotal(), tod = AREAS.every(a => habitosDeArea(a.id));   // 5.04 (Gustavo): también aquí, la medalla con todas las áreas cubiertas
+      return florGirasol(D.niveles, null, pendientes().length, tod ? {medalla: {ok: true, faltan: 0, lineas: [`${nh} ${nh === 1 ? 'hábito' : 'hábitos'}`, nh === 1 ? 'semanal' : 'semanales']}, resaltar: true} : {habitos: nh, resaltar: true}); })()}${areasCubiertasHTML()}
+      <span class="gc-flor-s">Pasa el ratón por la flor para ver tus hábitos en el calendario</span></div>
   </aside>`;
 }
 setInterval(() => document.querySelectorAll('.gc-hora b').forEach(b => b.textContent = horaEspana()), 20000);
