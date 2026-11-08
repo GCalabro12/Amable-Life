@@ -731,6 +731,10 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
   background:linear-gradient(90deg,#8b5cf6,#a855f7);color:#fff;font:inherit;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 14px rgba(139,92,246,.45)}
 .flex-pil .fp-fl{font-size:11px}
 .flex-pil i{font-style:normal;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#fff;color:#7c3aed;display:grid;place-items:center;font-size:12px}
+.flex-pil.vacia{opacity:.8;box-shadow:0 2px 8px rgba(139,92,246,.3)}
+.fx-vacio{margin:0 0 2px;font-size:13px;color:var(--suave)}
+.fx-ej{opacity:.75;align-items:center}
+.fx-ej .fx-cas{border-style:dashed}
 .flex-pil.todas{background:linear-gradient(90deg,#16a34a,#22c55e);box-shadow:0 4px 14px rgba(34,163,90,.4)}
 .flex-pil.todas i{color:#16a34a}
 #flex-pop{position:fixed;z-index:60;background:var(--tarjeta);color:var(--tinta);border-radius:18px;box-shadow:0 16px 44px rgba(0,0,0,.28);padding:12px 12px 10px;max-height:min(70vh,520px);overflow:auto}
@@ -927,6 +931,8 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-tit h3{margin:0;font-size:22px;font-weight:600;line-height:1.25;word-break:break-word}
 .ep-tit h3.ok{text-decoration:line-through;opacity:.7}
 .ep-tit p{margin:3px 0 0;font-size:14px;color:var(--suave)}
+.ep-bots{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px 36px}
+.ep-bots .ep-hecho{margin:0}
 .ep-hecho{margin:4px 0 6px 36px;border:1px solid var(--linea);background:none;color:var(--tinta);border-radius:99px;padding:7px 16px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
 .ep-hecho:hover{background:rgba(var(--bl),.07)}
 .ep-hecho.sel{background:color-mix(in srgb,var(--sube) 20%,transparent);border-color:var(--sube)}
@@ -1782,7 +1788,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.79';
+const VERSION = 'v4.80';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3775,7 +3781,7 @@ function rejillaHTML(dias){
   // en la columna del día siguiente apuntando a hoy (si hoy es la última, a la derecha de hoy); al tocarlo, la lista
   let pil = '';
   const ih = dias.indexOf(hoy), fl = ih >= 0 ? flexHoy() : [];
-  if(ih >= 0 && fl.length){
+  if(ih >= 0){   // 4.80: siempre que hoy esté a la vista, aunque no haya ninguna (así se pueden añadir desde ahí)
     const col = ih + 1 < dias.length ? ih + 1 : ih, izq = col !== ih;
     // 4.79 (Gustavo): empieza a las 6:00 (o a la hora de ahora, si es más tarde) y, si se topa con una tarea de hora fija
     // en su columna, salta al principio del bloque siguiente a esa tarea, para no taparla
@@ -3786,8 +3792,8 @@ function rejillaHTML(dias){
       const b = BLOQUES.find(z => z.ini >= e.fin); t = b ? b.ini : e.fin;
     }
     const pend = fl.filter(x => !x.hecha).length, top = Math.max(2, Math.min((h1 - h0) * AG_PX - 30, y(t)));
-    pil = `<button class="flex-pil ${izq ? 'izq' : 'der'} ${pend ? '' : 'todas'}" style="top:${top}px;${izq ? `left:calc(${col / dias.length * 100}% + 3px)` : 'right:4px'}" onclick="event.stopPropagation(); flexAbrir(this)" aria-label="Tareas flexibles de hoy">
-      <span class="fp-fl">◀</span><b>Tareas flexibles</b><i>${pend || '✓'}</i></button>`;
+    pil = `<button class="flex-pil ${izq ? 'izq' : 'der'} ${!fl.length ? 'vacia' : pend ? '' : 'todas'}" style="top:${top}px;${izq ? `left:calc(${col / dias.length * 100}% + 3px)` : 'right:4px'}" onclick="event.stopPropagation(); flexAbrir(this)" aria-label="Tareas flexibles de hoy">
+      <span class="fp-fl">◀</span><b>Tareas flexibles</b><i>${!fl.length ? '+' : pend || '✓'}</i></button>`;
   }
   return `<div class="rj ${sem ? 'sem' : ''}"><div class="rj-cuerpo" style="height:${(h1 - h0) * AG_PX}px">${lineas}<div class="rj-cols" style="grid-template-columns:repeat(${dias.length},1fr)">${cols}</div>${pil ? `<div class="flex-capa">${pil}</div>` : ''}</div></div>`;
 }
@@ -3812,8 +3818,10 @@ function flexHTML(){
         ${hecha ? `<small>Hecha${em ? ` de ${hm(minDe(em))}` : ''}${te ? ` ${em ? 'a' : 'a las'} ${hm(minDe(te))}` : ''}</small>`
           : em ? `<small>Empezaste a las ${hm(minDe(em))}</small><button class="fx-b fin" onclick="flexTerminar('${e.id}','${k}')">Tarea terminada</button>`
           : `<button class="fx-b" onclick="flexEmpezar('${e.id}','${k}')">Empiezo a hacerlo</button>`}</div></div>`; };
-  return `<div class="fx-cab"><b>Tareas flexibles</b><span>${pend ? `${pend} sin hacer` : 'Todas hechas'} · sin hora concreta</span><button class="ep-ico" aria-label="Cerrar" onclick="cerrarFlex()">${ICO_CRUZ}</button></div>
-    <div class="fx-lista">${L.map(fila).join('')}</div>
+  // 4.80: sin ninguna, tres ejemplos inventados (en gris) que se añaden con ＋
+  const ejemplos = ['Llamar al banco', 'Comprar pilas y bombillas', 'Contestar el correo pendiente'];
+  return `<div class="fx-cab"><b>Tareas flexibles</b><span>${!L.length ? 'Tareas de hoy sin hora concreta' : pend ? `${pend} sin hacer · sin hora concreta` : 'Todas hechas · sin hora concreta'}</span><button class="ep-ico" aria-label="Cerrar" onclick="cerrarFlex()">${ICO_CRUZ}</button></div>
+    <div class="fx-lista">${L.length ? L.map(fila).join('') : `<p class="fx-vacio">Aún no tienes ninguna. Por ejemplo:</p>${ejemplos.map(t => `<div class="fx-f fx-ej" style="--c:#8b5cf6"><span class="fx-cas"></span><div class="fx-t"><b>${t}</b></div><button class="fx-b" onclick="flexEjemplo('${t}')">＋ Añadir</button></div>`).join('')}`}</div>
     <button class="fx-nueva" onclick="cerrarFlex(); nuevoEvento(hoyK(), null, {todo: true})">＋ Añadir tarea flexible</button>`;
 }
 const minDe = iso => { const d = new Date(iso); return d.getHours() * 60 + d.getMinutes(); };
@@ -3826,6 +3834,10 @@ function flexAbrir(btn){
   p.style.top = (abajo + alto < innerHeight - 70 ? abajo : Math.max(12, r.top - alto - 8)) + 'px';
 }
 function cerrarFlex(){ const p = $('#flex-pop'); if(p) p.remove(); }
+function flexEjemplo(t){
+  AG_().eventos.push({id: uid(), creada: ahoraISO(), t, tipo: 'tarea', dia: hoyK(), dias: [], todo: true, ini: null, fin: null, rep: 'no', prio: 1, avisos: [], horasAviso: [], areas: [], area: null, saltar: [], hechos: [], mod: ahoraISO()});
+  guardar(); rerenderDia(); flexPinta(); aviso(`«${t}» añadida a tus tareas flexibles`);
+}
 function flexPinta(){ const p = $('#flex-pop'); if(p) p.innerHTML = flexHTML(); }
 document.addEventListener('click', e => { const p = $('#flex-pop'); if(p && e.target.isConnected && !p.contains(e.target) && !e.target.closest('.flex-pil')) cerrarFlex(); });
 function flexEmpezar(id, k){
@@ -4436,7 +4448,9 @@ function popHTML(e, k, enHoja){
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div><h3 class="${ok ? 'ok' : ''}">${broteEv(e)}${esc(e.t)}</h3>
       <p>${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
     <div id="ep-conf"></div>
-    <button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? '✓ Hecho · desmarcar' : 'Marcar como hecho'}</button>
+    <div class="ep-bots"><button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? '✓ Hecho · desmarcar' : 'Marcar como hecho'}</button>
+      ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
+      ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
     ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}">${desc}</div></div>` : ''}
     ${rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : ''}
     ${e.prio ? `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div>Prioridad ${prioDe(e).t.toLowerCase()}</div></div>` : ''}
@@ -4463,6 +4477,23 @@ function cerrarPop(){ const p = $('#ev-pop'); if(p) p.remove(); popInfo = null; 
 function popCerrarTodo(){ cerrarPop(); if($('#hoja .ep')) cerrarHoja(); }
 function popEditar(id, k){ popCerrarTodo(); setTimeout(() => editarEvento(id, k), $('#hoja') ? 320 : 0); }
 function popHecho(id, k){ popCerrarTodo(); alternarEv(id, k); }
+/* 4.80 (Gustavo): «Pasar a mañana» (a mañana, a la misma hora) y «Pasar a flexible» (sin hora; si ya pasó, a hoy).
+   Si se repite, solo esa vez: se quita ese día y se crea una copia suelta. Con Deshacer. */
+function popMover(id, k, a){
+  const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
+  const antes = JSON.stringify(A.eventos), hoy = hoyK(), destino = a === 'manana' ? sumarDias(hoy, 1) : (k < hoy ? hoy : k);
+  let x = e;
+  if(repite(e)){
+    e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO();
+    x = JSON.parse(JSON.stringify(e)); Object.assign(x, {id: uid(), creada: ahoraISO(), rep: 'no', saltar: [], hechos: []}); delete x.habRev; A.eventos.push(x);
+  }
+  x.dia = destino; x.mod = ahoraISO();
+  if(a === 'flex'){ x.todo = true; x.ini = null; x.fin = null; }
+  guardar(); popCerrarTodo(); rerenderDia();
+  const t = x.t.length > 28 ? x.t.slice(0, 27) + '…' : x.t;
+  avisoDeshacer(a === 'manana' ? `«${t}» pasa a mañana` : `«${t}» pasa a tareas flexibles${destino === hoy ? ' de hoy' : ''}`,
+    () => { A.eventos.splice(0, A.eventos.length, ...JSON.parse(antes)); guardar(); rerenderDia(); }, 5000);
+}
 function popDuplicar(id, k){
   const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
   const c = JSON.parse(JSON.stringify(e)); Object.assign(c, {id: uid(), creada: ahoraISO(), mod: ahoraISO(), hechos: [], saltar: []});
