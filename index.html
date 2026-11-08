@@ -1156,7 +1156,11 @@ html.claro .ev-ctx .ctx-borrar{color:#dc2626}
 .est-cab{margin-top:12px}
 .hoja-plana > .est-cab{margin:-4px 0 6px}
 .est-volver{display:inline-flex;align-items:center;gap:4px;font-weight:700}
-.est-tit{margin:6px 0 10px}
+.est-tit{margin:6px 0 10px;display:flex;align-items:center;color:var(--oro)}   /* 4.91 (Gustavo): títulos de las páginas del menú en dorado, con su icono a la izquierda */
+.aj-tit{color:var(--oro)}
+.prem-cab{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.prem-cab .est-tit{margin:0}
+.uso-sub{margin:0 0 8px;font-size:17px}
 .est-tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(var(--bl),.08);margin-bottom:12px}
 .est-tabs button{flex:1;border:0;border-radius:999px;padding:9px 6px;background:none;color:var(--suave);font:inherit;font-weight:800;font-size:14px;cursor:pointer}
 .est-tabs button.sel{background:var(--tarjeta);color:var(--tinta);box-shadow:0 1px 4px rgba(0,0,0,.25)}
@@ -1819,7 +1823,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.90';
+const VERSION = 'v4.91';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4725,7 +4729,7 @@ function menuHTML(){
     <div class="ml-g">
       <div class="ml-tema"><div class="seg-tema"><button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro'); abrirMenu()">${ICO_SOL} Día</button><button class="${temaClaro() ? '' : 'sel'}" onclick="ponerTema('oscuro'); abrirMenu()">${ICO_LUNA} Noche</button></div></div>
       ${MENU_SECC.filter(([v]) => v === 'estad').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}
-      ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}${esAdmin() ? fila(mIco('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.6c2.6.1 4.4 1.7 5 4.4"/>'), 'Quién usa la app', 'cerrarMenu(); usoLista = null; abrirUsuarios()') : ''}${MENU_SECC.filter(([v]) => v === 'ajustes').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+      ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}${esAdmin() ? fila(mIco('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.6c2.6.1 4.4 1.7 5 4.4"/>'), 'Solo admin', 'cerrarMenu(); abrirUsuarios(true)') : ''}${MENU_SECC.filter(([v]) => v === 'ajustes').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
     <div class="ml-g">${menuExtraHTML(fila)}</div>
     <div class="ml-g ml-g-sinc">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}</div>
 `;   // 4.63 (Gustavo): Sincronizar, abajo del todo (ya se sincroniza solo)
@@ -6302,7 +6306,8 @@ async function registrarUso(u){
 }
 /* Pantalla privada «Quién usa la app» (solo ADMINS) */
 let usoLista = null, usoError = '';
-async function abrirUsuarios(){
+async function abrirUsuarios(nueva){
+  if(nueva){ usoLista = null; usoError = ''; }   // 4.91: al abrir desde el menú, siempre se vuelve a cargar
   hojaAbierta = () => abrirUsuarios();
   mostrarHoja(usuariosHTML(), '#8b5cf6');
   if(usoLista === null){
@@ -6316,7 +6321,7 @@ async function abrirUsuarios(){
 }
 function usuariosHTML(){
   const ico = svgT('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.6c2.6.1 4.4 1.7 5 4.4"/>', 28);
-  const cab = `<div class="hoja-cab"><h2><span class="aj-tit-ico">${ico}</span>Quién usa la app</h2></div>`;
+  const cab = `<div class="hoja-cab"><h2><span class="aj-tit-ico">${ico}</span>Solo admin</h2></div><h3 class="uso-sub">Quién usa la app</h3>`;
   let cuerpo;
   if(usoError) cuerpo = `<p class="suave">${esc(usoError)}</p><div class="bots"><button class="btn sec" onclick="usoLista=null; usoError=''; abrirUsuarios()">Probar otra vez</button></div>`;
   else if(usoLista === null) cuerpo = `<p class="suave uso-cargando">Cargando…</p>`;
@@ -6568,7 +6573,7 @@ const PREMIUM_GRATIS = ['Tu flor de las áreas y todas tus tareas', 'Focus: bloq
 function vPremium(){
   const nom = nombrePila ? nombrePila() : '';
   return `<div class="prem">
-    <div class="est-cab"><button class="link est-volver" onclick="abrirMenu()">${ICO_IZQ.replace('width="24" height="24"', 'width="18" height="18"')} Menú</button></div>
+    <div class="est-cab prem-cab"><button class="link est-volver" onclick="abrirMenu()">${ICO_IZQ.replace('width="24" height="24"', 'width="18" height="18"')} Menú</button><h2 class="est-tit"><span class="aj-tit-ico">${ICO_PREMIUM}</span>Suscripción</h2></div>
     <div class="prem-hero"><div class="prem-logo"><svg viewBox="-100 -100 200 200" width="76" height="76" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1P')}</svg><span class="prem-corona">${ICO_PREMIUM}</span></div>
       <div><h2>Amable Life Premium</h2><p>${nom ? esc(nom) + ', de' : 'De'} momento tienes <b>todo gratis</b>: eres de las primeras personas en usar Amable Life.</p></div></div>
     <div class="prem-precio"><div><b>${PREMIUM_PRECIO}</b><span> al año</span><small>IVA incluido · unos 2 € al mes · cancelas cuando quieras</small></div><span class="prem-chip">Aún no se cobra</span></div>
@@ -6740,7 +6745,7 @@ function vEstad(){
   const cuerpo = {resumen: estResumen, tareas: estTareas, enfoque: estFocus, habitos: estHabitosTab}[estTab] || estResumen;
   return `<div class="est">
     <div class="est-cab"><button class="link est-volver" onclick="abrirMenu()">${ICO_IZQ.replace('width="24" height="24"', 'width="18" height="18"')} Menú</button></div>
-    <h2 class="est-tit">Estadísticas</h2>
+    <h2 class="est-tit"><span class="aj-tit-ico">${(MENU_SECC.find(x => x[0] === 'estad') || [])[2] || ''}</span>Estadísticas</h2>
     <div class="est-tabs" role="tablist">${tabs.map(([k, t]) => `<button role="tab" aria-selected="${estTab === k}" class="${estTab === k ? 'sel' : ''}" onclick="estTab = '${k}'; render()">${t}</button>`).join('')}</div>
     <div class="est-per">${Object.entries(EST_PER).map(([k, p]) => `<button class="${estPer === k ? 'sel' : ''}" onclick="estPer = '${k}'; render()">${p.t}</button>`).join('')}</div>
     ${cuerpo()}
