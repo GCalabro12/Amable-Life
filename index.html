@@ -1782,7 +1782,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.78';
+const VERSION = 'v4.79';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3776,8 +3776,16 @@ function rejillaHTML(dias){
   let pil = '';
   const ih = dias.indexOf(hoy), fl = ih >= 0 ? flexHoy() : [];
   if(ih >= 0 && fl.length){
-    const pend = fl.filter(x => !x.hecha).length, top = Math.max(2, Math.min((h1 - h0) * AG_PX - 30, y(minutosHoy()) - 15));
     const col = ih + 1 < dias.length ? ih + 1 : ih, izq = col !== ih;
+    // 4.79 (Gustavo): empieza a las 6:00 (o a la hora de ahora, si es más tarde) y, si se topa con una tarea de hora fija
+    // en su columna, salta al principio del bloque siguiente a esa tarea, para no taparla
+    const fijas = evsVer(dias[col]).filter(e => !e.todo), ocupa = 30 / AG_PX * 60;
+    let t = Math.max(360, minutosHoy());
+    for(let n = 0; n < 24; n++){
+      const e = fijas.find(z => z.ini < t + ocupa && z.fin > t); if(!e) break;
+      const b = BLOQUES.find(z => z.ini >= e.fin); t = b ? b.ini : e.fin;
+    }
+    const pend = fl.filter(x => !x.hecha).length, top = Math.max(2, Math.min((h1 - h0) * AG_PX - 30, y(t)));
     pil = `<button class="flex-pil ${izq ? 'izq' : 'der'} ${pend ? '' : 'todas'}" style="top:${top}px;${izq ? `left:calc(${col / dias.length * 100}% + 3px)` : 'right:4px'}" onclick="event.stopPropagation(); flexAbrir(this)" aria-label="Tareas flexibles de hoy">
       <span class="fp-fl">◀</span><b>Tareas flexibles</b><i>${pend || '✓'}</i></button>`;
   }
