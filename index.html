@@ -987,6 +987,15 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-ico{width:40px;height:40px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0}
 .ep-ico:hover{background:rgba(var(--bl),.1)}
 .ep-fila{display:flex;gap:16px;align-items:flex-start;padding:7px 0;font-size:14.5px}
+.ep-mas{background:color-mix(in srgb,#22c55e 22%,transparent)!important;font-weight:800}
+.obj-op{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;cursor:pointer}
+.obj-op input{margin-top:3px;accent-color:#22c55e}
+.obj-op span{display:flex;flex-direction:column;gap:2px}
+.obj-op small{color:var(--suave);font-size:12.5px}
+.obj-cant{display:flex;align-items:center;gap:8px;padding:4px 6px 8px 34px;flex-wrap:wrap}
+.obj-cant input{height:38px;border-radius:10px;border:1px solid rgba(var(--bl),.25);background:var(--tarjeta);color:var(--tinta);padding:0 10px;font:inherit}
+.obj-cant #obj-n{width:72px}
+.obj-cant #obj-u{width:130px}
 .ep-ed{border:0;background:none;padding:1px 4px;margin:-1px -2px;border-radius:6px;color:inherit;font:inherit;cursor:pointer;text-align:left}
 .ep-ed:hover{background:rgba(var(--bl),.1);text-decoration:underline dotted}
 .ep-cuando{position:relative}
@@ -1900,7 +1909,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.07';
+const VERSION = 'v5.08';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4018,7 +4027,7 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' + objDia(e, k) : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
     return `<div class="rj-col" data-k="${k}" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   // 4.78 (Gustavo): «Tareas flexibles» (las de hoy sin hora): un óvalo a la altura de la hora de ahora (baja con ella),
@@ -4479,7 +4488,7 @@ function pintarEvento(e){
       <div class="ev-dias">${DIAS_CORTO.map((x, i) => `<button data-d="${i}" class="${evEd.dias.includes(i) ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evDia(${i})">${x}</button>`).join('')}</div></div>
       <div id="frec-semanal" ${evEd.frec === 'semanal' ? '' : 'hidden'}><label class="frec-l"><select id="frec-veces" onchange="evEd.veces = +this.value; pintarDias()">${[1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(evEd.veces || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}</select> días a la semana, los que tú quieras</label></div>
       <div id="frec-intervalo" ${evEd.frec === 'intervalo' ? '' : 'hidden'}><label class="frec-l">Cada <input type="number" id="frec-cada" min="2" max="60" value="${evEd.cada || 2}" oninput="evEd.cada = Math.max(2, Math.min(60, +this.value || 2)); pintarDias()"> días</label></div>
-      </div></div></div>
+      </div></div>${objHojaHTML()}</div>
     </div>
     <div id="ev-fecha-w">
     <button type="button" class="ev-res" id="ev-res" onclick="evAbrirFecha()">${ICO_CALENDARIO}<span><b id="ev-res-t"></b><small id="ev-res-s"></small></span></button>
@@ -4724,10 +4733,10 @@ function popHTML(e, k, enHoja){
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${esc(e.t)}</h3>
-      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
+      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p>${rep}</p>` : ''}${objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
-    <div class="ep-bots"><button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
+    <div class="ep-bots">${objDe(e) && !ok ? `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}</button>` : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
       ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
     ${esMeta(e) ? metaTarjetaHTML(e) : ''}
@@ -5272,8 +5281,56 @@ function frecTipo(v){
   ['diario', 'semanal', 'intervalo'].forEach(x => { const el = $('#frec-' + x); if(el) el.hidden = x !== v; });
   pintarDias();
 }
+/* 5.08 (Gustavo, como el «Objetivo» de TickTick, en versión sencilla): un hábito es «Hecho o no hecho» (un toque) o «Una cantidad
+   al día» (8 vasos, 2 tareas, 20 páginas…): cada «＋1» de la tarjeta suma y, al llegar, queda hecho ese día. Sin lo de «Al verificar». */
+const OBJ_UNID = ['veces', 'vasos', 'páginas', 'minutos', 'tareas', 'km', 'pasos'];
+const objDe = e => e && e.tipo === 'habito' && e.obj && e.obj.n > 1 ? e.obj : null;
+const objTxtO = o => o ? `${o.n} ${o.u} al día` : 'Hecho o no hecho';
+const objProg = (e, k) => Math.min(((e.prog || {})[k] || 0), objDe(e) ? objDe(e).n : 0);
+const objDia = (e, k) => { const o = objDe(e); return o ? ` · ${hechoEv(e, k) ? o.n : objProg(e, k)}/${o.n} ${o.u}` : ''; };
+function objHojaHTML(){
+  const ev = evEd && evEd.id && AG_().eventos.find(x => x.id === evEd.id), o = objDe(ev);
+  return `<div class="desp" id="dc-obj"><button type="button" class="desp-btn" onclick="objTocar(this)">${svgT('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>', 22)}<span class="desp-t">Objetivo</span><span class="desp-v" id="dv-obj">${objTxtO(o)}</span>${FLECHA_ABAJO}</button>
+    <div class="frec-panel" id="obj-panel" hidden>
+      <label class="obj-op"><input type="radio" name="obj-m" value="todo" ${o ? '' : 'checked'} onchange="objPintar()"><span><b>Hecho o no hecho</b><small>Un toque y ese día está hecho</small></span></label>
+      <label class="obj-op"><input type="radio" name="obj-m" value="cant" ${o ? 'checked' : ''} onchange="objPintar()"><span><b>Una cantidad al día</b><small>Por ejemplo, 8 vasos de agua o 2 tareas. Cada «＋1» suma, y al llegar queda hecho</small></span></label>
+      <div class="obj-cant" id="obj-cant" ${o ? '' : 'hidden'}><input type="number" id="obj-n" min="2" max="999" value="${o ? o.n : 2}" aria-label="Cantidad" oninput="objPintar()">
+        <input type="text" id="obj-u" maxlength="20" list="obj-us" value="${esc(o ? o.u : 'veces')}" aria-label="Unidad" oninput="objPintar()"><datalist id="obj-us">${OBJ_UNID.map(u => `<option value="${u}">`).join('')}</datalist><span>al día</span></div>
+    </div></div>`;
+}
+function objLeer(){
+  const m = document.querySelector('#hoja input[name="obj-m"]:checked');
+  if(!m || m.value !== 'cant') return null;
+  return {n: Math.max(2, Math.min(999, Math.round(+valor('obj-n')) || 2)), u: (valor('obj-u') || 'veces').slice(0, 20)};
+}
+function objPintar(){
+  const o = objLeer(), c = $('#obj-cant'), v = $('#dv-obj');
+  if(c) c.hidden = !document.querySelector('#hoja input[name="obj-m"][value="cant"]:checked');
+  if(v) v.textContent = objTxtO(o);
+}
+function objTocar(b){
+  const p = $('#obj-panel'), abrir = p.hidden;
+  document.querySelectorAll('#hoja .desp-lista').forEach(x => x.hidden = true);
+  document.querySelectorAll('#hoja .desp-btn').forEach(x => x.classList.remove('abierto'));
+  const f = $('#frec-panel'); if(f) f.hidden = true;
+  p.hidden = !abrir; b.classList.toggle('abierto', abrir);
+}
+function habSumar(id, k){
+  const e = AG_().eventos.find(x => x.id === id), o = objDe(e); if(!o) return;
+  const lim = sumarDias(hoyK(), -120), P = {}; Object.entries(e.prog || {}).forEach(([d, n]) => { if(d >= lim) P[d] = n; });
+  P[k] = Math.min(o.n, (P[k] || 0) + 1); e.prog = P;
+  if(P[k] >= o.n && !hechoEv(e, k)){ e.hechos = [...(e.hechos || []).filter(d => d >= lim), k]; sonarHecho(); aviso(`¡Objetivo de hoy cumplido! ${o.n} ${o.u}`); }
+  else aviso(`${P[k]} de ${o.n} ${o.u}`);
+  e.mod = ahoraISO(); guardar(); rerenderDia(); popRepintar(e, k);
+}
+function popRepintar(e, k){
+  const p = $('#ev-pop'), h = document.querySelector('#hoja .ep-en-hoja');
+  if(p){ p.innerHTML = popHTML(e, k, false); if(popInfo){ popInfo.k = k; popInfo.hover = false; } if(typeof popEncajar === 'function') popEncajar(); }
+  else if(h) h.innerHTML = popHTML(e, k, true);
+}
 function frecTocar(b){
   const p = $('#frec-panel'), abrir = p.hidden;
+  const op = $('#obj-panel'); if(op) op.hidden = true;
   document.querySelectorAll('#hoja .desp-lista').forEach(x => x.hidden = true);
   document.querySelectorAll('#hoja .desp-btn').forEach(x => x.classList.remove('abierto'));
   p.hidden = !abrir; b.classList.toggle('abierto', abrir);
@@ -5306,7 +5363,7 @@ function guardarEvento(){
   const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, mod: ahoraISO()});
   guardar(); sonarHecho();
   aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
@@ -5335,6 +5392,7 @@ function alternarEv(id, k, desdeHoja){
   const ya = hechoEv(e, k);
   e.hechos = (e.hechos || []).filter(d => d !== k && d >= sumarDias(hoyK(), -120));
   if(!ya) e.hechos.push(k);
+  if(objDe(e)){ e.prog = Object.assign({}, e.prog || {}); if(ya) delete e.prog[k]; else e.prog[k] = objDe(e).n; }
   if(e.acc && !repite(e)){ const x = D.acciones.find(z => z.id === e.acc); if(x){ x.hecha = !ya; x.hechaEn = ya ? null : ahoraISO(); x.mod = ahoraISO(); } }
   e.mod = ahoraISO(); guardar(); if(!ya) sonarHecho();
   if(desdeHoja){ evEd = null; cerrarHoja(); }
