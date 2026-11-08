@@ -84,6 +84,12 @@ a.btn{text-decoration:none;box-sizing:border-box}
 .hab-marca:not(.rj-ev){position:relative}
 .hab-marca{z-index:3!important;box-shadow:0 0 0 2px var(--fondo2,#fff)}
 .hab-marca::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;background:linear-gradient(90deg,var(--tinta) 50%,transparent 0) repeat-x 0 0/10px 2.5px,linear-gradient(90deg,var(--tinta) 50%,transparent 0) repeat-x 0 100%/10px 2.5px,linear-gradient(0deg,var(--tinta) 50%,transparent 0) repeat-y 0 0/2.5px 10px,linear-gradient(0deg,var(--tinta) 50%,transparent 0) repeat-y 100% 0/2.5px 10px;animation:hormigas .7s linear infinite}
+.marca-anillo,.marca-pet{fill:none;stroke:var(--tinta);stroke-width:3;stroke-dasharray:3 2.2;stroke-linecap:round;pointer-events:none;opacity:0}
+.marca-anillo.on,.marca-pet.on{opacity:1;animation:marcaGira 2.4s linear infinite}
+.marca-pet.on{stroke-width:3.4;animation:marcaGira 2.4s linear infinite,marcaLate 1s ease-in-out infinite}
+@keyframes marcaGira{to{stroke-dashoffset:-52}}
+@keyframes marcaLate{50%{stroke-opacity:.35}}
+@media (prefers-reduced-motion:reduce){.marca-anillo.on,.marca-pet.on{animation:none}}
 @keyframes hormigas{to{background-position:10px 0,-10px 100%,0 -10px,100% 10px}}
 @media (prefers-reduced-motion:reduce){.hab-marca::after{animation:none}}
 .ico.g{width:26px;height:26px}
@@ -1914,7 +1920,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.12';
+const VERSION = 'v5.13';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3172,6 +3178,9 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
   });
   // zonas para tocar: pétalos (ver sus tareas) y centro (soltar tareas en el bloque)
   if(opt.resaltar){
+    // 5.13 (Gustavo): lo que está marcado se ve en la flor: un anillo de puntos que gira alrededor del centro (todos) o el borde del pétalo (esa área)
+    FL.forEach((a, i) => { const {L: Lp, W} = TAM[i]; s += `<g transform="rotate(${i*paso}) translate(0 ${-R0 + 8})"><path class="marca-pet" data-a="${a.id}" d="${petalo(Lp, W)}" pathLength="100"/></g>`; });
+    s += `<circle class="marca-anillo" r="${R0 + 4}" pathLength="100"/>`;
     FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="habFijar('${a.id}')" onmouseenter="habResaltar('${a.id}')" onmouseleave="habResaltar()"><title>Marcar los hábitos de ${a.nombre}</title></path>`; });
     s += `<circle class="g-centro" r="${R0}" fill="transparent" style="cursor:pointer" onclick="habFijar('*')" onmouseenter="habResaltar('*')" onmouseleave="habResaltar()"><title>Marcar todos tus hábitos</title></circle>`;
     return s + '</svg>';
@@ -3189,7 +3198,9 @@ function habResaltar(x){
     const e = A.find(z => z.id === el.dataset.ev);
     el.classList.toggle('hab-marca', !!(m && e && e.tipo === 'habito' && (m === '*' || areasEv(e).some(a => a.id === m))));
   });
-  document.querySelectorAll('.gc-flor').forEach(f => f.dataset.marca = habMarca || '');
+  document.querySelectorAll('.gc-flor').forEach(f => { f.dataset.marca = m || '';
+    f.querySelectorAll('.marca-anillo').forEach(c => c.classList.toggle('on', m === '*'));
+    f.querySelectorAll('.marca-pet').forEach(c => c.classList.toggle('on', !!m && c.dataset.a === m)); });
 }
 function habFijar(x){ habMarca = habMarca === x ? null : x; habResaltar(habMarca); }
 /* Al tocar (o pasar el ratón por) un pétalo: sus tareas, para arrastrarlas al centro o crear nuevas */
