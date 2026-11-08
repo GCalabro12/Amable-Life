@@ -1459,6 +1459,7 @@ body.pip .ev-mini{pointer-events:none}
 .girasol .g-hora{font-size:30px;font-weight:800;fill:#3a2208}
 .girasol .g-sub{font-size:10px;font-weight:800;fill:#5a3810}
 .girasol .g-frase{font-size:11px;font-weight:800;fill:#3a2208}
+.girasol .g-medalla{font-size:13px;fill:#5a3304}
 .girasol .g-ahora{font-size:8px;font-weight:800;fill:#5a3810;letter-spacing:.8px}
 .girasol .g-nom{font-size:12.5px;font-weight:800;fill:#fff;paint-order:stroke;stroke:rgba(20,12,40,.55);stroke-width:3px;stroke-linejoin:round}
 .girasol .g-nom.largo{font-size:11px}
@@ -1878,7 +1879,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.02';
+const VERSION = 'v5.03';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3090,12 +3091,17 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
     const ok = opt.medalla.ok, est = [], nf = opt.medalla.faltan;
     if(!ok) s += `<text class="g-hora" y="-12" text-anchor="middle" dominant-baseline="central">${nf}</text><text class="g-sub" y="14" text-anchor="middle" dominant-baseline="central">${nf === 1 ? 'área' : 'áreas'} sin</text><text class="g-sub" y="28" text-anchor="middle" dominant-baseline="central">hábitos</text>`;
     else {
-    for(let q = 0; q < 10; q++){ const r = q % 2 ? 5.2 : 12.5, a = Math.PI / 5 * q - Math.PI / 2; est.push((r * Math.cos(a)).toFixed(1) + ',' + (r * Math.sin(a) - 4).toFixed(1)); }
-    const [c1, c2, aro, fondo, borde, estC] = ['#e0323a', '#2563eb', '#fff7d6', '#f59e0b', '#9a4a07', '#fff'];
-    s += `<g class="medalla${ok ? ' ok' : ''}"><polygon points="-19,-60 -6,-60 5,-27 -8,-27" fill="${c1}"/><polygon points="19,-60 6,-60 -5,-27 8,-27" fill="${c2}"/>
-      <circle cy="-4" r="27" fill="${aro}" stroke="${borde}" stroke-width="2.5"/><circle cy="-4" r="20" fill="${fondo}" stroke="${borde}" stroke-width="1.5"/>
-      <polygon points="${est.join(' ')}" fill="${estC}" stroke="${borde}" stroke-width="1" stroke-linejoin="round"/></g>
-      <text class="g-frase" y="38" text-anchor="middle" dominant-baseline="central">¡Flor equilibrada!</text>`; }
+    // 5.03 (Gustavo): todo el centro es la medalla (sustituye al centro del girasol)
+    for(let q = 0; q < 10; q++){ const r = q % 2 ? 12 : 29, a = Math.PI / 5 * q - Math.PI / 2; est.push((r * Math.cos(a)).toFixed(1) + ',' + (r * Math.sin(a) - 12).toFixed(1)); }
+    const R1 = R0 - 9, mid = `medG${n}`, mid2 = `medA${n}`;
+    s += `<defs><radialGradient id="${mid}" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#f8c63a"/><stop offset="1" stop-color="#c47a12"/></radialGradient>
+      <linearGradient id="${mid2}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe680"/><stop offset=".5" stop-color="#d99a1e"/><stop offset="1" stop-color="#8a5208"/></linearGradient></defs>
+      <g class="medalla ok"><circle r="${R0}" fill="url(#${mid2})" stroke="#7a4706" stroke-width="2"/>
+      <circle r="${R0 - 4.5}" fill="none" stroke="#fff6cc" stroke-width="1.5" stroke-dasharray="2 4" stroke-linecap="round" opacity=".9"/>
+      <circle r="${R1}" fill="url(#${mid})" stroke="#9a5a0a" stroke-width="1.5"/>
+      <polygon points="${est.join(' ')}" fill="#fffbea" stroke="#9a5a0a" stroke-width="1.5" stroke-linejoin="round"/></g>
+      <text class="g-frase g-medalla" y="30" text-anchor="middle" dominant-baseline="central">¡Flor</text>
+      <text class="g-frase g-medalla" y="44" text-anchor="middle" dominant-baseline="central">equilibrada!</text>`; }
   }
   else if(opt.frase){   // 4.76 (Gustavo): en el centro, la frase de la flor equilibrada (sin lo del bloque)
     const L = ['Para tener una flor', 'equilibrada, ten al', 'menos una tarea o', 'hábito a la semana', 'en cada pétalo'];
