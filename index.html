@@ -1754,7 +1754,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.74';
+const VERSION = 'v4.75';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -1950,6 +1950,13 @@ function tareasSemanaArea(id){
   D.acciones.forEach(x => { if(x.area === id && (!x.hecha || (x.hechaEn && new Date(x.hechaEn).getTime() >= t0))) ids.add(x.id); });
   dias.forEach(k => eventosDe(k).forEach(e => { if(areasEv(e).some(a => a.id === id) && !(e.acc && ids.has(e.acc))) ids.add('ev:' + e.id); }));
   return ids.size;
+}
+/* 4.75: hábitos de un área: los del calendario con esa área y los que dijiste en «Revisar mi flor» (sin contar dos veces) */
+function habitosDeArea(id){
+  const k = new Set();
+  AG_().eventos.forEach(e => { if(e.tipo === 'habito' && areasEv(e).some(a => a.id === id)) k.add(e.habRev || 'ev:' + e.id); });
+  (((D.habitosArea || {})[id] || {}).tengo || []).forEach(t => k.add(claveHab(id, t)));
+  return k.size;
 }
 function petalo(L, W){
   const w = W != null ? W : Math.min(34, 14 + L*0.2);
@@ -2955,13 +2962,13 @@ function florGirasol(niveles, bloque, pendientesN){
   const conBloque = idsEnBloquesHoy();
   FL.forEach((a, i) => {
     const ang = i*paso - 90, giro = (ang > 90 || ang < -90) ? ang + 180 : ang, Lp = TAM[i].L;
-    // nº de tareas de esa área que aún no tienen bloque hoy
-    const nTar = D.acciones.filter(x => x.area === a.id && !x.hecha && !conBloque.has(x.id)).length;
+    // 4.75 (Gustavo): el número del pétalo = cuántos hábitos tiene esa área (también en los pétalos pequeños)
+    const nTar = habitosDeArea(a.id);
     // en el centro del pétalo: el nombre y, debajo, el número
     const [xm, ym] = pt(R0 - 8 + Lp*.52, ang), largo = a.corto.length > 8 || Lp < 80 ? ' largo' : '';
     s += `<g transform="translate(${xm.toFixed(1)} ${ym.toFixed(1)}) rotate(${giro})">
-      <text class="g-nom${largo}" y="${nTar ? -7 : 0}" text-anchor="middle" dominant-baseline="central">${a.corto}</text>
-      ${nTar ? `<text class="g-cuenta" y="10" text-anchor="middle" dominant-baseline="central">${nTar}</text>` : ''}</g>`;
+      <text class="g-nom${largo}" y="-7" text-anchor="middle" dominant-baseline="central">${a.corto}</text>
+      <text class="g-cuenta" y="10" text-anchor="middle" dominant-baseline="central">${nTar}</text></g>`;
   });
   // zonas para tocar: pétalos (ver sus tareas) y centro (soltar tareas en el bloque)
   FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="abrirPanelArea('${a.id}')" onmouseenter="if(matchMedia('(hover: hover)').matches) abrirPanelArea('${a.id}', true)"/>`; });
