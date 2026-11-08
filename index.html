@@ -537,6 +537,12 @@ body.pip #toast{bottom:16px}
 .hoja-plana .hoja-cab h2{display:flex;align-items:center;color:var(--oro)}   /* 4.87 (Gustavo): títulos de los menús en dorado, como el logotipo */
 .hoja-plana > .hoja-cab{margin:-6px 0 20px}   /* 4.87: el título más arriba y separado de lo de debajo */
 .nube-oro{color:var(--oro);font-weight:700;font-size:13px}
+.uso-res{margin:0;font-size:16px}
+.uso-lista{display:flex;flex-direction:column;gap:10px}
+.uso-f{border:1.5px solid rgba(139,92,246,.35);border-radius:16px;padding:12px 14px}
+.uso-f1{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.uso-pais{color:var(--oro);font-weight:800;font-size:13px;white-space:nowrap}
+.uso-nums{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 4px;font-size:14px}
 .copia-bots{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:14px}
 .aj-eliminar .aj-sub > summary{justify-content:center;position:relative}
 .aj-eliminar .aj-sub > summary > svg{position:absolute;right:14px}
@@ -1807,7 +1813,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.87';
+const VERSION = 'v4.88';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4009,7 +4015,6 @@ function gcTop(){
   else t = `${capi(MESES[d.getMonth()])} de ${d.getFullYear()}`;
   const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año', agenda: 'Agenda', '7dias': '7 días', '3dias': '3 días', rango: `${agN} días`, semanas: `${agW} semanas`}[agModo];
   return `<div class="gc-top">
-    <div class="gc-menu-w"><button class="gc-ico" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()">${ICO_MENU}</button></div>
     <div class="gc-marca"><svg viewBox="-100 -100 200 200" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1G')}</svg><b>Amable Life</b><span class="gc-ver"></span></div>
     <button class="gc-hoy" onclick="agHoy()" title="Ir a hoy (T)">Hoy</button>
     <button class="gc-ico" aria-label="Anterior" title="Anterior" onclick="agMover(-1)">${ICO_IZQ}</button>
@@ -4024,6 +4029,7 @@ function gcTop(){
         <hr class="gc-sep">
         <button class="gc-op" onclick="event.stopPropagation(); gcCambiar('finde')"><span class="gc-chk">${verFinde() ? ICO_CHECK : ''}</span>Mostrar fines de semana</button>
         <button class="gc-op" onclick="event.stopPropagation(); gcCambiarHechas()"><span class="gc-chk">${verHechas() ? ICO_CHECK : ''}</span>Mostrar tareas completadas</button></div></div>
+    <div class="gc-menu-w"><button class="gc-ico" aria-label="Menú: tu cuenta y las vistas" title="Menú" onclick="abrirMenu()">${ICO_MENU}</button></div>   <!-- 4.88 (Gustavo): a la derecha, como en Hábitos, Focus y Cuerpo -->
   </div>`;
 }
 let gcMiniDes = 0;
@@ -4691,7 +4697,7 @@ function menuHTML(){
     <div class="ml-g">
       <div class="ml-tema"><div class="seg-tema"><button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro'); abrirMenu()">${ICO_SOL} Día</button><button class="${temaClaro() ? '' : 'sel'}" onclick="ponerTema('oscuro'); abrirMenu()">${ICO_LUNA} Noche</button></div></div>
       ${MENU_SECC.filter(([v]) => v === 'estad').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}
-      ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}${MENU_SECC.filter(([v]) => v === 'ajustes').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
+      ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}${esAdmin() ? fila(mIco('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.6c2.6.1 4.4 1.7 5 4.4"/>'), 'Quién usa la app', 'cerrarMenu(); usoLista = null; abrirUsuarios()') : ''}${MENU_SECC.filter(([v]) => v === 'ajustes').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
     <div class="ml-g">${menuExtraHTML(fila)}</div>
     <div class="ml-g ml-g-sinc">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}</div>
 `;   // 4.63 (Gustavo): Sincronizar, abajo del todo (ya se sincroniza solo)
@@ -6053,7 +6059,8 @@ async function iniciarNube(){
       nube.ref = u ? firebase.firestore().collection('usuarios').doc(u.uid).collection('equilibra').doc('datos') : null;
       if(u) await traerNube();
       if(u && u.displayName && !D.nombre) guardarNombre(u.displayName);
-      if(u) setTimeout(() => revisarRegistro(true), 1000);   // con la cuenta ya lista, el resumen diario puede salir
+      if(u) setTimeout(() => revisarRegistro(true), 1000);
+      if(u) setTimeout(() => registrarUso(u), 1500);   // 4.88: país aproximado y días de uso (pantalla «Quién usa la app»)   // con la cuenta ya lista, el resumen diario puede salir
       if(authInicial){
         authInicial = false;
         let saltada = false; try{ saltada = sessionStorage.getItem('equilibra.sinCuenta') === '1'; }catch(e){}
@@ -6222,6 +6229,87 @@ function entrar(){
     else if(!['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code)) aviso('No se pudo entrar (' + e.code + ')');
   });
 }
+/* 4.88 (Gustavo): quién usa Amable Life. Cada cuenta guarda una vez al día en usuarios/{uid}/uso/resumen su país aproximado
+   (por la zona horaria y el idioma del aparato, sin mirar la IP), los días que abre la app y si es el móvil o el ordenador.
+   Nunca contraseñas ni lo que escribe. Solo las cuentas de ADMINS lo leen (pantalla «Quién usa la app», regla de Firestore aparte). */
+const ADMINS = ['info@practicaintegral.club', 'gcalabro12@gmail.com'];
+const esAdmin = () => !!(nube.usuario && nube.usuario.email && ADMINS.includes(nube.usuario.email.toLowerCase()));
+const ZONA_PAIS = {'Europe/Madrid':'ES','Atlantic/Canary':'ES','Africa/Ceuta':'ES','Europe/Andorra':'AD','Europe/Lisbon':'PT','Atlantic/Madeira':'PT','Atlantic/Azores':'PT',
+  'Europe/Paris':'FR','Europe/Berlin':'DE','Europe/Rome':'IT','Europe/London':'GB','Europe/Dublin':'IE','Europe/Amsterdam':'NL','Europe/Brussels':'BE','Europe/Zurich':'CH','Europe/Vienna':'AT',
+  'Europe/Stockholm':'SE','Europe/Oslo':'NO','Europe/Copenhagen':'DK','Europe/Helsinki':'FI','Europe/Warsaw':'PL','Europe/Prague':'CZ','Europe/Budapest':'HU','Europe/Bucharest':'RO','Europe/Athens':'GR','Europe/Moscow':'RU','Europe/Kiev':'UA','Europe/Kyiv':'UA','Europe/Istanbul':'TR','Europe/Luxembourg':'LU','Europe/Monaco':'MC',
+  'America/Mexico_City':'MX','America/Cancun':'MX','America/Monterrey':'MX','America/Merida':'MX','America/Tijuana':'MX','America/Chihuahua':'MX','America/Hermosillo':'MX','America/Mazatlan':'MX','America/Bahia_Banderas':'MX','America/Matamoros':'MX',
+  'America/Bogota':'CO','America/Lima':'PE','America/Santiago':'CL','America/Caracas':'VE','America/Montevideo':'UY','America/Asuncion':'PY','America/La_Paz':'BO','America/Guayaquil':'EC',
+  'America/Costa_Rica':'CR','America/Panama':'PA','America/Guatemala':'GT','America/El_Salvador':'SV','America/Tegucigalpa':'HN','America/Managua':'NI','America/Santo_Domingo':'DO','America/Havana':'CU','America/Puerto_Rico':'PR',
+  'America/Sao_Paulo':'BR','America/New_York':'US','America/Chicago':'US','America/Denver':'US','America/Los_Angeles':'US','America/Phoenix':'US','America/Anchorage':'US','America/Detroit':'US','Pacific/Honolulu':'US',
+  'America/Toronto':'CA','America/Vancouver':'CA','America/Montreal':'CA','Africa/Casablanca':'MA','Asia/Tokyo':'JP','Australia/Sydney':'AU'};
+function paisAprox(){
+  let zona = '', cod = '';
+  try{ zona = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){}
+  if(/^America\/Argentina\//.test(zona) || zona === 'America/Buenos_Aires') cod = 'AR';
+  cod = cod || ZONA_PAIS[zona] || '';
+  if(!cod){ const m = (navigator.language || '').match(/-([A-Z]{2})$/i); if(m) cod = m[1].toUpperCase(); }
+  let nom = '';
+  try{ nom = cod ? new Intl.DisplayNames(['es'], {type: 'region'}).of(cod) : ''; }catch(e){}
+  return {pais: nom || (zona ? zona.split('/').pop().replace(/_/g, ' ') : 'Desconocido'), cod, zona, idioma: navigator.language || ''};
+}
+async function registrarUso(u){
+  if(!u || !nube.listo) return;
+  const hoy = hoyK(), marca = u.uid + '|' + hoy + '|' + (esApp ? 'app' : 'web');
+  try{ if(localStorage.getItem('equilibra.uso') === marca) return; }catch(e){}
+  try{
+    const ref = firebase.firestore().collection('usuarios').doc(u.uid).collection('uso').doc('resumen');
+    const s = await ref.get(), v = s.exists ? s.data() : {};
+    const dias = (v.dias || []).filter(d => d >= sumarDias(hoy, -120));
+    const nuevo = !dias.includes(hoy);
+    if(!dias.includes(hoy)) dias.push(hoy);
+    const p = paisAprox(), ahora = ahoraISO(), donde = Object.assign({}, v.donde || {});
+    donde[esApp ? 'movil' : 'ordenador'] = ahora;
+    await ref.set({uid: u.uid, nombre: u.displayName || D.nombre || '', email: u.email || '',
+      entra: (u.providerData || []).some(x => x.providerId === 'google.com') ? 'Google' : 'Email y PIN',
+      pais: p.pais, cod: p.cod, zona: p.zona, idioma: p.idioma, alta: v.alta || ahora, ultimo: ahora, ultDia: hoy,
+      dias: dias.sort(), total: (v.total || 0) + (nuevo ? 1 : 0), donde, version: VERSION + (miApp() ? ' · app ' + miApp() : '')});
+    try{ localStorage.setItem('equilibra.uso', marca); }catch(e){}
+  }catch(e){ console.warn('Amable Life: registro de uso', e); }
+}
+/* Pantalla privada «Quién usa la app» (solo ADMINS) */
+let usoLista = null, usoError = '';
+async function abrirUsuarios(){
+  hojaAbierta = () => abrirUsuarios();
+  mostrarHoja(usuariosHTML(), '#8b5cf6');
+  if(usoLista === null){
+    try{
+      const q = await firebase.firestore().collectionGroup('uso').get();
+      usoLista = q.docs.map(d => d.data()).filter(x => x && x.ultimo).sort((a, b) => (b.ultimo || '').localeCompare(a.ultimo || ''));
+      usoError = '';
+    }catch(e){ usoLista = null; usoError = e && e.code === 'permission-denied' ? 'Falta poner la regla de Firestore que te deja ver esta lista.' : 'No se ha podido cargar la lista. Prueba otra vez.'; }
+    if($('.uso-cargando')) mostrarHoja(usuariosHTML(), '#8b5cf6');
+  }
+}
+function usuariosHTML(){
+  const ico = svgT('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.6c2.6.1 4.4 1.7 5 4.4"/>', 28);
+  const cab = `<div class="hoja-cab"><h2><span class="aj-tit-ico">${ico}</span>Quién usa la app</h2></div>`;
+  let cuerpo;
+  if(usoError) cuerpo = `<p class="suave">${esc(usoError)}</p><div class="bots"><button class="btn sec" onclick="usoLista=null; usoError=''; abrirUsuarios()">Probar otra vez</button></div>`;
+  else if(usoLista === null) cuerpo = `<p class="suave uso-cargando">Cargando…</p>`;
+  else {
+    const hoy = hoyK(), d7 = sumarDias(hoy, -6), d30 = sumarDias(hoy, -29);
+    const en = (x, desde) => (x.dias || []).filter(d => d >= desde).length;
+    const act7 = usoLista.filter(x => (x.ultDia || '') >= d7).length;
+    const paises = {}; usoLista.forEach(x => { paises[x.pais || 'Desconocido'] = (paises[x.pais || 'Desconocido'] || 0) + 1; });
+    const fecha = iso => { if(!iso) return '—'; const d = new Date(iso); return `${d.getDate()} ${MESES[d.getMonth()].slice(0, 3)}${d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : ''}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+    cuerpo = `<p class="uso-res"><b>${usoLista.length}</b> ${usoLista.length === 1 ? 'persona con cuenta' : 'personas con cuenta'} · <b>${act7}</b> en los últimos 7 días</p>
+      <p class="peq suave" style="margin:4px 0 14px">${Object.entries(paises).sort((a, b) => b[1] - a[1]).map(([p, n]) => `${esc(p)} ${n}`).join(' · ')}</p>
+      <div class="uso-lista" id="uso-lista">${usoLista.map(x => `<div class="uso-f">
+        <div class="uso-f1"><b>${esc(x.nombre || 'Sin nombre')}</b><span class="uso-pais">${esc(x.pais || '')}</span></div>
+        <div class="peq suave">${esc(x.email || '')} · entra con ${esc(x.entra || '—')}</div>
+        <div class="uso-nums"><span><b>${en(x, d7)}</b> de 7 días</span><span><b>${en(x, d30)}</b> de 30 días</span><span><b>${x.total || 0}</b> días en total</span></div>
+        <div class="peq suave">Última vez: ${fecha(x.ultimo)}${x.donde ? ' · ' + Object.keys(x.donde).map(k => k === 'movil' ? 'móvil' : 'ordenador').join(' y ') : ''} · desde ${fecha(x.alta).split(',')[0]}</div></div>`).join('') || '<p class="suave">Aún no hay nadie apuntado. Se apunta cada persona la primera vez que abre esta versión con su cuenta.</p>'}</div>
+      <p class="peq suave" style="margin-top:14px">El país es aproximado (por la zona horaria y el idioma del aparato). Solo salen quienes tienen cuenta. Las contraseñas y los PIN no se guardan aquí ni los puede ver nadie.</p>
+      <div class="bots" style="justify-content:center"><button class="btn sec" onclick="usoLista=null; abrirUsuarios()">Actualizar</button></div>`;
+  }
+  return `<div class="hoja-plana">${cab}${cuerpo}</div>`;
+}
+
 function salir(){
   if(!nube.listo) return;
   firebase.auth().signOut().then(() => { aviso('Sesión cerrada. Tus datos siguen en este dispositivo.'); render(); });
@@ -6229,7 +6317,8 @@ function salir(){
 function cuentaHTML(){
   const u = nube.usuario;
   if(u) return `<div class="cuenta">${u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : ''}<div><b>${esc(u.displayName || 'Tu cuenta')}</b><span>${esc(u.email || '')}</span></div></div>${unirHTML(true)}
-    <p class="nube-oro" style="margin:0 0 14px">☁️ Tus datos se guardan en la nube y se ven en todos tus dispositivos.</p>
+    <p class="nube-oro" style="margin:0 0 6px">☁️ Tus datos se guardan en la nube y se ven en todos tus dispositivos.</p>
+    <p class="peq suave" style="margin:0 0 14px">Para mejorar la app apuntamos tu país aproximado y los días que la abres. Nunca tu contraseña ni lo que escribes.</p>
     ${copiaHTML()}
     ${esCuentaPin(u) ? `<div class="cta-b"><h4>PIN</h4><p class="peq suave">El PIN de 4 números con el que entras con tu correo.</p><div class="bots"><button class="btn sec" onclick="abrirCambiarPin()">Cambiar el PIN</button></div></div>` : ''}
 `;
