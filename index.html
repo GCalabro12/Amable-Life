@@ -1879,7 +1879,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.03';
+const VERSION = 'v5.04';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3100,8 +3100,7 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
       <circle r="${R0 - 4.5}" fill="none" stroke="#fff6cc" stroke-width="1.5" stroke-dasharray="2 4" stroke-linecap="round" opacity=".9"/>
       <circle r="${R1}" fill="url(#${mid})" stroke="#9a5a0a" stroke-width="1.5"/>
       <polygon points="${est.join(' ')}" fill="#fffbea" stroke="#9a5a0a" stroke-width="1.5" stroke-linejoin="round"/></g>
-      <text class="g-frase g-medalla" y="30" text-anchor="middle" dominant-baseline="central">¡Flor</text>
-      <text class="g-frase g-medalla" y="44" text-anchor="middle" dominant-baseline="central">equilibrada!</text>`; }
+      ${(opt.medalla.lineas || ['¡Flor', 'equilibrada!']).map((l, q) => `<text class="g-frase g-medalla" y="${30 + q * 14}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`).join('')}`; }
   }
   else if(opt.frase){   // 4.76 (Gustavo): en el centro, la frase de la flor equilibrada (sin lo del bloque)
     const L = ['Para tener una flor', 'equilibrada, ten al', 'menos una tarea o', 'hábito a la semana', 'en cada pétalo'];
@@ -4203,7 +4202,8 @@ function gcLado(){
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
       ${mesPeq(m0, true)}</div>
     <div class="gc-hora">${fPref.zona ? 'Hora de ' + nombreZona() : 'Hora de aquí'} <b>${horaEspana()}</b>${h >= 7 && h < 20 ? ICO_SOL : ICO_LUNA}</div>
-    <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Hábitos"><span class="gc-flor-t">Tus hábitos semanales</span>${florGirasol(D.niveles, null, pendientes().length, {habitos: habitosTotal()})}${areasCubiertasHTML()}</button>
+    <button class="gc-flor" onclick="ir('dia')" aria-label="Ir a Hábitos"><span class="gc-flor-t">Tus hábitos semanales</span>${(() => { const nh = habitosTotal(), tod = AREAS.every(a => habitosDeArea(a.id));   // 5.04 (Gustavo): también aquí, la medalla con todas las áreas cubiertas
+      return florGirasol(D.niveles, null, pendientes().length, tod ? {medalla: {ok: true, faltan: 0, lineas: [`${nh} ${nh === 1 ? 'hábito' : 'hábitos'}`, nh === 1 ? 'semanal' : 'semanales']}} : {habitos: nh}); })()}${areasCubiertasHTML()}</button>
   </aside>`;
 }
 setInterval(() => document.querySelectorAll('.gc-hora b').forEach(b => b.textContent = horaEspana()), 20000);
