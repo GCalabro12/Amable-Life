@@ -971,6 +971,9 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-ico{width:40px;height:40px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0}
 .ep-ico:hover{background:rgba(var(--bl),.1)}
 .ep-fila{display:flex;gap:16px;align-items:flex-start;padding:7px 0;font-size:14.5px}
+.ep-tit p.ep-hab{display:flex;align-items:center;gap:6px;margin:0 0 4px;font-size:12.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#4ade80}
+html.claro .ep-tit p.ep-hab{color:#15803d}
+.ep-hab svg{width:14px;height:14px;flex:none}
 .ep-fila > svg{flex:none;margin-top:1px;color:var(--suave)}
 .ep-cuad{flex:none;width:16px;height:16px;border-radius:4px;margin:8px 2px 0}
 .ep-tit h3{margin:0;font-size:22px;font-weight:600;line-height:1.25;word-break:break-word}
@@ -1845,7 +1848,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.94';
+const VERSION = 'v4.95';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4581,22 +4584,28 @@ function repTxt(e){
   const d = fechaDe(e.dia);
   return {dia: 'Cada día', semana: `Cada semana, el ${DIAS_LARGO[diaSem(e.dia)]}`, mes: `Cada mes, el día ${d.getDate()}`, anio: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`, lab: 'De lunes a viernes'}[e.rep] || '';
 }
+/* 4.95 (Gustavo): en la tarjeta de un hábito, arriba, en verde y en mayúsculas, «HÁBITO DEL ÁREA DE PAREJA» con su pétalo (en lugar de la línea del área de abajo) */
+function habAreaTxt(ars){
+  if(!ars.length) return 'Hábito';
+  const n = ars.map(a => a.nombre);
+  return ars.length === 1 ? `Hábito del área de ${n[0]}` : `Hábito de las áreas de ${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}`;
+}
 function popHTML(e, k, enHoja){
-  const ok = hechoEv(e, k), ars = areasEv(e), rep = repTxt(e);
+  const ok = hechoEv(e, k), ars = areasEv(e), rep = repTxt(e), hab = e.tipo === 'habito';
   const rec = recTxtEv(e);
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
-    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div><h3 class="${ok ? 'ok' : ''}">${broteEv(e)}${esc(e.t)}</h3>
+    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${broteEv(e)}${esc(e.t)}</h3>
       <p>${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
     <div id="ep-conf"></div>
-    <div class="ep-bots"><button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? '✓ Hecho · desmarcar' : 'Marcar como hecho'}</button>
+    <div class="ep-bots"><button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
       ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
     ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}">${desc}</div></div>` : ''}
     ${rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : ''}
     ${e.prio ? `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div>Prioridad ${prioDe(e).t.toLowerCase()}</div></div>` : ''}
-    ${ars.length ? `<div class="ep-fila">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<div>${ars.map(a => `${ico(a)} ${a.nombre}`).join(' · ')}</div></div>` : ''}`;
+    ${ars.length && !hab ? `<div class="ep-fila">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<div>${ars.map(a => `${ico(a)} ${a.nombre}`).join(' · ')}</div></div>` : ''}`;
 }
 let popInfo = null, popT = null, popCierreT = null;
 function verEvento(id, k, el, hover){
