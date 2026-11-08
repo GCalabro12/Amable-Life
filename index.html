@@ -731,6 +731,14 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
   background:linear-gradient(90deg,#8b5cf6,#a855f7);color:#fff;font:inherit;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 14px rgba(139,92,246,.45)}
 .flex-pil .fp-fl{font-size:11px}
 .flex-pil i{font-style:normal;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#fff;color:#7c3aed;display:grid;place-items:center;font-size:12px}
+.pa-sub{margin:10px 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--suave)}
+.pa-habs{display:flex;flex-direction:column;gap:6px}
+.pa-hab{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--c) 16%,var(--tarjeta));color:var(--tinta);font:inherit;cursor:pointer}
+.pa-hab .brote{width:18px;height:18px;flex:none;color:#16a34a}
+.pa-hab span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pa-hab b{font-size:15px;font-weight:700}
+.pa-hab small{font-size:13px;color:var(--suave);font-weight:600}
+.pa-hab.suelto{cursor:default}
 .flex-pil.vacia{opacity:.8;box-shadow:0 2px 8px rgba(139,92,246,.3)}
 .fx-vacio{margin:0 0 2px;font-size:13px;color:var(--suave)}
 .fx-ej{opacity:.75;align-items:center}
@@ -1788,7 +1796,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.80';
+const VERSION = 'v4.81';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3028,12 +3036,26 @@ function panelArea(){
   return `<section class="panel-area" id="panel-area" style="--c:${a.color}">
     <div class="pa-cab">${ico(a, 'g')}<div><b>${a.nombre}</b><small>${nv ? NIVELES[nv].titulo : 'Sin revisar'} · <button class="link" onclick="abrirPetalo('${a.id}')">cambiar</button></small></div>
       <button class="del" aria-label="Cerrar" onclick="panelAbierto = null; const y = scrollY; render(); scrollTo(0, y)">✕</button></div>
+    ${habitosPanelHTML(a)}
+    ${lista.length ? '<p class="pa-sub">Tareas</p>' : ''}
     ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${bandX(x)}${esc(x.texto)}${durX(x)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
       <div class="sa-l2">${tagArea(a)}<button class="sa-con" onclick="quitarDeBloques('${x.id}')" title="Toca para quitarla del bloque">✓ Con bloque · quitar</button></div></div>` : filaTarea(x, c >= 0, false)).join('')
       : '<p class="suave" style="margin:6px 0">Este pétalo no tiene tareas pendientes.</p>'}
     <div class="campo-voz" style="margin-top:10px"><input type="text" id="pa-nueva" maxlength="120" placeholder="Nueva tarea para ${esc(a.corto)}" onkeydown="if(event.key==='Enter')nuevaEnPanel()">${botonMic()}</div>
     <button class="btn sec ancho" style="margin-top:8px" onclick="nuevaEnPanel()">＋ Añadir al área de ${esc(a.nombre)}</button>
   </section>`;
+}
+/* 4.81 (Gustavo): en el panel del pétalo, sus hábitos con la frecuencia y la hora. Los del calendario se tocan para ver su tarjeta;
+   los que solo dijiste en «Revisar mi flor» llevan «Definir día y hora» */
+function habitosPanelHTML(a){
+  const ev = AG_().eventos.filter(e => e.tipo === 'habito' && areasEv(e).some(z => z.id === a.id)), claves = new Set(ev.map(e => e.habRev).filter(Boolean));
+  const sueltos = (((D.habitosArea || {})[a.id] || {}).tengo || []).filter(t => !claves.has(claveHab(a.id, t)));
+  if(!ev.length && !sueltos.length) return '';
+  const frec = e => { const f = e.frec || 'diario';
+    if(f === 'diario'){ const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length ? d.map(k => DIAS_L[k]).join(' ') : 'Sin días'; }
+    return txtHabito(e); };
+  return `<p class="pa-sub">Hábitos</p><div class="pa-habs">${ev.map(e => `<button class="pa-hab" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small></span></button>`).join('')}
+    ${sueltos.map(t => `<div class="pa-hab suelto">${ICO_BROTE}<span><b>${esc(t)}</b><small>Sin día ni hora · <button class="link" onclick="P = P || {}; empezarDefHab()">Definir día y hora</button></small></span></div>`).join('')}</div>`;
 }
 function nuevaEnPanel(){
   const t = valor('pa-nueva'); if(!t){ aviso('Escribe la tarea'); return; }
