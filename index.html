@@ -1799,7 +1799,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.84';
+const VERSION = 'v4.85';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5226,7 +5226,8 @@ function posponerAlarma(id, k, min = 5, ultima = 1){
   try{ localStorage.setItem('equilibra.pospuestos', JSON.stringify(l)); }catch(x){}
   setTimeout(revisarPospuestos, min * 60000 + 500);
 }
-/* 4.84 / APK 2.51 (Gustavo): con el modo avión del teléfono puesto, las alarmas no suenan ni salen */
+/* 4.84 / APK 2.51 (Gustavo): con el modo avión del teléfono puesto, las alarmas no suenan ni salen.
+   4.85 / APK 2.52: tampoco con el modo luna (No molestar): desde la 2.52, AndroidEquilibra.modoAvion() dice sí con cualquiera de los dos */
 function modoAvion(){ try{ return !!(esApp && window.AndroidEquilibra && typeof AndroidEquilibra.modoAvion === 'function' && AndroidEquilibra.modoAvion()); }catch(e){ return false; } }
 function revisarPospuestos(){
   let l; try{ l = JSON.parse(localStorage.getItem('equilibra.pospuestos')) || []; }catch(x){ return; }
@@ -5588,7 +5589,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.51';   // última app Android publicada
+const APK_ULTIMA = '2.52';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
