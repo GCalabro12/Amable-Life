@@ -994,6 +994,8 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .obj-op small{color:var(--suave);font-size:12.5px}
 .obj-cant{display:flex;align-items:center;gap:8px;padding:4px 6px 8px 34px;flex-wrap:wrap}
 .obj-cant[hidden]{display:none}
+.pa-obj{color:#15803d!important;font-weight:700}
+html:not(.claro) .pa-obj{color:#4ade80!important}
 #obj-p{height:38px;border-radius:10px;border:1px solid rgba(var(--bl),.25);background:var(--tarjeta);color:var(--tinta);padding:0 8px;font:inherit}
 .ep-obj-ok{align-self:center;font-weight:800;color:#15803d;padding:6px 4px}
 .obj-cant input{height:38px;border-radius:10px;border:1px solid rgba(var(--bl),.25);background:var(--tarjeta);color:var(--tinta);padding:0 10px;font:inherit}
@@ -1912,7 +1914,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.10';
+const VERSION = 'v5.11';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3223,7 +3225,7 @@ function habitosPanelHTML(a){
   const frec = e => { const f = e.frec || 'diario';
     if(f === 'diario'){ const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length ? d.map(k => DIAS_L[k]).join(' ') : 'Sin días'; }
     return txtHabito(e); };
-  return `<p class="pa-sub">Hábitos</p><div class="pa-habs">${ev.map(e => `<button class="pa-hab" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small></span></button>`).join('')}
+  return `<p class="pa-sub">Hábitos</p><div class="pa-habs">${ev.map(e => `<button class="pa-hab" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small>${objDe(e) ? `<small class="pa-obj">Objetivo: ${esc(objTxtO(objDe(e)))} · llevas ${objProg(e, hoyK())}${objPer(objDe(e)) === 'dia' ? ' hoy' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</small>` : ''}</span></button>`).join('')}
     ${sueltos.map(t => `<div class="pa-hab suelto">${ICO_BROTE}<span><b>${esc(t)}</b><small>Sin día ni hora · <button class="link" onclick="P = P || {}; empezarDefHab()">Definir día y hora</button></small></span></div>`).join('')}</div>`;
 }
 function nuevaEnPanel(){
