@@ -534,7 +534,15 @@ body.pip #toast{bottom:16px}
 .aj-fila.sel{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.6)}
 .hoja-in:has(.hoja-plana){background:var(--tarjeta)}
 .hoja-plana .cta-b{background:none;border:1.5px solid rgba(139,92,246,.35)}
-.hoja-plana .hoja-cab h2{display:flex;align-items:center}
+.hoja-plana .hoja-cab h2{display:flex;align-items:center;color:var(--oro)}   /* 4.87 (Gustavo): títulos de los menús en dorado, como el logotipo */
+.hoja-plana > .hoja-cab{margin:-6px 0 20px}   /* 4.87: el título más arriba y separado de lo de debajo */
+.nube-oro{color:var(--oro);font-weight:700;font-size:13px}
+.copia-bots{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:14px}
+.aj-eliminar .aj-sub > summary{justify-content:center;position:relative}
+.aj-eliminar .aj-sub > summary > svg{position:absolute;right:14px}
+.aj-eliminar .aj-sub > summary > span{flex:none;text-align:center}
+.aj-eliminar .aj-sub-c{text-align:center}
+.aj-eliminar .aj-sub-c .bots{justify-content:center}
 .hoja-plana > :not(.hoja-cab){clear:both}
 .ver-tit{margin:4px 0 2px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--suave)}
 .ver-est{margin:10px 0 0;font-size:16px;font-weight:800}
@@ -1799,7 +1807,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.86';
+const VERSION = 'v4.87';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6221,7 +6229,7 @@ function salir(){
 function cuentaHTML(){
   const u = nube.usuario;
   if(u) return `<div class="cuenta">${u.photoURL ? `<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : ''}<div><b>${esc(u.displayName || 'Tu cuenta')}</b><span>${esc(u.email || '')}</span></div></div>${unirHTML(true)}
-    <p class="nube-ok" style="margin:0 0 12px">☁️ Tus acciones y tu flor se guardan en la nube y se ven en todos tus dispositivos.</p>
+    <p class="nube-oro" style="margin:0 0 14px">☁️ Tus datos se guardan en la nube y se ven en todos tus dispositivos.</p>
     ${copiaHTML()}
     ${esCuentaPin(u) ? `<div class="cta-b"><h4>PIN</h4><p class="peq suave">El PIN de 4 números con el que entras con tu correo.</p><div class="bots"><button class="btn sec" onclick="abrirCambiarPin()">Cambiar el PIN</button></div></div>` : ''}
 `;
@@ -6233,7 +6241,7 @@ function cuentaHTML(){
 }
 /* Copia de seguridad y restauración (Gustavo, 3.97, como en TickTick): todo Amable Life en un archivo, y recuperarlo */
 const copiaHTML = () => `<div class="cta-b"><h4>Copia de seguridad y restauración</h4><p class="peq suave">Guarda todo Amable Life en un archivo (tareas, flor, calendario, hábitos…) o recupera una copia que guardaste.</p>
-  <div class="bots"><button class="btn sec" onclick="exportar()">Generar copia de seguridad</button><button class="btn sec" onclick="$('#importar').click()">Importar una copia</button>
+  <div class="bots copia-bots"><button class="btn sec" onclick="exportar()">Generar copia de seguridad</button><button class="btn sec" onclick="$('#importar').click()">Importar una copia</button>
   <input type="file" id="importar" accept=".json,application/json" hidden onchange="importar(this)"></div></div>`;
 const esCuentaPin = u => !!(u && (u.providerData || []).some(p => p.providerId === 'password'));
 /* Cambiar el PIN: se comprueba el de ahora y se pone el nuevo (la clave real es «equilibra-» + PIN) */
