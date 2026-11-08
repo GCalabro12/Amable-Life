@@ -1799,7 +1799,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.85';
+const VERSION = 'v4.86';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3640,6 +3640,8 @@ const eventosDe = k => AG_().eventos.filter(e => tocaEv(e, k)).sort((a, b) => (b
 const hechoEv = (e, k) => (e.hechos || []).includes(k) || !!(e.acc && !repite(e) && (D.acciones.find(x => x.id === e.acc) || {}).hecha);
 const pasadoEv = (e, k) => !e.todo && (k < hoyK() || (k === hoyK() && e.fin <= minutosHoy()));
 const areasEv = e => (e.areas && e.areas.length ? e.areas : e.area ? [e.area] : []).map(areaDe).filter(Boolean);
+const cabeceraEv = e => e && e.tipo === 'habito' ? ['Hábito', ...areasEv(e).map(a => a.nombre)].join(' · ').toUpperCase() : '';   // 4.86 (Gustavo): primera línea de los avisos de hábitos, «HÁBITO · SALUD» (en las tareas, no)
+const tituloAviso = (e, txt) => { const c = cabeceraEv(e); return c ? [c, e.t + '\n' + txt] : [e.t, txt]; };
 const SIN_TITULO = '(Sin título)';
 const colorEv = e => e.prio && PRIO[e.prio] ? PRIO[e.prio].c : (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
 const horaEv = e => e.todo ? 'Todo el día' : `${hm(e.ini)} – ${hm(e.fin)}`;
@@ -5096,7 +5098,7 @@ function sonarAlarma(seg, tipo){
     const f = document.querySelector('#alarma-full .af-in');
     if(f && !f.querySelector('.af-sinson')) f.insertAdjacentHTML('afterbegin', '<button type="button" class="af-sinson" onclick="abrirAudio(); this.remove()">Toca aquí para oír la alarma</button>');
     const t = (document.querySelector('#alarma-full h1') || {}).textContent || 'Amable Life';
-    notifWeb(t, 'Recordatorio de Amable Life', 'alarma-sonido', true, {requireInteraction: true, renotify: true, silent: false});
+    notifWeb(...((f && f.parentNode && f.parentNode.dataset.cab) ? [f.parentNode.dataset.cab, t + '\nRecordatorio de Amable Life'] : [t, 'Recordatorio de Amable Life']), 'alarma-sonido', true, {requireInteraction: true, renotify: true, silent: false});
   }, 500);
 }
 function pararAlarma(){
@@ -5163,7 +5165,7 @@ function entTxt(e, a){
 function hojaAlarma(e, k, txt, ultima, a){
   // 4.25: antes llamaba a alarmaCerrar(), que paraba el sonido que se acababa de empezar (la ventana salía en silencio)
   const vieja = $('#alarma-full'); if(vieja){ vieja.id = ''; vieja.remove(); }
-  const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full'; d.style.setProperty('--c', colorEv(e));
+  const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full'; d.style.setProperty('--c', colorEv(e)); d.dataset.cab = cabeceraEv(e);
   d.innerHTML = `<div class="af-in" role="alertdialog" aria-label="Recordatorio">
     <div class="af-marca"><svg viewBox="-100 -100 200 200" width="34" height="34" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1A')}</svg><b>Amable Life</b></div>
     <p class="af-rec">Recordatorio</p>
@@ -5238,7 +5240,7 @@ function revisarPospuestos(){
   const p = toca[toca.length - 1], e = AG_().eventos.find(x => x.id === p.ev);
   if(!e || hechoEv(e, p.k) || ahora - p.at > 6 * 3600000 || modoAvion()) return;
   sonarAlarma(); hojaAlarma(e, p.k, `Pospuesto · ${horaEv(e)}: ${e.t}`, p.ul);
-  notifWeb(e.t, 'Pospuesto · ' + horaEv(e), 'pos-' + e.id, false, {requireInteraction: true, renotify: true, silent: false});
+  notifWeb(...tituloAviso(e, 'Pospuesto · ' + horaEv(e)), 'pos-' + e.id, false, {requireInteraction: true, renotify: true, silent: false});
 }
 /* La app de Android avisa de un pospuesto con la app en pantalla (APK 2.41) */
 window.alarmaDesdeApp = o => { const e = AG_().eventos.find(x => x.id === o.ev); if(!e || hechoEv(e, o.k) || modoAvion()) return; sonarAlarma(); hojaAlarma(e, o.k, `${o.txt}: ${e.t}`, !!o.ul); };
@@ -5291,7 +5293,7 @@ function avisarEventos(){
       if(esApp && document.visibilityState !== 'visible' && recordNativo()) return;   // la notificación del teléfono ya avisa
       const txt = `${textoRecord(e, a, Math.max(1, Math.round((base - ahora) / 60000)))}: ${e.t}`;   // con lo que falta de verdad
       sonarAlarma(); hojaAlarma(e, k, txt, a === Math.min(...e.avisos), a);
-      notifWeb(e.t, txt.replace(': ' + e.t, ''), clave, false, {requireInteraction: true, renotify: true, silent: false});
+      notifWeb(...tituloAviso(e, txt.replace(': ' + e.t, '')), clave, false, {requireInteraction: true, renotify: true, silent: false});
       setTimeout(() => hablar(txt.replace(/\(en (\d+) min\)/, 'dentro de $1 minutos').replace('(en 1 hora)', 'dentro de una hora') + '.', 'tareas'), 3500);
     }));
   }
