@@ -1327,7 +1327,7 @@ html.claro .brote{color:#16a34a}
 .rj.sem .brote,.rj-todo .brote{width:10px;height:10px}
 .ep-tit .brote{width:18px;height:18px;vertical-align:-2px;margin-right:6px}
 .flor-hab{width:15px;height:15px;vertical-align:-3px;margin-right:3px}
-.tag-meta{display:inline-block;font-size:9.5px;font-weight:800;line-height:1;padding:2px 4px;border-radius:4px;background:#fff;color:#15803d;border:1px solid #15803d;margin-right:4px;vertical-align:1px;white-space:nowrap}
+.tag-meta{display:inline-block;width:16px;height:16px;border-radius:50%;object-fit:cover;background:#fff;filter:grayscale(1) contrast(1.15);vertical-align:-3px;margin-right:4px;flex:none}
 .mini-practi{width:26px;height:26px;border-radius:50%;object-fit:cover;vertical-align:-5px;margin-right:8px;border:1.5px solid #22c55e}
 .ep-meta{margin:6px 0 4px 36px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,#22c55e 12%,transparent)}
 .ep-meta p{margin:0 0 6px}
@@ -1857,7 +1857,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.98';
+const VERSION = 'v4.99';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3705,7 +3705,7 @@ const ICO_BROTE = '<svg class="brote" viewBox="0 0 24 24" width="12" height="12"
 const ICO_FLOR_HAB = '<svg class="brote flor-hab" viewBox="0 0 24 24" width="12" height="12" aria-label="Hábito"><g fill="#fff" stroke="#15803d" stroke-width=".9"><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(0 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(45 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(90 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(135 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(180 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(225 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(270 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(315 12 12)"/></g><circle cx="12" cy="12" r="4.6" fill="#f5b301" stroke="#b45309" stroke-width=".8"/></svg>';
 const esMeta = e => !!(e && (e.metaId || e.metaReg));
 /* 4.96 (Gustavo): lo que viene de Amable Meta lleva en el calendario un rectangulito «Amable Meta» en lugar de la florecita, y en su tarjeta, Prácti regando en pequeño */
-const broteEv = e => esMeta(e) ? '<span class="tag-meta">Amable Meta</span>' : e && e.tipo === 'habito' ? ICO_FLOR_HAB : '';
+const broteEv = e => esMeta(e) ? '<img class="tag-meta" src="img/meta-planta.jpg" alt="Amable Meta" title="Amable Meta" width="16" height="16">' : e && e.tipo === 'habito' ? ICO_FLOR_HAB : '';
 const iconoTarjeta = e => esMeta(e) ? '<img class="mini-practi" src="img/meta-planta.jpg" alt="Prácti riega su planta" width="26" height="26">' : broteEv(e);
 const campEv = e => e && e.avisos && e.avisos.length ? ICO_CAMPANITA : '';
 const ICO_REP = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
@@ -4605,10 +4605,10 @@ function habAreaTxt(ars){
 }
 function metaTarjetaHTML(e){
   const hs = e.metaReg ? (e.metaHabitos || []) : [];
-  return `<div class="ep-meta">${e.metaReg && e.metaTexto ? `<p class="ep-meta-t">Tu meta</p><p class="ep-meta-m">${esc(e.metaTexto)}</p>` : ''}
-    ${hs.length ? `<p class="ep-meta-t">Tus hábitos</p><ul>${hs.map(h => `<li>${ICO_FLOR_HAB}${esc(h)}</li>`).join('')}</ul>` : ''}
+  return `<div class="ep-meta">${e.metaReg && e.metaTexto ? `<p class="ep-meta-t">Tu meta con guía</p><p class="ep-meta-m">${esc(e.metaTexto)}</p>` : ''}
+    ${hs.map((h, i) => `<p class="ep-meta-t">Tu meta sencilla ${i + 1}</p><p class="ep-meta-m">${ICO_FLOR_HAB}${esc(h)}</p>`).join('')}
     <p class="peq suave">Marcarlo aquí no lo registra en Amable Meta: regístralo también allí.</p>
-    <a class="btn sec ep-meta-b" href="https://app.practicaintegral.club/" target="_blank" rel="noopener">Registrar en Amable Meta</a></div>`;
+    <a class="btn sec ep-meta-b" href="https://app.practicaintegral.club/?registrar=1" target="_blank" rel="noopener">Registrar en Amable Meta</a></div>`;
 }
 function popHTML(e, k, enHoja){
   const ok = hechoEv(e, k), ars = areasEv(e), rep = repTxt(e), hab = e.tipo === 'habito';
@@ -4616,7 +4616,7 @@ function popHTML(e, k, enHoja){
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
-    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${e.metaReg ? 'Amable Meta' : e.metaId ? 'Hábito de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${esc(e.t)}</h3>
+    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${esc(e.t)}</h3>
       <p>${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
     <div id="ep-conf"></div>
     <div class="ep-bots"><button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
@@ -4730,17 +4730,29 @@ async function metaPedir(ruta, cuerpo){
 let metaK = null, metaLista = [], metaDF = null, metaSyncHecho = false;
 /* 4.96 (Gustavo): «Registrar en Amable Meta», cada día a la hora a la que Amable Meta te recuerda registrar (8 de la tarde si no la has cambiado);
    en su tarjeta, tu meta principal y tus hábitos de Amable Meta. Se crea al importar; después se pone al día solo al abrir el calendario (una vez por sesión). */
-function metaRegistro(df, crear){
-  const A = AG_(); let e = A.eventos.find(x => x.metaReg);
-  if(!e){ if(!crear) return false; e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: [], metaReg: true, dia: hoyK(), area: null, areas: [], prio: 1, avisos: [], horasAviso: [], rep: 'no', todo: false}; A.eventos.push(e); }
+function metaRegistro(df, crear, ini){
+  const A = AG_(); let e = A.eventos.find(x => x.metaReg), nuevoEv = false;
+  if(!e){ if(!crear) return false; e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: [], metaReg: true, dia: hoyK(), area: null, areas: [], prio: 0, avisos: [], horasAviso: [], rep: 'no', todo: false}; A.eventos.push(e); nuevoEv = true; }
   const h = Number(df.horaAviso), hora = Number.isInteger(h) && h >= 7 && h <= 23 ? h : 20;
-  const nuevo = {t: 'Registrar en Amable Meta', tipo: 'habito', dias: [0, 1, 2, 3, 4, 5, 6], frec: 'diario', veces: 7, ini: hora * 60, fin: hora * 60 + 30,
+  const dur = !nuevoEv && e.ini != null && e.fin > e.ini ? e.fin - e.ini : 30;
+  const i0 = ini != null && !isNaN(ini) ? +ini : !nuevoEv && e.ini != null ? e.ini : hora * 60;
+  const nuevo = {t: 'Hábitos de Amable Meta', tipo: 'habito', dias: [0, 1, 2, 3, 4, 5, 6], frec: 'diario', veces: 7, ini: i0, fin: Math.min(i0 + dur, 1439),
     metaTexto: String(df.metaTexto || '').trim(), metaHabitos: (df.metasSencillas || []).filter(m => m && m.nombre).map(m => m.nombre)};
   if(Object.keys(nuevo).every(k => JSON.stringify(e[k]) === JSON.stringify(nuevo[k]))) return false;
   Object.assign(e, nuevo, {mod: ahoraISO()}); return true;
 }
+/* 4.99 (Gustavo): ya no va un hábito por cada meta de Amable Meta, sino uno solo al día con todo dentro. Los de antes (metaId) se quitan
+   (a la papelera de la nube, D.borradas, para que no vuelvan) y, si aún no estaba el de «Hábitos de Amable Meta», se crea con sus nombres. */
+function metaUnificar(){
+  const A = AG_(), viejos = A.eventos.filter(x => x.metaId); if(!viejos.length) return false;
+  if(!A.eventos.some(x => x.metaReg)) metaRegistro({metasSencillas: viejos.map(v => ({nombre: v.t})), metaTexto: ''}, true, viejos[0].ini);
+  A.eventos = A.eventos.filter(x => !x.metaId); D.borradas = (D.borradas || []).concat(viejos.map(v => v.id));
+  return true;
+}
 async function metaSync(){
-  if(metaSyncHecho || !metaSesion() || !AG_().eventos.some(x => x.metaReg)) return; metaSyncHecho = true;
+  if(metaSyncHecho) return; metaSyncHecho = true;
+  if(metaUnificar()){ guardar(); if(vista === 'agenda') render(); }
+  if(!metaSesion() || !AG_().eventos.some(x => x.metaReg)) return;
   try{ const d = await metaPedir('/datos'); const df = (d.gamifica && d.gamifica.datosFormulario) || d.datosFormulario || {};
     if(metaRegistro(df)){ guardar(); if(vista === 'agenda') render(); } }catch(e){}
 }
@@ -4808,15 +4820,17 @@ async function metaCargar(){
     const d = await metaPedir('/datos');
     const df = (d.gamifica && d.gamifica.datosFormulario) || d.datosFormulario || {};
     metaLista = (df.metasSencillas || []).filter(m => m && m.nombre); metaDF = df;
-    const ya = id => AG_().eventos.find(e => e.metaId === id);
+    const metaT = String(df.metaTexto || '').trim(), ya = AG_().eventos.find(e => e.metaReg);
+    const hh = Number(df.horaAviso), ini = ya && ya.ini != null ? ya.ini : (Number.isInteger(hh) && hh >= 7 && hh <= 23 ? hh : 20) * 60;
     const horas = []; for(let m = 300; m <= 1380; m += 15) horas.push(m);
     if(!document.body.contains(c)) return;
-    c.innerHTML = metaLista.length ? `<p class="peq" style="margin:6px 0">Elige cuáles quieres en tu calendario y a qué hora:</p>
-      ${metaLista.map((m, i) => { const e = ya(m.id), ini = e && e.ini != null ? e.ini : 480;
-        return `<div class="meta-h"><label><input type="checkbox" id="meta-c${i}" checked><span><b>${ICO_BROTE} ${esc(m.nombre)}</b><small>${metaFrec(m)}${e ? ' · ya está en tu calendario: se pone al día' : ''}</small></span></label>
-          <select id="meta-h${i}" aria-label="Hora">${horas.map(h => `<option value="${h}" ${h === ini ? 'selected' : ''}>${hm(h)}</option>`).join('')}</select></div>`; }).join('')}
+    c.innerHTML = metaLista.length || metaT ? `<p class="peq" style="margin:6px 0">Irá <b>un solo hábito cada día</b>, «Hábitos de Amable Meta», con todo esto dentro:</p>
+      <div class="ep-meta" style="margin:0 0 10px">${metaT ? `<p class="ep-meta-t">Tu meta con guía</p><p class="ep-meta-m">${esc(metaT)}</p>` : ''}
+        ${metaLista.map((m, i) => `<p class="ep-meta-t">Tu meta sencilla ${i + 1}</p><p class="ep-meta-m">${ICO_FLOR_HAB}${esc(m.nombre)}</p>`).join('')}</div>
+      <div class="meta-h"><span><b>¿A qué hora?</b><small>${ya ? 'Ya está en tu calendario: se pone al día' : 'La hora a la que Amable Meta te recuerda registrar'}</small></span>
+        <select id="meta-hora" aria-label="Hora">${horas.map(h => `<option value="${h}" ${h === ini ? 'selected' : ''}>${hm(h)}</option>`).join('')}</select></div>
       <button class="btn prim ancho" style="margin-top:12px" onclick="metaImportar()">Añadir a mi calendario</button>
-      <p class="peq suave" style="margin:10px 0 0">Los días que ya regaste en Metas Amables salen como hechos. <button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`
+      <p class="peq suave" style="margin:10px 0 0"><button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`
       : `<p>En Metas Amables aún no tienes hábitos. Créalos allí (en «Tus metas sencillas») y vuelve aquí para traerlos.</p><p class="peq suave"><button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`;
   }catch(e){
     if(e.status === 401 || e.status === 403){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(x){} if(cuentaGoogle()) metaConGmail(); else metaConClave('Vuelve a entrar con tu contraseña de Amable Meta'); }
@@ -4824,18 +4838,10 @@ async function metaCargar(){
   }
 }
 function metaImportar(){
-  const A = AG_(), desde = sumarDias(hoyK(), -120); let n = 0;
-  metaLista.forEach((m, i) => {
-    const c = $('#meta-c' + i); if(!c || !c.checked) return;
-    const ini = +$('#meta-h' + i).value, hechos = (m.dias || []).filter(d => d >= desde);
-    let e = A.eventos.find(x => x.metaId === m.id);
-    if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: [], metaId: m.id, dia: m.desde && m.desde > desde ? m.desde : hoyK(), area: null, areas: [], prio: 1, avisos: [], rep: 'no', todo: false}; A.eventos.push(e); }
-    Object.assign(e, {t: m.nombre, tipo: 'habito', dias: metaDias(m), frec: m.frecuencia === 'semana' ? 'semanal' : 'diario', veces: Math.max(1, Math.min(7, m.vecesSemana || 3)), ini, fin: Math.min(ini + 30, 1439), hechos: [...new Set([...(e.hechos || []), ...hechos])], mod: ahoraISO()});
-    n++;
-  });
-  if(!n){ aviso('Elige al menos un hábito'); return; }
-  if(metaDF) metaRegistro(metaDF, true);
-  guardar(); sonarHecho(); aviso(n === 1 ? 'Hábito de Metas Amables en tu calendario' : `${n} hábitos de Metas Amables en tu calendario`);
+  if(!metaDF) return;
+  const s = $('#meta-hora');
+  metaRegistro(metaDF, true, s ? +s.value : null); metaUnificar();
+  guardar(); sonarHecho(); aviso('«Hábitos de Amable Meta» en tu calendario, cada día');
   cerrarHoja(); if(vista === 'agenda') agK = hoyK(); rerenderDia();
 }
 /* ---------- Menú lateral (Gustavo, 3.84, como el de Google Calendar): tu cuenta, las vistas, Actualizar y las secciones ---------- */
