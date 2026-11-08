@@ -987,6 +987,19 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-ico{width:40px;height:40px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0}
 .ep-ico:hover{background:rgba(var(--bl),.1)}
 .ep-fila{display:flex;gap:16px;align-items:flex-start;padding:7px 0;font-size:14.5px}
+.ep-ed{border:0;background:none;padding:1px 4px;margin:-1px -2px;border-radius:6px;color:inherit;font:inherit;cursor:pointer;text-align:left}
+.ep-ed:hover{background:rgba(var(--bl),.1);text-decoration:underline dotted}
+.ep-cuando{position:relative}
+.ep-dia-in{position:absolute;left:0;bottom:0;opacity:0;width:1px;height:1px;border:0;padding:0;pointer-events:none}
+.ep-opc:empty{display:none}
+.ep-opc{margin:0 0 8px 36px;padding:6px;border-radius:12px;background:rgba(var(--bl),.06);display:flex;flex-direction:column;gap:2px}
+.ep-opc-t{margin:2px 6px 4px;font-size:12px;font-weight:800;color:var(--suave)}
+.ep-horas{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;max-height:180px;overflow:auto}
+.ep-opc button.op{border:0;background:none;padding:6px 8px;border-radius:8px;color:var(--tinta);font:inherit;font-size:13.5px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ep-opc button.op small{font-size:11px;color:var(--suave)}
+.ep-opc button.op:hover{background:rgba(var(--bl),.1)}
+.ep-opc button.op.sel{background:color-mix(in srgb,var(--oro) 30%,transparent);font-weight:700}
+.ep-chk{width:18px;height:18px;border-radius:5px;border:1.5px solid rgba(var(--bl),.4);display:inline-grid;place-items:center;font-style:normal;font-size:12px;color:#15803d;flex:none}
 .ep-tit p.ep-hab{display:flex;align-items:center;gap:6px;margin:0 0 4px;font-size:12.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#4ade80}
 html.claro .ep-tit p.ep-hab{color:#15803d}
 .ep-hab svg{width:14px;height:14px;flex:none}
@@ -1887,7 +1900,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.06';
+const VERSION = 'v5.07';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4711,15 +4724,17 @@ function popHTML(e, k, enHoja){
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${esc(e.t)}</h3>
-      <p>${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
+      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
+    <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
     <div class="ep-bots"><button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
       ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
     ${esMeta(e) ? metaTarjetaHTML(e) : ''}
     ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}">${desc}</div></div>` : ''}
-    ${rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : ''}
-    ${e.prio && !hab ? `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div>Prioridad ${prioDe(e).t.toLowerCase()}</div></div>` : ''}
+    ${hab ? (rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : '')
+      : `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div><button type="button" class="ep-ed" title="Cambiar el recordatorio" onclick="popOpc('rec','${e.id}','${k}')">${rec || 'Sin recordatorio'}</button></div></div><div class="ep-opc" id="ep-opc-rec"></div>`}
+    ${hab ? '' : `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div><button type="button" class="ep-ed" title="Cambiar la prioridad" onclick="popOpc('prio','${e.id}','${k}')">${e.prio ? 'Prioridad ' + prioDe(e).t.toLowerCase() : 'Sin prioridad'}</button></div></div><div class="ep-opc" id="ep-opc-prio"></div>`}
     ${ars.length && !hab ? `<div class="ep-fila">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<div>${ars.map(a => `${ico(a)} ${a.nombre}`).join(' · ')}</div></div>` : ''}`;
 }
 let popInfo = null, popT = null, popCierreT = null;
@@ -4759,6 +4774,60 @@ function popMover(id, k, a){
   const t = x.t.length > 28 ? x.t.slice(0, 27) + '…' : x.t;
   avisoDeshacer(a === 'manana' ? `«${t}» pasa a mañana` : `«${t}» pasa a tareas flexibles${destino === hoy ? ' de hoy' : ''}`,
     () => { A.eventos.splice(0, A.eventos.length, ...JSON.parse(antes)); guardar(); rerenderDia(); }, 5000);
+}
+/* 5.07 (Gustavo): en la tarjeta, sin pasar por el lápiz, se cambian ahí mismo el día (abre el calendario), la hora de empezar y la de
+   terminar (lista de 15 en 15 min), el recordatorio y la prioridad. El día solo en lo que no se repite; en los hábitos, solo las horas. */
+function popCuandoHTML(e, k, hab){
+  const dia = capi(fechaLarga(k)).replace(' ', ', ');
+  const diaH = !hab && !repite(e) ? `<button type="button" class="ep-ed" title="Cambiar el día" onclick="popDiaAbrir(this)">${dia}</button><input type="date" class="ep-dia-in" value="${k}" tabindex="-1" aria-hidden="true" onchange="popSet('${e.id}','${k}','dia',this.value)">` : dia;
+  const horaH = e.todo || e.ini == null || e.fin == null ? horaEv(e)
+    : `<button type="button" class="ep-ed" title="Cambiar la hora de empezar" onclick="popOpc('ini','${e.id}','${k}')">${hm(e.ini)}</button> – <button type="button" class="ep-ed" title="Cambiar la hora de terminar" onclick="popOpc('fin','${e.id}','${k}')">${hm(e.fin)}</button>`;
+  return `${diaH} · ${horaH}`;
+}
+function popDiaAbrir(b){ const i = b.nextElementSibling; if(!i) return; try{ i.showPicker(); }catch(x){ i.focus(); i.click(); } }
+function popOpc(cual, id, k){
+  const e = AG_().eventos.find(x => x.id === id); if(!e) return;
+  const box = document.querySelector('.ep #ep-opc-' + (cual === 'ini' || cual === 'fin' ? 'hora' : cual)); if(!box) return;
+  if(box.dataset.c === cual){ box.innerHTML = ''; box.dataset.c = ''; return; }
+  document.querySelectorAll('.ep .ep-opc').forEach(b => { b.innerHTML = ''; b.dataset.c = ''; });
+  const op = (sel, fn, html) => `<button type="button" class="op ${sel ? 'sel' : ''}" onclick="${fn}">${html}</button>`;
+  let h = '';
+  if(cual === 'ini' || cual === 'fin'){
+    const L = []; for(let m = 0; m < 1440; m += 15) if(cual === 'ini' || m > e.ini) L.push(m);
+    if(cual === 'fin') L.push(1439);
+    h = `<p class="ep-opc-t">${cual === 'ini' ? 'Empieza a las' : 'Termina a las'}</p><div class="ep-horas">${L.map(m => op(m === e[cual], `popSet('${id}','${k}','${cual}',${m})`, cual === 'fin' ? `${hm(m)}<small>${durTxtMin(m - e.ini)}</small>` : hm(m))).join('')}</div>`;
+  } else if(cual === 'rec'){
+    const L = e.todo ? RECORD_DIA : RECORD_HORA, av = e.avisos || [];
+    h = `<p class="ep-opc-t">Recordatorio (puedes elegir varios)</p>${L.map(o => op(av.includes(o.k), `popSet('${id}','${k}','rec',${o.k})`, `<i class="ep-chk">${av.includes(o.k) ? '✓' : ''}</i>${o.t}`)).join('')}
+      ${av.length ? op(false, `popSet('${id}','${k}','rec',-1)`, '<i class="ep-chk"></i>Sin recordatorio') : ''}`;
+  } else if(cual === 'prio'){
+    h = PRIO.map(o => op((e.prio || 0) === o.k, `popSet('${id}','${k}','prio',${o.k})`, `${ICO_BANDERA(o.c)} ${o.k ? 'Prioridad ' + o.t.toLowerCase() : o.t}`)).join('');
+  }
+  box.dataset.c = cual; box.innerHTML = h; popEncajar();
+  const s = box.querySelector('.ep-horas .sel'); if(s) s.scrollIntoView({block: 'center'});
+}
+/* la tarjeta flotante crece al abrir un desplegable: que no se salga por abajo */
+function popEncajar(){ const p = $('#ev-pop'); if(!p) return; const h = p.offsetHeight, y = parseFloat(p.style.top) || 0; if(y + h > innerHeight - 10) p.style.top = Math.max(74, innerHeight - h - 10) + 'px'; }
+const durTxtMin = d => d < 60 ? `${d} min` : `${Math.floor(d / 60)} h${d % 60 ? ' ' + (d % 60) + ' min' : ''}`;
+function popSet(id, k, campo, v){
+  const e = AG_().eventos.find(x => x.id === id); if(!e) return;
+  let nk = k, seguir = null;
+  if(campo === 'dia'){ if(!v || v === k || repite(e)) return; e.dia = v; nk = v; }
+  else if(campo === 'ini'){ const d = e.fin != null && e.ini != null && e.fin > e.ini ? e.fin - e.ini : 60; e.ini = v; e.fin = Math.min(v + d, 1439); }
+  else if(campo === 'fin'){ if(v <= e.ini) return; e.fin = e.tipo === 'habito' ? Math.min(v, e.ini + 120) : v; }
+  else if(campo === 'prio') e.prio = v;
+  else if(campo === 'rec'){
+    if(v < 0) e.avisos = [];
+    else { const S = new Set(e.avisos || []); S.has(v) ? S.delete(v) : S.add(v); e.avisos = [...S].sort((a, b) => a - b); }
+    seguir = 'rec';
+  }
+  e.mod = ahoraISO(); guardar(); rerenderDia();
+  const p = $('#ev-pop'), h = document.querySelector('#hoja .ep-en-hoja');
+  if(p){ p.innerHTML = popHTML(e, nk, false); if(popInfo){ popInfo.k = nk; popInfo.hover = false; } }
+  else if(h) h.innerHTML = popHTML(e, nk, true);
+  if(seguir) popOpc(seguir, id, nk);
+  popEncajar();
+  if(campo === 'dia') aviso('Pasa al ' + fechaLarga(nk));
 }
 function popDuplicar(id, k){
   const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
