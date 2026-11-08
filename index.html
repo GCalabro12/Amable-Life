@@ -1327,6 +1327,15 @@ html.claro .brote{color:#16a34a}
 .rj.sem .brote,.rj-todo .brote{width:10px;height:10px}
 .ep-tit .brote{width:18px;height:18px;vertical-align:-2px;margin-right:6px}
 .flor-hab{width:15px;height:15px;vertical-align:-3px;margin-right:3px}
+.tag-meta{display:inline-block;font-size:9.5px;font-weight:800;line-height:1;padding:2px 4px;border-radius:4px;background:#fff;color:#15803d;border:1px solid #15803d;margin-right:4px;vertical-align:1px;white-space:nowrap}
+.mini-practi{width:26px;height:26px;border-radius:50%;object-fit:cover;vertical-align:-5px;margin-right:8px;border:1.5px solid #22c55e}
+.ep-meta{margin:6px 0 4px 36px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,#22c55e 12%,transparent)}
+.ep-meta p{margin:0 0 6px}
+.ep-meta-t{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#15803d}
+.ep-meta-m{font-weight:700}
+.ep-meta ul{list-style:none;margin:0 0 8px;padding:0}
+.ep-meta li{padding:2px 0}
+.ep-meta-b{display:inline-block;margin-top:4px}
 .rj.sem .flor-hab,.rj-todo .flor-hab{width:14px;height:14px}
 .ep-tit .flor-hab{width:20px;height:20px}
 .ev-meta{display:flex;align-items:center;gap:14px;margin:12px 0 4px;padding:10px 12px;border-radius:16px;background:color-mix(in srgb,#22c55e 12%,transparent);border:1px solid color-mix(in srgb,#22c55e 30%,transparent)}
@@ -1848,7 +1857,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.95';
+const VERSION = 'v4.96';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3566,7 +3575,7 @@ function dhGuardar(){
 /* 4.94 (Gustavo): los hábitos de «Revisar mi flor» que caen a la vez el mismo día no se pisan: van seguidos, cada media hora
    (10:00–10:30, 10:30–11:00, 11:00–11:30…). El primero se queda donde está; los que chocan pasan al siguiente hueco libre de 30 min. */
 function ordenarHabitos(){
-  const hs = AG_().eventos.filter(e => e.tipo === 'habito' && e.habRev && !e.todo && e.ini != null && e.fin != null)
+  const hs = AG_().eventos.filter(e => e.tipo === 'habito' && (e.habRev || e.metaId) && !e.todo && e.ini != null && e.fin != null)
     .sort((a, b) => (a.ini - b.ini) || String(a.creada || '').localeCompare(String(b.creada || '')) || String(a.id).localeCompare(String(b.id)));
   const puestos = []; let n = 0;
   hs.forEach(e => {
@@ -3694,7 +3703,10 @@ const ICO_CAMPANITA = '<svg class="campanita" viewBox="0 0 24 24" width="12" hei
 const ICO_BROTE = '<svg class="brote" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Hábito"><path d="M12 21v-8"/><path d="M12 13c0-4 3-6.5 7.5-6.5 0 4-3 6.5-7.5 6.5z"/><path d="M12 15.5c0-3.3-2.5-5.5-6.5-5.5 0 3.3 2.5 5.5 6.5 5.5z"/></svg>';
 /* 4.94 (Gustavo): en el calendario, en lugar del brote, la florecita de los hábitos (pétalos blancos y centro dorado, se ve sobre el verde) */
 const ICO_FLOR_HAB = '<svg class="brote flor-hab" viewBox="0 0 24 24" width="12" height="12" aria-label="Hábito"><g fill="#fff" stroke="#15803d" stroke-width=".9"><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(0 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(45 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(90 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(135 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(180 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(225 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(270 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(315 12 12)"/></g><circle cx="12" cy="12" r="4.6" fill="#f5b301" stroke="#b45309" stroke-width=".8"/></svg>';
-const broteEv = e => e && e.tipo === 'habito' ? ICO_FLOR_HAB : '';
+const esMeta = e => !!(e && (e.metaId || e.metaReg));
+/* 4.96 (Gustavo): lo que viene de Amable Meta lleva en el calendario un rectangulito «Amable Meta» en lugar de la florecita, y en su tarjeta, Prácti regando en pequeño */
+const broteEv = e => esMeta(e) ? '<span class="tag-meta">Amable Meta</span>' : e && e.tipo === 'habito' ? ICO_FLOR_HAB : '';
+const iconoTarjeta = e => esMeta(e) ? '<img class="mini-practi" src="img/meta-planta.jpg" alt="Prácti riega su planta" width="26" height="26">' : broteEv(e);
 const campEv = e => e && e.avisos && e.avisos.length ? ICO_CAMPANITA : '';
 const ICO_REP = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
 const AG_ = () => { if(!D.agenda) D.agenda = {eventos: []}; return D.agenda; };
@@ -3808,6 +3820,7 @@ function mesPeq(m0, conSem){
 }
 function vAgenda(){
   if(!agK) agK = hoyK();
+  if(!metaSyncHecho) setTimeout(metaSync, 1500);
   if(!habOrdenSesion){ habOrdenSesion = true; if(ordenarHabitos()){ guardar(); setTimeout(render, 0); } }
   recordarVista();
   const hoy = hoyK(), d0 = fechaDe(agK);
@@ -4590,18 +4603,26 @@ function habAreaTxt(ars){
   const n = ars.map(a => a.nombre);
   return ars.length === 1 ? `Hábito del área de ${n[0]}` : `Hábito de las áreas de ${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}`;
 }
+function metaTarjetaHTML(e){
+  const hs = e.metaReg ? (e.metaHabitos || []) : [];
+  return `<div class="ep-meta">${e.metaReg && e.metaTexto ? `<p class="ep-meta-t">Tu meta</p><p class="ep-meta-m">${esc(e.metaTexto)}</p>` : ''}
+    ${hs.length ? `<p class="ep-meta-t">Tus hábitos</p><ul>${hs.map(h => `<li>${ICO_FLOR_HAB}${esc(h)}</li>`).join('')}</ul>` : ''}
+    <p class="peq suave">Marcarlo aquí no lo registra en Amable Meta: regístralo también allí.</p>
+    <a class="btn sec ep-meta-b" href="https://app.practicaintegral.club/" target="_blank" rel="noopener">Registrar en Amable Meta</a></div>`;
+}
 function popHTML(e, k, enHoja){
   const ok = hechoEv(e, k), ars = areasEv(e), rep = repTxt(e), hab = e.tipo === 'habito';
   const rec = recTxtEv(e);
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
-    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${broteEv(e)}${esc(e.t)}</h3>
+    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${e.metaReg ? 'Amable Meta' : e.metaId ? 'Hábito de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${esc(e.t)}</h3>
       <p>${capi(fechaLarga(k)).replace(' ', ', ')} · ${horaEv(e)}</p>${rep ? `<p>${rep}</p>` : ''}</div></div>
     <div id="ep-conf"></div>
     <div class="ep-bots"><button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
       ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
+    ${esMeta(e) ? metaTarjetaHTML(e) : ''}
     ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}">${desc}</div></div>` : ''}
     ${rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : ''}
     ${e.prio ? `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div>Prioridad ${prioDe(e).t.toLowerCase()}</div></div>` : ''}
@@ -4706,7 +4727,23 @@ async function metaPedir(ruta, cuerpo){
   if(!r.ok) throw {msg: d.error || d.mensaje || 'Metas Amables no ha respondido bien', status: r.status};
   return d;
 }
-let metaK = null, metaLista = [];
+let metaK = null, metaLista = [], metaDF = null, metaSyncHecho = false;
+/* 4.96 (Gustavo): «Registrar en Amable Meta», cada día a la hora a la que Amable Meta te recuerda registrar (8 de la tarde si no la has cambiado);
+   en su tarjeta, tu meta principal y tus hábitos de Amable Meta. Se crea al importar; después se pone al día solo al abrir el calendario (una vez por sesión). */
+function metaRegistro(df, crear){
+  const A = AG_(); let e = A.eventos.find(x => x.metaReg);
+  if(!e){ if(!crear) return false; e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: [], metaReg: true, dia: hoyK(), area: null, areas: [], prio: 1, avisos: [], horasAviso: [], rep: 'no', todo: false}; A.eventos.push(e); }
+  const h = Number(df.horaAviso), hora = Number.isInteger(h) && h >= 7 && h <= 23 ? h : 20;
+  const nuevo = {t: 'Registrar en Amable Meta', tipo: 'habito', dias: [0, 1, 2, 3, 4, 5, 6], frec: 'diario', veces: 7, ini: hora * 60, fin: hora * 60 + 30,
+    metaTexto: String(df.metaTexto || '').trim(), metaHabitos: (df.metasSencillas || []).filter(m => m && m.nombre).map(m => m.nombre)};
+  if(Object.keys(nuevo).every(k => JSON.stringify(e[k]) === JSON.stringify(nuevo[k]))) return false;
+  Object.assign(e, nuevo, {mod: ahoraISO()}); return true;
+}
+async function metaSync(){
+  if(metaSyncHecho || !metaSesion() || !AG_().eventos.some(x => x.metaReg)) return; metaSyncHecho = true;
+  try{ const d = await metaPedir('/datos'); const df = (d.gamifica && d.gamifica.datosFormulario) || d.datosFormulario || {};
+    if(metaRegistro(df)){ guardar(); if(vista === 'agenda') render(); } }catch(e){}
+}
 function metaAbrir(){
   metaK = (evEd && (valor('ev-dia') || evEd.k)) || hoyK(); evEd = null;
   mostrarHoja(`<div class="hoja-cab"><h2>Hábitos de Metas Amables</h2></div>
@@ -4747,7 +4784,7 @@ async function metaCargar(){
   try{
     const d = await metaPedir('/datos');
     const df = (d.gamifica && d.gamifica.datosFormulario) || d.datosFormulario || {};
-    metaLista = (df.metasSencillas || []).filter(m => m && m.nombre);
+    metaLista = (df.metasSencillas || []).filter(m => m && m.nombre); metaDF = df;
     const ya = id => AG_().eventos.find(e => e.metaId === id);
     const horas = []; for(let m = 300; m <= 1380; m += 15) horas.push(m);
     if(!document.body.contains(c)) return;
@@ -4774,6 +4811,7 @@ function metaImportar(){
     n++;
   });
   if(!n){ aviso('Elige al menos un hábito'); return; }
+  if(metaDF) metaRegistro(metaDF, true);
   guardar(); sonarHecho(); aviso(n === 1 ? 'Hábito de Metas Amables en tu calendario' : `${n} hábitos de Metas Amables en tu calendario`);
   cerrarHoja(); if(vista === 'agenda') agK = hoyK(); rerenderDia();
 }
