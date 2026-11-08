@@ -792,6 +792,7 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
   body.v-dia .envoltura{max-width:1100px}
   body.v-dia .dia-cols{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);grid-template-areas:"izq der" "pan der";gap:20px 32px;align-items:start}
   body.v-dia .dia-izq{grid-area:izq}
+  body.v-dia .dia-cols.sin-der{grid-template-columns:minmax(240px,1fr) minmax(360px,460px);grid-template-areas:"pan izq"}
   body.v-dia .dia-pan{grid-area:pan}
   body.v-dia .dia-der{grid-area:der}
   .pan-vacio{display:block;margin:6px 0 0;padding:18px;border-radius:16px;border:2px dashed rgba(var(--bl),.18);color:var(--suave);font-size:14px;text-align:center}
@@ -801,6 +802,7 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
   body.v-dia .envoltura{max-width:1480px}
   body.v-dia .dia-cols{grid-template-columns:minmax(250px,1fr) minmax(380px,440px) minmax(0,1.6fr);grid-template-areas:"pan izq der";gap:28px}
   body.v-dia .dia-izq,body.v-dia .dia-pan{position:sticky;top:76px}
+  body.v-dia .dia-cols.sin-der{grid-template-columns:minmax(260px,1fr) minmax(380px,520px) minmax(0,.4fr);grid-template-areas:"pan izq ."}
   body.v-dia .dia-pan{max-height:calc(100vh - 92px);overflow-y:auto;scrollbar-width:thin}
   .tit-bloques{font-size:40px}
 }
@@ -1755,7 +1757,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.76';
+const VERSION = 'v4.77';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2397,8 +2399,7 @@ function idsEnBloquesHoy(){
   return r;
 }
 function destinoBloque(){
-  if(vista === 'dia' && bSel != null) return {k: claveDia(fechaBloques()), i: bSel};
-  const c = bloqueAhora(); return c < 0 ? null : {k: hoyK(), i: c};
+  const c = bloqueAhora(); return c < 0 ? null : {k: hoyK(), i: c};   // 4.77: siempre el bloque de ahora (el de Focus); en Hábitos ya no se eligen bloques
 }
 function asignarAhora(id){
   const dst = destinoBloque(); if(!dst){ aviso('Ahora no hay bloque (van de 5:30 a 22:00)'); return; }
@@ -5224,38 +5225,13 @@ function vDia(){
   // la flor en medio y los bloques a la derecha (así, al pasar por los pétalos, la flor no se mueve)
   // 4.64 (Gustavo): la flor representa hábitos: «Hábitos semanales»; la frase de la flor equilibrada, bajo el título;
   // debajo de la flor, el botón grande para revisarla y, después, pausar avisos
-  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Flor de hábitos semanales</h1><div class="dia-cols"><div class="dia-izq">
+  return `${unirHTML()}<h1 class="tit-acc tit-bloques">Flor de hábitos semanales</h1><div class="dia-cols sin-der"><div class="dia-izq">
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0, {frase: true})}</div>
     <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos un hábito en cada área por semana</button>
     <p class="peq suave flor-ayuda"><button class="link" onclick="ir('historial')">ver el historial</button></p>
     ${botonPausa('tareas')}
-    </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div><div class="dia-der">
-    <div class="tira-blk" id="tiraBlk">${tira}</div>
-    <div class="blk-barra-caja"><div class="blk-riel">${BLOQUES.map((x, i) => `<i class="${i === cur ? 'ya' : ''}" style="left:${(posBarra(i, cur) * 100).toFixed(2)}%"></i>`).join('')}</div>
-      <input type="range" class="blk-barra" min="0" max="1000" step="1" value="${Math.round(posBarra(bSel, cur) * 1000)}" aria-label="Mover a otro bloque" oninput="barraMueve(this)" onchange="elegirBloque(blkDeBarra(+this.value))" onkeydown="barraTecla(event)"></div>
-    ${(cur >= 0 && bSel !== cur) ? `<button class="link volver-ahora" onclick="bDia=0; bSel=bloqueAhora(); render(); centrarBloque()">↺ Volver al bloque de ahora</button>` : ''}
-    <section class="tarjeta bloque-sel" data-drop="bloque">
-      <div class="bs-cab"><b>${hm(b.ini)} – ${hm(b.fin)}</b><span>${estado}</span></div>
-      ${bSel === cur ? `<div class="mini-barra"><i style="width:${(m - b.ini) / 90 * 100}%"></i></div>` : ''}
-      ${evsBloqueHTML(k, b)}
-      ${acts.length ? `<div class="tareas">${acts.map((a, i) => `<div class="fila-acc"><button class="tarea ${hechaAct(a) ? 'ok' : ''}" style="--c:${a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area).color : 'var(--oro)'}" onclick="alternarAct(${i})"><span class="caja">✓</span><span class="t-col">${bandAct(a)}${esc(a.t)}${durAct(a)}${tagArea(a.acc && D.acciones.find(x => x.id === a.acc) ? areaDe(D.acciones.find(x => x.id === a.acc).area) : null)}</span></button>${lapiz(`editarBloque('${k}',${bSel},${i})`)}<button class="del" aria-label="Quitar" onclick="borrarAct(${i})">✕</button></div>`).join('')}</div>` : `<p class="suave" style="margin:10px 0 0">¿A qué vas a dedicar este bloque?</p>`}
-      ${lleno ? `<p class="peq suave" style="margin:8px 0 0">Bloque completo · ${MAX_ACT} actividades</p>` : `
-        <p class="eti" style="margin:14px 0 0">Añadir nueva tarea</p>
-        <div class="campo-voz" style="margin-top:8px"><input type="text" id="b-nueva" maxlength="120" placeholder="Escribe o dicta una actividad" onkeydown="if(event.key==='Enter')anadirAct()">${botonMic()}</div>
-        <button class="btn prim ancho" style="margin-top:10px" onclick="anadirAct()">Añadir al bloque</button>
-        ${sugeridas.length ? `<button class="flor-btn" onclick="abrirTareasAreas()"><span class="fb-flor">${logoSVG()}</span>
-          <span class="fb-t"><b>Añadir tarea de tus áreas</b><small>${pendientes().filter(x => !ya.has(x.id)).length} pendientes · toca para elegir</small></span><span class="fb-fl">›</span></button>` : ''}`}
-    </section>
-    ${petalosSinTareas()}
-    <section class="tarjeta">
-      <details class="ajustes-salud"><summary>Avisos de los bloques</summary>
-        <label class="fila-aj"><span><input type="checkbox" ${B_().startVoice ? 'checked' : ''} onchange="ajBloque('startVoice', this)"> Avisar con voz al empezar cada bloque</span></label>
-        <label class="fila-aj"><span><input type="checkbox" ${B_().remindOn ? 'checked' : ''} onchange="ajBloque('remindOn', this)"> Recordarme la actividad en la que estoy cada</span><input type="number" min="1" max="60" inputmode="numeric" value="${B_().remindMin}" onchange="ajBloqueMin(this)"></label>
-        <label class="fila-aj"><span><input type="checkbox" ${B_().sleepOn ? 'checked' : ''} onchange="ajBloque('sleepOn', this)"> A las 22:00, recordarme ir a dormir</span></label>
-        <p class="peq suave" style="margin:6px 0 0">Las actividades sin terminar pasan solas al bloque siguiente. Los avisos suenan con la app abierta.</p>
-      </details>
-    </section></div></div>`;
+    </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
 }
 /* 4.51 (Gustavo): en la barra, el bloque de ahora está en el medio; los de antes, a la izquierda, y los de después, a la derecha,
    cada uno en su puntito. El punto salta de puntito en puntito */
