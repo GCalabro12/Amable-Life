@@ -366,7 +366,9 @@ img,svg{-webkit-user-drag:none}
   .ev-col .ed-bots{padding-top:4px}
   .hoja-in:has(.ev-hoja) .hoja-x{position:absolute;top:14px;right:16px;margin:0;float:none}
   .hoja-in:has(.ev-hoja) .rt-barra{display:flex}
-  .hoja-in:has(.ev-hoja) .rt-ed{min-height:260px;max-height:48vh}
+  .hoja-in:has(.ev-hoja) .rt-ed{min-height:130px;max-height:48vh}   /* 4.93: la mitad de alta; crece al escribir */
+  .hoja-in:has(.ev-hoja) .ev-hoja.desc-larga .rt-ed{max-height:62vh}
+  .hoja-in:has(.ev-hoja) .rt-barra{padding-right:44px}
   .hoja-in:has(.ev-hoja) .ev-desc-c{background:rgba(var(--bl),.04)}
   .ev-hecho-fila{display:none}
   .ed-bots:has(.ev-hecha-b) .ev-cancelar{display:none}
@@ -909,6 +911,18 @@ html:not(.claro) .aj-eliminar .aj-sub > summary{color:#f87171}
 .ev-fecha > svg{flex:none;margin-top:8px}
 .ev-fecha-c{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
 .ev-fila1{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+/* 4.93 (Gustavo): «Sin hora (tarea flexible)» y «No se repite» en el mismo renglón; el día y la hora, también */
+.ev-fila2{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 16px}
+.ev-fila2 .ev-chk{min-height:40px}
+.ev-fila2 .ev-rep{flex:1;min-width:150px}
+.ev-fila2 .ev-rep .desp{position:relative}
+.ev-fila2 .ev-rep .desp-lista{position:absolute;left:0;top:100%;z-index:6;width:270px;max-width:80vw}
+.ev-fecha .hora-btn{min-width:74px;padding:0 11px}
+.ev-desc{position:relative}
+.ev-desc .mic{top:6px;right:8px;transform:none;width:34px;height:34px}
+.ev-desc .rt-ed{padding-right:44px}
+#ev-col-der > #ev-fecha-w > :first-child{margin-top:0}
+#ev-col-der > #ev-fecha-w{margin-bottom:12px}
 .ev-horas{display:inline-flex;align-items:center;gap:8px}
 .ev-guion{color:var(--suave);font-weight:700}
 .ev-dia-btn{font-weight:600}
@@ -1828,7 +1842,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.92';
+const VERSION = 'v4.93';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3598,6 +3612,31 @@ window.nativeDictation = (texto, error) => {
   campoDictado.value = (v.charAt(0).toUpperCase() + v.slice(1)).slice(0, campoDictado.maxLength > 0 ? campoDictado.maxLength : 500);
   campoDictado.dispatchEvent(new Event('input'));
 };
+/* 4.93 (Gustavo): dictar también la descripción (es un recuadro con formato, no un campo de texto) */
+function dictarDesc(btn){
+  const ed = $('#ev-desc'); if(!ed) return;
+  const poner = t => { t = (t || '').trim(); if(!t) return; const vacio = !ed.innerText.trim(); if(vacio) t = t.charAt(0).toUpperCase() + t.slice(1);
+    ed.insertAdjacentHTML('beforeend', (vacio ? '' : ' ') + esc(t)); rtVacio(ed); descLarga(); };
+  if(esApp){ campoDictado = {get value(){ return ''; }, set value(v){ poner(v); }, maxLength: 4000, dispatchEvent(){}}; btn.classList.add('escuchando'); AndroidEquilibra.dictar(); return; }
+  if(reconocimiento){ reconocimiento.stop(); return; }
+  const base = ed.innerHTML, r = new Reconocer();
+  r.lang = 'es-ES'; r.interimResults = true; r.continuous = false;
+  r.onresult = e => { let t = ''; for(const x of e.results) t += x[0].transcript; ed.innerHTML = base; poner(t); };
+  r.onerror = e => { if(e.error === 'not-allowed' || e.error === 'service-not-allowed') aviso('Permite el micrófono para dictar'); else if(e.error !== 'no-speech' && e.error !== 'aborted') aviso('No se pudo dictar (' + e.error + ')'); };
+  r.onend = () => { btn.classList.remove('escuchando'); reconocimiento = null; };
+  btn.classList.add('escuchando'); reconocimiento = r;
+  try{ r.start(); }catch(e){ btn.classList.remove('escuchando'); reconocimiento = null; }
+}
+/* 4.93 (Gustavo): en el ordenador, si la descripción se alarga mucho, el día y la hora pasan arriba de la columna derecha (y vuelven si se acorta) */
+function descLarga(){
+  const ed = $('#ev-desc'), w = $('#ev-fecha-w'), der = $('#ev-col-der'), hoja = $('.ev-hoja'); if(!ed || !w || !der || !hoja) return;
+  const ancho = matchMedia('(min-width:900px)').matches, larga = hoja.classList.contains('desc-larga');
+  const alto = ed.scrollHeight, pasa = ancho && (larga ? alto > 170 : alto > 200);
+  if(pasa === larga && (pasa ? w.parentNode === der : w.parentNode !== der)) return;
+  hoja.classList.toggle('desc-larga', pasa);
+  if(pasa) der.insertBefore(w, der.firstChild);
+  else { const ref = $('#ev-hab'); ref.parentNode.insertBefore(w, ref.nextSibling); }
+}
 function dictar(btn){
   if(esApp){ campoDictado = btn.previousElementSibling; btn.classList.add('escuchando'); AndroidEquilibra.dictar(); return; }
   if(reconocimiento){ reconocimiento.stop(); return; }
@@ -4276,6 +4315,8 @@ function pintarEvento(e){
       <span class="ev-prios">${[1, 2, 3].map(k => `<button type="button" class="ev-prio ${evEd.prio === k ? 'sel' : ''}" style="--c:${PRIO[k].c}" title="Prioridad ${PRIO[k].t.toLowerCase()}" aria-label="Prioridad ${PRIO[k].t.toLowerCase()}" onclick="evPrioB(${k}, this)">${ICO_BANDERA(PRIO[k].c)}</button>`).join('')}</span></div>
     <p class="ev-tipo-ayuda" id="ev-tipo-ayuda">${hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea}</p>
     <div class="campo-voz ev-titulo"><textarea id="ev-t" rows="1" maxlength="120" placeholder="Añade un título" aria-label="Título" oninput="tituloEv(this)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"></textarea>${botonMic()}</div>
+    <div class="ev-desc">${svgT('<path d="M4 7h16M4 12h16M4 17h11"/>', 20)}<div class="ev-desc-c">${rtBarra()}
+      <div class="rt-ed rt" id="ev-desc" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Descripción" data-ph="Añadir descripción" oninput="rtVacio(this); descLarga()" onpaste="event.preventDefault(); document.execCommand('insertText', false, (event.clipboardData || window.clipboardData).getData('text/plain'))"></div></div>${(Reconocer || esApp) ? `<button class="mic" type="button" aria-label="Dictar la descripción" onmousedown="event.preventDefault()" onclick="dictarDesc(this)">${MIC}</button>` : ''}</div>
     <div id="ev-hab" ${hab ? '' : 'hidden'}>
       <div class="ev-meta"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92">
         <div><p>Un hábito es como una planta: hay que <b>regarlo cada día</b>.</p>
@@ -4289,6 +4330,7 @@ function pintarEvento(e){
       <div id="frec-intervalo" ${evEd.frec === 'intervalo' ? '' : 'hidden'}><label class="frec-l">Cada <input type="number" id="frec-cada" min="2" max="60" value="${evEd.cada || 2}" oninput="evEd.cada = Math.max(2, Math.min(60, +this.value || 2)); pintarDias()"> días</label></div>
       </div></div></div>
     </div>
+    <div id="ev-fecha-w">
     <button type="button" class="ev-res" id="ev-res" onclick="evAbrirFecha()">${ICO_CALENDARIO}<span><b id="ev-res-t"></b><small id="ev-res-s"></small></span></button>
     <div class="ev-fecha" id="ev-fecha" hidden>${ICO_CALENDARIO}<div class="ev-fecha-c">
       <span id="ev-dia-t" hidden></span>
@@ -4301,12 +4343,10 @@ function pintarEvento(e){
           <div class="hl-w"><button type="button" class="hora-btn" id="ev-fin-b" onclick="horaLista('fin', event)"></button><div class="desp-lista hl" id="ev-hl-fin" hidden></div></div>
         </span>
       </div>
-      <label class="ev-chk"><input type="checkbox" id="ev-todo" ${todo ? 'checked' : ''} onchange="evTodo(this.checked)"><span>Sin hora (tarea flexible)</span></label>
-      <div id="ev-rep-c" class="ev-rep" ${hab ? 'hidden' : ''}>${despHTML('rep', 'Repetir', ICO_REP)}</div>
-    </div></div>
-    <div class="ev-desc">${svgT('<path d="M4 7h16M4 12h16M4 17h11"/>', 20)}<div class="ev-desc-c">${rtBarra()}
-      <div class="rt-ed rt" id="ev-desc" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Descripción" data-ph="Añadir descripción" oninput="rtVacio(this)" onpaste="event.preventDefault(); document.execCommand('insertText', false, (event.clipboardData || window.clipboardData).getData('text/plain'))"></div></div></div>
-    </div><div class="ev-col">
+      <div class="ev-fila2"><label class="ev-chk"><input type="checkbox" id="ev-todo" ${todo ? 'checked' : ''} onchange="evTodo(this.checked)"><span>Sin hora (tarea flexible)</span></label>
+      <div id="ev-rep-c" class="ev-rep" ${hab ? 'hidden' : ''}>${despHTML('rep', 'Repetir', ICO_REP)}</div></div>
+    </div></div></div>
+    </div><div class="ev-col" id="ev-col-der">
     <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
       ${despHTML('rec', 'Recordatorio', ICO_CAMPANA)}
@@ -4320,6 +4360,7 @@ function pintarEvento(e){
   $('#ev-t').value = e.t && e.t !== SIN_TITULO ? e.t : ''; tituloEv($('#ev-t'));
   const ds = $('#ev-desc'); if(ds) ds.innerHTML = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
   pintarDesp('dur');   // la duración ya con las horas puestas (y la línea del día)
+  descLarga();
   if(!evEd.id) setTimeout(() => { const t = $('#ev-t'); if(t && matchMedia('(hover: hover)').matches) t.focus(); }, 120);
 }
 /* La línea del día y la hora (como Google: «Lunes, 2 de noviembre · 10:00 – 11:00»); al tocarla se abre para cambiarla */
