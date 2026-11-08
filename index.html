@@ -1909,7 +1909,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.08';
+const VERSION = 'v5.09';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4810,7 +4810,7 @@ function popOpc(cual, id, k){
     h = `<p class="ep-opc-t">Recordatorio (puedes elegir varios)</p>${L.map(o => op(av.includes(o.k), `popSet('${id}','${k}','rec',${o.k})`, `<i class="ep-chk">${av.includes(o.k) ? '✓' : ''}</i>${o.t}`)).join('')}
       ${av.length ? op(false, `popSet('${id}','${k}','rec',-1)`, '<i class="ep-chk"></i>Sin recordatorio') : ''}`;
   } else if(cual === 'prio'){
-    h = PRIO.map(o => op((e.prio || 0) === o.k, `popSet('${id}','${k}','prio',${o.k})`, `${ICO_BANDERA(o.c)} ${o.k ? 'Prioridad ' + o.t.toLowerCase() : o.t}`)).join('');
+    h = PRIO.filter(o => o.k).map(o => op((e.prio || 0) === o.k, `popSet('${id}','${k}','prio',${o.k})`, `${ICO_BANDERA(o.c)} Prioridad ${o.t.toLowerCase()}`)).join('');   // 5.09 (Gustavo): sin «Sin prioridad»
   }
   box.dataset.c = cual; box.innerHTML = h; popEncajar();
   const s = box.querySelector('.ep-horas .sel'); if(s) s.scrollIntoView({block: 'center'});
