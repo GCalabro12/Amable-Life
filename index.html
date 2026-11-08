@@ -1007,6 +1007,9 @@ html:not(.claro) .pa-obj{color:#4ade80!important}
 .obj-cant input{height:38px;border-radius:10px;border:1px solid rgba(var(--bl),.25);background:var(--tarjeta);color:var(--tinta);padding:0 10px;font:inherit}
 .obj-cant #obj-n{width:72px}
 .obj-cant #obj-u{width:130px}
+.ep-t-ed{border-radius:8px;padding:0 4px;margin:0 -4px;cursor:text;transition:background .15s}
+.ep-t-ed:hover{background:rgba(var(--bl),.12)}
+.ep-t-ed[contenteditable=true]{background:rgba(var(--bl),.1);outline:2px solid var(--oro);outline-offset:1px}
 .ep-ed{border:0;background:none;padding:1px 4px;margin:-1px -2px;border-radius:6px;color:inherit;font:inherit;cursor:pointer;text-align:left}
 .ep-ed:hover{background:rgba(var(--bl),.1);text-decoration:underline dotted}
 .ep-cuando{position:relative}
@@ -1920,7 +1923,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.14';
+const VERSION = 'v5.15';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4755,7 +4758,7 @@ function popHTML(e, k, enHoja){
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
-    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${esc(e.t)}</h3>
+    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
       <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p>${rep}</p>` : ''}${objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
@@ -4818,6 +4821,26 @@ function popCuandoHTML(e, k, hab){
   const horaH = e.todo || e.ini == null || e.fin == null ? horaEv(e)
     : `<button type="button" class="ep-ed" title="Cambiar la hora de empezar" onclick="popOpc('ini','${e.id}','${k}')">${hm(e.ini)}</button> – <button type="button" class="ep-ed" title="Cambiar la hora de terminar" onclick="popOpc('fin','${e.id}','${k}')">${hm(e.fin)}</button>`;
   return `${diaH} · ${horaH}`;
+}
+/* 5.15 (Gustavo): el nombre se cambia ahí mismo: al pasar el ratón se pone gris y al clicar se escribe encima (Enter guarda, Esc deja el de antes) */
+let popTitT = null;
+function popTitulo(el, id, k){
+  if(el.isContentEditable) return;
+  const e = AG_().eventos.find(x => x.id === id); if(!e) return;
+  if(popInfo) popInfo.hover = false;
+  const antes = e.t, guarda = final => {
+    const t = el.textContent.replace(/\s+/g, ' ').trim().slice(0, 120) || SIN_TITULO;
+    if(t !== e.t){ e.t = t; e.mod = ahoraISO(); guardar(); }
+    if(final){ el.contentEditable = 'false'; if(e.t !== antes){ rerenderDia(); aviso('Nombre cambiado'); } }
+  };
+  el.contentEditable = 'true'; el.focus();
+  const r = document.createRange(); r.selectNodeContents(el); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  el.oninput = () => { clearTimeout(popTitT); popTitT = setTimeout(() => guarda(false), 500); };
+  el.onkeydown = ev => {
+    if(ev.key === 'Enter'){ ev.preventDefault(); el.blur(); }
+    else if(ev.key === 'Escape'){ ev.preventDefault(); ev.stopPropagation(); clearTimeout(popTitT); el.textContent = antes; if(e.t !== antes){ e.t = antes; e.mod = ahoraISO(); guardar(); } el.dataset.no = '1'; el.blur(); }
+  };
+  el.onblur = () => { clearTimeout(popTitT); if(el.dataset.no){ delete el.dataset.no; el.contentEditable = 'false'; rerenderDia(); return; } guarda(true); };
 }
 function popDiaAbrir(b){ const i = b.nextElementSibling; if(!i) return; try{ i.showPicker(); }catch(x){ i.focus(); i.click(); } }
 function popOpc(cual, id, k){
