@@ -1323,6 +1323,9 @@ html.claro .cal-ok{color:#15803d}
 html.claro .brote{color:#16a34a}
 .rj.sem .brote,.rj-todo .brote{width:10px;height:10px}
 .ep-tit .brote{width:18px;height:18px;vertical-align:-2px;margin-right:6px}
+.flor-hab{width:15px;height:15px;vertical-align:-3px;margin-right:3px}
+.rj.sem .flor-hab,.rj-todo .flor-hab{width:14px;height:14px}
+.ep-tit .flor-hab{width:20px;height:20px}
 .ev-meta{display:flex;align-items:center;gap:14px;margin:12px 0 4px;padding:10px 12px;border-radius:16px;background:color-mix(in srgb,#22c55e 12%,transparent);border:1px solid color-mix(in srgb,#22c55e 30%,transparent)}
 .ev-meta img{flex:none;width:84px;height:auto;border-radius:12px;background:#fff}
 .ev-meta p{margin:0 0 8px;font-size:15px;line-height:1.35}
@@ -1842,7 +1845,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v4.93';
+const VERSION = 'v4.94';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3543,20 +3546,41 @@ function dhGuardar(){
   // saltando las horas que ya tienen otros hábitos sin definir de ese día que no están en esta lista
   const mias = new Set(DH.items.map(x => x.clave0)), usadas = {5: new Set(), 6: new Set()};
   A.eventos.forEach(e => { if(e.tipo === 'habito' && e.sinDefinir && !mias.has(e.habRev) && (e.dias || []).length === 1 && usadas[e.dias[0]]) usadas[e.dias[0]].add(e.ini); });
-  DH.items.forEach(x => { if(!x.nodef) return; let h = 600; while(usadas[x.finde].has(h) && h < 1260) h += 60; usadas[x.finde].add(h); x.hIni = h; });
+  DH.items.forEach(x => { if(!x.nodef) return; let h = 600; while(usadas[x.finde].has(h) && h < 1290) h += 30; usadas[x.finde].add(h); x.hIni = h; });   // 4.94: cada media hora
   DH.items.forEach(x => {
-    const dias = x.nodef ? [x.finde] : x.dias.slice().sort(), ini = x.nodef ? x.hIni : x.ini, fin = x.nodef ? x.hIni + 60 : x.fin, k = claveHab(x.area, x.t);
+    const dias = x.nodef ? [x.finde] : x.dias.slice().sort(), ini = x.nodef ? x.hIni : x.ini, fin = x.nodef ? x.hIni + 30 : x.fin, k = claveHab(x.area, x.t);
     let e = A.eventos.find(z => z.tipo === 'habito' && (z.habRev === k || (x.clave0 && z.habRev === x.clave0)));
     if(!e){ e = {id: uid(), creada: ahora, saltar: [], hechos: [], dia: hoyK(), habRev: k}; A.eventos.push(e); }
     Object.assign(e, {t: x.t, habRev: k, tipo: 'habito', dias, frec: 'diario', veces: dias.length, cada: 2, todo: false, ini, fin, area: x.area, areas: [x.area],
       rep: 'no', prio: e.prio || 1, avisos: [0], horasAviso: [], sinDefinir: !!x.nodef, mod: ahora});
     n++;
   });
+  ordenarHabitos();
+  DH.items.forEach(x => { const e = A.eventos.find(z => z.tipo === 'habito' && z.habRev === claveHab(x.area, x.t)); if(e){ x.ini = e.ini; x.fin = e.fin; if(x.nodef){ x.hIni = e.ini; } } });
   guardar(); sonarFinal(); DH.fin = true; DH.n = n; render(); window.scrollTo(0, 0);
   setTimeout(() => pedirAvisosWeb(false), 900);
 }
+/* 4.94 (Gustavo): los hábitos de «Revisar mi flor» que caen a la vez el mismo día no se pisan: van seguidos, cada media hora
+   (10:00–10:30, 10:30–11:00, 11:00–11:30…). El primero se queda donde está; los que chocan pasan al siguiente hueco libre de 30 min. */
+function ordenarHabitos(){
+  const hs = AG_().eventos.filter(e => e.tipo === 'habito' && e.habRev && !e.todo && e.ini != null && e.fin != null)
+    .sort((a, b) => (a.ini - b.ini) || String(a.creada || '').localeCompare(String(b.creada || '')) || String(a.id).localeCompare(String(b.id)));
+  const puestos = []; let n = 0;
+  hs.forEach(e => {
+    const dias = e.dias || [], choca = (i, f) => puestos.some(p => (p.dias || []).some(d => dias.includes(d)) && i < p.fin && p.ini < f);
+    if(choca(e.ini, e.fin)){
+      let h = Math.ceil(e.ini / 30) * 30; while(choca(h, h + 30) && h < 1410) h += 30;
+      const dif = h - e.ini; e.ini = h; e.fin = h + 30;
+      if(Array.isArray(e.horasAviso) && e.horasAviso.length) e.horasAviso = e.horasAviso.map(x => x + dif);
+      e.mod = ahoraISO(); n++;
+    }
+    puestos.push(e);
+  });
+  return n;
+}
+let habOrdenSesion = false;
 function vDefHabFin(){
-  const fila = x => { const a = areaDe(x.area), d = x.nodef ? `${x.finde === 5 ? 'Sábado' : 'Domingo'} · ${hm(x.hIni)} – ${hm(x.hIni + 60)} (recordatorio)` : `${x.dias.map(k => DIAS_L[k]).join(' ')} · ${hm(x.ini)} – ${hm(x.fin)}`;
+  const fila = x => { const a = areaDe(x.area), d = x.nodef ? `${x.finde === 5 ? 'Sábado' : 'Domingo'} · ${hm(x.hIni)} – ${hm(x.hIni + 30)} (recordatorio)` : `${x.dias.map(k => DIAS_L[k]).join(' ')} · ${hm(x.ini)} – ${hm(x.fin)}`;
     return `<li style="--c:${a.color}">${ico(a)}<span><b>${esc(x.t)}</b><small>${d}</small></span></li>`; };
   return `<div class="res-tit"><h1>Hábitos en tu calendario</h1><p class="suave">${DH.n === 1 ? 'Tu hábito ya está' : `Tus ${DH.n} hábitos ya están`} en el calendario, con un aviso a la hora.</p></div>
     <ul class="dh-lista">${DH.items.map(fila).join('')}</ul>
@@ -3665,7 +3689,9 @@ function dictar(btn){
 const ICO_CAL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
 const ICO_CAMPANITA = '<svg class="campanita" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Con recordatorio"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>';
 const ICO_BROTE = '<svg class="brote" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Hábito"><path d="M12 21v-8"/><path d="M12 13c0-4 3-6.5 7.5-6.5 0 4-3 6.5-7.5 6.5z"/><path d="M12 15.5c0-3.3-2.5-5.5-6.5-5.5 0 3.3 2.5 5.5 6.5 5.5z"/></svg>';
-const broteEv = e => e && e.tipo === 'habito' ? ICO_BROTE : '';
+/* 4.94 (Gustavo): en el calendario, en lugar del brote, la florecita de los hábitos (pétalos blancos y centro dorado, se ve sobre el verde) */
+const ICO_FLOR_HAB = '<svg class="brote flor-hab" viewBox="0 0 24 24" width="12" height="12" aria-label="Hábito"><g fill="#fff" stroke="#15803d" stroke-width=".9"><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(0 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(45 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(90 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(135 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(180 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(225 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(270 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(315 12 12)"/></g><circle cx="12" cy="12" r="4.6" fill="#f5b301" stroke="#b45309" stroke-width=".8"/></svg>';
+const broteEv = e => e && e.tipo === 'habito' ? ICO_FLOR_HAB : '';
 const campEv = e => e && e.avisos && e.avisos.length ? ICO_CAMPANITA : '';
 const ICO_REP = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
 const AG_ = () => { if(!D.agenda) D.agenda = {eventos: []}; return D.agenda; };
@@ -3711,7 +3737,8 @@ const areasEv = e => (e.areas && e.areas.length ? e.areas : e.area ? [e.area] : 
 const cabeceraEv = e => e && e.tipo === 'habito' ? ['Hábito', ...areasEv(e).map(a => a.nombre)].join(' · ').toUpperCase() : '';   // 4.86 (Gustavo): primera línea de los avisos de hábitos, «HÁBITO · SALUD» (en las tareas, no)
 const tituloAviso = (e, txt) => { const c = cabeceraEv(e); return c ? [c, e.t + '\n' + txt] : [e.t, txt]; };
 const SIN_TITULO = '(Sin título)';
-const colorEv = e => e.prio && PRIO[e.prio] ? PRIO[e.prio].c : (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
+const COLOR_HAB = '#22c55e';   // 4.94 (Gustavo): los hábitos, siempre verdes
+const colorEv = e => e.tipo === 'habito' ? COLOR_HAB : e.prio && PRIO[e.prio] ? PRIO[e.prio].c : (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
 const horaEv = e => e.todo ? 'Todo el día' : `${hm(e.ini)} – ${hm(e.fin)}`;
 const txtHabito = e => { if(e.frec === 'semanal') return `${e.veces || 3} ${(e.veces || 3) === 1 ? 'día' : 'días'} a la semana`; if(e.frec === 'intervalo') return `Cada ${e.cada || 2} días`; const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length === 5 && d.join() === '0,1,2,3,4' ? 'De lunes a viernes' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana`; };
 /* Números del día para Grow Panel: cuántos hay hoy, horas ocupadas (sin contar dos veces lo que se solapa) y hechos o ya pasados */
@@ -3778,6 +3805,7 @@ function mesPeq(m0, conSem){
 }
 function vAgenda(){
   if(!agK) agK = hoyK();
+  if(!habOrdenSesion){ habOrdenSesion = true; if(ordenarHabitos()){ guardar(); setTimeout(render, 0); } }
   recordarVista();
   const hoy = hoyK(), d0 = fechaDe(agK);
   let tit, cuerpo, conHoy, fijo = '';   // fijo: la fila de los días, que se queda arriba con el mes al bajar por las horas
