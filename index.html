@@ -1615,6 +1615,7 @@ body.pip .ev-mini{pointer-events:none}
   body.v-salud .envoltura{max-width:1100px}
   body.v-salud .salud-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:18px 0 12px;align-items:start}
   .s-col{border:2px solid var(--c);border-radius:26px;padding:18px 16px 12px;background:color-mix(in srgb,var(--c) 10%,var(--tarjeta))}
+  .s-explica{margin:4px 2px 8px;line-height:1.4;color:var(--tinta)}
   .s-col-tit{margin:0;text-align:center;font-size:30px;font-weight:900;color:color-mix(in srgb,var(--c) 70%,var(--tinta))}
   .s-col-fila{display:flex;align-items:center;gap:12px;margin:12px 0 4px}
   .s-col-ico .s-svg{width:46px;height:46px;display:block}
@@ -1978,7 +1979,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.27';
+const VERSION = 'v5.28';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6587,7 +6588,8 @@ function vSalud(){
   const meta = p.steps >= S.meta, aguaOk = h.agua >= S.aguaGoal;
   const faltaA = S.aguaGoal - h.agua;
   const estPasos = esApp && pcCuentaPasos() ? 'Los cuenta Amable PC' : meta ? `¡Meta cumplida! Has pasado de ${fmtN(S.meta)} pasos` : `Te faltan ${fmtN(S.meta - p.steps)} pasos para tu meta de ${fmtN(S.meta)}`;
-  const subPasos = !S.pasosOn ? 'Avisos desactivados' : esApp && !pcCuentaPasos() ? `${km} km · ${mins} min activos` : '';
+  // 5.28 (Gustavo): fuera de la app del móvil los pasos no se cuentan: se dice de dónde vienen y no sale el interruptor de sus avisos
+  const subPasos = !esApp ? 'Medidos con tu móvil' : !S.pasosOn ? 'Avisos desactivados' : esApp && !pcCuentaPasos() ? `${km} km · ${mins} min activos` : '';
   const estAgua = aguaOk ? `¡Meta cumplida! Ya llevas ${fmtVasos(h.agua)} vasos` : h.agua === 0 ? 'Aún no has bebido: empieza con medio vaso' : `Te ${faltaA <= 1 ? 'falta' : 'faltan'} ${fmtVasos(faltaA)} ${faltaA <= 1 ? 'vaso' : 'vasos'} para llegar a ${S.aguaGoal}`;
   const estMov = h.mov === 0 ? 'Haz tu primera pausa activa de hoy' : h.mov < 4 ? '¡Bien! Sigue moviéndote cada hora' : '¡Muy activo hoy! Sigue así';
   const desliz = (clave, sig, min) => `<label class="desliz" onclick="event.stopPropagation()"><input type="checkbox" ${S[clave] ? 'checked' : ''} onchange="ajCheck('${clave}', this${sig ? `, '${sig}', '${min}'` : ''})"><i></i><span>${S[clave] ? 'Activado' : 'Desactivado'}</span></label>`;
@@ -6604,10 +6606,10 @@ function vSalud(){
     ${estadoPasos()}
     <details class="ajustes-salud"><summary>Ajustes de pasos</summary>
       <label class="fila-aj">Meta diaria <input type="number" min="1000" max="50000" step="500" inputmode="numeric" value="${S.meta}" onchange="ajSalud('meta', this, 1000, 50000)"></label>
-      <label class="fila-aj"><span><input type="checkbox" ${S.bloqueOn ? 'checked' : ''} onchange="ajCheck('bloqueOn', this)"> Avisar al completar cada bloque de</span><input type="number" min="500" max="10000" step="500" inputmode="numeric" value="${S.bloque}" onchange="ajSalud('bloque', this, 500, 10000)"></label>
+      ${esApp ? `<label class="fila-aj"><span><input type="checkbox" ${S.bloqueOn ? 'checked' : ''} onchange="ajCheck('bloqueOn', this)"> Avisar al completar cada bloque de</span><input type="number" min="500" max="10000" step="500" inputmode="numeric" value="${S.bloque}" onchange="ajSalud('bloque', this, 500, 10000)"></label>
       <label class="fila-aj"><span><input type="checkbox" ${S.voz ? 'checked' : ''} onchange="ajCheck('voz', this)"> Decir «llevas … pasos» cada</span><input type="number" min="100" max="5000" step="100" inputmode="numeric" value="${S.cada}" onchange="ajSalud('cada', this, 100, 5000)"></label>
       <label class="fila-aj"><span><input type="checkbox" ${S.caminarOn ? 'checked' : ''} onchange="ajCheck('caminarOn', this)"> Recordarme caminar si voy atrasado</span></label>
-      <p class="peq suave" style="margin:2px 0 0">A las 11:00 si no llevo 2.000 pasos · 13:00, 4.000 · 16:00, 6.000 · 18:00, 8.000.</p>
+      <p class="peq suave" style="margin:2px 0 0">A las 11:00 si no llevo 2.000 pasos · 13:00, 4.000 · 16:00, 6.000 · 18:00, 8.000.</p>` : '<p class="peq suave" style="margin:2px 0 0">Los pasos los cuenta la app de Amable Life en tu móvil y aquí los ves. Sus avisos se ajustan allí.</p>'}
     </details>
   </section>`, agua: `<section class="tarjeta salud-sec" id="sec-agua" style="--c:#14a3a3">
     <h3>💧 Agua</h3>
@@ -6616,17 +6618,18 @@ function vSalud(){
       <button class="cont-btn" onclick="sumarSalud('agua', AGUA_PASO)" aria-label="Añadir medio vaso">+</button></div>
     <div class="vasos">${vasos}</div>
     <p class="peq suave" style="text-align:center;margin:8px 0">${prox(S.aguaOn, S.aguaNext)}</p>
-    <label class="fila-aj"><span><input type="checkbox" ${S.aguaOn ? 'checked' : ''} onchange="ajCheck('aguaOn', this, 'aguaNext', 'aguaMin')"> Avisarme para beber agua cada</span><input type="number" min="10" max="240" inputmode="numeric" value="${S.aguaMin}" onchange="ajSalud('aguaMin', this, 10, 240, 'aguaNext')"></label>
+    <label class="fila-aj"><span><input type="checkbox" ${S.aguaOn ? 'checked' : ''} onchange="ajCheck('aguaOn', this, 'aguaNext', 'aguaMin')"> Avisarme para beber agua cada (minutos)</span><input type="number" min="10" max="240" inputmode="numeric" value="${S.aguaMin}" onchange="ajSalud('aguaMin', this, 10, 240, 'aguaNext')"></label>
     <label class="fila-aj">Meta (vasos al día) <input type="number" min="1" max="20" inputmode="numeric" value="${S.aguaGoal}" onchange="ajSalud('aguaGoal', this, 1, 20)"></label>
     <p class="peq suave s-horario">Los avisos de agua salen entre las 5:30 y las 22:00, solo con la app abierta.</p>
   </section>`, mov: `<section class="tarjeta salud-sec" id="sec-mov" style="--c:#22a35a">
-    <h3>🤸 Movimiento</h3>
+    <h3>🤸 Pausas activas</h3>
     <div class="contador"><button class="cont-btn" onclick="sumarSalud('mov', -1)" aria-label="Quitar una pausa activa">−</button>
       <div><b>${h.mov}</b><small>pausas activas hoy</small></div>
       <button class="cont-btn" onclick="sumarSalud('mov', 1)" aria-label="Me he movido">+</button></div>
     <p class="peq" style="text-align:center;margin:8px 0">💡 ${MOV_TIPS[new Date().getHours() % MOV_TIPS.length]}</p>
     <p class="peq suave" style="text-align:center;margin:0 0 8px">${prox(S.movOn, S.movNext)}</p>
-    <label class="fila-aj"><span><input type="checkbox" ${S.movOn ? 'checked' : ''} onchange="ajCheck('movOn', this, 'movNext', 'movMin')"> Avisarme para moverme cada</span><input type="number" min="10" max="240" inputmode="numeric" value="${S.movMin}" onchange="ajSalud('movMin', this, 10, 240, 'movNext')"></label>
+    <p class="peq s-explica">Una pausa activa es levantarte y moverte un par de minutos: estirar, caminar, girar los hombros. Si activas el aviso, te lo recuerdo cada tantos minutos; cuando la hagas, pulsa <b>+</b>.</p>
+    <label class="fila-aj"><span><input type="checkbox" ${S.movOn ? 'checked' : ''} onchange="ajCheck('movOn', this, 'movNext', 'movMin')"> Avisarme para una pausa activa cada (minutos)</span><input type="number" min="10" max="240" inputmode="numeric" value="${S.movMin}" onchange="ajSalud('movMin', this, 10, 240, 'movNext')"></label>
     <p class="peq suave s-horario">Los avisos de movimiento salen entre las 5:30 y las 22:00, solo con la app abierta.</p>
   </section>`};
   // 4.55 (Gustavo): en el ordenador, tres columnas siempre abiertas (nada que plegar): arriba en grande «Pasos», «Vasos» o «Pausas»;
@@ -6639,16 +6642,16 @@ function vSalud(){
       ${secciones[k]}</div>`;
     return `<h2 style="margin-top:18px">Tu cuerpo hoy</h2>${botonPausa('salud')}
     <div class="salud-cols">
-      ${col('pasos', 'Pasos', icoSalud('pasos', 's-svg'), fmtN(p.steps), estPasos, subPasos, '#f08a24', desliz('pasosOn'))}
+      ${col('pasos', 'Pasos', icoSalud('pasos', 's-svg'), fmtN(p.steps), estPasos, subPasos, '#f08a24', esApp ? desliz('pasosOn') : '')}
       ${col('agua', 'Vasos', icoSalud('agua', 's-svg'), fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', estAgua, '', '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}
-      ${col('mov', 'Pausas', icoSalud('mov', 's-svg'), h.mov, estMov, '', '#22a35a', desliz('movOn', 'movNext', 'movMin'))}
+      ${col('mov', 'Pausas activas', icoSalud('mov', 's-svg'), h.mov, estMov, '', '#22a35a', desliz('movOn', 'movNext', 'movMin'))}
     </div>`;
   }
   return `<h2 style="margin-top:18px">Tu cuerpo hoy</h2>${botonPausa('salud')}
   <div class="salud-tiles">
-    ${tile('pasos', icoSalud('pasos', 's-svg'), fmtN(p.steps), 'pasos', estPasos, subPasos, '#f08a24', desliz('pasosOn'))}${saludAbierta === 'pasos' ? secciones.pasos : ''}
+    ${tile('pasos', icoSalud('pasos', 's-svg'), fmtN(p.steps), 'pasos', estPasos, subPasos, '#f08a24', esApp ? desliz('pasosOn') : '')}${saludAbierta === 'pasos' ? secciones.pasos : ''}
     ${tile('agua', icoSalud('agua', 's-svg'), fmtVasos(h.agua) + '<i>/' + S.aguaGoal + '</i>', 'vasos', estAgua, prox(S.aguaOn, S.aguaNext), '#14a3a3', desliz('aguaOn', 'aguaNext', 'aguaMin'))}${saludAbierta === 'agua' ? secciones.agua : ''}
-    ${tile('mov', icoSalud('mov', 's-svg'), h.mov, h.mov === 1 ? 'pausa' : 'pausas', estMov, prox(S.movOn, S.movNext), '#22a35a', desliz('movOn', 'movNext', 'movMin'))}${saludAbierta === 'mov' ? secciones.mov : ''}
+    ${tile('mov', icoSalud('mov', 's-svg'), h.mov, h.mov === 1 ? 'pausa activa' : 'pausas activas', estMov, prox(S.movOn, S.movNext), '#22a35a', desliz('movOn', 'movNext', 'movMin'))}${saludAbierta === 'mov' ? secciones.mov : ''}
   </div>
   ${saludAbierta ? '' : '<p class="peq suave" style="text-align:center;margin:6px 0 14px">Toca una fila para ver el detalle.</p>'}`;
 }
