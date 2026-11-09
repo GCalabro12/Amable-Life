@@ -1794,8 +1794,10 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   .gc-pop .gc-dias .gc-dn{width:32px;height:32px;flex:none;padding:0;justify-content:center;border-radius:50%;border:1.5px solid var(--linea);font-size:19px;font-weight:700;line-height:1}
   .gc-pop .gc-dias .gc-dn:disabled{opacity:.3;cursor:default;background:none}
   .gc-dias.sel .gc-dl{color:var(--oro);font-weight:800}
-  .gc-crear{align-self:flex-start;display:flex;align-items:center;gap:12px;height:56px;padding:0 26px 0 16px;border-radius:16px;border:0;background:#2e2458;color:var(--tinta);font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer;margin-top:2px}
+  .gc-crear{align-self:center;flex:none;display:flex;align-items:center;gap:12px;height:58px;padding:0 34px 0 24px;margin:8px 0 6px !important;font-size:17px !important;border-radius:18px;border:0;background:#2e2458;color:var(--tinta);font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer;margin-top:2px}
   .gc-crear:hover{background:#372b69}
+  .gc-crear svg{width:26px;height:26px}
+  body.ancho .rj-cab button{cursor:default}
   .gc-mini-cab{display:flex;align-items:center;gap:2px;padding-left:8px;margin-bottom:4px}
   .gc-mini-cab b{flex:1;font-size:14px;font-weight:700}
   .gc-mini-cab .gc-ico{width:30px;height:30px}
@@ -1966,7 +1968,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.21';
+const VERSION = 'v5.22';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4137,7 +4139,7 @@ function vAgenda(){
     tit = rangoTxt(todosD[0], todosD[todosD.length - 1]);
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !(k === hoy && esFlexible(e))));
-    fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
+    fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
     cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div>${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
