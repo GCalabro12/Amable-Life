@@ -1984,7 +1984,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.33';
+const VERSION = 'v5.34';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5791,17 +5791,18 @@ function notifWeb(titulo, cuerpo, tag, siempre, extra){
 function probarAvisoWeb(){
   if(!hayAvisosWeb() || Notification.permission !== 'granted'){ pedirAvisosWeb(true); return; }
   const ok = notifWeb('Amable Life', 'Así se verán tus recordatorios: aquí, en la esquina de la pantalla', 'prueba-' + Date.now(), true);
-  mostrarHoja(`<div class="hoja-cab"><h2>Aviso de prueba</h2></div>
-    <p>${ok ? 'Te acabo de mandar un aviso a la <b>esquina de abajo a la derecha</b> de la pantalla, como los de tus recordatorios.' : 'No se ha podido mandar el aviso.'}</p>
-    <p class="peq suave">Si no lo ves, lo está tapando Windows: abre <b>Configuración de Windows → Sistema → Notificaciones</b>, quita <b>No molestar</b> y mira que <b>Google Chrome</b> tenga las notificaciones activadas. La alarma con sonido y su ventana salen igualmente.</p>
+  mostrarHoja(`<div class="hoja-cab"><h2>Aviso pequeño de prueba</h2></div>
+    <p>${ok ? 'Te acabo de mandar un aviso pequeño a la <b>esquina de abajo a la derecha</b> de la pantalla, como los que salen con tus recordatorios.' : 'No se ha podido mandar el aviso.'}</p>
+    <p class="peq suave">Si no lo ves, es que Windows tiene las notificaciones apagadas o «No molestar». Si los quieres: <b>Configuración de Windows → Sistema → Notificaciones</b>, actívalas y mira que <b>Google Chrome</b> también lo esté. Si no los quieres, no pasa nada: <b>la alarma con sonido y su ventana grande salen igualmente</b>.</p>
     <div class="bots"><button class="btn sec" onclick="cerrarHoja()">Entendido</button></div>`, '#f7c35b');
 }
 function avisosWebHTML(){
   if(!hayAvisosWeb()) return '';
   const p = Notification.permission;
-  return `<div class="cta-b"><h4>Avisos en la pantalla del ordenador</h4>
-    <p class="peq suave">${p === 'granted' ? 'Activados: aunque estés en otra ventana, suena la alarma y sale el aviso en la esquina; al tocarlo, Amable Life se pone delante.' : p === 'denied' ? 'Bloqueados en este navegador.' : 'Aún no los has activado.'}</p>
-    <div class="bots">${p === 'granted' ? `<button class="btn sec" onclick="probarAvisoWeb()">Probar un aviso</button>` : `<button class="btn sec" onclick="pedirAvisosWeb(true)">${p === 'denied' ? 'Cómo activarlos' : 'Activar los avisos'}</button>`}</div></div>`;
+  return `<div class="cta-b"><h4>2 · Avisos pequeños en la esquina</h4>
+    <p class="peq suave" style="margin:2px 0 6px">Además de la alarma, un <b>aviso pequeño abajo a la derecha</b> de la pantalla, por si Amable Life está tapada por otras ventanas. Al tocarlo, Amable Life se pone delante. Los saca Windows: si en Windows tienes las notificaciones apagadas o «No molestar», no salen (la alarma sí suena).</p>
+    <p class="peq suave">${p === 'granted' ? 'Permitidos en este navegador.' : p === 'denied' ? 'Bloqueados en este navegador.' : 'Aún no los has permitido.'}</p>
+    <div class="bots">${p === 'granted' ? `<button class="btn sec" onclick="probarAvisoWeb()">Probar un aviso pequeño</button>` : `<button class="btn sec" onclick="pedirAvisosWeb(true)">${p === 'denied' ? 'Cómo activarlos' : 'Activar los avisos'}</button>`}</div></div>`;
 }
 /* Alarma (4.08): pitidos de despertador durante un minuto, aunque la música y los efectos estén apagados (no usa `audio()`),
    y una ventana con Parar, Posponer 5 min y Marcar como hecho. Los pitidos se dejan programados de golpe en el reloj del audio,
@@ -6096,11 +6097,11 @@ function avisaAqui(){
   if(m === 'delante' && idleDet && (idleSt.u === 'idle' || idleSt.s === 'locked')) return false;
   return true;
 }
-const avPCnota = () => avPC() === 'nunca' ? 'Este ordenador no suena ni avisa: las alarmas te llegan solo al móvil, con la app de Android.'
-  : avPC() === 'delante' ? (idleDet ? 'Si llevas 5 minutos sin tocar el ordenador o la pantalla está bloqueada, aquí no suena ni sale nada: te avisa el móvil.'
+const avPCnota = () => avPC() === 'nunca' ? 'En este ordenador no suena la alarma ni sale ningún aviso: te llegan solo al móvil, con la app de Android.'
+  : avPC() === 'delante' ? (idleDet ? 'Si llevas 5 minutos sin tocar el ordenador o la pantalla está bloqueada, aquí no suena la alarma ni sale ningún aviso: te avisa el móvil.'
     : hayIdle() ? 'Falta el permiso del navegador: vuelve a pulsar «Solo si estoy delante» y elige «Permitir» (si no sale la pregunta, en el candado de la dirección, «Detección de inactividad»). Mientras tanto, te avisará siempre.'
     : 'Este navegador no sabe si estás delante (Chrome y Edge sí). Mientras tanto, te avisará siempre.')
-  : 'Suena aquí aunque también te avise el móvil.';
+  : 'Suena aquí aunque también te avise el móvil.';   /* 5.34: si no suena aquí, tampoco sale el aviso pequeño de la esquina */
 async function elegirAvPC(k, b){
   try{ localStorage.setItem('equilibra.avisosPC', k); }catch(e){}
   if(b) b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === b));
@@ -6115,8 +6116,8 @@ async function elegirAvPC(k, b){
 function avPCHTML(){
   if(esApp) return '';
   const m = avPC();
-  return `<div class="cta-b"><h4>Cuándo te avisa este ordenador</h4>
-    <p class="peq suave" style="margin:2px 0 8px">Si también tienes Amable Life en el móvil, puedes hacer que el ordenador no suene cuando no estás delante.</p>
+  return `<div class="cta-b"><h4>1 · Alarma en este ordenador</h4>
+    <p class="peq suave" style="margin:2px 0 8px">La alarma con <b>sonido</b> y la <b>ventana grande</b> (Enterado, Posponer). Si también tienes Amable Life en el móvil, puedes hacer que el ordenador no suene cuando no estás delante.</p>
     <div class="rec-son-b">${AV_PC.map(a => `<button type="button" class="${m === a.k ? 'sel' : ''}" onclick="elegirAvPC('${a.k}', this)">${a.t}</button>`).join('')}</div>
     <p class="peq suave" id="av-pc-nota" style="margin:8px 0 0">${esc(avPCnota())}</p></div>`;
 }
