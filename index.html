@@ -1982,7 +1982,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.30';
+const VERSION = 'v5.31';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6032,7 +6032,7 @@ function revisarPospuestos(){
   if(!toca.length) return;
   try{ localStorage.setItem('equilibra.pospuestos', JSON.stringify(quedan)); }catch(x){}
   const p = toca[toca.length - 1], e = AG_().eventos.find(x => x.id === p.ev);
-  if(!e || hechoEv(e, p.k) || ahora - p.at > 6 * 3600000 || modoAvion()) return;
+  if(!e || hechoEv(e, p.k) || ahora - p.at > 6 * 3600000 || modoAvion() || !avisaAqui()) return;
   sonarAlarma(); hojaAlarma(e, p.k, `Pospuesto · ${horaEv(e)}: ${e.t}`, p.ul);
   notifWeb(...tituloAviso(e, 'Pospuesto · ' + horaEv(e)), 'pos-' + e.id, false, {requireInteraction: true, renotify: true, silent: false, actions: ACC_ALARMA, data: {ev: e.id, k: p.k, ul: !!p.ul}});
 }
@@ -6048,6 +6048,60 @@ document.addEventListener('visibilitychange', () => { if(!document.hidden){ wind
 document.addEventListener('keydown', ev => { if(ev.key === 'Escape' && $('#alarma-full')) alarmaCerrar(); });
 if(navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', m => { const o = m.data || {}; if(o.tipo !== 'alarma') return;
   if(o.acc === 'enterado') alarmaCerrar(); else if(o.acc === 'pos5' && o.ev) posponerAlarma(o.ev, o.k, 5, o.ul ? 1 : 0); });
+/* 5.31 (Gustavo: «estoy fuera y prefiero que me avise el móvil, pero también me avisa el ordenador»): en el ordenador se elige
+   cuándo avisa. Se guarda solo en este aparato (equilibra.avisosPC): siempre; solo si estás delante (detector de inactividad de
+   Chrome y Edge: con 5 minutos sin tocar el ordenador o la pantalla bloqueada, aquí no suena ni sale nada y te avisa el móvil);
+   o nunca (solo el móvil). El aviso que se salta no vuelve a sonar al volver. */
+const AV_PC = [{k: 'siempre', t: 'Siempre'}, {k: 'delante', t: 'Solo si estoy delante'}, {k: 'nunca', t: 'Nunca: solo el móvil'}];
+const avPC = () => { try{ const v = localStorage.getItem('equilibra.avisosPC'); return AV_PC.some(a => a.k === v) ? v : 'siempre'; }catch(e){ return 'siempre'; } };
+const hayIdle = () => 'IdleDetector' in window;
+let idleDet = null, idleSt = {u: 'active', s: 'unlocked'};
+async function arrancarIdle(pedir){
+  if(esApp || !hayIdle()) return false;
+  if(idleDet) return true;
+  try{
+    if(pedir){ if(await IdleDetector.requestPermission() !== 'granted') return false; }
+    else { const q = await navigator.permissions.query({name: 'idle-detection'}); if(q.state !== 'granted') return false; }
+    const d = new IdleDetector();
+    d.addEventListener('change', () => { idleSt = {u: d.userState, s: d.screenState}; });
+    await d.start({threshold: 300000});
+    idleDet = d; idleSt = {u: d.userState, s: d.screenState};
+    return true;
+  }catch(e){ return false; }
+}
+/* ¿avisa este aparato? En el teléfono, siempre */
+function avisaAqui(){
+  if(esApp) return true;
+  const m = avPC();
+  if(m === 'nunca') return false;
+  if(m === 'delante' && idleDet && (idleSt.u === 'idle' || idleSt.s === 'locked')) return false;
+  return true;
+}
+const avPCnota = () => avPC() === 'nunca' ? 'Este ordenador no suena ni avisa: las alarmas te llegan solo al móvil, con la app de Android.'
+  : avPC() === 'delante' ? (idleDet ? 'Si llevas 5 minutos sin tocar el ordenador o la pantalla está bloqueada, aquí no suena ni sale nada: te avisa el móvil.'
+    : hayIdle() ? 'Falta el permiso del navegador: vuelve a pulsar «Solo si estoy delante» y elige «Permitir» (si no sale la pregunta, en el candado de la dirección, «Detección de inactividad»). Mientras tanto, te avisará siempre.'
+    : 'Este navegador no sabe si estás delante (Chrome y Edge sí). Mientras tanto, te avisará siempre.')
+  : 'Suena aquí aunque también te avise el móvil.';
+async function elegirAvPC(k, b){
+  try{ localStorage.setItem('equilibra.avisosPC', k); }catch(e){}
+  if(b) b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === b));
+  if(k === 'delante'){
+    const ok = await arrancarIdle(true);
+    aviso(ok ? 'Listo: si llevas 5 minutos sin usar el ordenador o lo bloqueas, te avisará solo el móvil'
+      : !hayIdle() ? 'Este navegador no sabe si estás delante: usa Chrome o Edge, o elige «Nunca: solo el móvil»'
+      : 'Sin ese permiso no sé si estás delante. Actívalo en el candado de la dirección («Detección de inactividad») o elige «Nunca: solo el móvil»', 7000);
+  }else aviso(k === 'nunca' ? 'Listo: este ordenador ya no te avisará; te avisa el móvil' : 'Listo: este ordenador te avisará siempre', 4500);
+  const n = document.getElementById('av-pc-nota'); if(n) n.textContent = avPCnota();
+}
+function avPCHTML(){
+  if(esApp) return '';
+  const m = avPC();
+  return `<div class="cta-b"><h4>Cuándo te avisa este ordenador</h4>
+    <p class="peq suave" style="margin:2px 0 8px">Si también tienes Amable Life en el móvil, puedes hacer que el ordenador no suene cuando no estás delante.</p>
+    <div class="rec-son-b">${AV_PC.map(a => `<button type="button" class="${m === a.k ? 'sel' : ''}" onclick="elegirAvPC('${a.k}', this)">${a.t}</button>`).join('')}</div>
+    <p class="peq suave" id="av-pc-nota" style="margin:8px 0 0">${esc(avPCnota())}</p></div>`;
+}
+setTimeout(() => { if(!esApp && avPC() === 'delante') arrancarIdle(false); }, 800);
 function textoRecord(e, a, falta){
   if(e.tipo === 'habito' && a !== 0) return e.todo ? 'Tu hábito de hoy' : `Tu hábito de las ${hm(e.ini)}`;
   if(e.todo) return a === 0 ? 'Hoy' : a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : a === 10080 ? 'Dentro de una semana' : `Dentro de ${Math.round(a / 1440)} días`;
@@ -6086,6 +6140,7 @@ function avisarEventos(){
       if(ahora < cuando || ahora > cuando + 10 * 60000 || vistos.includes(clave) || hechoEv(e, k)) return;
       vistos.push(clave); cambio = true;
       if(modoAvion()) return;   // en modo avión no suena (y no vuelve a sonar al quitarlo)
+      if(!avisaAqui()) return;   // 5.31: en el ordenador, si no estás delante (o elegiste «solo el móvil»), no suena aquí
       if(esApp && document.visibilityState !== 'visible' && recordNativo()) return;   // la notificación del teléfono ya avisa
       const txt = `${textoRecord(e, a, Math.max(1, Math.round((base - ahora) / 60000)))}: ${e.t}`;   // con lo que falta de verdad
       sonarAlarma(); hojaAlarma(e, k, txt, a === Math.min(...e.avisos), a);
@@ -7591,7 +7646,7 @@ function vAjustes(){
           ${ajSw('Pausar todos los avisos', pausa.salud && pausa.tareas, "alternarPausa('todo')", false, 'p-todo')}
           ${ajSw('Pausar los avisos del cuerpo', pausa.salud, "alternarPausa('salud')", true, 'p-salud')}
           ${ajSw('Pausar los avisos de tareas', pausa.tareas, "alternarPausa('tareas')", true, 'p-tareas')}`)}
-        ${ajSubHTML('alarma', 'Sonido del aviso de tarea', alarmaHTML(true), 'Suena a la hora de tus recordatorios, con una ventana para pararla o posponerla.' + (alarmaNativa() ? ' En el móvil suena el sonido de alarma que elijas en el teléfono.' : ''))}${avisosWebHTML()}`},
+        ${ajSubHTML('alarma', 'Sonido del aviso de tarea', alarmaHTML(true), 'Suena a la hora de tus recordatorios, con una ventana para pararla o posponerla.' + (alarmaNativa() ? ' En el móvil suena el sonido de alarma que elijas en el teléfono.' : ''))}${avPCHTML()}${avisosWebHTML()}`},
     {k: 'versiones', ico: svgT('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>', 24), t: 'Actualizaciones',
       sub: (miAppVieja() ? `<span class="aj-aviso">Hay una app nueva: ${APK_ULTIMA}</span> · ` : !miApp() && enAndroidWeb() ? '<span class="aj-aviso">Instala la app de Android</span> · ' : '')
         + `web ${VERSION.replace(/^v/, '')} · app ${miApp() ? esc(miApp()) : '—'}`,
