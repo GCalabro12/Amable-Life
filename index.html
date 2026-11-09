@@ -1012,6 +1012,14 @@ html:not(.claro) .pa-obj{color:#4ade80!important}
 .ev-prio,.ctx-prio button{position:relative}
 .prio-em{position:absolute;right:1px;bottom:0;font-style:normal;font-size:12px;line-height:1}
 .ep-opc .prio-em{position:static;font-size:13px;margin-left:-4px}
+.prio-solo{font-style:normal;font-size:15px;line-height:1;display:inline-block;min-width:16px;text-align:center}
+.ev-prio .prio-solo{font-size:21px}
+.ctx-prio .prio-solo{font-size:17px}
+.prio-i{margin-left:auto;display:inline-flex;color:var(--suave);padding:2px;border-radius:50%;cursor:pointer}
+.prio-i:hover{color:var(--tinta);background:rgba(var(--bl),.12)}
+.prio-info{margin:0 6px 6px 32px;padding:8px 10px;border-radius:10px;background:rgba(var(--bl),.07);font-size:12.5px;line-height:1.45;color:var(--tinta)}
+.prio-nota{margin:4px 0 0;font-size:12.5px;color:var(--suave)}
+.prio-nota:empty{display:none}
 .ep-t-ed{border-radius:8px;padding:0 4px;margin:0 -4px;cursor:text;transition:background .15s}
 .ep-t-ed:hover{background:rgba(var(--bl),.12)}
 .ep-t-ed[contenteditable=true]{background:rgba(var(--bl),.1);outline:2px solid var(--oro);outline-offset:1px}
@@ -1944,7 +1952,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.18';
+const VERSION = 'v5.19';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3878,12 +3886,27 @@ const prioDe = e => PRIO[e && e.prio] || PRIO[0];
 const marcaDe = t => { const x = String(t || '').trimStart(); return x.startsWith('🐸') ? 'rana' : x.startsWith('⭐') ? 'estrella' : null; };
 const sinMarca = t => String(t || '').trimStart().replace(/^(?:🐸|⭐)\uFE0F?\s*/u, '');
 const ponMarca = (t, m) => m ? (m === 'rana' ? '🐸 ' : '⭐ ') + sinMarca(t) : (marcaDe(t) ? sinMarca(t) : t);
-const PRIO_OPC = [{v: 1, t: 'Prioridad baja', c: PRIO[1].c}, {v: 2, t: 'Prioridad media', c: PRIO[2].c}, {v: 'rana', t: 'Prioritaria 🐸', c: PRIO[3].c, e: '🐸'}, {v: 'estrella', t: 'Prioritaria ⭐', c: PRIO[3].c, e: '⭐'}];
+/* 5.19 (Gustavo): de arriba abajo, alta (tarea rana), alta (tarea estrella), media y baja; la rana y la estrella en lugar de la bandera,
+   con una «i» que explica qué son (la rana, del libro de Brian Tracy «¡Tráguese ese sapo!») */
+const PRIO_INFO = {
+  rana: 'La tarea rana es la más difícil o pesada del día: la que más se te atraganta y más ganas tienes de dejar para luego. Hazla la primera, antes que nada. '
+    + 'Lo cuenta Brian Tracy en «¡Tráguese ese sapo!»: si tienes que comerte una rana, cómetela a primera hora; si tienes dos, empieza por la más fea; y no te quedes mucho rato mirándola: ponte con ella. Solo una al día.',
+  estrella: 'Las tareas estrella son muy importantes: las tienes que hacer este día y, si las haces, sentirás una gran satisfacción. Elige dos como mucho.'};
+const PRIO_NOTA = {rana: '🐸 Tarea rana: la más difícil del día. Hazla la primera.', estrella: '⭐ Tarea estrella: muy importante para hoy; te dará una gran satisfacción.'};
+const PRIO_OPC = [{v: 'rana', t: 'Prioridad alta (tarea rana)', c: PRIO[3].c, e: '🐸'}, {v: 'estrella', t: 'Prioridad alta (tarea estrella)', c: PRIO[3].c, e: '⭐'}, {v: 2, t: 'Prioridad media', c: PRIO[2].c}, {v: 1, t: 'Prioridad baja', c: PRIO[1].c}];
+function prioInfo(el, v){
+  const b = el.closest('button'), sig = b && b.nextElementSibling;
+  if(sig && sig.classList.contains('prio-info')){ sig.remove(); popEncajar(); return; }
+  document.querySelectorAll('.prio-info').forEach(x => x.remove());
+  if(b) b.insertAdjacentHTML('afterend', `<p class="prio-info">${PRIO_INFO[v]}</p>`);
+  popEncajar();
+}
 const prioVal = e => marcaDe(e && e.t) || (e && e.prio) || 0;
-const prioTxt = e => { const m = marcaDe(e.t); return m ? (m === 'rana' ? 'Prioritaria 🐸' : 'Prioritaria ⭐') : e.prio ? 'Prioridad ' + prioDe(e).t.toLowerCase() : 'Sin prioridad'; };
+const prioTxt = e => { const m = marcaDe(e.t); return m ? (m === 'rana' ? 'Prioridad alta (tarea rana)' : 'Prioridad alta (tarea estrella)') : e.prio ? 'Prioridad ' + prioDe(e).t.toLowerCase() : 'Sin prioridad'; };
 const marcaCls = e => { const m = e && e.tipo !== 'habito' && marcaDe(e.t); return m ? ' ev-' + m : ''; };
 const rangoPrio = e => ({rana: 5, estrella: 4})[marcaDe(e.t)] || e.prio || 0;
-const prioBtnHTML = o => `${ICO_BANDERA(o.c)}${o.e ? `<i class="prio-em">${o.e}</i>` : ''}`;
+const prioBtnHTML = o => o.e ? `<i class="prio-solo">${o.e}</i>` : ICO_BANDERA(o.c);
+const prioIcoEv = e => { const m = marcaDe(e.t); return m ? `<i class="prio-solo">${m === 'rana' ? '🐸' : '⭐'}</i>` : ICO_BANDERA(prioDe(e).c); };
 function aplicarPrio(e, v){
   v = /^\d$/.test(String(v)) ? +v : v;
   if(v === 'rana' || v === 'estrella'){ e.prio = 3; e.t = ponMarca(e.t, v); avisoMarca(e, v); }
@@ -4589,6 +4612,7 @@ function pintarEvento(e){
     <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" data-ayuda="${AYUDA_TIPO.tarea}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" data-ayuda="${AYUDA_TIPO.habito}" onclick="evTipo('habito')">Hábito</button>
       <span class="ev-prios"${hab ? ' style="display:none"' : ''}>${PRIO_OPC.map(o => `<button type="button" class="ev-prio ${evEd.prio === o.v ? 'sel' : ''}" style="--c:${o.c}" title="${o.t}" aria-label="${o.t}" onclick="evPrioB('${o.v}', this)">${prioBtnHTML(o)}</button>`).join('')}</span></div>
     <p class="ev-tipo-ayuda" id="ev-tipo-ayuda">${hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea}</p>
+    <p class="prio-nota" id="ev-prio-info"${hab ? ' style="display:none"' : ''}>${PRIO_NOTA[evEd.prio] || ''}</p>
     <div class="campo-voz ev-titulo"><textarea id="ev-t" rows="1" maxlength="120" placeholder="Añade un título" aria-label="Título" oninput="tituloEv(this)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"></textarea>${botonMic()}</div>
     <div class="ev-desc">${svgT('<path d="M4 7h16M4 12h16M4 17h11"/>', 20)}<div class="ev-desc-c">${rtBarra()}
       <div class="rt-ed rt" id="ev-desc" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Descripción" data-ph="Añadir descripción" oninput="rtVacio(this); descLarga()" onpaste="event.preventDefault(); document.execCommand('insertText', false, (event.clipboardData || window.clipboardData).getData('text/plain'))"></div></div>${(Reconocer || esApp) ? `<button class="mic" type="button" aria-label="Dictar la descripción" onmousedown="event.preventDefault()" onclick="dictarDesc(this)">${MIC}</button>` : ''}</div>
@@ -4859,7 +4883,7 @@ function popHTML(e, k, enHoja){
     ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}">${desc}</div></div>` : ''}
     ${hab ? (rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : '')
       : `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div><button type="button" class="ep-ed" title="Cambiar el recordatorio" onclick="popOpc('rec','${e.id}','${k}')">${rec || 'Sin recordatorio'}</button></div></div><div class="ep-opc" id="ep-opc-rec"></div>`}
-    ${hab ? '' : `<div class="ep-fila">${ICO_BANDERA(prioDe(e).c)}<div><button type="button" class="ep-ed" title="Cambiar la prioridad" onclick="popOpc('prio','${e.id}','${k}')">${prioTxt(e)}</button></div></div><div class="ep-opc" id="ep-opc-prio"></div>`}
+    ${hab ? '' : `<div class="ep-fila">${prioIcoEv(e)}<div><button type="button" class="ep-ed" title="Cambiar la prioridad" onclick="popOpc('prio','${e.id}','${k}')">${prioTxt(e)}</button></div></div><div class="ep-opc" id="ep-opc-prio"></div>`}
     ${ars.length && !hab ? `<div class="ep-fila">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<div>${ars.map(a => `${ico(a)} ${a.nombre}`).join(' · ')}</div></div>` : ''}`;
 }
 let popInfo = null, popT = null, popCierreT = null;
@@ -4949,7 +4973,7 @@ function popOpc(cual, id, k){
     h = `<p class="ep-opc-t">Recordatorio (puedes elegir varios)</p>${L.map(o => op(av.includes(o.k), `popSet('${id}','${k}','rec',${o.k})`, `<i class="ep-chk">${av.includes(o.k) ? '✓' : ''}</i>${o.t}`)).join('')}
       ${av.length ? op(false, `popSet('${id}','${k}','rec',-1)`, '<i class="ep-chk"></i>Sin recordatorio') : ''}`;
   } else if(cual === 'prio'){
-    h = PRIO_OPC.map(o => op(prioVal(e) === o.v, `popSet('${id}','${k}','prio','${o.v}')`, `${ICO_BANDERA(o.c)} ${o.t}`)).join('');   // 5.09 (Gustavo): sin «Sin prioridad»
+    h = PRIO_OPC.map(o => op(prioVal(e) === o.v, `popSet('${id}','${k}','prio','${o.v}')`, `${prioBtnHTML(o)} ${o.t}${o.e ? `<span class="prio-i" role="button" title="¿Qué es?" aria-label="¿Qué es?" onclick="event.stopPropagation(); prioInfo(this,'${o.v}')">${ICO_INFO.replace(/width="20" height="20"/, 'width="17" height="17"')}</span>` : ''}`)).join('');   // 5.09 (Gustavo): sin «Sin prioridad»
   }
   box.dataset.c = cual; box.innerHTML = h; popEncajar();
   const s = box.querySelector('.ep-horas .sel'); if(s) s.scrollIntoView({block: 'center'});
@@ -5359,6 +5383,7 @@ document.addEventListener('keydown', ev => { if(ev.key === 'Escape') cerrarCtx()
 addEventListener('scroll', cerrarCtx, {passive: true});
 function evPrioB(k, b){ const v = /^\d$/.test(String(k)) ? +k : k; evEd.prio = v; b.parentNode.querySelectorAll('.ev-prio').forEach(x => x.classList.toggle('sel', x === b));
   const t = $('#ev-t'); if(t){ const n = ponMarca(t.value, typeof v === 'string' ? v : null); if(n !== t.value){ t.value = n; if(typeof tituloEv === 'function') tituloEv(t); } }
+  const pn = $('#ev-prio-info'); if(pn) pn.textContent = PRIO_NOTA[v] || '';
   if(typeof v === 'string') avisoMarca({t: '', dia: valor('ev-dia') || evEd.k, tipo: 'tarea', id: evEd.id, rep: 'no'}, v); }
 function evAbrirFecha(){ $('#ev-res').hidden = true; $('#ev-fecha').hidden = false; }
 /* El día: el botón abre el calendario del sistema */
@@ -5405,7 +5430,7 @@ function evTipo(t){
   if(typeof pintarDesp === 'function' && $('#dl-rec')){ pintarDesp('rec'); pintarDesp('dur'); }
   document.querySelectorAll('.ev-tipo > button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
   if($('#ev-tipo-ayuda')) $('#ev-tipo-ayuda').textContent = hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea;
-  const prs = document.querySelector('.ev-prios'); if(prs) prs.style.display = hab ? 'none' : '';   // 4.97: los hábitos no tienen prioridad
+  const prs = document.querySelector('.ev-prios'); if(prs) prs.style.display = hab ? 'none' : ''; const pnt = $('#ev-prio-info'); if(pnt) pnt.style.display = hab ? 'none' : '';   // 4.97: los hábitos no tienen prioridad
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
   evResumen();
 }
