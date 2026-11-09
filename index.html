@@ -1020,6 +1020,17 @@ html:not(.claro) .pa-obj{color:#4ade80!important}
 .prio-info{margin:0 6px 6px 32px;padding:8px 10px;border-radius:10px;background:rgba(var(--bl),.07);font-size:12.5px;line-height:1.45;color:var(--tinta)}
 .prio-nota{margin:4px 0 0;font-size:12.5px;color:var(--suave)}
 .prio-nota:empty{display:none}
+/* 5.38 (Gustavo, en el móvil: «los iconos están todos arriba como atados; no caben ni se entiende» y la ventana no salía centrada):
+   en el móvil la prioridad va abajo, en una fila «Prioridad» con su desplegable; arriba solo Tarea y Hábito. En el ordenador, igual que antes */
+.hoja-in{overflow-x:hidden}
+@media (max-width:899px){ .ev-tipo.ev-tabs .ev-prios, #ev-prio-info{display:none !important} }
+@media (min-width:900px){ #ev-prio-c{display:none} }
+#dl-prio{width:100%}
+#dl-prio .desp-op span{flex-wrap:nowrap}
+#dl-prio .desp-op .prio-solo{font-size:18px;font-style:normal;width:auto;color:inherit}
+#dl-prio .desp-op .bandera{flex:none}
+#dl-prio .desp-op .prio-i{display:inline-grid;place-items:center;margin-left:auto;opacity:.7;flex:none}
+#dl-prio .prio-info{margin:0 10px 8px}
 .ep-t-ed{border-radius:8px;padding:0 4px;margin:0 -4px;cursor:text;transition:background .15s}
 .ep-t-ed:hover{background:rgba(var(--bl),.12)}
 .ep-t-ed[contenteditable=true]{background:rgba(var(--bl),.1);outline:2px solid var(--oro);outline-offset:1px}
@@ -1984,7 +1995,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.37';
+const VERSION = 'v5.38';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4610,6 +4621,7 @@ function despOpciones(id){
       : [...ALARMAS.map(a => ({k: a.k, t: `${a.t} <small class="desp-sub">${a.d}</small>`, sel: alarmaTipo() === a.k})), grad];
   }
   if(id === 'sdur') return ALARMA_DUR.map(d => ({k: d.k, t: d.t, sel: alarmaDur() === d.k}));
+  if(id === 'prio') return PRIO_OPC.map(o => ({k: o.v, t: `${prioBtnHTML(o)} ${o.t}${o.e ? `<span class="prio-i" role="button" title="¿Qué es?" aria-label="¿Qué es?" onclick="event.stopPropagation(); prioInfo(this,'${o.v}')">${ICO_INFO.replace(/width="20" height="20"/, 'width="17" height="17"')}</span>` : ''}`, sel: evEd.prio === o.v}));
   if(id === 'dur') return DURS.filter(m => evEd.tipo !== 'habito' || m <= 120).map(m => ({k: m, t: fmtDur(m), sel: durEv() === m}));   // hábitos: como mucho 2 horas
   if(id === 'rep') return opcionesRep().map(o => ({k: o.k, t: o.t, sel: (evEd.rep || 'no') === o.k}));
   if(id === 'rec' && evEd.tipo === 'habito'){
@@ -4627,6 +4639,7 @@ function despValor(id){
   if(id === 'snd') return `${despValor('son')} · ${durAlarmaTxt()}`;
   if(id === 'son') return (alarmaNativa() ? 'Sonido del teléfono' : (ALARMAS.find(a => a.k === alarmaTipo()) || ALARMAS[0]).t) + (alarmaGradual() ? ' · gradual' : '');
   if(id === 'sdur') return durAlarmaTxt();
+  if(id === 'prio') return ({rana: '🐸 Alta (rana)', estrella: '⭐ Alta (estrella)', 2: 'Media', 1: 'Baja'})[evEd.prio] || 'Sin prioridad';
   if(id === 'dur'){ const d = durEv(); return d ? fmtDur(d) : '—'; }
   if(id === 'rep') return (opcionesRep().find(o => o.k === (evEd.rep || 'no')) || {t: 'No se repite'}).t;
   if(id === 'rec' && evEd.tipo === 'habito'){ const l = [...(evEd.avisos.includes(0) ? ['A la hora'] : []), ...(evEd.horasAviso || []).slice().sort((a, b) => a - b).map(T => 'A las ' + hm(T))]; return l.length ? l.join(', ') : 'Sin recordatorio'; }
@@ -4695,6 +4708,15 @@ function despElegir(id, k){
   }
   if(id === 'sdur'){ try{ localStorage.setItem('equilibra.alarmaDur', String(k)); }catch(e){} pintarDesp(id); recordUlt = null; enviarRecordatorios(); return; }
   if(id === 'rep'){ evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
+  if(id === 'prio'){   // 5.38: una sola; tocar la elegida la quita (sin prioridad)
+    let v = /^\d$/.test(String(k)) ? +k : k; if(evEd.prio === v) v = 0;
+    const b = [...document.querySelectorAll('.ev-prios .ev-prio')][PRIO_OPC.findIndex(o => o.v === v)];
+    if(b) evPrioB(String(v), b);
+    else { evEd.prio = 0; document.querySelectorAll('.ev-prios .ev-prio').forEach(x => x.classList.remove('sel'));
+      const t = $('#ev-t'); if(t){ const n = ponMarca(t.value, null); if(n !== t.value){ t.value = n; tituloEv(t); } }
+      const pn = $('#ev-prio-info'); if(pn) pn.textContent = ''; }
+    pintarDesp(id); despTocar(id); return;
+  }
   if(id === 'dur'){ const i = minDeHora(valor('ev-ini')); if(i != null) $('#ev-fin').value = hhmm(Math.min(i + +k, 1439)); pintarDesp(id); despTocar(id); return; }
   if(id === 'rec' && typeof k === 'string' && k[0] === 'h'){ const T = +k.slice(1), h = evEd.horasAviso || []; evEd.horasAviso = h.includes(T) ? h.filter(x => x !== T) : [...h, T]; pintarDesp(id); return; }
   if(id === 'rec' && k === 'pers'){ recPers(); return; }
@@ -4758,6 +4780,7 @@ function pintarEvento(e){
     </div><div class="ev-col" id="ev-col-der">
     <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
+      <div id="ev-prio-c" ${hab ? 'hidden' : ''}>${despHTML('prio', 'Prioridad', ICO_BANDERA('currentColor').replace('width="14" height="14"', 'width="18" height="18"'))}</div>
       ${despHTML('rec', 'Recordatorio', ICO_CAMPANA)}
       ${despHTML('snd', 'Sonido y duración', ICO_ALTAVOZ)}
       ${despHTML('area', 'Área', ICO_PETALO)}
@@ -5583,7 +5606,7 @@ function evTipo(t){
   if(typeof pintarDesp === 'function' && $('#dl-rec')){ pintarDesp('rec'); pintarDesp('dur'); }
   document.querySelectorAll('.ev-tipo > button').forEach((b, i) => b.classList.toggle('sel', (i === 1) === hab));
   if($('#ev-tipo-ayuda')) $('#ev-tipo-ayuda').textContent = hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea;
-  const prs = document.querySelector('.ev-prios'); if(prs) prs.style.display = hab ? 'none' : ''; const pnt = $('#ev-prio-info'); if(pnt) pnt.style.display = hab ? 'none' : '';   // 4.97: los hábitos no tienen prioridad
+  const prs = document.querySelector('.ev-prios'); if(prs) prs.style.display = hab ? 'none' : ''; const pnt = $('#ev-prio-info'); if(pnt) pnt.style.display = hab ? 'none' : ''; const pc = $('#ev-prio-c'); if(pc) pc.hidden = hab;   // 4.97: los hábitos no tienen prioridad
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
   evResumen();
 }
