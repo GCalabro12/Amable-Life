@@ -682,6 +682,7 @@ body.pip .prox-prio{zoom:.72;margin-top:8px;padding:8px 10px}
   body:not(.pip) .aro-blk{font-size:11.5px}
 }
 .cuenta-txt{font-size:13px;font-weight:700;color:var(--oro)}
+.cuenta-txt-arr{margin-bottom:2px}   /* 5.42 (Gustavo): «min para acabar el bloque» arriba y el tiempo debajo */
 .tic-btn{flex:none;border:0;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800;background:rgba(var(--bl),.08);color:var(--suave)}
 .tic-btn.on{background:rgba(247,195,91,.22);color:var(--oro)}
 .check.cuadro{border-radius:12px}
@@ -1024,6 +1025,8 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-bar{display:flex;justify-content:flex-end;gap:2px;margin-bottom:2px}
 .ep-en-hoja .ep-bar{justify-content:flex-start;margin-right:44px}
 .ep-ico{width:40px;height:40px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0}
+.ep-focus{display:inline-flex;align-items:center;gap:5px;height:32px;align-self:center;margin:0 4px;padding:0 12px;border:1.5px solid #e0323a;border-radius:99px;background:rgba(224,50,58,.08);color:#dc2626;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.ep-focus:hover{background:rgba(224,50,58,.16)}
 .ep-ico:hover{background:rgba(var(--bl),.1)}
 .ep-fila{display:flex;gap:16px;align-items:flex-start;padding:7px 0;font-size:14.5px}
 .ep-mas{background:color-mix(in srgb,#22c55e 22%,transparent)!important;font-weight:800}
@@ -2028,7 +2031,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.41';
+const VERSION = 'v5.42';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2737,7 +2740,7 @@ function seccionAhora(pip){
   if(!pip) return `<section class="ahora-blk foco-b foco-b1">
     <h2 class="foco-tit">Trabajo en bloques de tiempo de 1,5 h</h2>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
-      <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
+      <div class="cuenta-col"><span class="cuenta-txt cuenta-txt-arr">min para acabar el bloque</span><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
       <div class="aro-col"><span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span>
         <span class="aro-blk">bloque <i>${hm(b.ini)} – ${hm(b.fin)}</i></span></div></div>
@@ -5064,7 +5067,7 @@ function popHTML(e, k, enHoja){
   const rec = recTxtEv(e);
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
-  return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
+  return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}<button type="button" class="ep-focus" title="Ponerla la primera en tu bloque de Focus" onclick="popFocus('${e.id}','${k}')">${ICO_DIANA}Focus</button>${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
       <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
@@ -5575,6 +5578,13 @@ function ctxArea(id, a){   // varias a la vez, como en la hoja
   const m = $('#ctx-areas'); if(m) m.innerHTML = ctxAreasHTML(e);
 }
 /* Iniciar Focus: la tarea entra arriba de tu bloque de ahora y se abre Focus (si no se repite, queda unida a una tarea de tus áreas) */
+/* 5.42 (Gustavo): botón «Focus» en la tarjeta de las tareas y los hábitos, a la derecha de Duplicar: lo mismo que «Iniciar Focus» */
+const ICO_DIANA = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>';
+function popFocus(id, k){
+  try{ cerrarPop(); }catch(x){}
+  if(document.querySelector('#hoja .ep-en-hoja')) cerrarHoja();
+  ctxFocus(id, k);
+}
 function ctxFocus(id, k){
   cerrarCtx();
   const e = AG_().eventos.find(z => z.id === id); if(!e) return;
@@ -5584,10 +5594,10 @@ function ctxFocus(id, k){
   if(acts.length >= MAX_ACT){ aviso(`Tu bloque de ahora ya tiene ${MAX_ACT} tareas`); return; }
   if(!repite(e) && !e.acc){
     const orden = Math.min(0, ...D.acciones.map(a => a.orden || 0)) - 1;
-    const a = {id: uid(), area: e.area || null, texto: e.t, hecha: false, creada: ahoraISO(), hechaEn: null, mod: ahoraISO(), prio: e.prio || 0, orden};
+    const a = {id: uid(), area: e.area || null, texto: e.t, hecha: false, creada: ahoraISO(), hechaEn: null, mod: ahoraISO(), prio: e.prio || 0, dur: !e.todo && e.fin > e.ini ? e.fin - e.ini : 0, orden};
     D.acciones.push(a); e.acc = a.id; e.mod = ahoraISO();
   }
-  acts.unshift({t: e.t, d: false, acc: repite(e) ? null : e.acc});
+  acts.unshift(Object.assign({t: e.t, d: false, acc: repite(e) ? null : e.acc}, repite(e) ? {prio: e.tipo === 'habito' ? 0 : e.prio || 0, dur: !e.todo && e.fin > e.ini ? e.fin - e.ini : 0} : {}));
   guardarBloques(); sonarHecho(); aviso(`En tu bloque de ${hm(BLOQUES[c].ini)}`);
   ir('inicio'); window.scrollTo(0, 0);
 }
