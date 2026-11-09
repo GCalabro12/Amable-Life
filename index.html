@@ -1180,6 +1180,9 @@ html.claro .ev-ctx{box-shadow:0 10px 28px rgba(40,20,90,.22)}
 .ev-ctx > button svg{color:var(--suave);flex:none}
 .ev-ctx .ctx-hecho,.ev-ctx .ctx-hecho svg{color:#4ade80}
 html.claro .ev-ctx .ctx-hecho,html.claro .ev-ctx .ctx-hecho svg{color:#15803d}
+.ev-ctx .ctx-rep{display:flex;align-items:center;gap:14px;margin:0;padding:6px 16px 8px;font-size:13.5px;color:var(--suave)}
+.ev-ctx .ctx-rep svg{flex:none;margin-left:1px}
+.ep-rep{display:flex;align-items:center;gap:6px}
 .ev-ctx .ctx-borrar{color:#f87171}
 html.claro .ev-ctx .ctx-borrar{color:#dc2626}
 .ev-ctx .ctx-borrar svg{color:inherit}
@@ -1979,7 +1982,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.29';
+const VERSION = 'v5.30';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2704,7 +2707,7 @@ function proximaHTML(){
   const x = proximaPrioritaria(); if(!x) return '';
   const {e, k} = x, hoy = hoyK(), dia = k === hoy ? '' : k === sumarDias(hoy, 1) ? 'Mañana · ' : fechaLarga(k) + ' · ';
   return `<section class="prox-prio"><h3>${ICO_BANDERA('#ef4444').replace('width="14" height="14"', 'width="18" height="18"')} Próxima tarea prioritaria</h3>
-    <div class="ev-blk"><button class="ev-mini${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${dia}${e.todo ? 'Todo el día' : `${hm(e.ini)}–${hm(e.fin)}`}</b><span>${campEv(e)}${esc(e.t)}</span></button></div></section>`;
+    <div class="ev-blk"><button class="ev-mini${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${dia}${e.todo ? 'Todo el día' : `${hm(e.ini)}–${hm(e.fin)}`}</b><span>${repIco(e)}${campEv(e)}${esc(e.t)}</span></button></div></section>`;
 }
 /* 4.51 (Gustavo): lo completado en el bloque de ahora sale debajo, fuera del recuadro rojo: las tareas tachadas
    (también las que ya se archivaron) y lo del calendario hecho. Tocar la casilla lo vuelve a dejar pendiente */
@@ -3896,6 +3899,10 @@ const esMeta = e => !!(e && (e.metaId || e.metaReg));
 const broteEv = e => e && e.tipo === 'habito' && !esMeta(e) && areasEv(e).length ? areasEv(e).map(a => ico(a, 'pet-ev')).join('') : esMeta(e) ? '<img class="tag-meta" src="img/meta-planta.jpg" alt="Amable Meta" title="Amable Meta" width="16" height="16">' : e && e.tipo === 'habito' ? ICO_FLOR_HAB : '';
 const iconoTarjeta = e => esMeta(e) ? '<img class="mini-practi" src="img/meta-planta.jpg" alt="Prácti riega su planta" width="26" height="26">' : broteEv(e);
 const campEv = e => e && e.avisos && e.avisos.length ? ICO_CAMPANITA : '';
+/* 5.30 (Gustavo): las tareas que se repiten llevan delante una flecha en círculo (una rueda sin cerrar con la punta de flecha) */
+const ICO_REPITE = '<svg class="campanita repite" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Se repite"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5v4h-4"/></svg>';
+const repIco = e => e && e.tipo !== 'habito' && repite(e) ? ICO_REPITE : '';
+const seRepiteTxt = e => { const r = e && e.tipo !== 'habito' && repite(e) ? repTxt(e) : ''; return r ? 'Se repite ' + r.charAt(0).toLowerCase() + r.slice(1) : ''; };
 const ICO_REP = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></svg>';
 const AG_ = () => { if(!D.agenda) D.agenda = {eventos: []}; return D.agenda; };
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -3993,12 +4000,12 @@ function agendaDia(k){
 /* Lo del calendario que cae dentro de un bloque (en Tareas y en Focus) */
 function evsBloqueHTML(k, b, que){
   const es = eventosDe(k).filter(e => !e.todo && e.ini < b.fin && e.fin > b.ini && (!que || (que === 'hechos') === !!hechoEv(e, k))); if(!es.length) return '';
-  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${broteEv(e)}${campEv(e)}${esc(e.t)}</span></button>`).join('')}</div>`;
+  return `<div class="ev-blk">${es.map(e => `<button class="ev-mini ${hechoEv(e, k) ? 'ok' : ''}${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)">${ICO_CAL}<b>${hm(e.ini)}–${hm(e.fin)}</b><span>${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</span></button>`).join('')}</div>`;
 }
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
     <button class="check ${ok ? 'hecho' : ''}" ${e.prio && e.tipo !== 'habito' ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
-    <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${campEv(e)}` : ''}</span><span class="ev-t">${broteEv(e)}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
+    <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${repIco(e)}${campEv(e)}` : ''}</span><span class="ev-t">${broteEv(e)}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al arrastrar más de 7 días   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
 const CON_COLS = ['semana', '7dias', '3dias', 'rango'];
@@ -4186,7 +4193,7 @@ function vAgenda(){
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !(k === hoy && esFlexible(e))));
     fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
-    cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div>${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
+    cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div>${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
     const ds = semsDias(), nCols = verFinde() ? 7 : 5;
@@ -4263,7 +4270,7 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}${marcaCls(e)}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' + objDia(e, k) : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}${marcaCls(e)}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' + objDia(e, k) : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
     return `<div class="rj-col" data-k="${k}" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   // 4.78 (Gustavo): «Tareas flexibles» (las de hoy sin hora): un óvalo a la altura de la hora de ahora (baja con ella),
@@ -4548,7 +4555,7 @@ function gcBuscarPintar(){
   const q = gcNorm(valor('gc-q'));
   if(!q){ box.innerHTML = '<p class="peq suave" style="margin:0">Busca por el nombre de lo que tienes en el calendario.</p>'; return; }
   const evs = AG_().eventos.filter(e => gcNorm(e.t).includes(q)).map(e => ({e, k: gcProximo(e)})).sort((a, b) => a.k.localeCompare(b.k)).slice(0, 40);
-  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio && e.tipo !== 'habito' ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${broteEv(e)}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · hábito' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
+  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio && e.tipo !== 'habito' ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · hábito' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
     : '<p class="peq suave" style="margin:0">No hay nada con esa palabra.</p>';
 }
 function gcIrA(id, k){ cerrarHoja(); agK = k; gcMiniDes = 0; render(); agVerAhora(); editarEvento(id, k); }
@@ -4971,7 +4978,7 @@ function popHTML(e, k, enHoja){
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
-      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p>${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
+      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
     <div class="ep-bots">${objDe(e) && !ok ? (objHecho(e, k) ? `<span class="ep-obj-ok">✓ Objetivo ${objPer(objDe(e)) === 'semana' ? 'de la semana' : 'del mes'} cumplido</span>`
@@ -5458,6 +5465,7 @@ function ctxEv(id, k, x, y){
   m.id = 'ev-ctx'; m.className = 'ev-ctx'; m.setAttribute('role', 'menu');
   m.innerHTML = `<button role="menuitem" class="ctx-hecho" onclick="cerrarCtx(); alternarEv('${id}','${k}')">${svgT('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 20)}<span>${ok ? 'Desmarcar como hecho' : 'Marcar como hecho'}</span></button>
     <button role="menuitem" class="ctx-borrar" onclick="ctxBorrar('${id}','${k}')">${ICO_PAPELERA}<span>Eliminar</span></button>
+    ${seRepiteTxt(e) ? `<p class="ctx-rep">${ICO_REPITE.replace('class="campanita repite"', '').replace(/width="12" height="12"/, 'width="18" height="18"')}<span>${seRepiteTxt(e)}</span></p>` : ''}
     <hr>
     <button role="menuitem" onclick="cerrarCtx(); popEditar('${id}','${k}')">${ICO_EP_LAPIZ}<span>Editar</span></button>
     <div class="ctx-sub"><button role="menuitem" aria-haspopup="true" onclick="this.parentNode.classList.toggle('abierto')">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<span>Áreas</span><i class="ctx-fl">›</i></button>
