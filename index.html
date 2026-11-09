@@ -1476,7 +1476,15 @@ html.claro .meta-error{color:#dc2626}
 .dia-est-pop{position:fixed;z-index:60;min-width:250px;padding:10px 14px 8px;border-radius:14px;background:var(--tarjeta);border:1px solid var(--linea);box-shadow:0 12px 32px rgba(0,0,0,.45);color:var(--tinta);text-align:left}
 html.claro .dia-est-pop{box-shadow:0 10px 28px rgba(40,20,90,.22)}
 .de-tit{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-weight:800;font-size:15px}
-.de-f{display:flex;justify-content:space-between;gap:16px;padding:5px 0;border-top:1px solid var(--linea);font-size:14px}
+.de-blq + .de-blq{margin-top:8px;padding-top:6px;border-top:1px solid var(--linea)}
+.de-bt{margin:2px 0 3px;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--suave)}
+.de-f{display:flex;justify-content:space-between;gap:16px;padding:4px 6px;margin:0 -6px;border-radius:8px;font-size:14px}
+.de-f.con-l{cursor:pointer}
+.de-f.con-l:hover,.de-f.act{background:rgba(var(--bl),.09)}
+.de-lista{min-width:190px;max-width:280px;z-index:61;border-left:3px solid var(--oro)}
+.de-lista.a-izq{border-left:1px solid var(--linea);border-right:3px solid var(--oro)}
+.de-lista ul{margin:4px 0 2px;padding-left:18px;font-size:13.5px;line-height:1.4}
+.de-lista li{margin:3px 0;word-break:break-word}
 .de-f b{font-size:15px;min-width:22px;text-align:right}
 .de-f.cero{color:var(--suave)}
 @media (max-width:899px){ .rj-cab.muchas .dia-est{position:absolute;left:-13px;top:1px} .rj-cab.muchas .dia-est svg{width:11px;height:11px} .rj-cab.muchas .rj-n{position:absolute;right:-9px;top:-1px;font-size:10px;font-weight:700} .rj-cab.muchas .rj-n em, .rj-cab.muchas .rj-n.cero{display:none} }
@@ -1952,7 +1960,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.19';
+const VERSION = 'v5.20';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4024,9 +4032,10 @@ function mesPeq(m0, conSem){
    cambiadas de hora y cambiadas de día (`D.diaLog[k] = {borr, hora, dia}` con los ids; viaja por la nube, unión). */
 const icoEst = w => svgT('<path d="M4 20h16M7.5 16.5v-4M12 16.5v-9M16.5 16.5v-6"/>', w);
 const diaEstBtn = k => `<u class="dia-est" role="button" tabindex="0" title="Cómo va el día" aria-label="Cómo va el día" onclick="verDiaEst(event,'${k}',this)">${icoEst(14)}</u>`;
-function apuntarDia(tipo, k, id){
+function apuntarDia(tipo, k, id, t){
   if(!k || !id) return false;
   const L = D.diaLog = D.diaLog || {}, d = L[k] = L[k] || {}, l = d[tipo] = d[tipo] || [];
+  if(t){ d.t = d.t || {}; d.t[id] = t; }   // 5.20: el nombre, para enseñarlo (las borradas ya no están en el calendario)
   if(l.includes(id)) return false;
   l.push(id);
   const ks = Object.keys(L).sort(); if(ks.length > 60) ks.slice(0, ks.length - 60).forEach(x => delete L[x]);
@@ -4042,28 +4051,54 @@ function apuntarCambio(e, ant, k){
   if(ant.ini !== e.ini || !!ant.todo !== !!e.todo) return apuntarDia('hora', d, e.id) ? ['hora', d] : null;
   return null;
 }
+/* 5.20 (Gustavo): en dos bloques, Tareas y Hábitos, sin repetir la palabra; cada fila lleva los nombres (las mismas cuentas que Grow Panel) */
 function comoVaDia(k){
-  const r = resumenDia(k), habs = eventosDe(k).filter(e => e.tipo === 'habito');
-  const movidas = new Set([...idsApunte('dia', k), ...AG_().eventos.filter(e => e.tipo !== 'habito' && (e.aplazadaDe || []).includes(k)).map(e => e.id)]);
-  return [['Tareas pendientes', Math.max(0, r.tareas_total - r.tareas_hechas)], ['Tareas hechas', r.tareas_hechas],
-    ['Hábitos pendientes', habs.filter(e => !hechoEv(e, k)).length], ['Hábitos hechos', habitosHechos(k)],
-    ['Tareas borradas sin hacer', idsApunte('borr', k).length], ['Tareas cambiadas de hora', idsApunte('hora', k).length], ['Tareas cambiadas de día', movidas.size]];
+  const dia = (B_().days || {})[k] || {}, pend = [], hech = D.acciones.filter(a => a.hecha && a.hechaEn && claveDia(a.hechaEn) === k).map(a => a.t);
+  Object.keys(dia).forEach(i => (dia[i] || []).forEach(a => { if(!a) return; if(!hechaAct(a)) pend.push(a.t); else if(!a.acc) hech.push(a.t); }));
+  eventosDe(k).filter(e => e.tipo !== 'habito' && !flexMovida(e, k) && !(e.acc && !repite(e) && D.acciones.some(a => a.id === e.acc)))
+    .forEach(e => (hechoEv(e, k) ? hech : pend).push(e.t));
+  const L = (D.diaLog || {})[k] || {}, nom = id => { const e = AG_().eventos.find(x => x.id === id); return e ? e.t : (L.t || {})[id] || 'Tarea borrada'; };
+  const movidas = [...new Set([...idsApunte('dia', k), ...AG_().eventos.filter(e => e.tipo !== 'habito' && (e.aplazadaDe || []).includes(k)).map(e => e.id)])];
+  const habs = eventosDe(k).filter(e => e.tipo === 'habito');
+  return [{t: 'Tareas', f: [['Pendientes', pend], ['Hechas', hech], ['Borradas sin hacer', idsApunte('borr', k).map(nom)], ['Cambiadas de hora', idsApunte('hora', k).map(nom)], ['Cambiadas de día', movidas.map(nom)]]},
+    {t: 'Hábitos', f: [['Pendientes', habs.filter(e => !hechoEv(e, k)).map(e => e.t)], ['Hechos', AG_().eventos.filter(e => e.tipo === 'habito' && (e.hechos || []).includes(k)).map(e => e.t)]]}];
 }
 function verDiaEst(ev, k, el){
   if(ev){ ev.stopPropagation(); ev.preventDefault(); }
-  const v = $('#dia-est'); if(v){ v.remove(); if(v.dataset.k === k) return; }
+  const v = $('#dia-est'); if(v){ cerrarDiaEst(); if(v.dataset.k === k) return; }
   const d = fechaDe(k), p = document.createElement('div');
-  p.id = 'dia-est'; p.className = 'dia-est-pop'; p.dataset.k = k;
+  p.id = 'dia-est'; p.className = 'dia-est-pop'; p.dataset.k = k; diaEstL = [];
   p.innerHTML = `<p class="de-tit">${icoEst(18)}Cómo va ${k === hoyK() ? 'hoy' : 'el ' + DIAS_LARGO[diaSem(k)] + ' ' + d.getDate()}</p>`
-    + comoVaDia(k).map(([t, n]) => `<div class="de-f${n ? '' : ' cero'}"><span>${t}</span><b>${n}</b></div>`).join('');
+    + comoVaDia(k).map(b => `<div class="de-blq"><p class="de-bt">${b.t}</p>${b.f.map(([t, l]) => { const i = diaEstL.push(l) - 1, n = l.length;
+      return `<div class="de-f${n ? '' : ' cero'}${n && n <= DE_MAX ? ' con-l' : ''}" data-i="${i}" onpointerenter="if(event.pointerType === 'mouse') diaEstLista(this)" onclick="diaEstLista(this, event.pointerType !== 'mouse')"><span>${t}</span><b>${n}</b></div>`; }).join('')}</div>`).join('');
+  p.addEventListener('pointerleave', ev => { if(ev.pointerType === 'mouse' && !(ev.relatedTarget && ev.relatedTarget.closest && ev.relatedTarget.closest('#dia-est-lista'))) quitarDiaLista(); });
   document.body.appendChild(p);
   const r = el.getBoundingClientRect();
   p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, r.left - 4)) + 'px';
   p.style.top = Math.min(r.bottom + 6, innerHeight - p.offsetHeight - 8) + 'px';
 }
-document.addEventListener('pointerdown', ev => { const p = $('#dia-est'); if(p && !p.contains(ev.target) && !ev.target.closest('.dia-est')) p.remove(); }, true);
-document.addEventListener('keydown', ev => { const p = $('#dia-est'); if(!p) return; if(ev.key === 'Escape') p.remove(); });
-addEventListener('scroll', () => { const p = $('#dia-est'); if(p) p.remove(); }, {passive: true});
+/* al pasar el ratón (o tocar) una fila con 1 a 5, a la derecha, pegada a esa fila, otra ventanita con los nombres; la de «cómo va» no se mueve */
+const DE_MAX = 5;
+let diaEstL = [];
+function quitarDiaLista(){ const l = $('#dia-est-lista'); if(l) l.remove(); document.querySelectorAll('.de-f.act').forEach(x => x.classList.remove('act')); }
+function cerrarDiaEst(){ const p = $('#dia-est'); if(p) p.remove(); quitarDiaLista(); }
+function diaEstLista(f, clic){
+  const l = diaEstL[+f.dataset.i] || [], vieja = $('#dia-est-lista');
+  if(vieja){ const misma = vieja.dataset.i === f.dataset.i; if(misma && !clic) return; quitarDiaLista(); if(misma) return; }
+  if(!l.length || l.length > DE_MAX) return;
+  f.classList.add('act');
+  const x = document.createElement('div'); x.id = 'dia-est-lista'; x.className = 'dia-est-pop de-lista'; x.dataset.i = f.dataset.i;
+  x.innerHTML = `<p class="de-bt">${esc(f.parentNode.querySelector('.de-bt').textContent)} · ${esc(f.querySelector('span').textContent.toLowerCase())}</p><ul>${l.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+  x.addEventListener('pointerleave', ev => { if(ev.pointerType === 'mouse' && !(ev.relatedTarget && ev.relatedTarget.closest && ev.relatedTarget.closest('#dia-est'))) quitarDiaLista(); });
+  document.body.appendChild(x);
+  const p = $('#dia-est').getBoundingClientRect(), r = f.getBoundingClientRect(), w = x.offsetWidth;
+  let izq = p.right - 2; if(izq + w > innerWidth - 8) izq = Math.max(8, p.left - w + 2);
+  x.classList.toggle('a-izq', izq < p.left);
+  x.style.left = izq + 'px'; x.style.top = Math.max(8, Math.min(r.top - 6, innerHeight - x.offsetHeight - 8)) + 'px';
+}
+document.addEventListener('pointerdown', ev => { if($('#dia-est') && !ev.target.closest('#dia-est, #dia-est-lista, .dia-est')) cerrarDiaEst(); }, true);
+document.addEventListener('keydown', ev => { if(ev.key === 'Escape' && $('#dia-est')) cerrarDiaEst(); });
+addEventListener('scroll', () => { if($('#dia-est')) cerrarDiaEst(); }, {passive: true});
 /* 5.00 (Gustavo): a la derecha del número del día, en pequeño, cuántas cosas hay ese día (tareas y hábitos, todo junto; lo que se ve) */
 function numDiaHTML(k){
   const n = evsVer(k).length;
@@ -6755,7 +6790,8 @@ function fusionar(local, remoto){
   if(Object.keys(fl).length || Object.keys(fr).length){ r.focoDias = {}; [...new Set([...Object.keys(fl), ...Object.keys(fr)])].forEach(k => r.focoDias[k] = Math.max(fl[k] || 0, fr[k] || 0)); }
   const dl = local.diaLog || {}, dr = remoto.diaLog || {};   // 5.18: lo apuntado de cada día, unido
   if(Object.keys(dl).length || Object.keys(dr).length){ r.diaLog = {}; [...new Set([...Object.keys(dl), ...Object.keys(dr)])].sort().slice(-60).forEach(k => { const a = dl[k] || {}, b = dr[k] || {}; r.diaLog[k] = {};
-    ['borr', 'hora', 'dia'].forEach(t => { const u = [...new Set([...(a[t] || []), ...(b[t] || [])])]; if(u.length) r.diaLog[k][t] = u; }); }); }
+    ['borr', 'hora', 'dia'].forEach(t => { const u = [...new Set([...(a[t] || []), ...(b[t] || [])])]; if(u.length) r.diaLog[k][t] = u; });
+    const tt = Object.assign({}, a.t || {}, b.t || {}); if(Object.keys(tt).length) r.diaLog[k].t = tt; }); }
   const al = local.appAndroid, ar = remoto.appAndroid;
   const cr = [local.calRevisado, remoto.calRevisado].filter(Boolean).sort().pop(); if(cr) r.calRevisado = cr;
   const rl = local.registroDia, rr = remoto.registroDia;
@@ -7936,7 +7972,7 @@ function cerrarToast(){ accionDeshacer = null; clearTimeout(tToast); $('#toast')
 function borrarDelCalendario(id, k, todo){
   const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
   const hab = e.tipo === 'habito', copia = JSON.parse(JSON.stringify(e)), d = fechaDe(k);
-  const ap = !hab && !hechoEv(e, k) && apuntarDia('borr', k, e.id);
+  const ap = !hab && !hechoEv(e, k) && apuntarDia('borr', k, e.id, e.t);
   if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas = (D.borradas || []).concat(e.id); }
   else { e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO(); }
   guardar(); rerenderDia();
