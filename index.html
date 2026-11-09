@@ -1984,7 +1984,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.35';
+const VERSION = 'v5.36';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6116,8 +6116,8 @@ async function elegirAvPC(k, b){
 function avPCHTML(){
   if(esApp) return '';
   const m = avPC();
-  return `<div class="cta-b"><h4>1 · Avisos de pantalla completa, con alarma en el ordenador</h4>
-    <p class="peq suave" style="margin:2px 0 8px">La <b>ventana grande</b> que ocupa la pantalla (Enterado, Posponer) con el <b>sonido de la alarma</b>. Si también tienes Amable Life en el móvil, puedes hacer que el ordenador no suene cuando no estás delante.</p>
+  return `<div class="cta-b"><h4>1 · Gestión de avisos de pantalla grande en el ordenador</h4>
+    <p class="peq suave" style="margin:2px 0 8px">Si también tienes Amable Life en el móvil, puedes gestionar cómo quieres que te suene en el ordenador: la <b>ventana grande</b> (Enterado, Posponer) con el <b>sonido de la alarma</b>.</p>
     <div class="rec-son-b">${AV_PC.map(a => `<button type="button" class="${m === a.k ? 'sel' : ''}" onclick="elegirAvPC('${a.k}', this)">${a.t}</button>`).join('')}</div>
     <p class="peq suave" id="av-pc-nota" style="margin:8px 0 0">${esc(avPCnota())}</p></div>`;
 }
