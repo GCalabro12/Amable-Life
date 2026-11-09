@@ -429,6 +429,10 @@ input.pin::placeholder{letter-spacing:normal;font-size:15px}
 html.claro .medalla-msg.ok{color:#15803d}
 html.claro .medalla-msg.falta{color:#dc2626}
 .flor-frase{text-align:center;margin:6px 8px 4px}
+/* 5.52 (Gustavo): la frase de la flor equilibrada, detrás de una «i» al final del mensaje de la medalla */
+.mm-i{display:inline-grid;place-items:center;vertical-align:middle;width:26px;height:26px;margin-left:4px;padding:0;border:0;border-radius:50%;background:none;color:var(--suave);cursor:pointer}
+.mm-i svg{width:18px;height:18px}
+.mm-i[aria-expanded="true"]{color:var(--oro)}
 .flor-pie{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:14px 0 4px}
 .flor-pie .pausa-fila{margin:0}
 .est-hist{display:flex;justify-content:center;margin:18px 0 6px}
@@ -2070,7 +2074,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.51';
+const VERSION = 'v5.52';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6442,9 +6446,9 @@ function vDia(){
   return `${unirHTML()}<h1 class="tit-acc tit-bloques">Flor de tus áreas semanales</h1><div class="dia-cols sin-der"><div class="dia-izq">
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0, {medalla: {ok: !sinHab.length, faltan: sinHab.length}})}</div>
-    ${medallaMsgHTML(sinHab)}
-    <p class="peq suave flor-frase">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo.</p>
-    <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos un hábito en cada área por semana</button>
+    ${medallaMsgHTML(sinHab).replace(/<\/p>$/, `<button type="button" class="mm-i" aria-label="Más información" aria-expanded="false" onclick="const n = document.getElementById('flor-frase'); n.hidden = !n.hidden; this.setAttribute('aria-expanded', !n.hidden)">${ICO_INFO}</button></p>`)}
+    <p class="peq suave flor-frase" id="flor-frase" hidden>Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada área.</p>
+    <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos una tarea por semana en cada área</button>
 
     </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
 }
