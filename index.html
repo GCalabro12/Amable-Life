@@ -1984,7 +1984,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.34';
+const VERSION = 'v5.35';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5799,8 +5799,8 @@ function probarAvisoWeb(){
 function avisosWebHTML(){
   if(!hayAvisosWeb()) return '';
   const p = Notification.permission;
-  return `<div class="cta-b"><h4>2 · Avisos pequeños en la esquina</h4>
-    <p class="peq suave" style="margin:2px 0 6px">Además de la alarma, un <b>aviso pequeño abajo a la derecha</b> de la pantalla, por si Amable Life está tapada por otras ventanas. Al tocarlo, Amable Life se pone delante. Los saca Windows: si en Windows tienes las notificaciones apagadas o «No molestar», no salen (la alarma sí suena).</p>
+  return `<div class="cta-b"><h4>2 · Avisos pequeños en la esquina del ordenador (sin alarma)</h4>
+    <p class="peq suave" style="margin:2px 0 6px">Además de lo anterior, un <b>aviso pequeño abajo a la derecha</b> de la pantalla, por si Amable Life está tapada por otras ventanas. Al tocarlo, Amable Life se pone delante. Los saca Windows: si en Windows tienes las notificaciones apagadas o «No molestar», no salen (la alarma sí suena).</p>
     <p class="peq suave">${p === 'granted' ? 'Permitidos en este navegador.' : p === 'denied' ? 'Bloqueados en este navegador.' : 'Aún no los has permitido.'}</p>
     <div class="bots">${p === 'granted' ? `<button class="btn sec" onclick="probarAvisoWeb()">Probar un aviso pequeño</button>` : `<button class="btn sec" onclick="pedirAvisosWeb(true)">${p === 'denied' ? 'Cómo activarlos' : 'Activar los avisos'}</button>`}</div></div>`;
 }
@@ -6116,8 +6116,8 @@ async function elegirAvPC(k, b){
 function avPCHTML(){
   if(esApp) return '';
   const m = avPC();
-  return `<div class="cta-b"><h4>1 · Alarma en este ordenador</h4>
-    <p class="peq suave" style="margin:2px 0 8px">La alarma con <b>sonido</b> y la <b>ventana grande</b> (Enterado, Posponer). Si también tienes Amable Life en el móvil, puedes hacer que el ordenador no suene cuando no estás delante.</p>
+  return `<div class="cta-b"><h4>1 · Avisos de pantalla completa, con alarma en el ordenador</h4>
+    <p class="peq suave" style="margin:2px 0 8px">La <b>ventana grande</b> que ocupa la pantalla (Enterado, Posponer) con el <b>sonido de la alarma</b>. Si también tienes Amable Life en el móvil, puedes hacer que el ordenador no suene cuando no estás delante.</p>
     <div class="rec-son-b">${AV_PC.map(a => `<button type="button" class="${m === a.k ? 'sel' : ''}" onclick="elegirAvPC('${a.k}', this)">${a.t}</button>`).join('')}</div>
     <p class="peq suave" id="av-pc-nota" style="margin:8px 0 0">${esc(avPCnota())}</p></div>`;
 }
