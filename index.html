@@ -710,9 +710,12 @@ body:not(.pip) .ahora-blk .compro-link{white-space:nowrap}
 .ah-vacio{margin:12px 0 0;padding:16px;border-radius:16px;background:rgba(var(--bl),.05);color:var(--suave);text-align:center}
 /* 5.40 (Gustavo): Focus en tres bloques con borde gris; arriba, los avisos de Focus y la ventana flotante */
 .foco-top{margin-top:14px;flex-wrap:wrap}
+/* 5.41 (Gustavo): avisos y «Ventana flotante» en el mismo renglón; si no caben (móvil estrecho), la ventana flotante baja */
 .foco-top{justify-content:flex-end}
-.foco-top .btn-avisos{order:2;flex:1 1 100%;width:auto;min-width:0;margin:0;padding:9px 12px;font-size:14px}
-.foco-top .btn-flot{order:1;margin-top:0}
+.foco-top .btn-avisos{flex:1 1 auto;width:auto;min-width:0;margin:0;padding:9px 12px;font-size:14px;white-space:nowrap}
+.foco-top .btn-flot{margin-top:0}
+.ahora-blk.foco-b1 .foco-tit{white-space:nowrap;overflow:hidden}
+@media (min-width:900px){ body.v-inicio .envoltura{max-width:760px} body.v-inicio .envoltura:has(.foco-cols){max-width:1100px} }
 .foco-b3 .btn.sec.btn-bloque{border-color:rgba(var(--bl),.25)}
 .ahora-blk.foco-b{border:2px solid rgba(var(--bl),.18);box-shadow:none;animation:none;margin-top:14px}
 .ahora-blk.foco-b1 .foco-tit{margin:0 0 6px;text-align:left}
@@ -2025,7 +2028,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.40';
+const VERSION = 'v5.41';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2375,7 +2378,10 @@ function render(){
 }
 /* La tarea en la que te enfocas, siempre en un solo renglón: se achica la letra hasta que quepa */
 function ajustarFoco(doc = document){
-  if(doc === document){ doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => el.style.fontSize = ''); return; }   // 5.39: en la app, letra grande y en varios renglones si hace falta
+  if(doc === document){ doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => el.style.fontSize = '');
+    doc.querySelectorAll('.foco-b1 .foco-tit').forEach(el => {   // 5.41: el título en un renglón; se achica si no cabe
+      let fs = 24; el.style.fontSize = fs + 'px'; while(el.scrollWidth > el.clientWidth + 1 && fs > 14){ fs--; el.style.fontSize = fs + 'px'; } });
+    return; }   // 5.39: en la app, letra grande y en varios renglones si hace falta
   doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => {
     let fs = doc === document ? 26 : 19; el.style.fontSize = fs + 'px';
     while(el.scrollWidth > el.clientWidth + 1 && fs > (doc === document ? 15 : 13)){ fs--; el.style.fontSize = fs + 'px'; }
@@ -2729,7 +2735,7 @@ function seccionAhora(pip){
   /* 5.40 (Gustavo): tres bloques con borde gris: «Trabajo en bloques de tiempo de 1 hora y media» con el reloj de arena, la cuenta
      atrás y el aro; «Estoy focus con» y sus tareas; y «Añadir tarea» con una nota. Sin la palabra FOCUS ni «Próxima tarea prioritaria» */
   if(!pip) return `<section class="ahora-blk foco-b foco-b1">
-    <h2 class="foco-tit">Trabajo en bloques de tiempo de 1 hora y media</h2>
+    <h2 class="foco-tit">Trabajo en bloques de tiempo de 1,5 h</h2>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
