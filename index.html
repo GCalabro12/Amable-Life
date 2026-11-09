@@ -1794,9 +1794,10 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   [data-atajo]{position:relative}
   [data-atajo]:hover::after{content:attr(data-atajo);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);z-index:90;width:max-content;max-width:230px;padding:7px 10px;border-radius:8px;background:#111;color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;line-height:1.35;letter-spacing:0;text-transform:none;text-align:left;white-space:normal;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.35)}
   .gc-pop kbd[data-atajo]:hover::after{left:auto;right:-12px;transform:none}
-  .gc-dias{display:flex;align-items:center;gap:4px;padding:2px 12px}
+  .gc-dias{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:3px 18px}
+  .gc-dias-g{display:flex;align-items:center;gap:2px}
   .gc-pop .gc-dias button{width:auto;padding:8px 10px}
-  .gc-pop .gc-dias .gc-dl{flex:1;justify-content:center}
+  .gc-pop .gc-dias .gc-dl{justify-content:center;padding:8px 8px}
   .gc-pop .gc-dias .gc-dn{width:32px;height:32px;flex:none;padding:0;justify-content:center;border-radius:50%;border:1.5px solid var(--linea);font-size:19px;font-weight:700;line-height:1}
   .gc-pop .gc-dias .gc-dn:disabled{opacity:.3;cursor:default;background:none}
   .gc-dias.sel .gc-dl{color:var(--oro);font-weight:800}
@@ -1974,7 +1975,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.24';
+const VERSION = 'v5.25';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4009,7 +4010,7 @@ const verFinde = () => gcPref.finde !== false, verHechas = () => gcPref.verHecha
 const gcVistaB = ([k, x, l]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')"><span>${x}</span><kbd data-atajo="Atajo de teclado: pulsa solo la tecla ${l} (sin Ctrl) y pasas a la vista ${x}.">${l}</kbd></button>`;
 /* 5.23 (Gustavo): al pasar el ratón por un atajo, una etiqueta negra que dice qué tecla pulsar; y en el menú, «Atajos de teclado» */
 const icoTeclado = () => svgT('<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/>', 24);
-const ATAJOS = [['D', 'Vista Día'], ['W', 'Vista Semana'], ['M', 'Vista Mes'], ['Y', 'Vista Año'], ['A', 'Vista Agenda'], ['T', 'Ir a hoy'], ['C', 'Crear una tarea o un hábito'],
+const ATAJOS = [['D', 'Vista Día'], ['W', 'Vista Semana'], ['M', 'Vista Mes'], ['Y', 'Vista Año'], ['A', 'Vista Agenda'], ['X', 'Vista de varios días (de entrada 3; en el desplegable, − y + para cambiarlos)'], ['T', 'Ir a hoy'], ['C', 'Crear una tarea o un hábito'],
   ['/', 'Buscar en el calendario'], ['→  o  J', 'Siguiente (día, semana o mes)'], ['←  o  K', 'Anterior'], ['Esc', 'Cerrar la ventana o el desplegable']];
 function abrirAtajos(){
   hojaAbierta = abrirAtajos;
@@ -4017,8 +4018,10 @@ function abrirAtajos(){
     <p class="peq suave">En el calendario del ordenador. Pulsa <b>solo la tecla</b>, sin Ctrl ni otra tecla, cuando no estés escribiendo en un campo.</p>
     <div class="atajos">${ATAJOS.map(([k, t]) => `<div class="at-f"><span>${t}</span><kbd>${k}</kbd></div>`).join('')}</div></div>`, '#8b5cf6');
 }
-const gcDiasHTML = () => { const n = agModo === 'rango' ? agN : 2;
-  return `<div class="gc-dias ${agModo === 'rango' ? 'sel' : ''}"><button type="button" class="gc-dn" aria-label="Un día menos" title="Un día menos" ${n <= 2 ? 'disabled' : ''} onclick="gcDias(${n - 1}, event)">−</button><button type="button" class="gc-dl" onclick="gcDias(${n}, event)">${n} días</button><button type="button" class="gc-dn" aria-label="Un día más" title="Un día más" ${n >= 7 ? 'disabled' : ''} onclick="gcDias(${n + 1}, event)">+</button></div>`; };
+/* 5.25 (Gustavo): de entrada 3 días; el grupo − N días + a la izquierda y a la derecha su atajo, la tecla X */
+const gcDiasHTML = () => { const n = agModo === 'rango' ? agN : 3;
+  return `<div class="gc-dias ${agModo === 'rango' ? 'sel' : ''}"><span class="gc-dias-g"><button type="button" class="gc-dn" aria-label="Un día menos" title="Un día menos" ${n <= 2 ? 'disabled' : ''} onclick="gcDias(${n - 1}, event)">−</button><button type="button" class="gc-dl" onclick="gcDias(${n}, event)">${n} días</button><button type="button" class="gc-dn" aria-label="Un día más" title="Un día más" ${n >= 7 ? 'disabled' : ''} onclick="gcDias(${n + 1}, event)">+</button></span><kbd data-atajo="Atajo de teclado: pulsa solo la tecla X (sin Ctrl) y pasas a la vista de ${n} días.">X</kbd></div>`; };
+function gcDiasVer(){ if(agModo !== 'rango') agN = 3; agModo = 'rango'; render(); agVerAhora(); }
 function gcDias(n, ev){
   if(ev) ev.stopPropagation();
   const masMenos = !!(ev && ev.currentTarget && ev.currentTarget.classList && ev.currentTarget.classList.contains('gc-dn'));
@@ -4533,7 +4536,7 @@ document.addEventListener('keydown', e => {
   if(e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
   const k = e.key.toLowerCase();
   if(k === 'd') agVer('dia'); else if(k === 'w') agVer('semana'); else if(k === 'm') agVer('mes');
-  else if(k === 'y') agVer('anio'); else if(k === 'a') agVer('agenda');
+  else if(k === 'y') agVer('anio'); else if(k === 'a') agVer('agenda'); else if(k === 'x') gcDiasVer();
   else if(k === 't') agHoy(); else if(k === 'c') nuevoEvento();
   else if(k === 'j' || k === 'n' || e.key === 'ArrowRight') agMover(1);
   else if(k === 'k' || k === 'p' || e.key === 'ArrowLeft') agMover(-1);
