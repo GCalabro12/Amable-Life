@@ -708,6 +708,23 @@ body:not(.pip) .ahora-blk .compro-link{white-space:nowrap}
 .prox.foco-1:not(.ok) .foco-hecha{border-color:rgba(255,255,255,.85);background:rgba(255,255,255,.16);color:#fff}
 .btn.sec.btn-bloque{padding-top:9px;padding-bottom:9px}
 .ah-vacio{margin:12px 0 0;padding:16px;border-radius:16px;background:rgba(var(--bl),.05);color:var(--suave);text-align:center}
+/* 5.40 (Gustavo): Focus en tres bloques con borde gris; arriba, los avisos de Focus y la ventana flotante */
+.foco-top{margin-top:14px;flex-wrap:wrap}
+.foco-top{justify-content:flex-end}
+.foco-top .btn-avisos{order:2;flex:1 1 100%;width:auto;min-width:0;margin:0;padding:9px 12px;font-size:14px}
+.foco-top .btn-flot{order:1;margin-top:0}
+.foco-b3 .btn.sec.btn-bloque{border-color:rgba(var(--bl),.25)}
+.ahora-blk.foco-b{border:2px solid rgba(var(--bl),.18);box-shadow:none;animation:none;margin-top:14px}
+.ahora-blk.foco-b1 .foco-tit{margin:0 0 6px;text-align:left}
+.ahora-blk.foco-b2 .foco-tit{margin:0}
+.ahora-blk.foco-b3{padding:12px}
+.foco-nota{margin:10px 2px 0}
+.foco-l2,.foco-l3{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.foco-l2{margin-top:4px}
+.foco-l3{margin-top:8px}
+.foco-l2 .area-p{margin-top:0;min-width:0}
+.foco-l3 .compro-link{margin-top:0;min-width:0}
+.foco-g .foco-ico .lapiz{width:30px;height:30px}
 .prox.ok .texto-p{text-decoration:line-through;opacity:.6}
 .check.hecho{background:var(--c);color:#fff}
 .prox .del{background:none;border:0;color:var(--suave);font-size:16px;padding:6px;margin-left:-6px}
@@ -2008,7 +2025,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.39';
+const VERSION = 'v5.40';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2628,11 +2645,9 @@ function vInicio(){
   const actsAhora = c >= 0 ? actsDe(hoyK(), c) : [];
   const tuNombre = nombrePila();
   let h = `${bannerApp()}
-    ${hayFlotante() ? `<div class="av-fila" style="margin-top:14px;justify-content:flex-end"><button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button></div>` : '<div style="height:14px"></div>'}
+    <div class="av-fila foco-top">${botonAvisosHTML()}${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
     ${seccionAhora()}
-    ${ESCRITORIO.matches ? '' : contratoLado()}
-    ${botonAvisosHTML()}
-    ${listaSinAsignar()}`;
+    ${ESCRITORIO.matches ? '' : contratoLado()}`;   // 5.40 (Gustavo): sin «Pétalos con tareas pendientes» (aquí no procede); los avisos de Focus, arriba
   const lado = ESCRITORIO.matches ? contratoLado() : '';
   if(lado) h = `<div class="foco-cols"><div class="foco-main">${h}</div>${lado}</div>`;
   return h;
@@ -2693,6 +2708,12 @@ function seccionAhora(pip){
   const b = BLOQUES[c], acts = actsDe(hoyK(), c), comp = compVigente();
   const fila = (a, i, grande) => {
     const x = a.acc && D.acciones.find(z => z.id === a.acc), ar = x && areaDe(x.area), ok = hechaAct(a);
+    /* 5.40 (Gustavo): el nombre a todo lo ancho; debajo el área con editar y quitar a su altura; abajo del todo «Me quiero comprometer» y «✓ Hecha» */
+    if(!pip){ const compro = !ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">Me quiero comprometer</button>` : '<span></span>';
+      return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} foco-g ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
+      ${ok ? '<span class="asa-hueco"></span>' : ASA}<div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}${durAct(a)}</div>
+        <div class="foco-l2"><div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div><div class="foco-ico">${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div></div>
+        <div class="foco-l3">${compro}<button type="button" class="foco-hecha" onclick="alternarActAhora(${i})">✓ Hecha</button></div></div></div>`; }
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
       ${ok ? '<span class="asa-hueco"></span>' : ASA}${pip ? `<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>` : ''}
       <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}${durAct(a)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
@@ -2705,6 +2726,24 @@ function seccionAhora(pip){
   const orden = acts.map((a, i) => ({a, i})), pend = orden.filter(o => !hechaAct(o.a)), hechas = orden.filter(o => hechaAct(o.a));
   const lista = pend.map((o, k) => fila(o.a, o.i, k === 0)).join('');   // 4.51: las hechas van fuera del recuadro (hechasBloqueHTML)
   const p = progresoBloque(b.ini, b.fin).toFixed(1);
+  /* 5.40 (Gustavo): tres bloques con borde gris: «Trabajo en bloques de tiempo de 1 hora y media» con el reloj de arena, la cuenta
+     atrás y el aro; «Estoy focus con» y sus tareas; y «Añadir tarea» con una nota. Sin la palabra FOCUS ni «Próxima tarea prioritaria» */
+  if(!pip) return `<section class="ahora-blk foco-b foco-b1">
+    <h2 class="foco-tit">Trabajo en bloques de tiempo de 1 hora y media</h2>
+    <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
+      <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
+        <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
+      <div class="aro-col"><span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span>
+        <span class="aro-blk">bloque <i>${hm(b.ini)} – ${hm(b.fin)}</i></span></div></div>
+  </section>
+  <section class="ahora-blk foco-b foco-b2" data-drop="ahora">
+    <h2 class="foco-tit">Estoy focus con</h2>
+    ${pend.length ? `<div class="prox-lista">${lista}</div>` : `<p class="ah-vacio">Todavía no hay ninguna tarea en este bloque: añádela abajo.</p>`}
+  </section>
+  <section class="ahora-blk foco-b foco-b3">
+    ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : `<p class="peq suave" style="margin:0">Este bloque ya tiene ${MAX_ACT} tareas.</p>`}
+    <p class="peq suave foco-nota">Una tarea que ya tienes en tus pétalos también la puedes traer aquí: en <b>Hábitos</b>, toca su pétalo y, en la tarea, pulsa <b>«→ Al bloque»</b>.</p>
+  </section>${hechasBloqueHTML(c)}`;
   return `<section class="ahora-blk" data-drop="ahora">
     <div class="ah-cab"><b class="ah-tit">FOCUS</b><span class="ah-sub">Trabajo en bloques de tiempo de 1,5 horas</span></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
@@ -6616,10 +6655,10 @@ function proximoAviso(){
   return op.length ? Math.max(ahora, Math.min(...op)) : null;
 }
 function txtAvisos(){
-  if(pausa.tareas) return 'Avisos desactivados';
-  const t = proximoAviso(); if(t === null) return 'Avisos activados';
+  if(pausa.tareas) return 'Avisos de Focus desactivados';   // 5.40 (Gustavo): que se entienda de qué son
+  const t = proximoAviso(); if(t === null) return 'Avisos de Focus activados';
   const q = Math.round((t - Date.now()) / 1000);
-  return `Avisos activados · próximo en ${Math.floor(q / 60)}:${String(q % 60).padStart(2, '0')}`;
+  return `Avisos de Focus activados · próximo en ${Math.floor(q / 60)}:${String(q % 60).padStart(2, '0')}`;
 }
 /* 4.51 (Gustavo): el botón gris de los avisos (donde estaba «Nueva tarea»): dice si están activados y cuándo es el próximo,
    y abre lo mismo que abría el lápiz */
