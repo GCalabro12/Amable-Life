@@ -694,6 +694,19 @@ body.pip .prox-prio{zoom:.72;margin-top:8px;padding:8px 10px}
 .prox.foco-sig{padding:12px 16px}
 .prox.foco-sig .texto-p{font-size:17px}
 .prox.foco-sig .check.cuadro{width:38px;height:38px;border-width:2.5px;font-size:17px}
+/* 5.39 (Gustavo): la tarea de Focus, a la izquierda y en letra grande (casi como «Estoy focus con»), en varios renglones si hace falta;
+   el área y «Me quiero comprometer» en un renglón; a la derecha editar, quitar y el botón «Hecha» (en la flotante, como antes) */
+body:not(.pip) .ahora-blk .prox.foco-1 .texto-p{font-size:22px;line-height:1.2;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+body:not(.pip) .ahora-blk .prox.foco-sig .texto-p{font-size:18px}
+body:not(.pip) .ahora-blk .prox{padding:14px 10px 14px 6px;gap:8px}
+body:not(.pip) .ahora-blk .prox .area-p{white-space:nowrap;overflow:hidden}
+body:not(.pip) .ahora-blk .compro-link{white-space:nowrap}
+.foco-acc{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:8px;align-self:center}
+.foco-ico{display:flex;align-items:center;gap:2px}
+.foco-ico .del{margin-left:0}
+.foco-hecha{border:1.5px solid var(--linea);background:rgba(var(--bl),.06);color:var(--tinta);border-radius:99px;padding:6px 12px;font:inherit;font-size:14px;font-weight:800;white-space:nowrap;cursor:pointer}
+.prox.foco-1:not(.ok) .foco-hecha{border-color:rgba(255,255,255,.85);background:rgba(255,255,255,.16);color:#fff}
+.btn.sec.btn-bloque{padding-top:9px;padding-bottom:9px}
 .ah-vacio{margin:12px 0 0;padding:16px;border-radius:16px;background:rgba(var(--bl),.05);color:var(--suave);text-align:center}
 .prox.ok .texto-p{text-decoration:line-through;opacity:.6}
 .check.hecho{background:var(--c);color:#fff}
@@ -1995,7 +2008,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.38';
+const VERSION = 'v5.39';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2345,6 +2358,7 @@ function render(){
 }
 /* La tarea en la que te enfocas, siempre en un solo renglón: se achica la letra hasta que quepa */
 function ajustarFoco(doc = document){
+  if(doc === document){ doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => el.style.fontSize = ''); return; }   // 5.39: en la app, letra grande y en varios renglones si hace falta
   doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => {
     let fs = doc === document ? 26 : 19; el.style.fontSize = fs + 'px';
     while(el.scrollWidth > el.clientWidth + 1 && fs > (doc === document ? 15 : 13)){ fs--; el.style.fontSize = fs + 'px'; }
@@ -2680,10 +2694,12 @@ function seccionAhora(pip){
   const fila = (a, i, grande) => {
     const x = a.acc && D.acciones.find(z => z.id === a.acc), ar = x && areaDe(x.area), ok = hechaAct(a);
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
-      ${ok ? '<span class="asa-hueco"></span>' : ASA}<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>
+      ${ok ? '<span class="asa-hueco"></span>' : ASA}${pip ? `<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>` : ''}
       <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}${durAct(a)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
-        ${!ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">${ICO_FIRMA} Me quiero comprometer</button>` : ''}</div>
-      ${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>`;
+        ${!ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">${pip ? ICO_FIRMA + ' ' : ''}Me quiero comprometer</button>` : ''}</div>
+      ${pip ? `${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button>`
+        : `<div class="foco-acc"><div class="foco-ico">${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>
+          <button type="button" class="foco-hecha" onclick="alternarActAhora(${i})">✓ Hecha</button></div>`}</div>`;   // 5.39 (Gustavo): sin la casilla grande, con un botón «Hecha» al lado
   };
   // arriba solo la tarea en la que estás (la primera sin hacer); debajo las demás pendientes; las hechas al final, tachadas
   const orden = acts.map((a, i) => ({a, i})), pend = orden.filter(o => !hechaAct(o.a)), hechas = orden.filter(o => hechaAct(o.a));
@@ -2700,7 +2716,7 @@ function seccionAhora(pip){
     ${pend.length ? `<div class="prox-lista">${lista}</div>`
       : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}
     ${pip ? compromisoHTML(pend) : ''}
-    ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Nueva tarea para este bloque</button>` : ''}
+    ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : ''}
   </section>${proximaHTML()}${hechasBloqueHTML(c)}`;
 }
 /* 4.59 (Gustavo): lo del calendario ya no sale dentro del recuadro (distrae): debajo, «Próxima tarea prioritaria» con la bandera
