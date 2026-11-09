@@ -1,5 +1,5 @@
 /* Amable Life (antes Equilibra): service worker. Subir CACHE con cada versión (igual que VERSION en index.html). */
-const CACHE = 'equilibra-v5.16';
+const CACHE = 'equilibra-v5.17';
 const BASE = ['./', 'index.html', 'manifest.json', 'img/icono-life-192.png',
   'img/salud.jpg', 'img/pareja.jpg', 'img/familia.jpg', 'img/trabajo.jpg',
   'img/crecimiento.jpg', 'img/ocio.jpg', 'img/proposito.jpg', 'img/hogar.jpg', 'sonido/inicio.mp3'];
@@ -24,10 +24,13 @@ self.addEventListener('fetch', e => {
   }
 });
 // al tocar un aviso de Amable Life: se abre (o se trae delante) la pestaña de la app
+// 5.17: los botones de la alarma (Enterado, Posponer 5 min) se mandan a la app abierta sin traerla delante
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  const d = e.notification.data || {}, acc = e.action;
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(cs => {
-    const c = cs.find(x => x.url.includes('/Amable-Life/'));
+    const mias = cs.filter(x => x.url.includes('/Amable-Life/')), c = mias[0];
+    if(acc && d.ev && c){ mias.forEach(x => x.postMessage({tipo: 'alarma', acc, ev: d.ev, k: d.k, ul: d.ul})); return; }
     return c ? c.focus() : self.clients.openWindow('./');
   }));
 });

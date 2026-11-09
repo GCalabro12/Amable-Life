@@ -1130,6 +1130,12 @@ body.li-moviendo,body.li-moviendo *{cursor:grabbing!important;user-select:none}
 .af-ayuda-b button{border:1.5px solid #f7c35b;background:rgba(247,195,91,.15);color:#fff;border-radius:12px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}
 .af-pos-l{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .af-pos-l[hidden]{display:none}
+.af-nosuena + .af-nosuena{margin-top:8px}
+.pip-alarma{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:12px;text-align:center;color:#fff;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--c) 55%,#1b1236),#120d24 75%)}
+.pip-alarma h2{margin:0;font-size:20px;line-height:1.2;word-break:break-word}
+.pa-falta{margin:0;color:#f7c35b;font-weight:800;font-size:15px}
+.pa-cuando{margin:0 0 6px;font-size:13px;color:#e9e4ff}
+.pip-alarma .af-b{padding:10px;font-size:15px;border-radius:12px}
 .af-pos-l button{border:1.5px solid #8b5cf6;background:rgba(139,92,246,.18);color:#fff;border-radius:12px;padding:12px 4px;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
 .alarma-ops{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .alarma-op{display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left;padding:10px 14px;border-radius:12px;border:1px solid var(--linea);background:rgba(var(--bl),.04);color:var(--tinta);font:inherit;cursor:pointer}
@@ -1928,7 +1934,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.16';
+const VERSION = 'v5.17';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2338,7 +2344,7 @@ function pintarFlotante(){
   if(filaN){ filaN.scrollLeft = desliz;
     const ch = filaN.querySelector('.chip.sel');   // el pétalo elegido, siempre a la vista
     if(ch){ const l = ch.offsetLeft; if(l < filaN.scrollLeft) filaN.scrollLeft = l; else if(l + ch.offsetWidth > filaN.scrollLeft + filaN.clientWidth) filaN.scrollLeft = l + ch.offsetWidth - filaN.clientWidth; } }
-  ajustarFoco(d); copiarToast();
+  ajustarFoco(d); copiarToast(); alarmaPip();
 }
 /* 4.51 (Gustavo): en la flotante, flechas para pasar de pétalo en lugar de la barra de desplazamiento */
 const pipAreas = () => [...AREAS].sort((x, y) => (y.id === 'trabajo') - (x.id === 'trabajo'));
@@ -5552,8 +5558,8 @@ function notifWeb(titulo, cuerpo, tag, siempre, extra){
   if(!siempre && document.visibilityState === 'visible' && document.hasFocus()) return false;   // si estás mirando la app, ya lo ves dentro
   const op = Object.assign({body: cuerpo, icon: 'img/icono-192.png', badge: 'img/icono-192.png', tag: tag || 'amable-life', lang: 'es'}, extra || {});
   try{
-    if(navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(titulo, op)).catch(() => { try{ new Notification(titulo, op); }catch(x){} });
-    else new Notification(titulo, op);
+    if(navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(titulo, op)).catch(() => { try{ delete op.actions; new Notification(titulo, op); }catch(x){} });
+    else { delete op.actions; new Notification(titulo, op); }
     return true;
   }catch(e){ return false; }
 }
@@ -5614,7 +5620,7 @@ function sonarAlarma(seg, tipo){
     const f = document.querySelector('#alarma-full .af-in');
     if(f && !f.querySelector('.af-sinson')) f.insertAdjacentHTML('afterbegin', '<button type="button" class="af-sinson" onclick="abrirAudio(); this.remove()">Toca aquí para oír la alarma</button>');
     const t = (document.querySelector('#alarma-full h1') || {}).textContent || 'Amable Life';
-    notifWeb(...((f && f.parentNode && f.parentNode.dataset.cab) ? [f.parentNode.dataset.cab, t + '\nRecordatorio de Amable Life'] : [t, 'Recordatorio de Amable Life']), 'alarma-sonido', true, {requireInteraction: true, renotify: true, silent: false});
+    notifWeb(...((f && f.parentNode && f.parentNode.dataset.cab) ? [f.parentNode.dataset.cab, t + '\nRecordatorio de Amable Life'] : [t, 'Recordatorio de Amable Life']), 'alarma-sonido', true, Object.assign({requireInteraction: true, renotify: true, silent: false}, alarmaAct ? {actions: ACC_ALARMA, data: {ev: alarmaAct.id, k: alarmaAct.k, ul: alarmaAct.ul}} : {}));
   }, 500);
 }
 function pararAlarma(){
@@ -5697,9 +5703,59 @@ function hojaAlarma(e, k, txt, ultima, a){
       ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">Tarea completada</button>` : ''}
     </div>
     <button type="button" class="af-nosuena" onclick="ayudaSonido(this)">¿No te suena la alarma?</button>
+    ${faltaDelante() ? '<button type="button" class="af-nosuena" onclick="ayudaDelante(this)">¿Estaba tapada por otras ventanas?</button>' : ''}
     </div>`;
   document.body.appendChild(d);
   requestAnimationFrame(() => d.classList.add('ver'));
+  alarmaAct = {id: e.id, k, ul: !!ultima, t: e.t, falta: faltaTxt(e, k), cuando: cuandoTxt(e, k, hoyK()), c: colorEv(e)};
+  alarmaPip();
+}
+/* 5.17 (Gustavo: «la alarma sonaba pero estaba tapada con otras ventanas»): una web no puede ponerse delante sola (el navegador
+   no lo deja). Lo que sí sale delante de todo: el aviso del sistema (esquina de la pantalla, con Enterado y Posponer 5 min; al
+   tocarlo, Amable Life se pone delante) y la ventana flotante de Focus (siempre encima), donde ahora sale también la alarma. */
+const ACC_ALARMA = [{action: 'enterado', title: 'Enterado'}, {action: 'pos5', title: 'Posponer 5 min'}];
+let alarmaAct = null;
+const faltaDelante = () => !esApp && ((hayAvisosWeb() && Notification.permission !== 'granted') || (hayFlotante() && !pipWin));
+function ayudaDelante(b){
+  const ya = document.querySelector('.af-delante'); if(ya){ ya.remove(); return; }
+  abrirAudio();
+  const p = hayAvisosWeb() ? Notification.permission : 'x', items = [];
+  if(hayAvisosWeb() && p !== 'granted') items.push(`<li><b>Avisos en la esquina de la pantalla</b>: salen encima de todas las ventanas, con Enterado y Posponer 5 min; al tocarlos, Amable Life se pone delante.
+    <div class="af-ayuda-b"><button type="button" onclick="activarDesdeAlarma(this)">${p === 'denied' ? 'Están bloqueados: cómo activarlos' : 'Activar los avisos'}</button></div></li>`);
+  if(hayFlotante() && !pipWin) items.push(`<li class="af-li-flot"><b>Ventana flotante</b>: una ventana pequeña que está siempre encima de todo. Mientras esté abierta, la alarma sale también en ella.
+    <div class="af-ayuda-b"><button type="button" onclick="abrirFlotanteAlarma()">Abrir la ventana flotante</button></div></li>`);
+  b.insertAdjacentHTML('afterend', `<div class="af-ayuda af-delante"><p style="margin:0 0 8px">El navegador no deja que una web se ponga delante sola. Para que la alarma salga delante de todo:</p><ol>${items.join('')}</ol></div>`);
+}
+function activarDesdeAlarma(b){
+  const caja = b.parentNode;
+  if(Notification.permission === 'denied'){ caja.outerHTML = '<p style="margin:8px 0 0">Pulsa el <b>candado</b> a la izquierda de la dirección (en la app instalada, el menú <b>⋮</b> de arriba → <b>Información de la app</b>), busca <b>Notificaciones</b> y elige <b>Permitir</b>.</p>'; return; }
+  try{ localStorage.setItem('equilibra.avisosWeb', 'pedido'); }catch(e){}
+  try{ Notification.requestPermission().then(r => {
+    if(r === 'granted') caja.outerHTML = '<p style="margin:8px 0 0;color:#86efac;font-weight:700">✓ Avisos activados: la próxima alarma saldrá también en la esquina, delante de todo.</p>';
+    else aviso('No se han activado. Puedes hacerlo en Ajustes → Sonidos y avisos', 4000);
+  }); }catch(e){}
+}
+async function abrirFlotanteAlarma(){
+  await abrirFlotante();
+  const li = document.querySelector('.af-li-flot');
+  if(li && pipWin) li.innerHTML = '<b style="color:#86efac">✓ Ventana flotante abierta.</b> Déjala abierta (puedes ponerla en una esquina) y las alarmas saldrán ahí, delante de todo.';
+}
+/* la alarma, también dentro de la ventana flotante (que está siempre encima de las demás) */
+function alarmaPip(){
+  if(!pipWin) return;
+  const d = pipWin.document, v = d.getElementById('pip-alarma'); if(v) v.remove();
+  const x = alarmaAct; if(!x) return;
+  d.body.insertAdjacentHTML('beforeend', `<div id="pip-alarma" class="pip-alarma" style="--c:${x.c}" role="alertdialog" aria-label="Recordatorio">
+    <div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="40" height="40"')}</div>
+    <p class="pa-falta">${esc(x.falta)}</p><h2>${esc(x.t)}</h2><p class="pa-cuando">${esc(x.cuando)}</p>
+    <button type="button" class="af-b af-ent" data-onclick="alarmaCerrar()">Enterado</button>
+    <button type="button" class="af-b af-pos" data-onclick="posponerAlarma('${x.id}','${x.k}',5,${x.ul ? 1 : 0})">Posponer 5 min</button>
+    ${x.ul ? `<button type="button" class="af-b af-ok" data-onclick="alarmaCompletar('${x.id}','${x.k}')">Tarea completada</button>` : ''}</div>`);
+}
+/* al quitar la alarma aquí, se quitan también sus avisos de la esquina */
+function cerrarNotifAlarma(){
+  if(esApp || !navigator.serviceWorker) return;
+  navigator.serviceWorker.getRegistration().then(r => r && r.getNotifications()).then(l => (l || []).forEach(n => { if(n.data && n.data.ev) n.close(); })).catch(() => {});
 }
 /* «¿No te suena la alarma?» (Gustavo, 4.26): debajo de los botones, los pasos para que suene y, en Windows, un botón que abre
    directamente el volumen de las apps (ms-settings:apps-volume) */
@@ -5720,6 +5776,7 @@ function ayudaSonido(b){
 }
 function alarmaCerrar(rapido){
   pararAlarma();
+  if(alarmaAct){ alarmaAct = null; alarmaPip(); cerrarNotifAlarma(); }
   const d = $('#alarma-full'); if(!d) return;
   d.id = ''; if(rapido){ d.remove(); return; }
   d.classList.remove('ver'); setTimeout(() => d.remove(), 250);
@@ -5756,7 +5813,7 @@ function revisarPospuestos(){
   const p = toca[toca.length - 1], e = AG_().eventos.find(x => x.id === p.ev);
   if(!e || hechoEv(e, p.k) || ahora - p.at > 6 * 3600000 || modoAvion()) return;
   sonarAlarma(); hojaAlarma(e, p.k, `Pospuesto · ${horaEv(e)}: ${e.t}`, p.ul);
-  notifWeb(...tituloAviso(e, 'Pospuesto · ' + horaEv(e)), 'pos-' + e.id, false, {requireInteraction: true, renotify: true, silent: false});
+  notifWeb(...tituloAviso(e, 'Pospuesto · ' + horaEv(e)), 'pos-' + e.id, false, {requireInteraction: true, renotify: true, silent: false, actions: ACC_ALARMA, data: {ev: e.id, k: p.k, ul: !!p.ul}});
 }
 /* La app de Android avisa de un pospuesto con la app en pantalla (APK 2.41) */
 window.alarmaDesdeApp = o => { const e = AG_().eventos.find(x => x.id === o.ev); if(!e || hechoEv(e, o.k) || modoAvion()) return; sonarAlarma(); hojaAlarma(e, o.k, `${o.txt}: ${e.t}`, !!o.ul); };
@@ -5768,6 +5825,8 @@ window.aplicarAlarmas = () => {
 };
 document.addEventListener('visibilitychange', () => { if(!document.hidden){ window.aplicarAlarmas(); revisarPospuestos(); } });
 document.addEventListener('keydown', ev => { if(ev.key === 'Escape' && $('#alarma-full')) alarmaCerrar(); });
+if(navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', m => { const o = m.data || {}; if(o.tipo !== 'alarma') return;
+  if(o.acc === 'enterado') alarmaCerrar(); else if(o.acc === 'pos5' && o.ev) posponerAlarma(o.ev, o.k, 5, o.ul ? 1 : 0); });
 function textoRecord(e, a, falta){
   if(e.tipo === 'habito' && a !== 0) return e.todo ? 'Tu hábito de hoy' : `Tu hábito de las ${hm(e.ini)}`;
   if(e.todo) return a === 0 ? 'Hoy' : a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : a === 10080 ? 'Dentro de una semana' : `Dentro de ${Math.round(a / 1440)} días`;
@@ -5809,7 +5868,7 @@ function avisarEventos(){
       if(esApp && document.visibilityState !== 'visible' && recordNativo()) return;   // la notificación del teléfono ya avisa
       const txt = `${textoRecord(e, a, Math.max(1, Math.round((base - ahora) / 60000)))}: ${e.t}`;   // con lo que falta de verdad
       sonarAlarma(); hojaAlarma(e, k, txt, a === Math.min(...e.avisos), a);
-      notifWeb(...tituloAviso(e, txt.replace(': ' + e.t, '')), clave, false, {requireInteraction: true, renotify: true, silent: false});
+      notifWeb(...tituloAviso(e, txt.replace(': ' + e.t, '')), clave, false, {requireInteraction: true, renotify: true, silent: false, actions: ACC_ALARMA, data: {ev: e.id, k, ul: a === Math.min(...e.avisos)}});
       setTimeout(() => hablar(txt.replace(/\(en (\d+) min\)/, 'dentro de $1 minutos').replace('(en 1 hora)', 'dentro de una hora') + '.', 'tareas'), 3500);
     }));
   }
