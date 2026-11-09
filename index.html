@@ -1119,10 +1119,12 @@ body.li-moviendo,body.li-moviendo *{cursor:grabbing!important;user-select:none}
 .alarma-full.ver{opacity:1}
 .af-in{width:100%;max-width:440px;text-align:center}
 .af-marca{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px}
-.af-rec{margin:6px 0 18px;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#f7c35b;font-weight:700}
+/* 5.32 (Gustavo): sin la palabra «Recordatorio»; la campana sube y debajo dice qué hora es */
+.af-in > .af-ico{margin-top:16px}
+.af-hora{margin:8px 0 0;font-size:18px;font-weight:600;color:#e9e4ff}
 .af-ico{color:#f7c35b;display:inline-block;animation:alarmaMueve .5s ease-in-out infinite alternate}
 .alarma-full h1{margin:4px 0 10px;font-size:30px;line-height:1.2;word-break:break-word}
-.af-falta{margin:14px 0 0;font-size:21px;font-weight:800;color:#f7c35b}
+.af-falta{margin:6px 0 0;font-size:21px;font-weight:800;color:#f7c35b}
 .af-cuando{margin:0 0 28px;font-size:18px;color:#e9e4ff}
 .af-dia{margin:6px 0 28px;font-size:15px;color:#a99fca}
 .af-bots{display:flex;flex-direction:column;gap:10px}
@@ -1982,7 +1984,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.31';
+const VERSION = 'v5.32';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5911,8 +5913,8 @@ function hojaAlarma(e, k, txt, ultima, a){
   const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full'; d.style.setProperty('--c', colorEv(e)); d.dataset.cab = cabeceraEv(e);
   d.innerHTML = `<div class="af-in" role="alertdialog" aria-label="Recordatorio">
     <div class="af-marca"><svg viewBox="-100 -100 200 200" width="34" height="34" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1A')}</svg><b>Amable Life</b></div>
-    <p class="af-rec">Recordatorio</p>
     <div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="64" height="64"')}</div>
+    <p class="af-hora" id="af-hora">${sonLas()}</p>
     <p class="af-falta">${esc(faltaTxt(e, k))}</p>
     <h1>${broteEv(e)}${esc(e.t)}</h1>
     <p class="af-cuando">${esc(cuandoTxt(e, k, hoyK()))}</p>
@@ -5930,7 +5932,13 @@ function hojaAlarma(e, k, txt, ultima, a){
   requestAnimationFrame(() => d.classList.add('ver'));
   alarmaAct = {id: e.id, k, ul: !!ultima, t: e.t, falta: faltaTxt(e, k), cuando: cuandoTxt(e, k, hoyK()), c: colorEv(e)};
   alarmaPip();
+  clearInterval(horaAlarmaT);   // la hora sigue al día mientras la ventana está abierta
+  horaAlarmaT = setInterval(() => { const h = document.getElementById('af-hora'); if(!h){ clearInterval(horaAlarmaT); return; } h.textContent = sonLas();
+    const ph = pipWin && pipWin.document.getElementById('pa-hora'); if(ph) ph.textContent = sonLas(); }, 15000);
 }
+/* 5.32: «Son las 19:30» («Es la 1:05») debajo de la campana */
+const sonLas = () => { const m = minutosHoy(); return (Math.floor(m / 60) % 12 === 1 ? 'Es la ' : 'Son las ') + hm(m); };
+let horaAlarmaT = null;
 /* 5.17 (Gustavo: «la alarma sonaba pero estaba tapada con otras ventanas»): una web no puede ponerse delante sola (el navegador
    no lo deja). Lo que sí sale delante de todo: el aviso del sistema (esquina de la pantalla, con Enterado y Posponer 5 min; al
    tocarlo, Amable Life se pone delante) y la ventana flotante de Focus (siempre encima), donde ahora sale también la alarma. */
@@ -5968,6 +5976,7 @@ function alarmaPip(){
   const x = alarmaAct; if(!x) return;
   d.body.insertAdjacentHTML('beforeend', `<div id="pip-alarma" class="pip-alarma" style="--c:${x.c}" role="alertdialog" aria-label="Recordatorio">
     <div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="40" height="40"')}</div>
+    <p id="pa-hora" style="margin:2px 0 0;font-size:14px;font-weight:600;opacity:.9">${sonLas()}</p>
     <p class="pa-falta">${esc(x.falta)}</p><h2>${esc(x.t)}</h2><p class="pa-cuando">${esc(x.cuando)}</p>
     <button type="button" class="af-b af-ent" data-onclick="alarmaCerrar()">Enterado</button>
     <button type="button" class="af-b af-pos" data-onclick="posponerAlarma('${x.id}','${x.k}',5,${x.ul ? 1 : 0})">Posponer 5 min</button>
