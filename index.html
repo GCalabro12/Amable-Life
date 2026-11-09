@@ -1462,7 +1462,16 @@ html.claro .meta-error{color:#dc2626}
 .rj-num{position:relative;display:inline-flex;align-items:center;gap:5px;font-style:normal}
 .rj-n{font-size:11px;font-weight:600;color:var(--suave);line-height:1.1;white-space:nowrap}
 .rj-n em{font-style:normal}
-@media (max-width:899px){ .rj-cab.muchas .rj-n{position:absolute;right:-9px;top:-1px;font-size:10px;font-weight:700} .rj-cab.muchas .rj-n em, .rj-cab.muchas .rj-n.cero{display:none} }
+.dia-est{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;color:var(--tinta);cursor:pointer;border-radius:5px;padding:1px;margin-right:-1px}
+.dia-est:hover{opacity:1;background:rgba(var(--bl),.12)}
+.de-dia{display:inline-flex;align-items:center;gap:6px;margin:0 0 8px;border:1px solid var(--linea);background:none;color:var(--tinta);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.dia-est-pop{position:fixed;z-index:60;min-width:250px;padding:10px 14px 8px;border-radius:14px;background:var(--tarjeta);border:1px solid var(--linea);box-shadow:0 12px 32px rgba(0,0,0,.45);color:var(--tinta);text-align:left}
+html.claro .dia-est-pop{box-shadow:0 10px 28px rgba(40,20,90,.22)}
+.de-tit{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-weight:800;font-size:15px}
+.de-f{display:flex;justify-content:space-between;gap:16px;padding:5px 0;border-top:1px solid var(--linea);font-size:14px}
+.de-f b{font-size:15px;min-width:22px;text-align:right}
+.de-f.cero{color:var(--suave)}
+@media (max-width:899px){ .rj-cab.muchas .dia-est{position:absolute;left:-13px;top:1px} .rj-cab.muchas .dia-est svg{width:11px;height:11px} .rj-cab.muchas .rj-n{position:absolute;right:-9px;top:-1px;font-size:10px;font-weight:700} .rj-cab.muchas .rj-n em, .rj-cab.muchas .rj-n.cero{display:none} }
 .rj-todo{display:grid;grid-template-columns:44px repeat(7,1fr);gap:2px;margin:2px 0 8px}
 .rj-todo em{font-style:normal;font-size:10px;line-height:1.1;color:var(--suave);align-self:center}
 .rj-todo div{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -1801,6 +1810,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   body.ancho .rj-cab button b::after{content:attr(data-l);font-size:12px;letter-spacing:.6px}
   body.ancho .rj-cab button span{font-size:24px;width:46px;height:46px;font-weight:600}
   body.ancho .rj-num{gap:8px}
+  body.ancho .dia-est svg{width:18px;height:18px}
   body.ancho .rj-n{font-size:13px}
   body.ancho .rj-h span{font-size:12px}
   body.ancho .rj.sem .rj-ev{font-size:13px;padding:3px 6px;border-radius:7px;border-left-width:3px}
@@ -1934,7 +1944,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.17';
+const VERSION = 'v5.18';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3986,10 +3996,55 @@ function mesPeq(m0, conSem){
   }
   return `<div class="mm ${conSem ? 'gc-mini' : ''} ${conSem && !cs ? 'sin-sem' : ''}">${g}</div>`;
 }
+/* 5.18 (Gustavo): a la izquierda del número del día, un iconito de estadística; al tocarlo se despliega «cómo va el día»
+   con los números de Grow Panel de ese día. Lo que no sale de los datos se apunta por día al hacerlo: tareas borradas sin hacer,
+   cambiadas de hora y cambiadas de día (`D.diaLog[k] = {borr, hora, dia}` con los ids; viaja por la nube, unión). */
+const icoEst = w => svgT('<path d="M4 20h16M7.5 16.5v-4M12 16.5v-9M16.5 16.5v-6"/>', w);
+const diaEstBtn = k => `<u class="dia-est" role="button" tabindex="0" title="Cómo va el día" aria-label="Cómo va el día" onclick="verDiaEst(event,'${k}',this)">${icoEst(14)}</u>`;
+function apuntarDia(tipo, k, id){
+  if(!k || !id) return false;
+  const L = D.diaLog = D.diaLog || {}, d = L[k] = L[k] || {}, l = d[tipo] = d[tipo] || [];
+  if(l.includes(id)) return false;
+  l.push(id);
+  const ks = Object.keys(L).sort(); if(ks.length > 60) ks.slice(0, ks.length - 60).forEach(x => delete L[x]);
+  return true;
+}
+function quitarApunte(tipo, k, id){ const l = ((D.diaLog || {})[k] || {})[tipo]; if(l){ const i = l.indexOf(id); if(i >= 0) l.splice(i, 1); } }
+const idsApunte = (tipo, k) => ((D.diaLog || {})[k] || {})[tipo] || [];
+/* una tarea (no hábito) que cambia: de día (cuenta en el día de antes) o de hora (en su día); devuelve lo apuntado, para Deshacer */
+function apuntarCambio(e, ant, k){
+  if(!ant || !e || e.tipo === 'habito') return null;
+  const d = k || ant.dia;
+  if(ant.dia !== e.dia && !repite(e)) return apuntarDia('dia', d, e.id) ? ['dia', d] : null;
+  if(ant.ini !== e.ini || !!ant.todo !== !!e.todo) return apuntarDia('hora', d, e.id) ? ['hora', d] : null;
+  return null;
+}
+function comoVaDia(k){
+  const r = resumenDia(k), habs = eventosDe(k).filter(e => e.tipo === 'habito');
+  const movidas = new Set([...idsApunte('dia', k), ...AG_().eventos.filter(e => e.tipo !== 'habito' && (e.aplazadaDe || []).includes(k)).map(e => e.id)]);
+  return [['Tareas pendientes', Math.max(0, r.tareas_total - r.tareas_hechas)], ['Tareas hechas', r.tareas_hechas],
+    ['Hábitos pendientes', habs.filter(e => !hechoEv(e, k)).length], ['Hábitos hechos', habitosHechos(k)],
+    ['Tareas borradas sin hacer', idsApunte('borr', k).length], ['Tareas cambiadas de hora', idsApunte('hora', k).length], ['Tareas cambiadas de día', movidas.size]];
+}
+function verDiaEst(ev, k, el){
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+  const v = $('#dia-est'); if(v){ v.remove(); if(v.dataset.k === k) return; }
+  const d = fechaDe(k), p = document.createElement('div');
+  p.id = 'dia-est'; p.className = 'dia-est-pop'; p.dataset.k = k;
+  p.innerHTML = `<p class="de-tit">${icoEst(18)}Cómo va ${k === hoyK() ? 'hoy' : 'el ' + DIAS_LARGO[diaSem(k)] + ' ' + d.getDate()}</p>`
+    + comoVaDia(k).map(([t, n]) => `<div class="de-f${n ? '' : ' cero'}"><span>${t}</span><b>${n}</b></div>`).join('');
+  document.body.appendChild(p);
+  const r = el.getBoundingClientRect();
+  p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, r.left - 4)) + 'px';
+  p.style.top = Math.min(r.bottom + 6, innerHeight - p.offsetHeight - 8) + 'px';
+}
+document.addEventListener('pointerdown', ev => { const p = $('#dia-est'); if(p && !p.contains(ev.target) && !ev.target.closest('.dia-est')) p.remove(); }, true);
+document.addEventListener('keydown', ev => { const p = $('#dia-est'); if(!p) return; if(ev.key === 'Escape') p.remove(); });
+addEventListener('scroll', () => { const p = $('#dia-est'); if(p) p.remove(); }, {passive: true});
 /* 5.00 (Gustavo): a la derecha del número del día, en pequeño, cuántas cosas hay ese día (tareas y hábitos, todo junto; lo que se ve) */
 function numDiaHTML(k){
   const n = evsVer(k).length;
-  return `<i class="rj-num"><span>${fechaDe(k).getDate()}</span><small class="rj-n${n ? '' : ' cero'}" title="${n} ${n === 1 ? 'tarea o hábito' : 'tareas y hábitos'}"><em>(</em>${n}<em> ${n === 1 ? 'tarea' : 'tareas'})</em></small></i>`;
+  return `<i class="rj-num">${diaEstBtn(k)}<span>${fechaDe(k).getDate()}</span><small class="rj-n${n ? '' : ' cero'}" title="${n} ${n === 1 ? 'tarea o hábito' : 'tareas y hábitos'}"><em>(</em>${n}<em> ${n === 1 ? 'tarea' : 'tareas'})</em></small></i>`;
 }
 function vAgenda(){
   if(!agK) agK = hoyK();
@@ -4001,7 +4056,7 @@ function vAgenda(){
   if(agModo === 'dia'){
     tit = fechaLarga(agK) + (agK === hoy ? ' · hoy' : '') + (fPref.cal ? ` · ${calExtra(agK)}` : ''); conHoy = agK === hoy;
     const todo = evsVer(agK).filter(e => e.todo && !(agK === hoy && esFlexible(e)));
-    cuerpo = (todo.length ? `<div class="ag-grupo"><p class="ag-gt">Sin hora</p>${todo.map(e => filaEv(e, agK)).join('')}</div>` : '')
+    cuerpo = `<button type="button" class="de-dia" onclick="verDiaEst(event,'${agK}',this)">${icoEst(16)} Cómo va el día</button>` + (todo.length ? `<div class="ag-grupo"><p class="ag-gt">Sin hora</p>${todo.map(e => filaEv(e, agK)).join('')}</div>` : '')
       + `<p class="peq suave ag-vacio">Toca una hora para añadir algo a esa hora.</p>` + rejillaHTML([agK]);
   } else if(CON_COLS.includes(agModo)){
     const todosD = colsDias(), sinFinde = todosD.filter(k => diaSem(k) < 5), dias = verFinde() || !sinFinde.length ? todosD : sinFinde;
@@ -4214,9 +4269,10 @@ function rjSoltar(cancelar){
   if(cancelar || (a.nIni === a.ini && a.nFin === a.fin && kN === a.k)){ rerenderDia(); return; }
   const e = a.e, antes = {ini: e.ini, fin: e.fin, dia: e.dia};
   e.ini = a.nIni; e.fin = a.nFin; if(kN !== a.k && !repite(e)) e.dia = kN; e.mod = ahoraISO();
+  const ap = apuntarCambio(e, Object.assign({todo: e.todo}, antes), a.k);
   guardar(); rerenderDia();
   const t = a.estirar ? `«${e.t}» ahora es de ${hm(e.ini)} a ${hm(e.fin)}` : `«${e.t}» movida a ${kN !== a.k ? fechaLarga(kN) + ', ' : ''}${hm(e.ini)} – ${hm(e.fin)}`;
-  avisoDeshacer(t, () => { Object.assign(e, antes, {mod: ahoraISO()}); guardar(); rerenderDia(); }, 5000);
+  avisoDeshacer(t, () => { Object.assign(e, antes, {mod: ahoraISO()}); if(ap) quitarApunte(ap[0], ap[1], e.id); guardar(); rerenderDia(); }, 5000);
 }
 document.addEventListener('pointerup', () => rjSoltar(false));
 document.addEventListener('pointercancel', () => rjSoltar(true));
@@ -4841,10 +4897,11 @@ function popMover(id, k, a){
   else if(x !== e) delete x.aplazadaDe;
   x.dia = destino; x.mod = ahoraISO();
   if(a === 'flex'){ x.todo = true; x.ini = null; x.fin = null; }
+  const ap = e.tipo === 'habito' ? null : destino !== k ? (apuntarDia('dia', k, e.id) && ['dia', k]) : (a === 'flex' && apuntarDia('hora', k, e.id) && ['hora', k]);
   guardar(); popCerrarTodo(); rerenderDia();
   const t = x.t.length > 28 ? x.t.slice(0, 27) + '…' : x.t;
   avisoDeshacer(a === 'manana' ? `«${t}» pasa a mañana` : `«${t}» pasa a tareas flexibles${destino === hoy ? ' de hoy' : ''}`,
-    () => { A.eventos.splice(0, A.eventos.length, ...JSON.parse(antes)); guardar(); rerenderDia(); }, 5000);
+    () => { A.eventos.splice(0, A.eventos.length, ...JSON.parse(antes)); if(ap) quitarApunte(ap[0], ap[1], e.id); guardar(); rerenderDia(); }, 5000);
 }
 /* 5.07 (Gustavo): en la tarjeta, sin pasar por el lápiz, se cambian ahí mismo el día (abre el calendario), la hora de empezar y la de
    terminar (lista de 15 en 15 min), el recordatorio y la prioridad. El día solo en lo que no se repite; en los hábitos, solo las horas. */
@@ -4902,7 +4959,7 @@ function popEncajar(){ const p = $('#ev-pop'); if(!p) return; const h = p.offset
 const durTxtMin = d => d < 60 ? `${d} min` : `${Math.floor(d / 60)} h${d % 60 ? ' ' + (d % 60) + ' min' : ''}`;
 function popSet(id, k, campo, v){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
-  let nk = k, seguir = null;
+  let nk = k, seguir = null; const ant = {dia: e.dia, ini: e.ini, todo: e.todo};
   if(campo === 'dia'){ if(!v || v === k || repite(e)) return; e.dia = v; nk = v; }
   else if(campo === 'ini'){ const d = e.fin != null && e.ini != null && e.fin > e.ini ? e.fin - e.ini : 60; e.ini = v; e.fin = Math.min(v + d, 1439); }
   else if(campo === 'fin'){ if(v <= e.ini) return; e.fin = e.tipo === 'habito' ? Math.min(v, e.ini + 120) : v; }
@@ -4912,6 +4969,7 @@ function popSet(id, k, campo, v){
     else { const S = new Set(e.avisos || []); S.has(v) ? S.delete(v) : S.add(v); e.avisos = [...S].sort((a, b) => a - b); }
     seguir = 'rec';
   }
+  if(campo === 'dia' || campo === 'ini') apuntarCambio(e, ant, k);
   e.mod = ahoraISO(); guardar(); rerenderDia();
   const p = $('#ev-pop'), h = document.querySelector('#hoja .ep-en-hoja');
   if(p){ p.innerHTML = popHTML(e, nk, false); if(popInfo){ popInfo.k = nk; popInfo.hover = false; } }
@@ -5454,9 +5512,11 @@ function guardarEvento(){
   let ini = minDeHora(valor('ev-ini')), fin = minDeHora(valor('ev-fin'));
   if(!todo){ if(ini == null){ aviso('Pon la hora de empezar'); return; } if(fin == null || fin <= ini) fin = Math.min(ini + 60, 1439); }
   const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
+  const antE = e ? {dia: e.dia, ini: e.ini, todo: e.todo} : null;
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
     area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, mod: ahoraISO()});
+  apuntarCambio(e, antE, e0.k || (antE && antE.dia));
   guardar(); sonarHecho();
   aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
@@ -6668,6 +6728,9 @@ function fusionar(local, remoto){
   r.nombre = local.nombre || remoto.nombre || '';
   const fl = local.focoDias || {}, fr = remoto.focoDias || {};   // bloques con tareas de cada día: el número más alto
   if(Object.keys(fl).length || Object.keys(fr).length){ r.focoDias = {}; [...new Set([...Object.keys(fl), ...Object.keys(fr)])].forEach(k => r.focoDias[k] = Math.max(fl[k] || 0, fr[k] || 0)); }
+  const dl = local.diaLog || {}, dr = remoto.diaLog || {};   // 5.18: lo apuntado de cada día, unido
+  if(Object.keys(dl).length || Object.keys(dr).length){ r.diaLog = {}; [...new Set([...Object.keys(dl), ...Object.keys(dr)])].sort().slice(-60).forEach(k => { const a = dl[k] || {}, b = dr[k] || {}; r.diaLog[k] = {};
+    ['borr', 'hora', 'dia'].forEach(t => { const u = [...new Set([...(a[t] || []), ...(b[t] || [])])]; if(u.length) r.diaLog[k][t] = u; }); }); }
   const al = local.appAndroid, ar = remoto.appAndroid;
   const cr = [local.calRevisado, remoto.calRevisado].filter(Boolean).sort().pop(); if(cr) r.calRevisado = cr;
   const rl = local.registroDia, rr = remoto.registroDia;
@@ -7848,6 +7911,7 @@ function cerrarToast(){ accionDeshacer = null; clearTimeout(tToast); $('#toast')
 function borrarDelCalendario(id, k, todo){
   const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
   const hab = e.tipo === 'habito', copia = JSON.parse(JSON.stringify(e)), d = fechaDe(k);
+  const ap = !hab && !hechoEv(e, k) && apuntarDia('borr', k, e.id);
   if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas = (D.borradas || []).concat(e.id); }
   else { e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO(); }
   guardar(); rerenderDia();
@@ -7855,6 +7919,7 @@ function borrarDelCalendario(id, k, todo){
     const B = AG_();
     if(todo){ D.borradas = (D.borradas || []).filter(b => b !== copia.id); if(!B.eventos.some(x => x.id === copia.id)) B.eventos.push(Object.assign(copia, {mod: ahoraISO()})); }
     else { const x = B.eventos.find(z => z.id === id); if(x){ x.saltar = (x.saltar || []).filter(z => z !== k); x.mod = ahoraISO(); } }
+    if(ap) quitarApunte('borr', k, id);
     guardar(); rerenderDia(); aviso(hab ? 'Hábito recuperado' : 'Tarea recuperada');
   }, 5000);
 }
