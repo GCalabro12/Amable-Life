@@ -1476,6 +1476,9 @@ html.claro .meta-error{color:#dc2626}
 .dia-est-pop{position:fixed;z-index:60;min-width:250px;padding:10px 14px 8px;border-radius:14px;background:var(--tarjeta);border:1px solid var(--linea);box-shadow:0 12px 32px rgba(0,0,0,.45);color:var(--tinta);text-align:left}
 html.claro .dia-est-pop{box-shadow:0 10px 28px rgba(40,20,90,.22)}
 .de-tit{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-weight:800;font-size:15px}
+.atajos{margin-top:8px}
+.at-f{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--linea);font-size:15px}
+.at-f kbd{font:inherit;font-weight:800;font-size:14px;min-width:34px;text-align:center;padding:2px 9px;border:1.5px solid var(--linea);border-bottom-width:3px;border-radius:7px;white-space:pre}
 .de-blq + .de-blq{margin-top:8px;padding-top:6px;border-top:1px solid var(--linea)}
 .de-bt{margin:2px 0 3px;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--suave)}
 .de-f{display:flex;justify-content:space-between;gap:16px;padding:4px 6px;margin:0 -6px;border-radius:8px;font-size:14px}
@@ -1787,7 +1790,10 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   .gc-pop button{display:flex;justify-content:space-between;align-items:center;gap:20px;width:100%;border:0;background:none;color:var(--tinta);padding:11px 18px;font-size:15px;text-align:left;cursor:pointer}
   .gc-pop button:hover{background:rgba(var(--bl),.08)}
   .gc-pop button.sel{color:var(--oro);font-weight:800}
-  .gc-pop kbd{font:inherit;font-size:12px;color:var(--suave)}
+  .gc-pop kbd{font:inherit;font-size:12px;color:var(--suave);border:1px solid var(--linea);border-radius:5px;padding:1px 6px;cursor:help}
+  [data-atajo]{position:relative}
+  [data-atajo]:hover::after{content:attr(data-atajo);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);z-index:90;width:max-content;max-width:230px;padding:7px 10px;border-radius:8px;background:#111;color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;line-height:1.35;letter-spacing:0;text-transform:none;text-align:left;white-space:normal;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  .gc-pop kbd[data-atajo]:hover::after{left:auto;right:-12px;transform:none}
   .gc-dias{display:flex;align-items:center;gap:4px;padding:2px 12px}
   .gc-pop .gc-dias button{width:auto;padding:8px 10px}
   .gc-pop .gc-dias .gc-dl{flex:1;justify-content:center}
@@ -1968,7 +1974,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.22';
+const VERSION = 'v5.23';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4000,7 +4006,17 @@ const rangoTxt = (a, b) => { const x = fechaDe(a), y = fechaDe(b);
 const gcPref = (() => { try{ return JSON.parse(localStorage.getItem('equilibra.vistaCal') || '{}') || {}; }catch(e){ return {}; } })();
 const verFinde = () => gcPref.finde !== false, verHechas = () => gcPref.verHechas === true;   // 4.71: de entrada, lo hecho no se ve
 /* 5.21 (Gustavo): fuera «7 días»; debajo de Día, una fila «− 2 días +»: de entrada 2 días, y cada + suma uno (hasta 7) */
-const gcVistaB = ([k, x, l]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')"><span>${x}</span><kbd>${l}</kbd></button>`;
+const gcVistaB = ([k, x, l]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')"><span>${x}</span><kbd data-atajo="Atajo de teclado: pulsa solo la tecla ${l} (sin Ctrl) y pasas a la vista ${x}.">${l}</kbd></button>`;
+/* 5.23 (Gustavo): al pasar el ratón por un atajo, una etiqueta negra que dice qué tecla pulsar; y en el menú, «Atajos de teclado» */
+const icoTeclado = () => svgT('<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/>', 24);
+const ATAJOS = [['D', 'Vista Día'], ['W', 'Vista Semana'], ['M', 'Vista Mes'], ['Y', 'Vista Año'], ['A', 'Vista Agenda'], ['T', 'Ir a hoy'], ['C', 'Crear una tarea o un hábito'],
+  ['/', 'Buscar en el calendario'], ['→  o  J', 'Siguiente (día, semana o mes)'], ['←  o  K', 'Anterior'], ['Esc', 'Cerrar la ventana o el desplegable']];
+function abrirAtajos(){
+  hojaAbierta = abrirAtajos;
+  mostrarHoja(`<div class="hoja-plana"><div class="hoja-cab"><h2><span class="aj-tit-ico">${icoTeclado()}</span>Atajos de teclado</h2></div>
+    <p class="peq suave">En el calendario del ordenador. Pulsa <b>solo la tecla</b>, sin Ctrl ni otra tecla, cuando no estés escribiendo en un campo.</p>
+    <div class="atajos">${ATAJOS.map(([k, t]) => `<div class="at-f"><span>${t}</span><kbd>${k}</kbd></div>`).join('')}</div></div>`, '#8b5cf6');
+}
 const gcDiasHTML = () => { const n = agModo === 'rango' ? agN : 2;
   return `<div class="gc-dias ${agModo === 'rango' ? 'sel' : ''}"><button type="button" class="gc-dn" aria-label="Un día menos" title="Un día menos" ${n <= 2 ? 'disabled' : ''} onclick="gcDias(${n - 1}, event)">−</button><button type="button" class="gc-dl" onclick="gcDias(${n}, event)">${n} días</button><button type="button" class="gc-dn" aria-label="Un día más" title="Un día más" ${n >= 7 ? 'disabled' : ''} onclick="gcDias(${n + 1}, event)">+</button></div>`; };
 function gcDias(n, ev){
@@ -4065,21 +4081,24 @@ const idsApunte = (tipo, k) => ((D.diaLog || {})[k] || {})[tipo] || [];
 function apuntarCambio(e, ant, k){
   if(!ant || !e || e.tipo === 'habito') return null;
   const d = k || ant.dia;
-  if(ant.dia !== e.dia && !repite(e)) return apuntarDia('dia', d, e.id) ? ['dia', d] : null;
-  if(ant.ini !== e.ini || !!ant.todo !== !!e.todo) return apuntarDia('hora', d, e.id) ? ['hora', d] : null;
+  if(ant.dia !== e.dia && !repite(e)) return apuntarDia('dia', d, e.id, e.t) ? ['dia', d] : null;
+  if(ant.ini !== e.ini || !!ant.todo !== !!e.todo) return apuntarDia('hora', d, e.id, e.t) ? ['hora', d] : null;
   return null;
 }
 /* 5.20 (Gustavo): en dos bloques, Tareas y Hábitos, sin repetir la palabra; cada fila lleva los nombres (las mismas cuentas que Grow Panel) */
+/* 5.23 (Gustavo): «Hábitos de Amable Meta: …» con los hábitos de verdad (sus metas sencillas o, si no hay, la meta con guía) */
+const nomHabDia = e => { const l = e.metaReg ? ((e.metaHabitos || []).length ? e.metaHabitos : e.metaTexto ? [e.metaTexto] : []) : []; return l.length ? `${e.t}: ${l.join(' · ')}` : e.t; };
 function comoVaDia(k){
   const dia = (B_().days || {})[k] || {}, pend = [], hech = D.acciones.filter(a => a.hecha && a.hechaEn && claveDia(a.hechaEn) === k).map(a => a.t);
   Object.keys(dia).forEach(i => (dia[i] || []).forEach(a => { if(!a) return; if(!hechaAct(a)) pend.push(a.t); else if(!a.acc) hech.push(a.t); }));
   eventosDe(k).filter(e => e.tipo !== 'habito' && !flexMovida(e, k) && !(e.acc && !repite(e) && D.acciones.some(a => a.id === e.acc)))
     .forEach(e => (hechoEv(e, k) ? hech : pend).push(e.t));
-  const L = (D.diaLog || {})[k] || {}, nom = id => { const e = AG_().eventos.find(x => x.id === id); return e ? e.t : (L.t || {})[id] || 'Tarea borrada'; };
+  const L = (D.diaLog || {})[k] || {}, nom = id => { const e = AG_().eventos.find(x => x.id === id); if(e) return e.t;
+    const g = Object.values(D.diaLog || {}).map(x => (x.t || {})[id]).find(Boolean); return (L.t || {})[id] || g || 'Sin nombre (se borró antes de que la app guardara los nombres)'; };
   const movidas = [...new Set([...idsApunte('dia', k), ...AG_().eventos.filter(e => e.tipo !== 'habito' && (e.aplazadaDe || []).includes(k)).map(e => e.id)])];
   const habs = eventosDe(k).filter(e => e.tipo === 'habito');
   return [{t: 'Tareas', f: [['Pendientes', pend], ['Hechas', hech], ['Borradas sin hacer', idsApunte('borr', k).map(nom)], ['Cambiadas de hora', idsApunte('hora', k).map(nom)], ['Cambiadas de día', movidas.map(nom)]]},
-    {t: 'Hábitos', f: [['Pendientes', habs.filter(e => !hechoEv(e, k)).map(e => e.t)], ['Hechos', AG_().eventos.filter(e => e.tipo === 'habito' && (e.hechos || []).includes(k)).map(e => e.t)]]}];
+    {t: 'Hábitos', f: [['Pendientes', habs.filter(e => !hechoEv(e, k)).map(nomHabDia)], ['Hechos', AG_().eventos.filter(e => e.tipo === 'habito' && (e.hechos || []).includes(k)).map(nomHabDia)]]}];
 }
 function verDiaEst(ev, k, el){
   if(ev){ ev.stopPropagation(); ev.preventDefault(); }
@@ -4419,12 +4438,12 @@ function gcTop(){
   const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año', agenda: 'Agenda', '7dias': '7 días', '3dias': '3 días', rango: `${agN} días`, semanas: `${agW} semanas`}[agModo];
   return `<div class="gc-top">
     <div class="gc-marca"><svg viewBox="-100 -100 200 200" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1G')}</svg><b>Amable Life</b><span class="gc-ver"></span></div>
-    <button class="gc-hoy" onclick="agHoy()" title="Ir a hoy (T)">Hoy</button>
-    <button class="gc-ico" aria-label="Anterior" title="Anterior" onclick="agMover(-1)">${ICO_IZQ}</button>
-    <button class="gc-ico" aria-label="Siguiente" title="Siguiente" onclick="agMover(1)">${ICO_DER}</button>
+    <button class="gc-hoy" onclick="agHoy()" data-atajo="Ir a hoy · Atajo de teclado: pulsa solo la tecla T (sin Ctrl)">Hoy</button>
+    <button class="gc-ico" aria-label="Anterior" data-atajo="Anterior · Atajo de teclado: la flecha ← (o la tecla K)" onclick="agMover(-1)">${ICO_IZQ}</button>
+    <button class="gc-ico" aria-label="Siguiente" data-atajo="Siguiente · Atajo de teclado: la flecha → (o la tecla J)" onclick="agMover(1)">${ICO_DER}</button>
     <h1 class="gc-tit">${t}</h1>${fPref.numSem && ['dia', 'semana', '7dias', '3dias', 'rango'].includes(agModo) ? `<span class="gc-chip">Semana ${semanaISO(agK)}</span>` : ''}
     <span class="gc-hueco"></span>
-    <button class="gc-ico" aria-label="Buscar" title="Buscar (/)" onclick="gcBuscar()">${ICO_LUPA}</button>
+    <button class="gc-ico" aria-label="Buscar" data-atajo="Buscar · Atajo de teclado: pulsa solo la tecla / (sin Ctrl)" onclick="gcBuscar()">${ICO_LUPA}</button>
     <button class="gc-ico" aria-label="${temaClaro() ? 'Modo noche' : 'Modo día'}" title="${temaClaro() ? 'Modo noche' : 'Modo día'}" onclick="ponerTema(temaClaro() ? 'oscuro' : 'claro')">${temaClaro() ? ICO_LUNA : ICO_SOL}</button>
     <button class="gc-ico" aria-label="Ajustes" title="Ajustes" onclick="ir('ajustes')">${ICO_RUEDA}</button>
     <div class="gc-vista-w"><button class="gc-vista" aria-haspopup="true" onclick="gcPop('gc-vistas', event)">${nom}${ICO_BAJA}</button>
@@ -4440,7 +4459,7 @@ function gcLado(){
   const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
   const h = +new Intl.DateTimeFormat('es-ES', Object.assign({hour: '2-digit', hour12: false}, fPref.zona ? {timeZone: fPref.zona} : {})).format(new Date()).slice(0, 2);
   return `<aside class="gc-lado">${menuSeccionesHTML('gc-secc')}
-    <button class="gc-crear" onclick="nuevoEvento()" title="Crear (C)">${ICO_MAS}Crear</button>
+    <button class="gc-crear" onclick="nuevoEvento()" data-atajo="Crear · Atajo de teclado: pulsa solo la tecla C (sin Ctrl)">${ICO_MAS}Crear</button>
     <div><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
       ${mesPeq(m0, true)}</div>
@@ -4974,7 +4993,7 @@ function popMover(id, k, a){
   else if(x !== e) delete x.aplazadaDe;
   x.dia = destino; x.mod = ahoraISO();
   if(a === 'flex'){ x.todo = true; x.ini = null; x.fin = null; }
-  const ap = e.tipo === 'habito' ? null : destino !== k ? (apuntarDia('dia', k, e.id) && ['dia', k]) : (a === 'flex' && apuntarDia('hora', k, e.id) && ['hora', k]);
+  const ap = e.tipo === 'habito' ? null : destino !== k ? (apuntarDia('dia', k, e.id, e.t) && ['dia', k]) : (a === 'flex' && apuntarDia('hora', k, e.id, e.t) && ['hora', k]);
   guardar(); popCerrarTodo(); rerenderDia();
   const t = x.t.length > 28 ? x.t.slice(0, 27) + '…' : x.t;
   avisoDeshacer(a === 'manana' ? `«${t}» pasa a mañana` : `«${t}» pasa a tareas flexibles${destino === hoy ? ' de hoy' : ''}`,
@@ -5268,6 +5287,7 @@ function menuExtraHTML(fila){
     + fila(ICO_PREMIUM, 'Suscripción', "cerrarMenu(); abrirSeccion('premium')")
     + fila(svgT('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>', 24), `Actualizaciones${nueva ? ' <span class="aj-nueva">nueva</span>' : ''}`, "cerrarMenu(); abrirSeccion('versiones')")
     + fila(ICO_CAL_AJ, 'Importar y exportar', "cerrarMenu(); abrirSeccion('calendario')")
+    + (ESCRITORIO.matches ? fila(icoTeclado(), 'Atajos de teclado', 'cerrarMenu(); abrirAtajos()') : '')
     + fila(svgT('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3"/><circle cx="12" cy="16.8" r=".7" fill="currentColor"/>', 24), 'Cómo funciona la app', "cerrarMenu(); abrirSeccion('ayuda')");
 }
 function menuHTML(){
@@ -7991,6 +8011,7 @@ function borrarDelCalendario(id, k, todo){
   const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
   const hab = e.tipo === 'habito', copia = JSON.parse(JSON.stringify(e)), d = fechaDe(k);
   const ap = !hab && !hechoEv(e, k) && apuntarDia('borr', k, e.id, e.t);
+  if(todo) Object.values(D.diaLog || {}).forEach(x => { if(['borr', 'hora', 'dia'].some(t => (x[t] || []).includes(e.id))){ x.t = x.t || {}; x.t[e.id] = e.t; } });
   if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas = (D.borradas || []).concat(e.id); }
   else { e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO(); }
   guardar(); rerenderDia();
