@@ -1480,7 +1480,7 @@ html.claro .dia-est-pop{box-shadow:0 10px 28px rgba(40,20,90,.22)}
 .at-f{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--linea);font-size:15px}
 .at-f kbd{font:inherit;font-weight:800;font-size:14px;min-width:34px;text-align:center;padding:2px 9px;border:1.5px solid var(--linea);border-bottom-width:3px;border-radius:7px;white-space:pre}
 .de-blq + .de-blq{margin-top:8px;padding-top:6px;border-top:1px solid var(--linea)}
-.de-bt{margin:2px 0 3px;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--suave)}
+.de-bt{margin:2px 0 3px;font-size:15px;font-weight:800;color:var(--tinta)}
 .de-f{display:flex;justify-content:space-between;gap:16px;padding:4px 6px;margin:0 -6px;border-radius:8px;font-size:14px}
 .de-f.con-l{cursor:pointer}
 .de-f.con-l:hover,.de-f.act{background:rgba(var(--bl),.09)}
@@ -1974,7 +1974,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.23';
+const VERSION = 'v5.24';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4097,7 +4097,7 @@ function comoVaDia(k){
     const g = Object.values(D.diaLog || {}).map(x => (x.t || {})[id]).find(Boolean); return (L.t || {})[id] || g || 'Sin nombre (se borró antes de que la app guardara los nombres)'; };
   const movidas = [...new Set([...idsApunte('dia', k), ...AG_().eventos.filter(e => e.tipo !== 'habito' && (e.aplazadaDe || []).includes(k)).map(e => e.id)])];
   const habs = eventosDe(k).filter(e => e.tipo === 'habito');
-  return [{t: 'Tareas', f: [['Pendientes', pend], ['Hechas', hech], ['Borradas sin hacer', idsApunte('borr', k).map(nom)], ['Cambiadas de hora', idsApunte('hora', k).map(nom)], ['Cambiadas de día', movidas.map(nom)]]},
+  return [{t: 'Tareas', f: [['Pendientes', pend], ['Hechas', hech], ['Cambiadas de hora', idsApunte('hora', k).map(nom)], ['Cambiadas de día', movidas.map(nom)], ['Borradas sin hacer', idsApunte('borr', k).map(nom)]]},
     {t: 'Hábitos', f: [['Pendientes', habs.filter(e => !hechoEv(e, k)).map(nomHabDia)], ['Hechos', AG_().eventos.filter(e => e.tipo === 'habito' && (e.hechos || []).includes(k)).map(nomHabDia)]]}];
 }
 function verDiaEst(ev, k, el){
