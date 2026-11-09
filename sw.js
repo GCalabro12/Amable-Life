@@ -1,10 +1,11 @@
 /* Amable Life (antes Equilibra): service worker. Subir CACHE con cada versión (igual que VERSION en index.html). */
-const CACHE = 'equilibra-v5.28';
+const CACHE = 'equilibra-v5.29';
 const BASE = ['./', 'index.html', 'manifest.json', 'img/icono-life-192.png',
   'img/salud.jpg', 'img/pareja.jpg', 'img/familia.jpg', 'img/trabajo.jpg',
   'img/crecimiento.jpg', 'img/ocio.jpg', 'img/proposito.jpg', 'img/hogar.jpg', 'sonido/inicio.mp3'];
 
-self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting())); });
+// 5.29: la copia sin conexión se baja del servidor (cache:'reload'), nunca de la caché del navegador
+self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE.map(u => new Request(u, {cache: 'reload'})))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
   // solo sus propias cachés viejas (las de otras apps de gcalabro12.github.io no se tocan)
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('equilibra-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -14,14 +15,12 @@ self.addEventListener('fetch', e => {
   // solo lo de Amable Life: el botón de Grow Panel y las otras apps de gcalabro12.github.io van siempre a la red
   if(!url.pathname.startsWith('/Amable-Life/')) return;   // 4.17: antes /Equilibra/
   if(e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.endsWith('.apk') || url.searchParams.has('v')) return;
-  // La página, primero de la red (para recibir versiones nuevas); las imágenes, primero de la caché
-  if(e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/')){
-    // sin caché del navegador (GitHub Pages deja guardada la página 10 minutos)
-    e.respondWith(fetch(e.request.url, {cache: 'no-cache', credentials: 'same-origin'}).then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put(e.request, c)); return r; })
-      .catch(() => caches.open(CACHE).then(k => k.match(e.request).then(r => r || k.match('index.html')))));
-  }else{
-    e.respondWith(caches.open(CACHE).then(k => k.match(e.request)).then(r => r || fetch(e.request)));   // solo su propia caché, no las de otras apps
-  }
+  // 5.29 (receta de Amable Sleep): todo primero de la red, preguntando al servidor (GitHub Pages guarda 10 minutos); sin red, la copia guardada
+  // (solo de su propia caché, no las de otras apps). Antes las imágenes iban primero de la caché.
+  const nav = e.request.mode === 'navigate';
+  e.respondWith(fetch(new Request(e.request.url, {cache: 'no-cache', credentials: 'same-origin'}))
+    .then(r => { if(r.ok){ const c = r.clone(); caches.open(CACHE).then(k => k.put(e.request, c)); } return r; })
+    .catch(() => caches.open(CACHE).then(k => k.match(e.request, {ignoreSearch: true}).then(r => r || (nav ? k.match('index.html') : Response.error())))));
 });
 // al tocar un aviso de Amable Life: se abre (o se trae delante) la pestaña de la app
 // 5.17: los botones de la alarma (Enterado, Posponer 5 min) se mandan a la app abierta sin traerla delante
