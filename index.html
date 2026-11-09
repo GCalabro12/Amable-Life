@@ -112,6 +112,9 @@ a.btn{text-decoration:none;box-sizing:border-box}
 .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 11px;font-size:13px;font-weight:700;
   background:color-mix(in srgb,var(--c) 18%,transparent);color:color-mix(in srgb,var(--c) 55%,#fff);border:1.5px solid transparent}
 button.chip.sel{border-color:var(--c);background:color-mix(in srgb,var(--c) 32%,transparent);color:#fff}
+/* 5.43 (Gustavo: «demasiado colorincha»): en las ventanas (nueva tarea, editar tarea…), los títulos y el texto de los botones en negro (el color del texto) */
+.hoja .chip,.hoja button.chip.sel{color:var(--tinta)}
+.hoja .eti{color:var(--tinta)!important}
 
 /* Acción */
 .accion{border-left:5px solid var(--c,var(--acento))}
@@ -1049,6 +1052,7 @@ html:not(.claro) .pa-obj{color:#4ade80!important}
 .prio-em{position:absolute;right:1px;bottom:0;font-style:normal;font-size:12px;line-height:1}
 .ep-opc .prio-em{position:static;font-size:13px;margin-left:-4px}
 .prio-solo{font-style:normal;font-size:15px;line-height:1;display:inline-block;min-width:16px;text-align:center}
+.prio-solo.est{filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 0 .6px #fff)}   /* 5.43: la estrella con reborde blanco, que se vea sobre fondos claros */
 .ev-prio .prio-solo{font-size:21px}
 .ctx-prio .prio-solo{font-size:17px}
 .prio-i{margin-left:auto;display:inline-flex;color:var(--suave);padding:2px;border-radius:50%;cursor:pointer}
@@ -2031,7 +2035,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.42';
+const VERSION = 'v5.43';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4018,8 +4022,8 @@ const prioVal = e => marcaDe(e && e.t) || (e && e.prio) || 0;
 const prioTxt = e => { const m = marcaDe(e.t); return m ? (m === 'rana' ? 'Prioridad alta (tarea rana)' : 'Prioridad alta (tarea estrella)') : e.prio ? 'Prioridad ' + prioDe(e).t.toLowerCase() : 'Sin prioridad'; };
 const marcaCls = e => { const m = e && e.tipo !== 'habito' && marcaDe(e.t); return m ? ' ev-' + m : ''; };
 const rangoPrio = e => ({rana: 5, estrella: 4})[marcaDe(e.t)] || e.prio || 0;
-const prioBtnHTML = o => o.e ? `<i class="prio-solo">${o.e}</i>` : ICO_BANDERA(o.c);
-const prioIcoEv = e => { const m = marcaDe(e.t); return m ? `<i class="prio-solo">${m === 'rana' ? '🐸' : '⭐'}</i>` : ICO_BANDERA(prioDe(e).c); };
+const prioBtnHTML = o => o.e ? `<i class="prio-solo${o.v === 'estrella' ? ' est' : ''}">${o.e}</i>` : ICO_BANDERA(o.c);
+const prioIcoEv = e => { const m = marcaDe(e.t); return m ? `<i class="prio-solo${m === 'estrella' ? ' est' : ''}">${m === 'rana' ? '🐸' : '⭐'}</i>` : ICO_BANDERA(prioDe(e).c); };
 function aplicarPrio(e, v){
   v = /^\d$/.test(String(v)) ? +v : v;
   if(v === 'rana' || v === 'estrella'){ e.prio = 3; e.t = ponMarca(e.t, v); avisoMarca(e, v); }
