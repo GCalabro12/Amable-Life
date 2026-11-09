@@ -1788,6 +1788,12 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   .gc-pop button:hover{background:rgba(var(--bl),.08)}
   .gc-pop button.sel{color:var(--oro);font-weight:800}
   .gc-pop kbd{font:inherit;font-size:12px;color:var(--suave)}
+  .gc-dias{display:flex;align-items:center;gap:4px;padding:2px 12px}
+  .gc-pop .gc-dias button{width:auto;padding:8px 10px}
+  .gc-pop .gc-dias .gc-dl{flex:1;justify-content:center}
+  .gc-pop .gc-dias .gc-dn{width:32px;height:32px;flex:none;padding:0;justify-content:center;border-radius:50%;border:1.5px solid var(--linea);font-size:19px;font-weight:700;line-height:1}
+  .gc-pop .gc-dias .gc-dn:disabled{opacity:.3;cursor:default;background:none}
+  .gc-dias.sel .gc-dl{color:var(--oro);font-weight:800}
   .gc-crear{align-self:flex-start;display:flex;align-items:center;gap:12px;height:56px;padding:0 26px 0 16px;border-radius:16px;border:0;background:#2e2458;color:var(--tinta);font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer;margin-top:2px}
   .gc-crear:hover{background:#372b69}
   .gc-mini-cab{display:flex;align-items:center;gap:2px;padding-left:8px;margin-bottom:4px}
@@ -1960,7 +1966,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.20';
+const VERSION = 'v5.21';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3991,6 +3997,16 @@ const rangoTxt = (a, b) => { const x = fechaDe(a), y = fechaDe(b);
 /* Mostrar fines de semana y tareas completadas (como en Google Calendar): se guarda en este aparato */
 const gcPref = (() => { try{ return JSON.parse(localStorage.getItem('equilibra.vistaCal') || '{}') || {}; }catch(e){ return {}; } })();
 const verFinde = () => gcPref.finde !== false, verHechas = () => gcPref.verHechas === true;   // 4.71: de entrada, lo hecho no se ve
+/* 5.21 (Gustavo): fuera «7 días»; debajo de Día, una fila «− 2 días +»: de entrada 2 días, y cada + suma uno (hasta 7) */
+const gcVistaB = ([k, x, l]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')"><span>${x}</span><kbd>${l}</kbd></button>`;
+const gcDiasHTML = () => { const n = agModo === 'rango' ? agN : 2;
+  return `<div class="gc-dias ${agModo === 'rango' ? 'sel' : ''}"><button type="button" class="gc-dn" aria-label="Un día menos" title="Un día menos" ${n <= 2 ? 'disabled' : ''} onclick="gcDias(${n - 1}, event)">−</button><button type="button" class="gc-dl" onclick="gcDias(${n}, event)">${n} días</button><button type="button" class="gc-dn" aria-label="Un día más" title="Un día más" ${n >= 7 ? 'disabled' : ''} onclick="gcDias(${n + 1}, event)">+</button></div>`; };
+function gcDias(n, ev){
+  if(ev) ev.stopPropagation();
+  const masMenos = !!(ev && ev.currentTarget && ev.currentTarget.classList && ev.currentTarget.classList.contains('gc-dn'));
+  agN = Math.max(2, Math.min(7, n)); agModo = 'rango'; render();
+  if(masMenos) gcPop('gc-vistas'); else agVerAhora();   // con − y + el desplegable se queda abierto
+}
 function gcCambiarHechas(){ gcPref.verHechas = !verHechas(); try{ localStorage.setItem('equilibra.vistaCal', JSON.stringify(gcPref)); }catch(e){} render(); gcPop('gc-vistas'); }
 /* La vista del calendario se recuerda (Gustavo): la última que usaste; si no hay ninguna guardada, Semana */
 const MODOS_CAL = ['dia', 'semana', 'mes', 'anio', 'agenda', '7dias', '3dias', 'rango', 'semanas'];
@@ -4410,7 +4426,7 @@ function gcTop(){
     <button class="gc-ico" aria-label="${temaClaro() ? 'Modo noche' : 'Modo día'}" title="${temaClaro() ? 'Modo noche' : 'Modo día'}" onclick="ponerTema(temaClaro() ? 'oscuro' : 'claro')">${temaClaro() ? ICO_LUNA : ICO_SOL}</button>
     <button class="gc-ico" aria-label="Ajustes" title="Ajustes" onclick="ir('ajustes')">${ICO_RUEDA}</button>
     <div class="gc-vista-w"><button class="gc-vista" aria-haspopup="true" onclick="gcPop('gc-vistas', event)">${nom}${ICO_BAJA}</button>
-      <div class="gc-pop der" id="gc-vistas" hidden>${[['dia', 'Día', 'D'], ['semana', 'Semana', 'W'], ['mes', 'Mes', 'M'], ['anio', 'Año', 'Y'], ['agenda', 'Agenda', 'A'], ['7dias', '7 días', 'X']].map(([k, x, l]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')"><span>${x}</span><kbd>${l}</kbd></button>`).join('')}
+      <div class="gc-pop der" id="gc-vistas" hidden>${gcVistaB(['dia', 'Día', 'D'])}${gcDiasHTML()}${[['semana', 'Semana', 'W'], ['mes', 'Mes', 'M'], ['anio', 'Año', 'Y'], ['agenda', 'Agenda', 'A']].map(gcVistaB).join('')}
         <hr class="gc-sep">
         <button class="gc-op" onclick="event.stopPropagation(); gcCambiar('finde')"><span class="gc-chk">${verFinde() ? ICO_CHECK : ''}</span>Mostrar fines de semana</button>
         <button class="gc-op" onclick="event.stopPropagation(); gcCambiarHechas()"><span class="gc-chk">${verHechas() ? ICO_CHECK : ''}</span>Mostrar tareas completadas</button></div></div>
@@ -4496,7 +4512,7 @@ document.addEventListener('keydown', e => {
   if(e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
   const k = e.key.toLowerCase();
   if(k === 'd') agVer('dia'); else if(k === 'w') agVer('semana'); else if(k === 'm') agVer('mes');
-  else if(k === 'y') agVer('anio'); else if(k === 'a') agVer('agenda'); else if(k === 'x') agVer('7dias');
+  else if(k === 'y') agVer('anio'); else if(k === 'a') agVer('agenda');
   else if(k === 't') agHoy(); else if(k === 'c') nuevoEvento();
   else if(k === 'j' || k === 'n' || e.key === 'ArrowRight') agMover(1);
   else if(k === 'k' || k === 'p' || e.key === 'ArrowLeft') agMover(-1);
