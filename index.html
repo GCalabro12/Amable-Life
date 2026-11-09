@@ -1024,6 +1024,8 @@ html:not(.claro) .pa-obj{color:#4ade80!important}
 .ep-t-ed:hover{background:rgba(var(--bl),.12)}
 .ep-t-ed[contenteditable=true]{background:rgba(var(--bl),.1);outline:2px solid var(--oro);outline-offset:1px}
 .ep-ed{border:0;background:none;padding:1px 4px;margin:-1px -2px;border-radius:6px;color:inherit;font:inherit;cursor:pointer;text-align:left}
+.ep-dias{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 4px}
+.ep-opc .ep-dias button.op{min-width:38px;justify-content:center;border:1px solid var(--linea)}
 .ep-ed:hover{background:rgba(var(--bl),.1);text-decoration:underline dotted}
 .ep-cuando{position:relative}
 .ep-dia-in{position:absolute;left:0;bottom:0;opacity:0;width:1px;height:1px;border:0;padding:0;pointer-events:none}
@@ -1976,7 +1978,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.26';
+const VERSION = 'v5.27';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3951,7 +3953,9 @@ const minDeHora = v => { const r = /^(\d{1,2}):(\d{2})/.exec(v || ''); return r 
 const fechaLarga = k => { const d = fechaDe(k); return `${DIAS_SEM[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}`; };
 const repite = e => e.tipo === 'habito' || (e.rep && e.rep !== 'no');
 function tocaEv(e, k){
-  if(!e || k < e.dia || (e.saltar || []).includes(k)) return false;
+  if(!e || (e.saltar || []).includes(k)) return false;
+  if((e.extra || []).includes(k)) return true;   // 5.27: un día de un hábito pasado a otro día, solo esa vez
+  if(k < e.dia) return false;
   if(e.tipo === 'habito'){
     const f = e.frec || 'diario';
     if(f === 'intervalo') return Math.round((fechaDe(k) - fechaDe(e.dia)) / 864e5) % Math.max(2, e.cada || 2) === 0;
@@ -4966,7 +4970,7 @@ function popHTML(e, k, enHoja){
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
-      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p>${rep}</p>` : ''}${objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
+      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p>${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
     <div class="ep-bots">${objDe(e) && !ok ? (objHecho(e, k) ? `<span class="ep-obj-ok">✓ Objetivo ${objPer(objDe(e)) === 'semana' ? 'de la semana' : 'del mes'} cumplido</span>`
@@ -5025,7 +5029,8 @@ function popMover(id, k, a){
    terminar (lista de 15 en 15 min), el recordatorio y la prioridad. El día solo en lo que no se repite; en los hábitos, solo las horas. */
 function popCuandoHTML(e, k, hab){
   const dia = capi(fechaLarga(k)).replace(' ', ', ');
-  const diaH = !hab && !repite(e) ? `<button type="button" class="ep-ed" title="Cambiar el día" onclick="popDiaAbrir(this)">${dia}</button><input type="date" class="ep-dia-in" value="${k}" tabindex="-1" aria-hidden="true" onchange="popSet('${e.id}','${k}','dia',this.value)">` : dia;
+  const diaH = !hab && !repite(e) ? `<button type="button" class="ep-ed" title="Cambiar el día" onclick="popDiaAbrir(this)">${dia}</button><input type="date" class="ep-dia-in" value="${k}" tabindex="-1" aria-hidden="true" onchange="popSet('${e.id}','${k}','dia',this.value)">`
+    : hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Pasar solo este día a otro día" onclick="popDiaAbrir(this)">${dia}</button><input type="date" class="ep-dia-in" value="${k}" tabindex="-1" aria-hidden="true" onchange="popSet('${e.id}','${k}','diaHab',this.value)">` : dia;
   const horaH = e.todo || e.ini == null || e.fin == null ? horaEv(e)
     : `<button type="button" class="ep-ed" title="Cambiar la hora de empezar" onclick="popOpc('ini','${e.id}','${k}')">${hm(e.ini)}</button> – <button type="button" class="ep-ed" title="Cambiar la hora de terminar" onclick="popOpc('fin','${e.id}','${k}')">${hm(e.fin)}</button>`;
   return `${diaH} · ${horaH}`;
@@ -5053,7 +5058,7 @@ function popTitulo(el, id, k){
 function popDiaAbrir(b){ const i = b.nextElementSibling; if(!i) return; try{ i.showPicker(); }catch(x){ i.focus(); i.click(); } }
 function popOpc(cual, id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
-  const box = document.querySelector('.ep #ep-opc-' + (cual === 'ini' || cual === 'fin' ? 'hora' : cual)); if(!box) return;
+  const box = document.querySelector('.ep #ep-opc-' + (['ini', 'fin', 'frec', 'obj'].includes(cual) ? 'hora' : cual)); if(!box) return;
   if(box.dataset.c === cual){ box.innerHTML = ''; box.dataset.c = ''; return; }
   document.querySelectorAll('.ep .ep-opc').forEach(b => { b.innerHTML = ''; b.dataset.c = ''; });
   const op = (sel, fn, html) => `<button type="button" class="op ${sel ? 'sel' : ''}" onclick="${fn}">${html}</button>`;
@@ -5066,6 +5071,18 @@ function popOpc(cual, id, k){
     const L = e.todo ? RECORD_DIA : RECORD_HORA, av = e.avisos || [];
     h = `<p class="ep-opc-t">Recordatorio (puedes elegir varios)</p>${L.map(o => op(av.includes(o.k), `popSet('${id}','${k}','rec',${o.k})`, `<i class="ep-chk">${av.includes(o.k) ? '✓' : ''}</i>${o.t}`)).join('')}
       ${av.length ? op(false, `popSet('${id}','${k}','rec',-1)`, '<i class="ep-chk"></i>Sin recordatorio') : ''}`;
+  } else if(cual === 'frec'){   // 5.27 (Gustavo): la frecuencia del hábito, ahí mismo
+    const f = e.frec || 'diario', dias = e.dias || [];
+    h = `<p class="ep-opc-t">Frecuencia</p><div class="ep-dias">${[['diario', 'Diario'], ['semanal', 'Semanal'], ['intervalo', 'Intervalo']].map(([v, t]) => op(f === v, `popSet('${id}','${k}','frec','${v}')`, t)).join('')}</div>`
+      + (f === 'semanal' ? `<p class="ep-opc-t">Días a la semana, los que tú quieras</p><div class="ep-dias">${[1, 2, 3, 4, 5, 6, 7].map(n => op((e.veces || 3) === n, `popSet('${id}','${k}','veces',${n})`, n)).join('')}</div>`
+        : f === 'intervalo' ? `<p class="ep-opc-t">Cada cuántos días</p><div class="ep-dias">${[2, 3, 4, 5, 6, 7, 10, 14].map(n => op((e.cada || 2) === n, `popSet('${id}','${k}','cada',${n})`, n)).join('')}</div>`
+        : `<p class="ep-opc-t">Qué días</p><div class="ep-dias">${ordenDias().map(d => op(dias.includes(d), `popSet('${id}','${k}','dias',${d})`, DIAS_CORTO[d])).join('')}</div>`);
+  } else if(cual === 'obj'){   // 5.27: el objetivo del hábito, ahí mismo
+    const o = Object.assign({n: 2, u: 'veces', p: 'dia'}, e.obj || {}), cant = !!objDe(e), per = objPer(o);
+    h = `<p class="ep-opc-t">Objetivo</p><div class="ep-dias">${op(!cant, `popSet('${id}','${k}','obj','no')`, 'Hecho o no hecho')}${op(cant, `popSet('${id}','${k}','obj','si')`, 'Una cantidad')}</div>`
+      + (cant ? `<p class="ep-opc-t">Cuántas</p><div class="ep-dias">${[1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30].filter(n => per !== 'dia' || n > 1).map(n => op(o.n === n, `popSet('${id}','${k}','objN',${n})`, n)).join('')}</div>
+        <p class="ep-opc-t">De qué</p><div class="ep-dias">${[...new Set([o.u, ...OBJ_UNID])].map(u => op(o.u === u, `popSet('${id}','${k}','objU','${esc(u).replace(/'/g, '&#39;')}')`, esc(u))).join('')}</div>
+        <p class="ep-opc-t">Cada</p><div class="ep-dias">${Object.keys(OBJ_PER).map(q => op(per === q, `popSet('${id}','${k}','objP','${q}')`, OBJ_PER[q][0])).join('')}</div>` : '');
   } else if(cual === 'prio'){
     h = PRIO_OPC.map(o => op(prioVal(e) === o.v, `popSet('${id}','${k}','prio','${o.v}')`, `${prioBtnHTML(o)} ${o.t}${o.e ? `<span class="prio-i" role="button" title="¿Qué es?" aria-label="¿Qué es?" onclick="event.stopPropagation(); prioInfo(this,'${o.v}')">${ICO_INFO.replace(/width="20" height="20"/, 'width="17" height="17"')}</span>` : ''}`)).join('');   // 5.09 (Gustavo): sin «Sin prioridad»
   }
@@ -5082,6 +5099,20 @@ function popSet(id, k, campo, v){
   else if(campo === 'ini'){ const d = e.fin != null && e.ini != null && e.fin > e.ini ? e.fin - e.ini : 60; e.ini = v; e.fin = Math.min(v + d, 1439); }
   else if(campo === 'fin'){ if(v <= e.ini) return; e.fin = e.tipo === 'habito' ? Math.min(v, e.ini + 120) : v; }
   else if(campo === 'prio') aplicarPrio(e, v);
+  else if(campo === 'diaHab'){   // 5.27: solo este día del hábito pasa a otro día
+    if(!v || v === k) return;
+    e.saltar = [...new Set([...(e.saltar || []), k])].filter(x => x !== v); e.extra = [...new Set([...(e.extra || []).filter(x => x !== k), v])];
+    if((e.hechos || []).includes(k)) e.hechos = [...new Set([...e.hechos.filter(x => x !== k), v])];
+    nk = v;
+  }
+  else if(campo === 'frec'){ e.frec = v; if(v === 'diario' && !(e.dias || []).length) e.dias = [0, 1, 2, 3, 4, 5, 6]; seguir = 'frec'; }
+  else if(campo === 'dias'){ const S = new Set(e.dias || []); S.has(v) ? S.delete(v) : S.add(v); if(!S.size) return; e.dias = [...S].sort(); seguir = 'frec'; }
+  else if(campo === 'veces'){ e.veces = v; seguir = 'frec'; }
+  else if(campo === 'cada'){ e.cada = v; seguir = 'frec'; }
+  else if(campo === 'obj'){ e.obj = v === 'no' ? null : {n: Math.max(2, (e.obj && e.obj.n) || 2), u: (e.obj && e.obj.u) || 'veces', p: (e.obj && e.obj.p) || 'dia'}; seguir = 'obj'; }
+  else if(campo === 'objN'){ e.obj = Object.assign({u: 'veces', p: 'dia'}, e.obj || {}, {n: v}); seguir = 'obj'; }
+  else if(campo === 'objU'){ e.obj = Object.assign({n: 2, p: 'dia'}, e.obj || {}, {u: v}); seguir = 'obj'; }
+  else if(campo === 'objP'){ e.obj = Object.assign({n: 2, u: 'veces'}, e.obj || {}, {p: v}); if(v === 'dia' && e.obj.n < 2) e.obj.n = 2; seguir = 'obj'; }
   else if(campo === 'rec'){
     if(v < 0) e.avisos = [];
     else { const S = new Set(e.avisos || []); S.has(v) ? S.delete(v) : S.add(v); e.avisos = [...S].sort((a, b) => a - b); }
@@ -5095,6 +5126,7 @@ function popSet(id, k, campo, v){
   if(seguir) popOpc(seguir, id, nk);
   popEncajar();
   if(campo === 'dia') aviso('Pasa al ' + fechaLarga(nk));
+  if(campo === 'diaHab') aviso('Solo esta vez: pasa al ' + fechaLarga(nk));
 }
 function popDuplicar(id, k){
   const A = AG_(), e = A.eventos.find(x => x.id === id); if(!e) return;
