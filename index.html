@@ -730,6 +730,10 @@ body:not(.pip) .ahora-blk .compro-link{white-space:nowrap}
 .foco-i{display:inline-grid;place-items:center;vertical-align:middle;width:30px;height:30px;margin-left:6px;padding:0;border:0;border-radius:50%;background:none;color:var(--suave);cursor:pointer}
 .foco-i[aria-expanded="true"]{color:var(--oro);background:rgba(247,195,91,.15)}
 .foco-info{margin:2px 0 10px;padding:10px 12px;border-radius:12px;background:rgba(var(--bl),.05);font-size:14px;line-height:1.4;color:var(--tinta)}
+.foco-info{position:relative;padding-right:40px}
+.foco-info-x{position:absolute;top:4px;right:4px;width:32px;height:32px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:none;color:var(--tinta);cursor:pointer}
+.foco-info-x:hover{background:rgba(var(--bl),.08)}
+.foco-info-x svg{width:18px;height:18px}
 .foco-info ul{margin:6px 0 0;padding-left:18px}
 .foco-info li{margin:4px 0}
 /* 5.46 (Gustavo): la tarea en la que estás, con un reborde punteado que se va moviendo */
@@ -1521,6 +1525,10 @@ html.claro .meta-error{color:#dc2626}
 }
 #dl-dur:not([hidden]){display:grid;grid-template-rows:repeat(7,auto);grid-auto-flow:column;grid-auto-columns:1fr;column-gap:4px;width:min(92%,330px)}
 #dl-dur .desp-op{padding:8px 10px;font-size:14px}
+#dl-dur:not([hidden]){display:flex;flex-direction:column;width:min(78%,300px)}   /* 5.47: una columna, ya son pocas */
+.dur-h{width:46px!important;min-width:0;flex:none;margin:0 2px 0 6px!important;padding:3px 6px!important;border:1.5px solid rgba(var(--bl),.25);border-radius:8px;background:var(--tarjeta);color:var(--tinta);font:inherit;font-size:14px;text-align:center}
+.chip.dur-pers{cursor:text}
+.dur-pers-op{cursor:text}
 #dl-rec{max-height:330px;overflow:auto}
 .rj-ev .bandera{width:11px;height:11px;margin-right:2px;vertical-align:-1px}
 .rj-todo .bandera{width:9px;height:9px;margin-right:2px}
@@ -2047,7 +2055,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.46';
+const VERSION = 'v5.47';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2762,7 +2770,7 @@ function seccionAhora(pip){
      atrás y el aro; «Estoy focus con» y sus tareas; y «Añadir tarea» con una nota. Sin la palabra FOCUS ni «Próxima tarea prioritaria» */
   if(!pip) return `<section class="ahora-blk foco-b foco-b1">
     <h2 class="foco-tit">Trabajo en bloques de tiempo de 1,5 h<button type="button" class="foco-i" aria-label="Ventajas de trabajar en bloques" aria-expanded="${focoInfo}" onclick="focoInfo = !focoInfo; this.setAttribute('aria-expanded', focoInfo); document.getElementById('foco-info').hidden = !focoInfo">${ICO_INFO}</button></h2>
-    <div class="foco-info" id="foco-info" ${focoInfo ? '' : 'hidden'}><b>Ventajas de trabajar en bloques de hora y media</b><ul>${FOCO_VENTAJAS.map(v => `<li>${v}</li>`).join('')}</ul></div>
+    <div class="foco-info" id="foco-info" ${focoInfo ? '' : 'hidden'}><button type="button" class="foco-info-x" aria-label="Cerrar" onclick="focoInfo = false; this.parentNode.hidden = true; const b = document.querySelector('.foco-i'); if(b) b.setAttribute('aria-expanded', 'false')">${ICO_CRUZ}</button><b>Ventajas de trabajar en bloques de hora y media</b><ul>${FOCO_VENTAJAS.map(v => `<li>${v}</li>`).join('')}</ul></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-txt cuenta-txt-arr">min para acabar el bloque</span><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
@@ -4710,7 +4718,7 @@ function despOpciones(id){
   }
   if(id === 'sdur') return ALARMA_DUR.map(d => ({k: d.k, t: d.t, sel: alarmaDur() === d.k}));
   if(id === 'prio') return PRIO_OPC.map(o => ({k: o.v, t: `${prioBtnHTML(o)} ${o.t}${o.e ? `<span class="prio-i" role="button" title="¿Qué es?" aria-label="¿Qué es?" onclick="event.stopPropagation(); prioInfo(this,'${o.v}')">${ICO_INFO.replace(/width="20" height="20"/, 'width="17" height="17"')}</span>` : ''}`, sel: evEd.prio === o.v}));
-  if(id === 'dur') return DURS.filter(m => evEd.tipo !== 'habito' || m <= 120).map(m => ({k: m, t: fmtDur(m), sel: durEv() === m}));   // hábitos: como mucho 2 horas
+  if(id === 'dur') return DUR_FIJAS.map(m => ({k: m, t: fmtDur(m), sel: durEv() === m}));   // 5.47: hasta 1 h 30 min; lo demás, «Personalizado» (hábitos: como mucho 2 horas)
   if(id === 'rep') return opcionesRep().map(o => ({k: o.k, t: o.t, sel: (evEd.rep || 'no') === o.k}));
   if(id === 'rec' && evEd.tipo === 'habito'){
     const hs = []; for(let T = 300; T <= 1380; T += 30) hs.push(T);
@@ -4744,8 +4752,18 @@ function pintarDesp(id){
     if(v) v.innerHTML = despValor(id);
     evResumen(); return;
   }
-  l.innerHTML = despOpciones(id).map(o => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${id}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`).join('');
+  l.innerHTML = despOpciones(id).map(o => `<button type="button" class="desp-op ${o.sel ? 'sel' : ''}" onclick="despElegir('${id}','${o.k}')"><span>${o.t}</span><i>${o.sel ? '✓' : ''}</i></button>`).join('')
+    + (id === 'dur' ? (() => { const d = durEv(), pers = d && !DUR_FIJAS.includes(d);
+      return `<label class="desp-op dur-pers-op ${pers ? 'sel' : ''}"><span>Personalizado <input type="text" inputmode="decimal" class="dur-h" maxlength="4" value="${pers ? horasTxt(d) : ''}" placeholder="2" aria-label="Horas" oninput="durPersEv(this)"> h</span><i>${pers ? '✓' : ''}</i></label>`; })() : '');
   if(v) v.innerHTML = despValor(id);
+  evResumen();
+}
+function durPersEv(inp){
+  let m = leerHoras(inp); if(!m) return;
+  if(evEd.tipo === 'habito' && m > 120){ m = 120; aviso('Los hábitos duran como mucho 2 horas'); }
+  const i = minDeHora(valor('ev-ini')); if(i != null) $('#ev-fin').value = hhmm(Math.min(i + m, 1439));
+  const l = $('#dl-dur'); if(l) l.querySelectorAll('.desp-op').forEach(o => { const si = o === inp.closest('.desp-op'); o.classList.toggle('sel', si); const t = o.querySelector('i'); if(t) t.textContent = si ? '✓' : ''; });
+  const v = $('#dv-dur'); if(v) v.innerHTML = despValor('dur');
   evResumen();
 }
 function despTocar(id){
@@ -5691,7 +5709,24 @@ const fmtDur = m => m < 60 ? `${m} min` : m % 60 ? `${Math.floor(m / 60)} h ${m 
 const durX = x => x && x.dur ? ` <span class="dur-t">${ICO_RELOJ} ${fmtDur(x.dur)}</span>` : '';
 const durAct = a => { const x = a && a.acc && D.acciones.find(z => z.id === a.acc); return durX(x || a); };
 const ICO_RELOJ = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-const chipsDur = (donde, actual) => `<div class="chips" style="justify-content:flex-start;margin:8px 0">${[0, ...DURS].map(m => `<button type="button" class="chip ${m === (actual || 0) ? 'sel' : ''}" style="--c:#8b5cf6" onclick="${donde} = ${m}; this.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === this))">${m ? fmtDur(m) : 'Sin duración'}</button>`).join('')}</div>`;
+/* 5.47 (Gustavo: «demasiadas horas»): duraciones hasta 1 h 30 min y después «Personalizado» con una casilla para las horas
+   (un decimal como mucho: 2 = 2 h, 2,5 = 2 h 30 min). En Nueva / Editar tarea y en el desplegable Duración del calendario */
+const DUR_FIJAS = [15, 30, 45, 60, 90];
+const horasTxt = m => String(Math.round(m / 6) / 10).replace('.', ',');
+function leerHoras(inp){
+  let v = inp.value.replace(/[^\d.,]/g, '').replace('.', ',');
+  const mm = v.match(/^(\d{0,2})(,?)(\d?)/); v = mm ? mm[1] + mm[2] + mm[3] : '';
+  if(v !== inp.value) inp.value = v;
+  const n = parseFloat(v.replace(',', '.')); return n > 0 ? Math.round(n * 60) : 0;
+}
+function durPers(inp, donde){
+  const m = leerHoras(inp); if(!m) return;
+  if(donde === 'durNueva') durNueva = m; else if(edicion) edicion.dur = m;
+  const ch = inp.closest('.chip'); ch.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === ch));
+}
+const chipsDur = (donde, actual) => { const pers = actual && !DUR_FIJAS.includes(actual);
+  return `<div class="chips" style="justify-content:flex-start;margin:8px 0">${[0, ...DUR_FIJAS].map(m => `<button type="button" class="chip ${m === (actual || 0) ? 'sel' : ''}" style="--c:#8b5cf6" onclick="${donde} = ${m}; this.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === this))">${m ? fmtDur(m) : 'Sin duración'}</button>`).join('')}
+    <label class="chip dur-pers ${pers ? 'sel' : ''}" style="--c:#8b5cf6">Personalizado <input type="text" inputmode="decimal" class="dur-h" maxlength="4" value="${pers ? horasTxt(actual) : ''}" placeholder="2" aria-label="Horas" oninput="durPers(this, '${donde}')"> h</label></div>`; };
 const bandAct = a => { const x = a && a.acc && D.acciones.find(z => z.id === a.acc); return bandX(x || a); };
 function evTipo(t){
   evEd.tipo = t; const hab = t === 'habito';
