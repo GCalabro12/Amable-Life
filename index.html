@@ -1552,7 +1552,7 @@ html.claro .meta-error{color:#dc2626}
 .rj-cab button{border:0;background:none;color:var(--tinta);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;font-weight:800}
 .rj-cab button b{font-size:11px;color:var(--suave)}
 .rj-cab button span{font-size:15px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
-.rj-cab button.hoy span{background:var(--oro);color:#2a1d05}
+.rj-cab button.hoy span{background:var(--oro);color:#2a1d05}   /* 5.50: lo cambia la regla de .rj-l1 de más abajo */
 .rj-num{position:relative;display:inline-flex;align-items:center;gap:5px;font-style:normal}
 .rj-n{font-size:11px;font-weight:600;color:var(--suave);line-height:1.1;white-space:nowrap}
 .rj-n em{font-style:normal}
@@ -1580,7 +1580,13 @@ html.claro .dia-est-pop{box-shadow:0 10px 28px rgba(40,20,90,.22)}
 .de-lista li{margin:3px 0;word-break:break-word}
 .de-f b{font-size:15px;min-width:22px;text-align:right}
 .de-f.cero{color:var(--suave)}
-@media (max-width:899px){ .rj-cab.muchas .dia-est{position:absolute;left:-13px;top:1px} .rj-cab.muchas .dia-est svg{width:11px;height:11px} .rj-cab.muchas .rj-n{position:absolute;right:-9px;top:-1px;font-size:10px;font-weight:700} .rj-cab.muchas .rj-n em, .rj-cab.muchas .rj-n.cero{display:none} }
+/* 5.50 (Gustavo): arriba «L 9» y debajo el icono de estadística con «2 tareas»; hoy, «L 9» con borde amarillo y el número del color del botón ＋ */
+.rj-l1{display:inline-flex;align-items:center;gap:4px;font-style:normal;padding:2px 4px;border:2px solid transparent;border-radius:99px}
+.rj-l2{display:inline-flex;align-items:center;gap:4px;font-style:normal;font-size:11px;font-weight:700;color:var(--suave)}
+.rj-l2 .rj-n em{font-style:normal}
+.rj-cab button.hoy .rj-l1{border-color:var(--oro)}
+.rj-cab button.hoy span{background:linear-gradient(135deg,var(--acento),var(--acento2));color:#fff}
+@media (max-width:899px){ .rj-cab.muchas .rj-l1{gap:1px;padding:1px 2px} .rj-cab.muchas .rj-l1 span{width:26px;height:26px;font-size:14px} .rj-cab.muchas .dia-est svg{width:11px;height:11px} .rj-cab.muchas .rj-l2{font-size:10px;gap:2px} .rj-cab.muchas .rj-n em{display:none} }
 .rj-todo{display:grid;grid-template-columns:44px repeat(7,1fr);gap:2px;margin:2px 0 8px}
 .rj-todo em{font-style:normal;font-size:10px;line-height:1.1;color:var(--suave);align-self:center}
 .rj-todo div{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -2063,7 +2069,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.49';
+const VERSION = 'v5.50';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4292,10 +4298,11 @@ addEventListener('scroll', () => { if($('#dia-est')) cerrarDiaEst(); }, {passive
 /* 5.00 (Gustavo): a la derecha del número del día, en pequeño, cuántas cosas hay ese día (tareas y hábitos, todo junto; lo que se ve) */
 function numDiaHTML(k){
   const n = evsVer(k).length;
-  return `<i class="rj-num">${diaEstBtn(k)}<span>${fechaDe(k).getDate()}</span><small class="rj-n${n ? '' : ' cero'}" title="${n} ${n === 1 ? 'tarea o hábito' : 'tareas y hábitos'}"><em>(</em>${n}<em> ${n === 1 ? 'tarea' : 'tareas'})</em></small></i>`;
+  return `<i class="rj-l2">${diaEstBtn(k)}<small class="rj-n${n ? '' : ' cero'}" title="${n} ${n === 1 ? 'tarea o hábito' : 'tareas y hábitos'}">${n}<em> ${n === 1 ? 'tarea' : 'tareas'}</em></small></i>`;   // 5.50: debajo del día
 }
 function vAgenda(){
   if(!agK) agK = hoyK();
+  if(agModo === 'semana' && !ESCRITORIO.matches) agModo = '3dias';   // 5.50 (Gustavo): en pantallas estrechas no hay vista Semana (no cabe); 3 días en su lugar
   if(!metaSyncHecho) setTimeout(metaSync, 1500);
   if(!habOrdenSesion){ habOrdenSesion = true; if(ordenarHabitos()){ guardar(); setTimeout(render, 0); } }
   recordarVista();
@@ -4311,7 +4318,7 @@ function vAgenda(){
     tit = rangoTxt(todosD[0], todosD[todosD.length - 1]);
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !(k === hoy && esFlexible(e))));
-    fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
+    fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')"><i class="rj-l1"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></i>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
     cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div>${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
@@ -4349,7 +4356,7 @@ function vAgenda(){
     cuerpo = `<div class="ag-mes" style="grid-template-columns:repeat(${nCols},minmax(0,1fr))">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
   }
   return gcTop() + gcLado() + `<div class="gc-main">
-    <div class="ag-modos">${[['dia', 'Día'], ['semana', 'Semana'], ['mes', 'Mes']].map(([k, t]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${t}</button>`).join('')}</div>
+    <div class="ag-modos">${[['dia', 'Día'], ...(ESCRITORIO.matches ? [['semana', 'Semana']] : []), ['mes', 'Mes']].map(([k, t]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${t}</button>`).join('')}</div>
     <div class="ag-fijo"><div class="ag-nav"><button class="fn-flecha" onclick="agMover(-1)" aria-label="Anterior">‹</button><b>${tit}</b><button class="fn-flecha" onclick="agMover(1)" aria-label="Siguiente">›</button></div>
 ${fijo}</div>
     ${conHoy ? '' : '<div class="ag-acc"><button class="link" onclick="agHoy()">Volver a hoy</button></div>'}
@@ -5511,7 +5518,7 @@ function menuHTML(){
 function cabVistaHTML(){
   const nom = {dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año', agenda: 'Agenda', '7dias': '7 días', '3dias': '3 días', rango: `${agN} días`, semanas: `${agW} semanas`}[agModo] || 'Vista';
   return `<button type="button" class="cab-vbtn" aria-haspopup="true" onclick="gcPop('cab-vistas', event)">${nom}${ICO_BAJA}</button>
-    <div class="gc-pop cab-pop" id="cab-vistas" hidden>${MENU_VISTAS.map(([k, t, ic]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${ic}<span>${t}</span></button>`).join('')}</div>`;
+    <div class="gc-pop cab-pop" id="cab-vistas" hidden>${MENU_VISTAS.filter(([k]) => k !== 'semana' || ESCRITORIO.matches).map(([k, t, ic]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${ic}<span>${t}</span></button>`).join('')}</div>`;
 }
 function abrirMenu(){
   let m = $('#menu-lat');
@@ -6437,7 +6444,7 @@ function vDia(){
     ${medallaMsgHTML(sinHab)}
     <p class="peq suave flor-frase">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo.</p>
     <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos un hábito en cada área por semana</button>
-    <div class="flor-pie">${botonPausa('tareas')}<button class="btn-hist" onclick="ir('historial')">${svgT('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>', 19)} Ver el historial</button></div>
+    <div class="flor-pie"><button class="btn-hist" onclick="ir('historial')">${svgT('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>', 19)} Ver el historial</button></div>
     </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
 }
 /* 4.51 (Gustavo): en la barra, el bloque de ahora está en el medio; los de antes, a la izquierda, y los de después, a la derecha,
