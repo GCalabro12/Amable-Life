@@ -1984,7 +1984,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.32';
+const VERSION = 'v5.33';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5768,7 +5768,7 @@ function pedirAvisosWeb(forzar){
 function permitirAvisosWeb(){
   try{ localStorage.setItem('equilibra.avisosWeb', 'pedido'); }catch(e){}
   cerrarHoja();
-  try{ Notification.requestPermission().then(p => { aviso(p === 'granted' ? 'Listo: te avisaré en la esquina de la pantalla' : 'No se han activado. Puedes hacerlo cuando quieras en Ajustes → Sonidos y avisos', 4500); if(p === 'granted') notifWeb('Amable Life', 'Así se verán tus recordatorios', 'prueba', true); const y = window.scrollY; render(); window.scrollTo(0, y); }); }catch(e){}
+  try{ Notification.requestPermission().then(p => { aviso(p === 'granted' ? 'Listo: te avisaré en la esquina de la pantalla' : 'No se han activado. Puedes hacerlo cuando quieras en Ajustes → Sonidos y avisos', 4500); if(p === 'granted') notifWeb('Amable Life', 'Así se verán tus recordatorios', 'prueba-' + Date.now(), true); const y = window.scrollY; render(); window.scrollTo(0, y); }); }catch(e){}
 }
 function noAvisosWeb(){ try{ localStorage.setItem('equilibra.avisosWeb', 'no'); }catch(e){} cerrarHoja(); aviso('Vale. Puedes activarlos cuando quieras en Ajustes → Sonidos y avisos', 4000); }
 function hojaAvisosBloqueados(){
@@ -5786,12 +5786,22 @@ function notifWeb(titulo, cuerpo, tag, siempre, extra){
     return true;
   }catch(e){ return false; }
 }
+/* 5.33 (Gustavo: «le clico y no activa nada»): cada prueba con su propia etiqueta (con la misma, Windows cambiaba la
+   anterior sin enseñarla) y, dentro de la app, qué tiene que salir y qué mirar si no sale */
+function probarAvisoWeb(){
+  if(!hayAvisosWeb() || Notification.permission !== 'granted'){ pedirAvisosWeb(true); return; }
+  const ok = notifWeb('Amable Life', 'Así se verán tus recordatorios: aquí, en la esquina de la pantalla', 'prueba-' + Date.now(), true);
+  mostrarHoja(`<div class="hoja-cab"><h2>Aviso de prueba</h2></div>
+    <p>${ok ? 'Te acabo de mandar un aviso a la <b>esquina de abajo a la derecha</b> de la pantalla, como los de tus recordatorios.' : 'No se ha podido mandar el aviso.'}</p>
+    <p class="peq suave">Si no lo ves, lo está tapando Windows: abre <b>Configuración de Windows → Sistema → Notificaciones</b>, quita <b>No molestar</b> y mira que <b>Google Chrome</b> tenga las notificaciones activadas. La alarma con sonido y su ventana salen igualmente.</p>
+    <div class="bots"><button class="btn sec" onclick="cerrarHoja()">Entendido</button></div>`, '#f7c35b');
+}
 function avisosWebHTML(){
   if(!hayAvisosWeb()) return '';
   const p = Notification.permission;
   return `<div class="cta-b"><h4>Avisos en la pantalla del ordenador</h4>
     <p class="peq suave">${p === 'granted' ? 'Activados: aunque estés en otra ventana, suena la alarma y sale el aviso en la esquina; al tocarlo, Amable Life se pone delante.' : p === 'denied' ? 'Bloqueados en este navegador.' : 'Aún no los has activado.'}</p>
-    <div class="bots">${p === 'granted' ? `<button class="btn sec" onclick="notifWeb('Amable Life', 'Así se verán tus recordatorios', 'prueba', true)">Probar un aviso</button>` : `<button class="btn sec" onclick="pedirAvisosWeb(true)">${p === 'denied' ? 'Cómo activarlos' : 'Activar los avisos'}</button>`}</div></div>`;
+    <div class="bots">${p === 'granted' ? `<button class="btn sec" onclick="probarAvisoWeb()">Probar un aviso</button>` : `<button class="btn sec" onclick="pedirAvisosWeb(true)">${p === 'denied' ? 'Cómo activarlos' : 'Activar los avisos'}</button>`}</div></div>`;
 }
 /* Alarma (4.08): pitidos de despertador durante un minuto, aunque la música y los efectos estén apagados (no usa `audio()`),
    y una ventana con Parar, Posponer 5 min y Marcar como hecho. Los pitidos se dejan programados de golpe en el reloj del audio,
