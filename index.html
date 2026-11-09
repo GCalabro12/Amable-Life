@@ -2035,7 +2035,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.43';
+const VERSION = 'v5.44';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2755,7 +2755,7 @@ function seccionAhora(pip){
   </section>
   <section class="ahora-blk foco-b foco-b3">
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : `<p class="peq suave" style="margin:0">Este bloque ya tiene ${MAX_ACT} tareas.</p>`}
-    <p class="peq suave foco-nota">Una tarea que ya tienes en tus pétalos también la puedes traer aquí: en <b>Hábitos</b>, toca su pétalo y, en la tarea, pulsa <b>«→ Al bloque»</b>.</p>
+    <p class="peq suave foco-nota">Cualquier tarea o hábito de tu <b>calendario</b> también lo puedes traer aquí: ábrelo y pulsa <b>«Focus»</b>.</p>
   </section>${hechasBloqueHTML(c)}`;
   return `<section class="ahora-blk" data-drop="ahora">
     <div class="ah-cab"><b class="ah-tit">FOCUS</b><span class="ah-sub">Trabajo en bloques de tiempo de 1,5 horas</span></div>
