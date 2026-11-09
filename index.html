@@ -431,6 +431,7 @@ html.claro .medalla-msg.falta{color:#dc2626}
 .flor-frase{text-align:center;margin:6px 8px 4px}
 .flor-pie{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:14px 0 4px}
 .flor-pie .pausa-fila{margin:0}
+.est-hist{display:flex;justify-content:center;margin:18px 0 6px}
 .btn-hist{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;font-size:15px;font-weight:700;background:transparent;color:var(--tinta);border:1.5px solid rgba(var(--bl),.3);cursor:pointer}
 .btn-hist:hover{border-color:rgba(var(--bl),.55)}
 .btn-definir{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;font-size:17px;line-height:1.25;padding:14px 16px;text-align:center}
@@ -2069,7 +2070,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.50';
+const VERSION = 'v5.51';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6444,7 +6445,7 @@ function vDia(){
     ${medallaMsgHTML(sinHab)}
     <p class="peq suave flor-frase">Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada pétalo.</p>
     <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos un hábito en cada área por semana</button>
-    <div class="flor-pie"><button class="btn-hist" onclick="ir('historial')">${svgT('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>', 19)} Ver el historial</button></div>
+
     </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
 }
 /* 4.51 (Gustavo): en la barra, el bloque de ahora está en el medio; los de antes, a la izquierda, y los de después, a la derecha,
@@ -7721,7 +7722,8 @@ function estTareas(){
   return `<div class="et-fila">${estTile(tot, `tareas completadas ${estP().txt}`, estDelta(tot, totA))}${estPer === 'dia' ? estTile(pend, 'pendientes ahora') : estTile((Math.round(tot / dias.length * 10) / 10).toString().replace('.', ','), 'de media al día')}${estPer === 'dia' ? estTile(D.acciones.filter(a => !a.hecha && claveDia(a.creada) === hoyK()).length, 'tareas nuevas hoy') : estTile(pend, 'pendientes ahora')}</div>
     <div class="ec-grid">${estCard(estTitGraf('Tareas completadas'), estBarras(v, G.map(g => g.l), G.map((g, i) => `${g.tip}: ${v[i]} ${v[i] === 1 ? 'tarea' : 'tareas'}`), EST_COL.tareas, {aria: 'Tareas completadas'}))}
     ${estCard('Completadas por área', filas.length ? estFilasH(filas, EST_COL.tareas) : `<p class="ec-vacio">Aún no has completado tareas ${estP().txt}.</p>`)}
-    ${estCard('Tareas del calendario cumplidas', cal ? `<div class="ec-num"><b>${Math.round(calOk / cal * 100)}%</b><span>${calOk} de ${cal} cumplidas</span></div><div class="eprog"><i style="width:${calOk / cal * 100}%;background:${EST_COL.tareas}"></i></div>` : `<p class="ec-vacio">No tenías tareas en el calendario ${estP().txt}.</p>`)}</div>`;
+    ${estCard('Tareas del calendario cumplidas', cal ? `<div class="ec-num"><b>${Math.round(calOk / cal * 100)}%</b><span>${calOk} de ${cal} cumplidas</span></div><div class="eprog"><i style="width:${calOk / cal * 100}%;background:${EST_COL.tareas}"></i></div>` : `<p class="ec-vacio">No tenías tareas en el calendario ${estP().txt}.</p>`)}</div>
+    <div class="est-hist"><button class="btn-hist" onclick="ir('historial')">${svgT('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>', 19)} Ver historial de tareas</button></div>`;   // 5.51 (Gustavo): antes, debajo de la flor de Tus áreas
 }
 function estFocus(){
   const dias = estDiasPer(), G = estGrupos(), cal = {}; const cd = k => cal[k] || (cal[k] = estCalDia(k));
