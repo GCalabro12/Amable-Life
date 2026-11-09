@@ -726,6 +726,14 @@ body:not(.pip) .ahora-blk .compro-link{white-space:nowrap}
 .ahora-blk.foco-b2 .foco-tit{margin:0}
 .ahora-blk.foco-b3{padding:12px}
 .foco-nota{margin:10px 2px 0}
+/* 5.48 (Gustavo): lo de los bloques de tiempo en marrón; «Estoy focus con» y su reborde en rojo */
+:root{--marron:#8a4b14}
+html:not(.claro){--marron:#d9a06a}
+.ahora-blk.foco-b1 .foco-tit,.foco-b1 .cuenta-txt,.foco-b1 .cuenta-atras{color:var(--marron)}
+.cuenta-hora{margin-bottom:2px}
+.foco-top #av-estado,.foco-top .btn-avisos{color:var(--marron)!important}
+.ahora-blk.foco-b2{border-color:#e0323a}
+.ahora-blk.foco-b2 .foco-tit{color:#dc2626}
 /* 5.46 (Gustavo): la «i» del título de Focus, con las ventajas de trabajar en bloques */
 .foco-i{display:inline-grid;place-items:center;vertical-align:middle;width:30px;height:30px;margin-left:6px;padding:0;border:0;border-radius:50%;background:none;color:var(--suave);cursor:pointer}
 .foco-i[aria-expanded="true"]{color:var(--oro);background:rgba(247,195,91,.15)}
@@ -2055,7 +2063,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.47';
+const VERSION = 'v5.48';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2685,7 +2693,7 @@ function vInicio(){
   const actsAhora = c >= 0 ? actsDe(hoyK(), c) : [];
   const tuNombre = nombrePila();
   let h = `${bannerApp()}
-    <div class="av-fila foco-top">${botonAvisosHTML()}${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
+    <div style="height:14px"></div>
     ${seccionAhora()}
     ${ESCRITORIO.matches ? '' : contratoLado()}`;   // 5.40 (Gustavo): sin «Pétalos con tareas pendientes» (aquí no procede); los avisos de Focus, arriba
   const lado = ESCRITORIO.matches ? contratoLado() : '';
@@ -2772,15 +2780,15 @@ function seccionAhora(pip){
     <h2 class="foco-tit">Trabajo en bloques de tiempo de 1,5 h<button type="button" class="foco-i" aria-label="Ventajas de trabajar en bloques" aria-expanded="${focoInfo}" onclick="focoInfo = !focoInfo; this.setAttribute('aria-expanded', focoInfo); document.getElementById('foco-info').hidden = !focoInfo">${ICO_INFO}</button></h2>
     <div class="foco-info" id="foco-info" ${focoInfo ? '' : 'hidden'}><button type="button" class="foco-info-x" aria-label="Cerrar" onclick="focoInfo = false; this.parentNode.hidden = true; const b = document.querySelector('.foco-i'); if(b) b.setAttribute('aria-expanded', 'false')">${ICO_CRUZ}</button><b>Ventajas de trabajar en bloques de hora y media</b><ul>${FOCO_VENTAJAS.map(v => `<li>${v}</li>`).join('')}</ul></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
-      <div class="cuenta-col"><span class="cuenta-txt cuenta-txt-arr">min para acabar el bloque</span><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span>
+      <div class="cuenta-col"><span class="cuenta-txt cuenta-txt-arr">min para acabar el bloque</span><span class="cuenta-txt cuenta-hora">de ${hm(b.ini)} a ${hm(b.fin)}</span><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
-      <div class="aro-col"><span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span>
-        <span class="aro-blk">bloque <i>${hm(b.ini)} – ${hm(b.fin)}</i></span></div></div>
+      <div class="aro-col"><span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span></div></div>
   </section>
   <section class="ahora-blk foco-b foco-b2" data-drop="ahora">
     <h2 class="foco-tit">Estoy focus con</h2>
     ${pend.length ? `<div class="prox-lista">${lista}</div>` : `<p class="ah-vacio">Todavía no hay ninguna tarea en este bloque: añádela abajo.</p>`}
   </section>
+  <div class="av-fila foco-top">${botonAvisosHTML()}${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
   <section class="ahora-blk foco-b foco-b3">
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : `<p class="peq suave" style="margin:0">Este bloque ya tiene ${MAX_ACT} tareas.</p>`}
     <p class="peq suave foco-nota">Cualquier tarea o hábito de tu <b>calendario</b> también lo puedes traer aquí: ábrelo y pulsa <b>«Focus»</b>.</p>
