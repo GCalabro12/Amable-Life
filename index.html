@@ -726,6 +726,18 @@ body:not(.pip) .ahora-blk .compro-link{white-space:nowrap}
 .ahora-blk.foco-b2 .foco-tit{margin:0}
 .ahora-blk.foco-b3{padding:12px}
 .foco-nota{margin:10px 2px 0}
+/* 5.46 (Gustavo): la «i» del título de Focus, con las ventajas de trabajar en bloques */
+.foco-i{display:inline-grid;place-items:center;vertical-align:middle;width:30px;height:30px;margin-left:6px;padding:0;border:0;border-radius:50%;background:none;color:var(--suave);cursor:pointer}
+.foco-i[aria-expanded="true"]{color:var(--oro);background:rgba(247,195,91,.15)}
+.foco-info{margin:2px 0 10px;padding:10px 12px;border-radius:12px;background:rgba(var(--bl),.05);font-size:14px;line-height:1.4;color:var(--tinta)}
+.foco-info ul{margin:6px 0 0;padding-left:18px}
+.foco-info li{margin:4px 0}
+/* 5.46 (Gustavo): la tarea en la que estás, con un reborde punteado que se va moviendo */
+.prox.foco-g.foco-1{position:relative}
+.foco-hormigas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.foco-hormigas rect{width:calc(100% - 6px);height:calc(100% - 6px);fill:none;stroke:rgba(255,255,255,.9);stroke-width:2.2;stroke-dasharray:9 7;animation:hormigas 1.1s linear infinite}
+@keyframes hormigas{to{stroke-dashoffset:-16}}
+@media (prefers-reduced-motion:reduce){ .foco-hormigas rect{animation:none} }
 .foco-l2,.foco-l3{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .foco-l2{margin-top:4px}
 .foco-l3{margin-top:8px}
@@ -2035,7 +2047,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.45';
+const VERSION = 'v5.46';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2384,6 +2396,13 @@ function render(){
   if(habMarca && vista === 'agenda') habResaltar();
 }
 /* La tarea en la que te enfocas, siempre en un solo renglón: se achica la letra hasta que quepa */
+/* 5.46 (Gustavo): ventajas de trabajar en bloques de hora y media, en la «i» de Focus */
+let focoInfo = false;
+const FOCO_VENTAJAS = [
+  '<b>Sigue tu ritmo natural.</b> La atención va por ciclos de más o menos hora y media; trabajar a ese ritmo cansa menos.',
+  '<b>Te da tiempo a concentrarte de verdad.</b> Meterse a fondo en algo cuesta unos minutos; en hora y media te da para avanzar en lo importante.',
+  '<b>Menos interrupciones y saltos de tarea.</b> Hasta que acabe el bloque solo haces esto; lo demás espera al siguiente.',
+  '<b>Descansos a su hora.</b> Al acabar cada bloque paras, te mueves y bebes agua, y llegas al final del día con más energía.'];
 function ajustarFoco(doc = document){
   if(doc === document){ doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => el.style.fontSize = '');
     doc.querySelectorAll('.foco-b1 .foco-tit').forEach(el => {   // 5.41: el título en un renglón; se achica si no cabe
@@ -2724,7 +2743,7 @@ function seccionAhora(pip){
     /* 5.40 (Gustavo): el nombre a todo lo ancho; debajo el área con editar y quitar a su altura; abajo del todo «Me quiero comprometer» y «✓ Hecha» */
     if(!pip){ const compro = !ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">Me quiero comprometer</button>` : '<span></span>';
       return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} foco-g ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
-      ${ok ? '<span class="asa-hueco"></span>' : ASA}<div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}${durAct(a)}</div>
+      ${grande && !ok ? '<svg class="foco-hormigas" aria-hidden="true"><rect x="3" y="3" rx="11" ry="11"/></svg>' : ''}${ok ? '<span class="asa-hueco"></span>' : ASA}<div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}${durAct(a)}</div>
         <div class="foco-l2"><div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div><div class="foco-ico">${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div></div>
         <div class="foco-l3">${compro}<button type="button" class="foco-hecha" onclick="alternarActAhora(${i})">✓ Hecha</button></div></div></div>`; }
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
@@ -2742,7 +2761,8 @@ function seccionAhora(pip){
   /* 5.40 (Gustavo): tres bloques con borde gris: «Trabajo en bloques de tiempo de 1 hora y media» con el reloj de arena, la cuenta
      atrás y el aro; «Estoy focus con» y sus tareas; y «Añadir tarea» con una nota. Sin la palabra FOCUS ni «Próxima tarea prioritaria» */
   if(!pip) return `<section class="ahora-blk foco-b foco-b1">
-    <h2 class="foco-tit">Trabajo en bloques de tiempo de 1,5 h</h2>
+    <h2 class="foco-tit">Trabajo en bloques de tiempo de 1,5 h<button type="button" class="foco-i" aria-label="Ventajas de trabajar en bloques" aria-expanded="${focoInfo}" onclick="focoInfo = !focoInfo; this.setAttribute('aria-expanded', focoInfo); document.getElementById('foco-info').hidden = !focoInfo">${ICO_INFO}</button></h2>
+    <div class="foco-info" id="foco-info" ${focoInfo ? '' : 'hidden'}><b>Ventajas de trabajar en bloques de hora y media</b><ul>${FOCO_VENTAJAS.map(v => `<li>${v}</li>`).join('')}</ul></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
       <div class="cuenta-col"><span class="cuenta-txt cuenta-txt-arr">min para acabar el bloque</span><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
