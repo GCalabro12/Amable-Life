@@ -2035,7 +2035,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.44';
+const VERSION = 'v5.45';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3443,7 +3443,7 @@ function borrarAccion(id){
 function quitarActividad(k, i, j){
   const a = actsDe(k, i).splice(j, 1)[0]; if(!a) return;
   guardarBloques();
-  avisoDeshacer(a.acc ? 'Tarea quitada del bloque' : 'Tarea eliminada', () => { actsDe(k, i, true).splice(j, 0, a); guardarBloques(); rerenderDia(); });
+  avisoDeshacer(vista === 'inicio' ? 'Tarea eliminada de Focus' : a.acc ? 'Tarea quitada del bloque' : 'Tarea eliminada', () => { actsDe(k, i, true).splice(j, 0, a); guardarBloques(); rerenderDia(); });   // 5.45 (Gustavo): en Focus, que se entienda que solo sale de Focus
 }
 /* Editar: cambiar el nombre o borrar una tarea de tus áreas (id) o una actividad de un bloque (k, i, j) */
 let edicion = null;
