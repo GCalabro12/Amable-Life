@@ -2185,7 +2185,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.67';
+const VERSION = 'v5.68';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6443,9 +6443,26 @@ function tonoA(c, g, t, f, tipo, dur, vol){
   else e.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(e); e.connect(g); o.start(t); o.stop(t + dur + .02);
 }
+/* 5.68 (Gustavo: «suena y no sale ninguna ventana»; la pestaña de Amable Life estaba detrás, entre otras): si la alarma
+   salta con la app escondida (otra pestaña, ventana minimizada), el título de la pestaña parpadea «🔔 Recordatorio» hasta
+   que vuelves a ella, y suena como mucho 1 minuto aunque esté elegido «Hasta que la apague» */
+let tituloAntes = null, tituloT = null;
+function tituloAlarma(on){
+  if(on){
+    if(tituloT) return;
+    tituloAntes = document.title; let i = 0;
+    const nombre = () => ((document.querySelector('#alarma-full h1') || {}).textContent || '').trim();
+    tituloT = setInterval(() => { i++; document.title = i % 2 ? (nombre() ? '🔔 ' + nombre() : '🔔 Amable Life') : '🔔 Recordatorio'; }, 900);
+    document.title = '🔔 Recordatorio';
+  } else if(tituloT){ clearInterval(tituloT); tituloT = null; if(tituloAntes != null) document.title = tituloAntes; tituloAntes = null; }
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden) tituloAlarma(false); });
+addEventListener('focus', () => tituloAlarma(false));
 function sonarAlarma(seg, tipo){
   pararAlarma();
+  const deVerdad = !seg;   // una alarma de verdad (al probar el sonido se pasan los segundos)
   if(!seg) seg = alarmaSeg(alarmaNativa());
+  if(deVerdad && document.hidden && !alarmaNativa()){ seg = Math.min(seg, 60); tituloAlarma(true); }
   try{ if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500, 250, 500]); }catch(e){}
   const grad = alarmaGradual();
   if(grad && seg <= 6) seg = 7;   // al probar, que dé tiempo a oír la subida
@@ -6475,6 +6492,7 @@ function sonarAlarma(seg, tipo){
 }
 function pararAlarma(){
   clearTimeout(alarmaFinT); alarmaFinT = null;
+  if(!document.hidden) tituloAlarma(false);
   if(alarmaApp){ try{ AndroidEquilibra.pararAlarma(); }catch(e){} alarmaApp = false; }
   if(alarmaGain){ try{ alarmaGain.gain.cancelScheduledValues(0); alarmaGain.gain.value = 0; alarmaGain.disconnect(); }catch(e){} alarmaGain = null; }
   try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
