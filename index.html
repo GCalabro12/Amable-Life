@@ -189,7 +189,7 @@ body.v-evaluar header.cab{display:none}
 .ph-lista li.falta{color:var(--suave)}
 .ph-ok{color:var(--c);font-weight:900;margin-left:4px}
 .leyenda-hab .pt-peq{display:inline-block;width:6px;height:10px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#cbbcf5}
-.flor-hab .flor:not(.mini){max-width:440px;width:calc(100% + 24px);margin:6px -12px 4px}
+.flor-plan-hab .flor:not(.mini){max-width:440px;width:calc(100% + 24px);margin:6px -12px 4px}
 .dh-caja{position:relative;margin-top:16px;padding:18px 16px;border-radius:20px;background:color-mix(in srgb,var(--c) 14%,var(--tarjeta));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 45%,transparent)}
 .dh-tipo{display:flex;align-items:center;justify-content:center;gap:6px;margin:0;font-size:13px;font-weight:700;color:var(--suave)}
 .dh-tipo .brote{width:16px;height:16px;color:#22a35a}
@@ -2155,7 +2155,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.64';
+const VERSION = 'v5.65';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3965,7 +3965,7 @@ function vPlanHab(){
       : (h.tengo.length ? h.tengo.map(t => `<li>${ICO_BROTE} ${esc(t)}</li>`).join('') : `<li>${nv ? NIVELES[nv].titulo : 'Sin revisar'}</li>`);
     return `<div class="plan-area" style="--c:${a.color}"><h3>${ico(a)} ${a.nombre} ${nv === 'mas' || !nv ? '' : '<span class="ph-ok">✓</span>'}</h3><ul class="ph-lista">${items}</ul></div>`; }).join('');
   return `<div class="res-tit"><h1>Tu flor de prácticas integrales</h1><p class="suave">Áreas con prácticas integrales: <b>${con} de ${FL.length}</b></p></div>
-    <section class="tarjeta flor-sec flor-hab">${flor(D.niveles, {hab: true, centro: con, centroTxt: con === 1 ? 'área con prácticas' : 'áreas con prácticas'})}${LEYENDA_HAB}</section>
+    <section class="tarjeta flor-sec flor-plan-hab">${flor(D.niveles, {hab: true, centro: con, centroTxt: con === 1 ? 'área con prácticas' : 'áreas con prácticas'})}${LEYENDA_HAB}</section>
     ${nuevas ? `<p class="suave peq" style="text-align:center;margin:0 0 10px">Lo que te falta ya está como tarea en su pétalo, en Tus áreas.</p>` : ''}
     ${filas}
     ${habitosParaDefinir().length ? `<button class="btn prim ancho btn-definir" style="margin-top:18px" onclick="empezarDefHab()">${ICO_CAL} Define cuándo haces o quieres hacer estas prácticas integrales</button>` : ''}
