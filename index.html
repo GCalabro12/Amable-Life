@@ -947,7 +947,7 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
   body.v-dia .dia-cols{grid-template-columns:minmax(250px,1fr) minmax(380px,440px) minmax(0,1.6fr);grid-template-areas:"pan izq der";gap:28px}
   body.v-dia .dia-izq,body.v-dia .dia-pan{position:sticky;top:76px}
   body.v-dia .dia-cols.sin-der{grid-template-columns:minmax(260px,1fr) minmax(380px,520px) minmax(0,.4fr);grid-template-areas:"pan izq ."}
-  body.v-dia .dia-pan{max-height:calc(100vh - 92px);overflow-y:auto;scrollbar-width:thin}
+  body.v-dia .dia-pan{max-height:calc(100vh - 92px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
   .tit-bloques{font-size:40px}
 }
 .ml-secc.cab-secc button{flex-direction:row;gap:6px;padding:6px 10px;font-size:13.5px}
@@ -1190,6 +1190,8 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .rt ul:not(.chk) > li,.rt ol > li{padding-left:18px;margin:2px 0}
 .rt li.li-mov{opacity:.75;background-color:rgba(var(--bl),.08);border-radius:6px}
 body.li-moviendo,body.li-moviendo *{cursor:grabbing!important;user-select:none}
+body.redimensionando,body.redimensionando *{user-select:none}
+body.redimensionando iframe{pointer-events:none}
 .rt ul.chk > li{position:relative;padding-left:42px;margin:3px 0}
 .rt ul.chk > li::before{content:'';position:absolute;left:16px;top:.15em;width:15px;height:15px;border:2px solid currentColor;border-radius:4px;opacity:.65;cursor:pointer;box-sizing:content-box}
 .rt ul.chk > li[data-ok="1"]{text-decoration:line-through;opacity:.6}
@@ -2101,7 +2103,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.58';
+const VERSION = 'v5.59';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3619,8 +3621,10 @@ function mostrarHoja(html, color){
   if(!hoja){ hoja = document.createElement('div'); hoja.id = 'hoja'; hoja.className = 'hoja'; hoja.onclick = e => { if(e.target === hoja && Date.now() - hojaMovidaEn > 400) cerrarHojaX(); }; document.body.appendChild(hoja); }
   const nueva = !hoja.classList.contains('ver');
   const pos = !nueva && hoja.querySelector('.hoja-in') ? hoja.querySelector('.hoja-in').style.transform : '';
+  const hiV = !nueva && hoja.querySelector('.hoja-in'), tam = hiV && hiV.dataset.tam ? hiV.style.cssText : '';   // 5.59: si la estiraste, se queda de ese tamaño
   hoja.innerHTML = `<div class="hoja-in accion" style="--c:${color}"><div class="hoja-asa" title="Arrastra para mover la ventana" onmousedown="hojaArrastrar(event)"><svg viewBox="0 0 24 12" width="26" height="13" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.8"/><circle cx="12" cy="3" r="1.8"/><circle cx="19" cy="3" r="1.8"/><circle cx="5" cy="9" r="1.8"/><circle cx="12" cy="9" r="1.8"/><circle cx="19" cy="9" r="1.8"/></svg></div>${/class="hoja-plana"/.test(html) ? '' : `<button class="hoja-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button>`}${html.replace('<div class="hoja-plana">', `<div class="hoja-plana">${botonMenuHTML("cerrarHoja(); abrirMenu()")}`)}</div>`;
   if(pos) hoja.querySelector('.hoja-in').style.transform = pos;   // si ya la habías movido, se queda donde estaba
+  if(tam){ const hi = hoja.querySelector('.hoja-in'); hi.style.cssText = tam; hi.dataset.tam = '1'; }
   if(nueva) requestAnimationFrame(() => hoja.classList.add('ver'));
 }
 /* Mover la ventana con los seis puntitos (Gustavo): se arrastra a cualquier parte de la pantalla, sin salirse */
@@ -3638,6 +3642,66 @@ function hojaArrastrar(ev){
   const soltar = () => { removeEventListener('mousemove', mover); removeEventListener('mouseup', soltar); h.style.transition = ''; document.body.classList.remove('moviendo'); hojaMovidaEn = Date.now(); };
   addEventListener('mousemove', mover); addEventListener('mouseup', soltar);
 }
+/* 5.59 (Gustavo): estirar las ventanas por los lados y las esquinas, como en Windows (en el ordenador, con el ratón):
+   la tarjeta de una tarea del calendario y las ventanas (crear, editar…). Al acercar el ratón a un borde cambia la flecha. */
+const REDIM_SEL = '#ev-pop, .hoja-in', REDIM_B = 8, REDIM_MINW = 260, REDIM_MINH = 160;
+const REDIM_CUR = {n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize', ne: 'nesw-resize', sw: 'nesw-resize', nw: 'nwse-resize', se: 'nwse-resize'};
+let redimando = false, redimFin = 0;
+function redimBorde(el, x, y){
+  const r = el.getBoundingClientRect(); let b = '';
+  if(y < r.top + REDIM_B) b += 'n'; else if(y > r.bottom - REDIM_B) b += 's';
+  if(x < r.left + REDIM_B) b += 'w'; else if(x > r.right - REDIM_B) b += 'e';
+  return b;
+}
+// la ventana bajo el ratón, contando también sus esquinas redondeadas y 4 px por fuera del borde (la tarjeta va encima de la hoja)
+function redimPuede(ev){
+  if(!ESCRITORIO.matches || !matchMedia('(hover: hover)').matches) return null;
+  const x = ev.clientX, y = ev.clientY;
+  return [document.getElementById('ev-pop'), document.querySelector('#hoja.ver .hoja-in')].find(el => {
+    if(!el) return false; const r = el.getBoundingClientRect();
+    return x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4;
+  }) || null;
+}
+document.addEventListener('mousemove', ev => {
+  if(redimando) return;
+  const el = redimPuede(ev) || null;
+  document.querySelectorAll('[data-redim]').forEach(x => { if(x !== el){ x.style.cursor = ''; delete x.dataset.redim; } });
+  if(!el) return;
+  const b = redimBorde(el, ev.clientX, ev.clientY);
+  if(b){ el.dataset.redim = b; el.style.cursor = REDIM_CUR[b]; } else if(el.dataset.redim){ delete el.dataset.redim; el.style.cursor = ''; }
+});
+// el pointerdown va antes que el mousedown: si cae en un borde, que nadie más lo vea (no cierra la tarjeta ni la hoja)
+document.addEventListener('pointerdown', ev => {
+  if(ev.pointerType !== 'mouse' || ev.button !== 0) return;
+  const el = redimPuede(ev); if(el && redimBorde(el, ev.clientX, ev.clientY)) ev.stopPropagation();
+}, true);
+document.addEventListener('mousedown', ev => {
+  if(ev.button !== 0) return;
+  const el = redimPuede(ev); if(!el) return;
+  const b = redimBorde(el, ev.clientX, ev.clientY); if(!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const r = el.getBoundingClientRect(), sx = ev.clientX, sy = ev.clientY;
+  if(popInfo && el.id === 'ev-pop') popInfo.hover = false;   // la tarjeta que salió con el ratón encima ya no se cierra al salir
+  Object.assign(el.style, {position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px',
+    maxWidth: 'none', maxHeight: 'none', minHeight: '0', margin: '0', transform: 'none', transition: 'none'});
+  el.dataset.tam = '1'; redimando = true; document.body.classList.add('redimensionando'); document.body.style.cursor = REDIM_CUR[b];
+  const mover = e => {
+    const dx = e.clientX - sx, dy = e.clientY - sy; let left = r.left, top = r.top, width = r.width, height = r.height;
+    if(b.includes('e')) width = Math.min(innerWidth - left - 4, Math.max(REDIM_MINW, r.width + dx));
+    if(b.includes('s')) height = Math.min(innerHeight - top - 4, Math.max(REDIM_MINH, r.height + dy));
+    if(b.includes('w')){ left = Math.max(4, Math.min(r.right - REDIM_MINW, r.left + dx)); width = r.right - left; }
+    if(b.includes('n')){ top = Math.max(4, Math.min(r.bottom - REDIM_MINH, r.top + dy)); height = r.bottom - top; }
+    Object.assign(el.style, {left: left + 'px', top: top + 'px', width: width + 'px', height: height + 'px'});
+  };
+  const soltar = () => {
+    removeEventListener('mousemove', mover); removeEventListener('mouseup', soltar);
+    redimando = false; redimFin = hojaMovidaEn = Date.now(); el.style.transition = '';
+    document.body.classList.remove('redimensionando'); document.body.style.cursor = '';
+  };
+  addEventListener('mousemove', mover); addEventListener('mouseup', soltar);
+}, true);
+// al soltar fuera de la ventana, ese clic no la cierra
+addEventListener('click', ev => { if(Date.now() - redimFin < 400){ ev.stopPropagation(); ev.preventDefault(); } }, true);
 function cerrarHoja(){ if(alarmaGain) pararAlarma(); hojaAbierta = null; const h = $('#hoja'); if(h){ h.id = ''; h.classList.remove('ver'); setTimeout(() => h.remove(), 300); } }
 const cerrarPetalo = cerrarHoja;
 /* La cruz (y tocar fuera) cierra cada hoja como su propio botón de salir */
