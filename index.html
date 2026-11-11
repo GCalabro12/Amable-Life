@@ -1131,6 +1131,10 @@ html.claro .ep-tit p.ep-hab{color:#15803d}
 .ep-hecho{margin:4px 0 6px 36px;border:1px solid var(--linea);background:none;color:var(--tinta);border-radius:99px;padding:7px 16px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
 .ep-hecho:hover{background:rgba(var(--bl),.07)}
 .ep-hecho.sel{background:color-mix(in srgb,var(--sube) 20%,transparent);border-color:var(--sube)}
+/* 5.53 (Gustavo): «Marcar como hecho», el botón que más se pulsa en la tarjeta, con reborde y letra verdes */
+.ep-hecho.ep-prin{border:2px solid #16a34a;color:#15803d;padding:6px 15px}
+.ep-hecho.ep-prin:hover{background:rgba(22,163,74,.1)}
+html:not(.claro) .ep-hecho.ep-prin{border-color:#4ade80;color:#4ade80}
 .ep-desc{max-height:200px;overflow:auto;min-width:0;word-break:break-word}
 .ep-conf{margin:6px 0 4px 36px;display:flex;flex-direction:column;gap:8px}
 /* 4.92 (Gustavo): al borrar algo que se repite, solo una ventanita con la pregunta */
@@ -2074,7 +2078,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.52';
+const VERSION = 'v5.53';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5135,7 +5139,7 @@ function popHTML(e, k, enHoja){
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
     <div class="ep-bots">${objDe(e) && !ok ? (objHecho(e, k) ? `<span class="ep-obj-ok">✓ Objetivo ${objPer(objDe(e)) === 'semana' ? 'de la semana' : 'del mes'} cumplido</span>`
-      : `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}${objPer(objDe(e)) === 'dia' ? '' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</button>`) : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : ''}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
+      : `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}${objPer(objDe(e)) === 'dia' ? '' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</button>`) : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : 'ep-prin'}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
       ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
     ${esMeta(e) ? metaTarjetaHTML(e) : ''}
