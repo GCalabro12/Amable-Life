@@ -717,6 +717,12 @@ body:not(.pip) .ahora-blk .compro-link{white-space:nowrap}
 .prox.foco-1:not(.ok) .foco-hecha{border-color:rgba(255,255,255,.85);background:rgba(255,255,255,.16);color:#fff}
 .btn.sec.btn-bloque{padding-top:9px;padding-bottom:9px}
 .ah-vacio{margin:12px 0 0;padding:16px;border-radius:16px;background:rgba(var(--bl),.05);color:var(--suave);text-align:center}
+/* 5.71 (Gustavo): bloque vacío: «Es hora de moverte…», cómo traer una tarea del calendario y «＋ Añadir tarea» solo en letra */
+.ah-vacio2 p{margin:0}
+.ah-vacio2 .ah-mov{margin-bottom:6px;font-size:16px;font-weight:700;color:var(--tinta)}
+.ah-anadir{display:block;margin:12px auto 2px;border:0;background:none;padding:6px 10px;font:inherit;font-size:16px;font-weight:800;color:var(--tinta);cursor:pointer}
+.ah-anadir:hover{text-decoration:underline}
+body.pip .ah-anadir{display:none}
 /* 5.40 (Gustavo): Focus en tres bloques con borde gris; arriba, los avisos de Focus y la ventana flotante */
 .foco-top{margin-top:14px;flex-wrap:wrap}
 /* 5.41 (Gustavo): avisos y «Ventana flotante» en el mismo renglón; si no caben (móvil estrecho), la ventana flotante baja */
@@ -2208,7 +2214,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.70';
+const VERSION = 'v5.71';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2932,13 +2938,11 @@ function seccionAhora(pip){
   </section>
   <section class="ahora-blk foco-b foco-b2" data-drop="ahora">
     <h2 class="foco-tit">Estoy focus con</h2>
-    ${pend.length ? `<div class="prox-lista">${lista}</div>` : `<p class="ah-vacio">Todavía no hay ninguna tarea en este bloque: añádela abajo.</p>`}
+    ${pend.length ? `<div class="prox-lista">${lista}</div>` : `<div class="ah-vacio ah-vacio2"><p class="ah-mov">Es hora de moverte: da una vuelta por la casa o la oficina.</p><p>Puedes traer una tarea del calendario pulsando en ella y luego en <b>«Focus»</b>.</p></div>`}
+    ${acts.length < MAX_ACT ? `<button type="button" class="ah-anadir" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : ''}
   </section>
   <div class="av-fila foco-top">${botonAvisosHTML()}${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
-  <section class="ahora-blk foco-b foco-b3">
-    ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : `<p class="peq suave" style="margin:0">Este bloque ya tiene ${MAX_ACT} tareas.</p>`}
-    <p class="peq suave foco-nota">Cualquier tarea o práctica integral de tu <b>calendario</b> también la puedes traer aquí: ábrelo y pulsa <b>«Focus»</b>.</p>
-  </section>${hechasBloqueHTML(c)}`;
+  ${hechasBloqueHTML(c)}`;   // 5.71 (Gustavo): fuera el recuadro de «Añadir tarea»; ahora es un texto en negrita dentro de «Estoy focus con»
   return `<section class="ahora-blk" data-drop="ahora">
     <div class="ah-cab"><b class="ah-tit">FOCUS</b><span class="ah-sub">Trabajo en bloques de tiempo de 1,5 horas</span></div>
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
