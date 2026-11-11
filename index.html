@@ -2113,7 +2113,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.61';
+const VERSION = 'v5.62';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2136,8 +2136,9 @@ const AREAS = [
    pregunta:'¿Tienes tiempo para disfrutar, jugar y descansar?', ejemplos:['reservar el sábado por la tarde para algo que me guste', 'salir a un sitio nuevo', 'una hora de mi hobby sin pantallas']},
   {id:'proposito', corto:'Propósito',   nombre:'Propósito / Espiritualidad', etiqueta:'Propósito /|Espiritualidad', color:'#14a3a3',
    pregunta:'¿Sientes que tu vida tiene sentido y dirección?', ejemplos:['10 minutos de silencio o meditación cada mañana', 'escribir para qué hago lo que hago', 'ayudar a alguien sin esperar nada']},
-  {id:'hogar', corto:'Entorno',     nombre:'Entorno y hogar', etiqueta:'Entorno|y hogar',         color:'#b0703c',
-   pregunta:'¿Te sientes a gusto donde y cómo vives?', ejemplos:['ordenar el escritorio y dejarlo despejado', 'tirar o regalar 5 cosas que no uso', 'poner una planta o algo bonito en casa']},
+  // 5.62 (Gustavo): «Entorno y hogar» pasa a ser «Sociedad» (el id sigue siendo «hogar», así los datos no cambian)
+  {id:'hogar', corto:'Sociedad',    nombre:'Sociedad',        etiqueta:'Sociedad',                color:'#b0703c',
+   pregunta:'¿Sientes que aportas y participas en la sociedad?', ejemplos:['ayudar a un vecino o a alguien que lo necesite', 'colaborar con una asociación o una causa', 'participar en algo de tu barrio o tu comunidad']},
 ];
 
 const $ = s => document.querySelector(s);
@@ -3829,7 +3830,7 @@ function precargar(i){ const a = areasFlor()[i]; if(a) (new Image()).src = `img/
 /* 4.65 (Gustavo): la pregunta de cada área, en hábitos */
 const REL_HAB = {salud: 'tu cuerpo, tu energía y tu descanso', pareja: 'tu pareja o tu vida sentimental', familia: 'tu familia y tus amigos',
   trabajo: 'tu trabajo y tu dinero', crecimiento: 'tu aprendizaje y tu crecimiento personal', ocio: 'tu ocio y tu disfrute',
-  proposito: 'tu propósito y tu espiritualidad', hogar: 'tu hogar y tu entorno'};
+  proposito: 'tu propósito y tu espiritualidad', hogar: 'lo que aportas a la sociedad y a tu comunidad'};
 const pregHab = a => `¿Cuántas prácticas integrales a la semana haces en relación a ${REL_HAB[a.id] || a.nombre.toLowerCase()}?`;
 function salirRevision(){ clearTimeout(tAvance); E = null; ir('dia'); }
 const ICO_ATRAS = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
@@ -8362,7 +8363,7 @@ function filasCSV(t, sep){
 const ttFecha = v => { v = String(v || '').trim(); if(!v) return null; const d = new Date(v.replace(/([+-]\d{2})(\d{2})$/, '$1:$2')); return isNaN(d) ? null : d; };
 const TT_AREAS = {salud: ['salud', 'health', 'deporte', 'ejercicio', 'gym', 'medico'], pareja: ['pareja', 'partner'], familia: ['familia', 'amigos', 'family', 'friends'],
   trabajo: ['trabajo', 'dinero', 'work', 'oficina', 'negocio', 'clientes', 'finanzas'], crecimiento: ['crecimiento', 'aprender', 'estudio', 'formacion', 'lectura', 'libros', 'study', 'cursos'],
-  ocio: ['ocio', 'disfrute', 'viaje', 'travel', 'hobby', 'diversion'], proposito: ['proposito', 'espiritual', 'meditacion', 'mision'], hogar: ['hogar', 'casa', 'entorno', 'home', 'compras', 'shopping']};
+  ocio: ['ocio', 'disfrute', 'viaje', 'travel', 'hobby', 'diversion'], proposito: ['proposito', 'espiritual', 'meditacion', 'mision'], hogar: ['sociedad', 'comunidad', 'voluntariado', 'social', 'hogar', 'casa', 'entorno', 'home']};
 function ttArea(lista, carpeta){   // si la lista (o la carpeta) se llama como un área de Life, va a esa área
   const n = gcNorm((lista || '') + ' ' + (carpeta || ''));
   const id = Object.keys(TT_AREAS).find(a => TT_AREAS[a].some(w => n.includes(w)));
