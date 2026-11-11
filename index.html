@@ -1305,7 +1305,9 @@ body.redimensionando iframe{pointer-events:none}
 .af-bots{display:flex;flex-direction:column;gap:10px}
 .af-b{border:0;border-radius:16px;padding:16px;font:inherit;font-size:18px;font-weight:800;cursor:pointer;color:#fff}
 /* 5.54 (Gustavo): Enterado en verde (es lo que más se pulsa); «Tarea completada» discreto y solo en las alarmas de 5 min antes o menos */
-.af-ok{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.35)}
+/* 5.69 (Gustavo): con 5 min o menos, lo que se pulsa es «Tarea completada»: va en verde y Enterado pasa a discreto */
+.af-ok{background:#16a34a}
+.af-ent.af-gris{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.35)}
 .af-pos{background:#8b5cf6}
 .af-ent{background:#16a34a}
 .af-ent-txt{margin:-4px 0 4px;font-size:13px;color:#cfc6ec;text-align:center}
@@ -2185,7 +2187,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.68';
+const VERSION = 'v5.69';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6567,7 +6569,7 @@ function hojaAlarma(e, k, txt, ultima, a){
     <h1>${broteEv(e)}${esc(e.t)}</h1>
     <p class="af-cuando">${esc(cuandoTxt(e, k, hoyK()))}</p>
     <div class="af-bots">
-      <button type="button" class="af-b af-ent" onclick="alarmaCerrar()">Enterado</button>
+      <button type="button" class="af-b af-ent${ultima ? ' af-gris' : ''}" onclick="alarmaCerrar()">Enterado</button>
       <p class="af-ent-txt">${esc(entTxt(e, a))}</p>
       <button type="button" class="af-b af-pos" onclick="const l = document.getElementById('af-pos-l'); l.hidden = !l.hidden">Posponer</button>
       <div class="af-pos-l" id="af-pos-l" hidden>${POSPONER_MIN.map(m => `<button type="button" onclick="posponerAlarma('${e.id}','${k}',${m},${ultima ? 1 : 0})">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div>
@@ -6626,7 +6628,7 @@ function alarmaPip(){
     <div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="40" height="40"')}</div>
     <p id="pa-hora" style="margin:2px 0 0;font-size:14px;font-weight:600;opacity:.9">${sonLas()}</p>
     <p class="pa-falta">${esc(x.falta)}</p><h2>${esc(x.t)}</h2><p class="pa-cuando">${esc(x.cuando)}</p>
-    <button type="button" class="af-b af-ent" data-onclick="alarmaCerrar()">Enterado</button>
+    <button type="button" class="af-b af-ent${x.ul ? ' af-gris' : ''}" data-onclick="alarmaCerrar()">Enterado</button>
     <button type="button" class="af-b af-pos" data-onclick="posponerAlarma('${x.id}','${x.k}',5,${x.ul ? 1 : 0})">Posponer 5 min</button>
     ${x.ul ? `<button type="button" class="af-b af-ok" data-onclick="alarmaCompletar('${x.id}','${x.k}')">Tarea completada</button>` : ''}</div>`);
 }
@@ -7100,7 +7102,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.53';   // última app Android publicada
+const APK_ULTIMA = '2.54';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
