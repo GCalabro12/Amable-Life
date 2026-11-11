@@ -1665,6 +1665,20 @@ body.pip .ev-mini{pointer-events:none}
 .girasol .g-centro.drop-ok{fill:rgba(var(--bl),.25);stroke:#fff;stroke-width:5}
 .panel-area{margin:6px 0 12px;padding:12px;border-radius:18px;background:color-mix(in srgb,var(--c) 15%,transparent);animation:entra .25s ease-out both}
 .pa-cab{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.panel-todas{margin:6px 0 12px;animation:entra .25s ease-out both}
+.pt-cab{display:flex;align-items:center;justify-content:space-between;margin:0 4px 8px}
+.pt-cab b{font-size:17px}
+.pt-cab .del{background:none;border:0;color:var(--suave);font-size:18px;cursor:pointer}
+.pt-area{margin:0 0 8px;border-radius:16px;background:color-mix(in srgb,var(--c) 15%,transparent)}
+.pt-area>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer}
+.pt-area>summary::-webkit-details-marker{display:none}
+.pt-area>summary::before{content:'';flex:none;border-style:solid;border-width:6px 0 6px 9px;border-color:transparent transparent transparent currentColor;opacity:.7;transition:transform .15s}
+.pt-area[open]>summary::before{transform:rotate(90deg)}
+.pt-area>summary>span{flex:1;display:flex;flex-direction:column;min-width:0}
+.pt-area>summary b{font-size:15px}
+.pt-area>summary small{font-size:12.5px;color:var(--suave)}
+.pt-cuerpo{padding:0 12px 12px}
+.pt-niv{margin:0 0 4px;font-size:13px;color:var(--suave)}
 .pa-cab>div{flex:1;display:flex;flex-direction:column}
 .pa-cab b{font-size:17px}
 .pa-cab small{font-size:13px;color:var(--suave)}
@@ -2087,7 +2101,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.57';
+const VERSION = 'v5.58';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3423,19 +3437,36 @@ function abrirPanelArea(id, hover){
 }
 function panelArea(){
   if(!panelAbierto) return '';
-  const a = areaDe(panelAbierto), c = destinoBloque() ? 0 : -1, nv = nivel(a.id);
-  const lista = pendientes().filter(x => x.area === a.id), enBloque = idsEnBloquesHoy();
+  if(panelAbierto === '*') return panelTodasHTML();
+  const a = areaDe(panelAbierto), nv = nivel(a.id);
   return `<section class="panel-area" id="panel-area" style="--c:${a.color}">
     <div class="pa-cab">${ico(a, 'g')}<div><b>${a.nombre}</b><small>${nv ? NIVELES[nv].titulo : 'Sin revisar'} · <button class="link" onclick="abrirPetalo('${a.id}')">cambiar</button></small></div>
       <button class="del" aria-label="Cerrar" onclick="panelAbierto = null; const y = scrollY; render(); scrollTo(0, y)">✕</button></div>
-    ${habitosPanelHTML(a)}
+    ${cuerpoArea(a, '')}
+  </section>`;
+}
+/* 5.58 (Gustavo): al clicar el centro de la flor, a la izquierda las 8 áreas plegadas (con triángulo, como Notion);
+   al desplegar una, sus prácticas integrales y sus tareas, igual que al clicar su pétalo. Se recuerda cuáles están abiertas. */
+const panelTodas = new Set();
+function panelTodasHTML(){
+  return `<section class="panel-todas" id="panel-area"><div class="pt-cab"><b>Tus áreas</b>
+      <button class="del" aria-label="Cerrar" onclick="panelAbierto = null; const y = scrollY; render(); scrollTo(0, y)">✕</button></div>
+    ${areasFlor().map(a => { const n = habitosDeArea(a.id), t = pendientes().filter(x => x.area === a.id).length, nv = nivel(a.id);
+      return `<details class="pt-area" style="--c:${a.color}" ${panelTodas.has(a.id) ? 'open' : ''} ontoggle="panelTodas[this.open ? 'add' : 'delete']('${a.id}')">
+        <summary>${ico(a, 'g')}<span><b>${a.nombre}</b><small>${n} ${n === 1 ? 'práctica integral' : 'prácticas integrales'}${t ? ` · ${t} ${t === 1 ? 'tarea' : 'tareas'}` : ''}</small></span></summary>
+        <div class="pt-cuerpo"><p class="pt-niv">${nv ? NIVELES[nv].titulo : 'Sin revisar'} · <button class="link" onclick="abrirPetalo('${a.id}')">cambiar</button></p>${cuerpoArea(a, '-' + a.id)}</div></details>`; }).join('')}
+  </section>`;
+}
+function cuerpoArea(a, suf){
+  const c = destinoBloque() ? 0 : -1;
+  const lista = pendientes().filter(x => x.area === a.id), enBloque = idsEnBloquesHoy(), arg = suf ? `'${a.id}'` : '';
+  return `${habitosPanelHTML(a)}
     ${lista.length ? '<p class="pa-sub">Tareas</p>' : ''}
     ${lista.length ? lista.map(x => enBloque.has(x.id) ? `<div class="sa-fila"><div class="sa-l1"><span class="sa-t">${ICO_TAREA}${bandX(x)}${esc(x.texto)}${durX(x)}</span>${lapiz(`editarTarea('${x.id}')`)}</div>
       <div class="sa-l2">${tagArea(a)}<button class="sa-con" onclick="quitarDeBloques('${x.id}')" title="Toca para quitarla del bloque">✓ Con bloque · quitar</button></div></div>` : filaTarea(x, c >= 0, false)).join('')
       : '<p class="suave" style="margin:6px 0">Este pétalo no tiene tareas pendientes.</p>'}
-    <div class="campo-voz" style="margin-top:10px"><input type="text" id="pa-nueva" maxlength="120" placeholder="Nueva tarea para ${esc(a.corto)}" onkeydown="if(event.key==='Enter')nuevaEnPanel()">${botonMic()}</div>
-    <button class="btn sec ancho" style="margin-top:8px" onclick="nuevaEnPanel()">＋ Añadir al área de ${esc(a.nombre)}</button>
-  </section>`;
+    <div class="campo-voz" style="margin-top:10px"><input type="text" id="pa-nueva${suf}" maxlength="120" placeholder="Nueva tarea para ${esc(a.corto)}" onkeydown="if(event.key==='Enter')nuevaEnPanel(${arg})">${botonMic()}</div>
+    <button class="btn sec ancho" style="margin-top:8px" onclick="nuevaEnPanel(${arg})">＋ Añadir al área de ${esc(a.nombre)}</button>`;
 }
 /* 4.81 (Gustavo): en el panel del pétalo, sus hábitos con la frecuencia y la hora. Los del calendario se tocan para ver su tarjeta;
    los que solo dijiste en «Revisar mi flor» llevan «Definir día y hora» */
@@ -3449,9 +3480,9 @@ function habitosPanelHTML(a){
   return `<p class="pa-sub">Prácticas integrales</p><div class="pa-habs">${ev.map(e => `<button class="pa-hab" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small>${objDe(e) ? `<small class="pa-obj">Objetivo: ${esc(objTxtO(objDe(e)))} · llevas ${objProg(e, hoyK())}${objPer(objDe(e)) === 'dia' ? ' hoy' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</small>` : ''}</span></button>`).join('')}
     ${sueltos.map(t => `<div class="pa-hab suelto">${ICO_BROTE}<span><b>${esc(t)}</b><small>Sin día ni hora · <button class="link" onclick="P = P || {}; empezarDefHab()">Definir día y hora</button></small></span></div>`).join('')}</div>`;
 }
-function nuevaEnPanel(){
-  const t = valor('pa-nueva'); if(!t){ aviso('Escribe la tarea'); return; }
-  nuevaAccion(panelAbierto, t); guardar(); sonarHecho(); aviso('Tarea añadida 🌱');
+function nuevaEnPanel(id){
+  const t = valor(id ? 'pa-nueva-' + id : 'pa-nueva'); if(!t){ aviso('Escribe la tarea'); return; }
+  nuevaAccion(id || panelAbierto, t); guardar(); sonarHecho(); aviso('Tarea añadida 🌱');
   const y = window.scrollY; render(); window.scrollTo(0, y);
 }
 function hacerAccion(id){
@@ -6533,12 +6564,12 @@ function vDia(){
   // debajo de la flor, el botón grande para revisarla y, después, pausar avisos
   return `${unirHTML()}<h1 class="tit-acc tit-bloques">Flor de tus áreas semanales</h1><div class="dia-cols sin-der"><div class="dia-izq">
     <div class="flor-nav">
-      ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0, {medalla: {ok: !sinHab.length, faltan: sinHab.length}})}</div>
+      ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: "abrirPanelArea('*')"}, 0, {medalla: {ok: !sinHab.length, faltan: sinHab.length}})}</div>
     ${medallaMsgHTML(sinHab).replace(/<\/p>$/, `<button type="button" class="mm-i" aria-label="Más información" aria-expanded="false" onclick="const n = document.getElementById('flor-frase'); n.hidden = !n.hidden; this.setAttribute('aria-expanded', !n.hidden)">${ICO_INFO}</button></p>`)}
     <p class="peq suave flor-frase" id="flor-frase" hidden>Para tener una flor equilibrada, ten al menos una práctica integral a la semana en cada área.</p>
     <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos una práctica integral por semana en cada área</button>
 
-    </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Toca un pétalo para ver aquí sus tareas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
+    </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Toca un pétalo para ver aquí sus tareas, o el centro para ver todas tus áreas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
 }
 /* 4.51 (Gustavo): en la barra, el bloque de ahora está en el medio; los de antes, a la izquierda, y los de después, a la derecha,
    cada uno en su puntito. El punto salta de puntito en puntito */
