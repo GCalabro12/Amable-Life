@@ -1026,7 +1026,33 @@ html:not(.claro) .aj-eliminar .aj-sub > summary{color:#f87171}
 #ev-der-hab > .desps{margin:0 0 10px!important}
 .hoja-in:has(.ev-hoja) .ev-hoja:has(#ev-reg:not([hidden])) .rt-ed{min-height:70px}   /* 5.63: con el registro, la descripción más apretada */
 .ev-reg{margin:12px 0 0;padding:12px;border-radius:16px;background:rgba(var(--bl),.04);border:1px solid var(--linea)}
-.reg-cab{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--oro)}
+.reg-cab{display:flex;align-items:center;gap:8px;width:100%;margin:0;padding:0;border:0;background:none;font:inherit;text-align:left;color:var(--oro);cursor:pointer}
+.reg-cab[aria-expanded="true"]{margin-bottom:8px}
+.reg-tri{flex:none;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent var(--suave);transition:transform .15s}
+.reg-cab[aria-expanded="true"] .reg-tri{transform:rotate(90deg)}
+.reg-res{font-size:13px;color:var(--suave);white-space:nowrap}
+.reg-res b{color:var(--tinta)}
+.reg-nav{justify-content:center;margin:0 0 6px}
+.reg-tots{display:flex;justify-content:center;gap:18px;margin:10px 0 4px;font-size:14px;color:var(--suave)}
+.reg-tots b{color:var(--tinta)}
+.reg-por{margin:8px 2px 4px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--suave)}
+.reg-semanas{display:flex;flex-wrap:wrap;gap:6px}
+.reg-sx{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:99px;background:rgba(var(--bl),.06);font-size:13px}
+.reg-sx small{color:var(--suave);font-size:12px}
+.reg-sx b{min-width:14px;text-align:center}
+.reg-sx.act{box-shadow:inset 0 0 0 1.5px var(--oro)}
+.reg-globo{position:fixed;z-index:9800;display:flex;gap:8px;padding:8px;background:#fff;border-radius:14px;box-shadow:0 8px 26px rgba(0,0,0,.25)}
+.reg-globo::after{content:'';position:absolute;left:var(--flecha,50%);width:14px;height:14px;background:#fff;transform:translateX(-50%) rotate(45deg)}
+.reg-globo.arriba::after{bottom:-6px}.reg-globo.abajo::after{top:-6px}
+.reg-globo button{position:relative;z-index:1;width:48px;height:48px;border-radius:50%;border:0;font:inherit;font-weight:800;font-size:19px;color:#fff;cursor:pointer}
+.reg-globo .g-mas{background:#16a34a;font-size:18px}
+.reg-globo .g-no{background:#d9483b}
+.reg-globo .g-com{background:#edebe6;color:#333;font-size:15px}
+.reg-globo.texto{flex-direction:column;gap:6px}
+.reg-globo .g-dia{position:relative;z-index:1;margin:0 2px;font-size:13px;font-weight:700;color:#5b5470}
+.reg-globo .g-nota{position:relative;z-index:1;width:250px;max-width:70vw;min-height:54px;box-sizing:border-box;border:1.5px solid #d9cfb8;border-radius:10px;padding:8px 10px;font:inherit;font-size:15px;color:#2a1f52;background:#fff;resize:vertical}
+.reg-globo .g-txt{width:auto;height:auto;border-radius:10px;padding:10px 14px;background:#f6f3ec;color:#2a1f52;font-size:14.5px;font-weight:700;text-align:left}
+.reg-globo .g-guardar{background:#16a34a;color:#fff}
 .reg-cab b{flex:1;font-size:16px;color:var(--tinta)}
 .reg-nav{display:flex;align-items:center;gap:4px;color:var(--tinta)}
 .reg-nav button{width:30px;height:30px;border-radius:50%;border:0;background:rgba(var(--bl),.08);color:var(--tinta);font:inherit;font-size:18px;line-height:1;cursor:pointer}
@@ -2155,7 +2181,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.65';
+const VERSION = 'v5.66';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3768,7 +3794,7 @@ document.addEventListener('mousedown', ev => {
 }, true);
 // al soltar fuera de la ventana, ese clic no la cierra
 addEventListener('click', ev => { if(Date.now() - redimFin < 400){ ev.stopPropagation(); ev.preventDefault(); } }, true);
-function cerrarHoja(){ if(alarmaGain) pararAlarma(); hojaAbierta = null; const h = $('#hoja'); if(h){ h.id = ''; h.classList.remove('ver'); setTimeout(() => h.remove(), 300); } }
+function cerrarHoja(){ if(typeof regCerrarPop === 'function') regCerrarPop(); if(alarmaGain) pararAlarma(); hojaAbierta = null; const h = $('#hoja'); if(h){ h.id = ''; h.classList.remove('ver'); setTimeout(() => h.remove(), 300); } }
 const cerrarPetalo = cerrarHoja;
 /* La cruz (y tocar fuera) cierra cada hoja como su propio botón de salir */
 function cerrarHojaX(){
@@ -5108,7 +5134,7 @@ function pintarEvento(e){
   $('#ev-t').value = e.t && e.t !== SIN_TITULO ? e.t : ''; tituloEv($('#ev-t'));
   const ds = $('#ev-desc'); if(ds) ds.innerHTML = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
   pintarDesp('dur');   // la duración ya con las horas puestas (y la línea del día)
-  regM = null; regK = null; regCom = false;
+  regM = null; regCerrarPop();
   descLarga(); pintarRegistro();
   if(!evEd.id) setTimeout(() => { const t = $('#ev-t'); if(t && matchMedia('(hover: hover)').matches) t.focus(); }, 120);
 }
@@ -6102,49 +6128,87 @@ function colocarHab(){
 }
 /* Registro (como Amable Meta): un calendario por meses (flechas o deslizar); al tocar un día, «+1» (verde), «✕» (no hecha)
    y las tres rayas para un comentario de ese día. Se guarda al momento en la práctica (hechos, prog, fallos, notas). */
-let regM = null, regK = null, regCom = false, regX = 0;
+let regM = null, regX = 0;
 const regEv = () => evEd && evEd.id && evEd.tipo === 'habito' ? AG_().eventos.find(x => x.id === evEd.id) : null;
 function pintarRegistro(){
   const r = $('#ev-reg'); if(!r) return;
   const e = regEv(); r.hidden = !e; r.innerHTML = e ? regHTML(e) : '';
 }
+/* 5.66 (Gustavo): el Registro se pliega; arriba «Semana: N · Mes: N»; dentro, el mes, «Esta semana / En noviembre» y los registros
+   por semanas. Al tocar un día, un globo encima con «+1», «✕» y «•••» (comentario), igual que Amable Meta. Un registro por día. */
+let regAbierto = true, regPop = null;
 function regHTML(e){
   if(!regM) regM = (evEd.k || hoyK()).slice(0, 7);
-  const [y, m] = regM.split('-').map(Number), d1 = regM + '-01', off = diaSem(d1), nd = new Date(y, m, 0).getDate(), hoy = hoyK();
+  const [y, m] = regM.split('-').map(Number), d1 = regM + '-01', off = diaSem(d1), nd = new Date(y, m, 0).getDate(), hoy = hoyK(), H = e.hechos || [];
   let c = '', tot = 0;
   for(let i = 0; i < off; i++) c += '<span></span>';
   for(let d = 1; d <= nd; d++){
-    const k = regM + '-' + String(d).padStart(2, '0'), ok = (e.hechos || []).includes(k), no = (e.fallos || []).includes(k), pr = (e.prog || {})[k] || 0, nota = !!(e.notas || {})[k];
+    const k = regM + '-' + String(d).padStart(2, '0'), ok = H.includes(k), no = (e.fallos || []).includes(k), pr = (e.prog || {})[k] || 0, nota = !!(e.notas || {})[k];
     if(ok) tot++;
-    const cls = [ok ? 'ok' : no ? 'no' : pr ? 'parc' : '', k === hoy ? 'hoy' : '', k > hoy ? 'fut' : '', !ok && !no && !tocaEv(e, k) ? 'fuera' : '', k === regK ? 'sel' : ''].filter(Boolean).join(' ');
-    c += `<button type="button" class="reg-d ${cls}" ${k > hoy ? 'disabled' : ''} aria-label="${capi(fechaLarga(k))}" onclick="regDia('${k}')">${d}${pr && !ok ? `<small>${pr}</small>` : ''}${nota ? '<i></i>' : ''}</button>`;
+    const cls = [ok ? 'ok' : no ? 'no' : pr ? 'parc' : '', k === hoy ? 'hoy' : '', k > hoy ? 'fut' : '', !ok && !no && !tocaEv(e, k) ? 'fuera' : ''].filter(Boolean).join(' ');
+    c += `<button type="button" class="reg-d ${cls}" ${k > hoy ? 'disabled' : ''} aria-label="${capi(fechaLarga(k))}" onclick="regDia('${k}', this)">${d}${pr && !ok ? `<small>${pr}</small>` : ''}${nota ? '<i></i>' : ''}</button>`;
   }
-  return `<div class="reg-cab">${ICO_CALENDARIO}<b>Registro</b><span class="reg-nav"><button type="button" aria-label="Mes anterior" onclick="regMes(-1)">‹</button><span class="reg-mes">${capi(MESES[m - 1])} ${y}</span><button type="button" aria-label="Mes siguiente" onclick="regMes(1)">›</button></span></div>
+  const lh = lunesDe(hoy), semN = H.filter(d => lunesDe(d) === lh).length, mesHoy = H.filter(d => d.slice(0, 7) === hoy.slice(0, 7)).length;
+  let semanas = '', l = lunesDe(d1); const ult = regM + '-' + String(nd).padStart(2, '0');
+  while(l <= ult){
+    const fin = sumarDias(l, 6), n = H.filter(d => lunesDe(d) === l).length, fl = fechaDe(l), ff = fechaDe(fin);
+    semanas += `<span class="reg-sx${l === lh ? ' act' : ''}"><small>${fl.getDate()}${fl.getMonth() !== ff.getMonth() ? ' ' + MESES[fl.getMonth()].slice(0, 3) : ''} – ${ff.getDate()} ${MESES[ff.getMonth()].slice(0, 3)}</small><b>${n}</b></span>`;
+    l = sumarDias(l, 7);
+  }
+  return `<button type="button" class="reg-cab" aria-expanded="${regAbierto}" onclick="regAbierto = !regAbierto; regCerrarPop(); pintarRegistro()"><i class="reg-tri"></i>${ICO_CALENDARIO}<b>Registro</b><span class="reg-res">Semana: <b>${semN}</b> · Mes: <b>${mesHoy}</b></span></button>
+    ${regAbierto ? `<div class="reg-nav"><button type="button" aria-label="Mes anterior" onclick="regMes(-1)">‹</button><span class="reg-mes">${capi(MESES[m - 1])} ${y}</span><button type="button" aria-label="Mes siguiente" onclick="regMes(1)">›</button></div>
     <div class="reg-sem">${DIAS_CORTO.map(x => `<span>${x}</span>`).join('')}</div>
     <div class="reg-grid" onpointerdown="regX = event.clientX" onpointerup="if(Math.abs(event.clientX - regX) > 50) regMes(event.clientX < regX ? 1 : -1)">${c}</div>
-    <p class="reg-tot">Registros en el mes: <b>${tot}</b></p>
-    ${regK && regK.startsWith(regM) ? regPopHTML(e, regK) : ''}`;
+    <div class="reg-tots"><span>Esta semana: <b>${semN}</b></span><span>En ${MESES[m - 1]}: <b>${tot}</b></span></div>
+    <p class="reg-por">Registros por semana</p><div class="reg-semanas">${semanas}</div>` : ''}`;
 }
-function regPopHTML(e, k){
-  const ok = (e.hechos || []).includes(k), no = (e.fallos || []).includes(k), o = objDe(e), nota = (e.notas || {})[k] || '';
-  const est = ok ? '✓ Hecha' : no ? '✕ No hecha' : o && objProg(e, k) ? `${objProg(e, k)} de ${o.n} ${esc(o.u)}` : 'Sin registrar';
-  return `<div class="reg-pop"><div class="reg-pop-c"><b>${capi(fechaLarga(k))}</b><small>${est}</small></div>
-    <div class="reg-bots"><button type="button" class="reg-mas" onclick="regMas('${k}')">+1</button><button type="button" class="reg-no" aria-label="No hecha" onclick="regNo('${k}')">✕</button><button type="button" class="reg-com ${regCom ? 'on' : ''}" aria-label="Comentario" onclick="regCom = !regCom; pintarRegistro()">${svgT('<path d="M5 7h14M5 12h14M5 17h14"/>', 20)}</button></div>
-    ${regCom ? `<div class="reg-nota"><textarea id="reg-txt" rows="3" maxlength="500" placeholder="Escribe un comentario de este día">${esc(nota)}</textarea><button type="button" class="btn sec" onclick="regNota('${k}')">Guardar comentario</button></div>`
-      : nota ? `<div class="reg-nota"><p>${esc(nota)}</p></div>` : ''}</div>`;
+function regMes(n){ const [y, m] = regM.split('-').map(Number), d = new Date(y, m - 1 + n, 1); regM = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; regCerrarPop(); pintarRegistro(); }
+function regFuera(ev){ if(regPop && !regPop.contains(ev.target)) regCerrarPop(); }
+function regCerrarPop(){
+  if(!regPop) return; regPop.remove(); regPop = null;
+  removeEventListener('scroll', regCerrarPop, true); document.removeEventListener('pointerdown', regFuera, true);
 }
-function regMes(n){ const [y, m] = regM.split('-').map(Number), d = new Date(y, m - 1 + n, 1); regM = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; regK = null; regCom = false; pintarRegistro(); }
-function regDia(k){ regK = regK === k ? null : k; regCom = false; pintarRegistro(); }
+function regDia(k, b){
+  regCerrarPop();
+  const e = regEv(); if(!e || !b) return;
+  const p = document.createElement('div'); p.className = 'reg-globo'; p.setAttribute('role', 'menu');
+  p.innerHTML = `<button type="button" class="g-mas" aria-label="Hecho">+1</button><button type="button" class="g-no" aria-label="No lo hice">✕</button><button type="button" class="g-com" aria-label="Comentario">•••</button>`;
+  document.body.appendChild(p); regPop = p;
+  const colocar = () => {
+    const r = b.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight;
+    const x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)), arriba = r.top - h - 12 > 8;
+    p.classList.toggle('arriba', arriba); p.classList.toggle('abajo', !arriba);
+    p.style.left = x + 'px'; p.style.top = (arriba ? r.top - h - 12 : r.bottom + 12) + 'px';
+    p.style.setProperty('--flecha', Math.max(16, Math.min(w - 16, r.left + r.width / 2 - x)) + 'px');
+  };
+  colocar();
+  p.querySelector('.g-mas').onclick = () => { regCerrarPop(); regMas(k); };
+  p.querySelector('.g-no').onclick = () => { regCerrarPop(); regNo(k); };
+  p.querySelector('.g-com').onclick = () => {
+    const nota = (e.notas || {})[k] || '';
+    p.classList.add('texto');
+    p.innerHTML = `<p class="g-dia">${capi(fechaLarga(k))}</p><textarea class="g-nota" rows="2" maxlength="500" placeholder="Comentario de este día…">${esc(nota)}</textarea><button type="button" class="g-txt g-guardar">Guardar comentario</button><button type="button" class="g-txt g-quitar">Quitar la marca</button>`;
+    colocar();
+    const ta = p.querySelector('.g-nota'); ta.focus();
+    p.querySelector('.g-guardar').onclick = () => { const t = ta.value; regCerrarPop(); regNota(k, t); };
+    p.querySelector('.g-quitar').onclick = () => { regCerrarPop(); regQuitar(k); };
+  };
+  setTimeout(() => { addEventListener('scroll', regCerrarPop, true); document.addEventListener('pointerdown', regFuera, true); }, 0);
+}
 function regGuardar(e){ e.mod = ahoraISO(); guardar(); pintarRegistro(); try{ rerenderDia(); }catch(x){} }
 function regMas(k){
   const e = regEv(); if(!e) return; const o = objDe(e);
   e.fallos = (e.fallos || []).filter(d => d !== k);
-  if(o){
-    if(objHecho(e, k)){ aviso('El objetivo ya está cumplido'); regGuardar(e); return; }
-    e.prog = Object.assign({}, e.prog || {}); e.prog[k] = (e.prog[k] || 0) + 1;
-    if(objProg(e, k) >= o.n && !(e.hechos || []).includes(k)){ e.hechos = [...(e.hechos || []), k]; sonarHecho(); }
-  } else if(!(e.hechos || []).includes(k)){ e.hechos = [...(e.hechos || []), k]; sonarHecho(); }
-  else aviso('Ese día ya está hecho');
+  if(o && objPer(o) !== 'dia'){   // objetivo de la semana o del mes: cada día suma uno (un registro por día)
+    if((e.prog || {})[k]){ aviso('Ese día ya está registrado'); regGuardar(e); return; }
+    e.prog = Object.assign({}, e.prog || {}); e.prog[k] = 1;
+    if(objProg(e, k) >= o.n && !(e.hechos || []).includes(k)) e.hechos = [...(e.hechos || []), k];
+    sonarHecho();
+  } else if(!(e.hechos || []).includes(k)){
+    e.hechos = [...(e.hechos || []), k];
+    if(o){ e.prog = Object.assign({}, e.prog || {}); e.prog[k] = o.n; }
+    sonarHecho();
+  } else aviso('Ese día ya está registrado');
   regGuardar(e);
 }
 function regNo(k){
@@ -6154,10 +6218,16 @@ function regNo(k){
   if(!(e.fallos || []).includes(k)) e.fallos = [...(e.fallos || []), k];
   regGuardar(e);
 }
-function regNota(k){
-  const e = regEv(); if(!e) return; const t = (valor('reg-txt') || '').trim();
+function regQuitar(k){
+  const e = regEv(); if(!e) return;
+  e.hechos = (e.hechos || []).filter(d => d !== k); e.fallos = (e.fallos || []).filter(d => d !== k);
+  if(e.prog && e.prog[k]){ e.prog = Object.assign({}, e.prog); delete e.prog[k]; }
+  aviso('Marca quitada'); regGuardar(e);
+}
+function regNota(k, txt){
+  const e = regEv(); if(!e) return; const t = (txt || '').trim();
   e.notas = Object.assign({}, e.notas || {}); if(t) e.notas[k] = t.slice(0, 500); else delete e.notas[k];
-  regCom = false; aviso(t ? 'Comentario guardado' : 'Comentario quitado'); regGuardar(e);
+  aviso(t ? 'Comentario guardado' : 'Comentario borrado'); regGuardar(e);
 }
 function frecTocar(b){
   const p = $('#frec-panel'), abrir = p.hidden;
