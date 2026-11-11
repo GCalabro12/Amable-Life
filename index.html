@@ -840,6 +840,9 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .pa-hab{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--c) 16%,var(--tarjeta));color:var(--tinta);font:inherit;cursor:pointer}
 .pa-hab .brote{width:18px;height:18px;flex:none;color:#16a34a}
 .pa-hab span{display:flex;flex-direction:column;gap:2px;min-width:0}
+/* 5.60 (Gustavo): lápiz a la derecha de cada práctica integral del panel: abre directamente la ventana de editar */
+.pa-hab > span{flex:1}
+.pa-hab .lapiz{flex:none;margin-left:auto}
 .pa-hab b{font-size:15px;font-weight:700}
 .pa-hab small{font-size:13px;color:var(--suave);font-weight:600}
 .pa-hab.suelto{cursor:default}
@@ -2103,7 +2106,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.59';
+const VERSION = 'v5.60';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3479,7 +3482,7 @@ function habitosPanelHTML(a){
   const frec = e => { const f = e.frec || 'diario';
     if(f === 'diario'){ const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length ? d.map(k => DIAS_L[k]).join(' ') : 'Sin días'; }
     return txtHabito(e); };
-  return `<p class="pa-sub">Prácticas integrales</p><div class="pa-habs">${ev.map(e => `<button class="pa-hab" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small>${objDe(e) ? `<small class="pa-obj">Objetivo: ${esc(objTxtO(objDe(e)))} · llevas ${objProg(e, hoyK())}${objPer(objDe(e)) === 'dia' ? ' hoy' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</small>` : ''}</span></button>`).join('')}
+  return `<p class="pa-sub">Prácticas integrales</p><div class="pa-habs">${ev.map(e => `<div class="pa-hab" role="button" tabindex="0" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small>${objDe(e) ? `<small class="pa-obj">Objetivo: ${esc(objTxtO(objDe(e)))} · llevas ${objProg(e, hoyK())}${objPer(objDe(e)) === 'dia' ? ' hoy' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</small>` : ''}</span>${lapiz(`event.stopPropagation(); editarEvento('${e.id}','${hoyK()}')`)}</div>`).join('')}
     ${sueltos.map(t => `<div class="pa-hab suelto">${ICO_BROTE}<span><b>${esc(t)}</b><small>Sin día ni hora · <button class="link" onclick="P = P || {}; empezarDefHab()">Definir día y hora</button></small></span></div>`).join('')}</div>`;
 }
 function nuevaEnPanel(id){
