@@ -1177,6 +1177,13 @@ body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 .cab-pop button svg{color:var(--suave);width:22px;height:22px;flex:none}
 .cab-pop button.sel{background:color-mix(in srgb,var(--oro) 24%,transparent)}
 .rt ul.chk{list-style:none;padding-left:2px;margin:4px 0}
+/* 5.55 (Gustavo, como Notion): bloque plegable con triangulito; tocar el triángulo lo abre o lo cierra */
+.rt .tgl{margin:2px 0}
+.rt .tgl-t{position:relative;padding-left:24px;min-height:1.4em}
+.rt .tgl-t::before{content:'';position:absolute;left:5px;top:.42em;border-style:solid;border-width:6px 0 6px 9px;border-color:transparent transparent transparent currentColor;opacity:.75;cursor:pointer;transform:rotate(90deg);transition:transform .15s}
+.rt .tgl[data-open="0"] > .tgl-t::before{transform:none}
+.rt .tgl-c{padding-left:24px;min-height:1.4em}
+.rt .tgl[data-open="0"] > .tgl-c{display:none}
 /* 4.69 (Gustavo): seis puntitos a la izquierda de cada línea para subirla o bajarla; los números se reajustan solos */
 .rt li{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='16' viewBox='0 0 10 16'%3E%3Cg fill='%239a90b8'%3E%3Ccircle cx='2.5' cy='3' r='1.6'/%3E%3Ccircle cx='7.5' cy='3' r='1.6'/%3E%3Ccircle cx='2.5' cy='8' r='1.6'/%3E%3Ccircle cx='7.5' cy='8' r='1.6'/%3E%3Ccircle cx='2.5' cy='13' r='1.6'/%3E%3Ccircle cx='7.5' cy='13' r='1.6'/%3E%3C/g%3E%3C/svg%3E") no-repeat 0 .3em;cursor:default}
 .rt ul:not(.chk),.rt ol{padding-left:0;list-style-position:inside;margin:4px 0}
@@ -2080,7 +2087,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.54';
+const VERSION = 'v5.55';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4961,6 +4968,7 @@ function limpiarHTML(h){
       if(!tag){ out.appendChild(limpia(c)); return; }
       const el = document.createElement(tag);
       if(tag === 'ul' && c.classList && c.classList.contains('chk')) el.className = 'chk';
+      if(tag === 'div' && c.classList){ const tc = ['tgl', 'tgl-t', 'tgl-c'].find(x => c.classList.contains(x)); if(tc){ el.className = tc; if(tc === 'tgl') el.dataset.open = c.dataset.open === '0' ? '0' : '1'; } }
       if(tag === 'li' && c.parentElement && c.parentElement.classList.contains('chk')) el.dataset.ok = c.dataset.ok === '1' ? '1' : '0';
       if(tag === 'a'){ const href = c.getAttribute('href') || ''; if(/^(https?:|mailto:)/i.test(href)){ el.setAttribute('href', href); el.target = '_blank'; el.rel = 'noopener noreferrer'; } }
       if(tag === 'span'){
@@ -4975,7 +4983,7 @@ function limpiarHTML(h){
 }
 const rtTexto = () => { const d = $('#ev-desc'); return d ? d.innerText.replace(/\n{3,}/g, '\n\n').trim().slice(0, 2000) : ''; };
 const rtHTML = () => rtTexto() ? limpiarHTML($('#ev-desc').innerHTML).slice(0, 8000) : '';
-function rtVacio(d){ if(!d.innerText.trim() && !d.querySelector('li')) d.innerHTML = ''; rtEstado(); }
+function rtVacio(d){ if(!d.innerText.trim() && !d.querySelector('li, .tgl')) d.innerHTML = ''; rtEstado(); }
 const RT_COLORES = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6'];
 function rtBarra(){
   const b = (c, t, ico) => `<button type="button" data-c="${c}" title="${t}" aria-label="${t}" onmousedown="event.preventDefault()" onclick="rtCmd('${c}')">${ico}</button>`;
@@ -4985,7 +4993,7 @@ function rtBarra(){
     <i class="rt-sep"></i>
     ${b('bold', 'Negrita', '<b>B</b>')}${b('italic', 'Cursiva', '<i>I</i>')}${b('underline', 'Subrayado', '<u>U</u>')}
     <i class="rt-sep"></i>
-    ${b('insertOrderedList', 'Lista numerada', svgT('<path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 4.5h1.5V9M4 9h3M4 14.5a1.5 1.5 0 0 1 3 0c0 1-3 2.3-3 3.6h3" stroke-width="1.5"/>', 18))}${b('insertUnorderedList', 'Lista con puntos', svgT('<path d="M10 6h10M10 12h10M10 18h10"/><circle cx="5" cy="6" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="5" cy="18" r="1.2" fill="currentColor"/>', 18))}${b('checklist', 'Lista con casillas', svgT('<rect x="3" y="4" width="6" height="6" rx="1.3"/><path d="M4.6 7l1.1 1.1 2-2.2" stroke-width="1.6"/><rect x="3" y="14" width="6" height="6" rx="1.3"/><path d="M12 7h9M12 17h9"/>', 18))}
+    ${b('insertOrderedList', 'Lista numerada', svgT('<path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 4.5h1.5V9M4 9h3M4 14.5a1.5 1.5 0 0 1 3 0c0 1-3 2.3-3 3.6h3" stroke-width="1.5"/>', 18))}${b('insertUnorderedList', 'Lista con puntos', svgT('<path d="M10 6h10M10 12h10M10 18h10"/><circle cx="5" cy="6" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="5" cy="18" r="1.2" fill="currentColor"/>', 18))}${b('checklist', 'Lista con casillas', svgT('<rect x="3" y="4" width="6" height="6" rx="1.3"/><path d="M4.6 7l1.1 1.1 2-2.2" stroke-width="1.6"/><rect x="3" y="14" width="6" height="6" rx="1.3"/><path d="M12 7h9M12 17h9"/>', 18))}${b('toggle', 'Bloque plegable (con triángulo para abrir y cerrar)', svgT('<path d="M4 4.5l6 4-6 4z" fill="currentColor" stroke-width="1.2"/><path d="M13 8.5h8M9 15h12M9 20h12"/>', 18))}
     <i class="rt-sep"></i>
     <span class="rt-w"><button type="button" title="Enlace" aria-label="Enlace" onmousedown="event.preventDefault()" onclick="rtPop('rt-enl', event)">${svgT('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>', 18)}</button>
       <span class="rt-pop rt-pop-enl" id="rt-enl" hidden><input type="url" id="rt-url" placeholder="https://…" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); rtEnlace(); }"><button type="button" class="rt-poner" onclick="rtEnlace()">Poner</button></span></span>
@@ -4999,6 +5007,7 @@ function rtCmd(c, v){
   const d = $('#ev-desc'); if(!d) return;
   if(document.activeElement !== d) rtVolverRango();
   if(c === 'removeFormat'){ document.execCommand('removeFormat'); document.execCommand('unlink'); }
+  else if(c === 'toggle'){ rtToggle(d); return; }
   else if(c === 'checklist'){
     const ul0 = ulDeSel(d);
     if(ul0 && ul0.classList.contains('chk')) document.execCommand('insertUnorderedList');   // otra vez: se quita la lista
@@ -5015,6 +5024,65 @@ function rtCmd(c, v){
   else document.execCommand(c, false, v || null);
   rtEstado();
 }
+/* 5.55 (Gustavo, como Notion): bloque plegable. La línea donde está el cursor pasa a ser el título (con el triángulo)
+   y debajo queda un hueco para escribir lo de dentro. Con el cursor en un título, vuelve a ser texto normal.
+   Dentro de un bloque se puede meter otro. */
+function rtToggle(d){
+  const s = getSelection(); if(!s.rangeCount) return;
+  const n = s.anchorNode, el = n && (n.nodeType === 3 ? n.parentElement : n);
+  const tt = el && el.closest && el.closest('.tgl-t');
+  if(tt && d.contains(tt)){
+    const t0 = tt.parentElement, cc = t0.querySelector(':scope > .tgl-c'), f = document.createDocumentFragment(), a = document.createElement('div');
+    while(tt.firstChild) a.appendChild(tt.firstChild);
+    if(!a.firstChild) a.appendChild(document.createElement('br'));
+    f.appendChild(a); if(cc) while(cc.firstChild) f.appendChild(cc.firstChild);
+    t0.replaceWith(f); rtVacio(d); return;
+  }
+  const cont = (el && el.closest && el.closest('.tgl-c') && d.contains(el.closest('.tgl-c'))) ? el.closest('.tgl-c') : d;
+  let blk = n === cont ? cont.childNodes[s.anchorOffset] || cont.childNodes[s.anchorOffset - 1] || null : n;
+  while(blk && blk.parentNode !== cont) blk = blk.parentNode;
+  const tgl = document.createElement('div'); tgl.className = 'tgl'; tgl.dataset.open = '1';
+  const tit = document.createElement('div'); tit.className = 'tgl-t';
+  const den = document.createElement('div'); den.className = 'tgl-c'; den.appendChild(document.createElement('div')).appendChild(document.createElement('br'));
+  tgl.append(tit, den);
+  const bloque = x => x.nodeType === 1 && /^(DIV|UL|OL|P)$/.test(x.tagName);
+  if(blk && blk.nodeType === 1 && (blk.tagName === 'DIV' || blk.tagName === 'P') && !blk.classList.contains('tgl')){
+    while(blk.firstChild) tit.appendChild(blk.firstChild);
+    blk.replaceWith(tgl);
+  } else if(blk && !bloque(blk)){
+    // texto suelto: la línea va del salto (br) o bloque anterior al siguiente
+    let ini = blk; while(ini.previousSibling && !bloque(ini.previousSibling) && ini.previousSibling.nodeName !== 'BR') ini = ini.previousSibling;
+    const linea = []; let x = ini;
+    while(x && !bloque(x) && x.nodeName !== 'BR'){ linea.push(x); x = x.nextSibling; }
+    if(x && x.nodeName === 'BR') x.remove();
+    cont.insertBefore(tgl, ini); linea.forEach(y => tit.appendChild(y));
+  } else if(blk){ blk.after(tgl); }
+  else cont.appendChild(tgl);
+  tit.querySelectorAll(':scope > br').forEach((b, i, l) => { if(i === l.length - 1 && tit.childNodes.length > 1) b.remove(); });
+  if(!tit.firstChild) tit.appendChild(document.createElement('br'));
+  const r = document.createRange(); r.selectNodeContents(tit); r.collapse(false); s.removeAllRanges(); s.addRange(r);
+  rtEstado();
+}
+/* Tocar el triángulo abre o cierra el bloque. En la hoja se guarda con Guardar; en la tarjeta y en la nota, en el momento. */
+function tglClic(e){
+  const tt = e.target.closest && e.target.closest('.rt .tgl-t'); if(!tt) return;
+  if(e.clientX - tt.getBoundingClientRect().left > 22) return;
+  e.preventDefault(); e.stopPropagation();
+  const t = tt.parentElement; t.dataset.open = t.dataset.open === '0' ? '1' : '0';
+  chkGuardar(tt);
+}
+document.addEventListener('click', tglClic, true);
+/* Enter en el título de un bloque: el cursor pasa a lo de dentro (y se abre), sin partir el título */
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Enter' || e.shiftKey || !e.target.closest || !e.target.closest('.rt[contenteditable="true"]')) return;
+  const s = getSelection(); let n = s.anchorNode; if(n && n.nodeType === 3) n = n.parentElement;
+  const tt = n && n.closest && n.closest('.tgl-t'); if(!tt) return;
+  e.preventDefault();
+  const t = tt.parentElement; t.dataset.open = '1';
+  let c = t.querySelector(':scope > .tgl-c'); if(!c){ c = document.createElement('div'); c.className = 'tgl-c'; t.appendChild(c); }
+  if(!c.firstChild) c.appendChild(document.createElement('div')).appendChild(document.createElement('br'));
+  const r = document.createRange(); r.selectNodeContents(c.firstChild.nodeType === 1 ? c.firstChild : c); r.collapse(true); s.removeAllRanges(); s.addRange(r);
+}, true);
 /* La lista (ul) donde está el cursor dentro de la descripción; con una numerada, se convierte primero */
 function ulDeSel(d){
   const s = getSelection(); if(!s.rangeCount) return null;
