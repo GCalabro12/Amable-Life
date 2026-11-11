@@ -1021,6 +1021,47 @@ html:not(.claro) .aj-eliminar .aj-sub > summary{color:#f87171}
 .ev-desc .rt-ed{padding-right:44px}
 #ev-col-der > #ev-fecha-w > :first-child{margin-top:0}
 #ev-col-der > #ev-fecha-w{margin-bottom:12px}
+#ev-der-hab > #ev-fecha-w{margin:0 0 10px}
+#ev-der-hab > #ev-fecha-w > :first-child{margin-top:0}
+#ev-der-hab > .desps{margin:0 0 10px!important}
+.hoja-in:has(.ev-hoja) .ev-hoja:has(#ev-reg:not([hidden])) .rt-ed{min-height:70px}   /* 5.63: con el registro, la descripción más apretada */
+.ev-reg{margin:12px 0 0;padding:12px;border-radius:16px;background:rgba(var(--bl),.04);border:1px solid var(--linea)}
+.reg-cab{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--oro)}
+.reg-cab b{flex:1;font-size:16px;color:var(--tinta)}
+.reg-nav{display:flex;align-items:center;gap:4px;color:var(--tinta)}
+.reg-nav button{width:30px;height:30px;border-radius:50%;border:0;background:rgba(var(--bl),.08);color:var(--tinta);font:inherit;font-size:18px;line-height:1;cursor:pointer}
+.reg-mes{min-width:118px;text-align:center;font-weight:700;font-size:14px}
+.reg-sem,.reg-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.reg-sem{margin-bottom:2px}
+.reg-sem span{font-size:11px;font-weight:800;color:var(--suave)}
+.reg-grid{touch-action:pan-y;user-select:none}
+.reg-d{position:relative;width:100%;max-width:36px;height:34px;margin:0 auto;border:0;border-radius:50%;background:none;color:var(--tinta);font:inherit;font-size:13px;font-weight:700;cursor:pointer;display:grid;place-items:center;padding:0}
+.reg-d.fuera{opacity:.45}
+.reg-d.fut{opacity:.3;cursor:default}
+.reg-d.hoy{box-shadow:inset 0 0 0 2px var(--oro)}
+.reg-d.ok{background:#16a34a;color:#fff;opacity:1}
+.reg-d.no{background:color-mix(in srgb,#ef4444 24%,transparent);color:#b91c1c;opacity:1}
+html:not(.claro) .reg-d.no{color:#fca5a5}
+.reg-d.parc{background:color-mix(in srgb,#16a34a 28%,transparent);opacity:1}
+.reg-d.sel{outline:2px solid var(--tinta);outline-offset:1px}
+.reg-d small{position:absolute;bottom:0;right:1px;font-size:9px}
+.reg-d i{position:absolute;bottom:3px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:currentColor}
+.reg-tot{margin:8px 2px 0;font-size:13px;color:var(--suave)}
+.reg-tot b{color:var(--tinta)}
+.reg-pop{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--tarjeta);border:1px solid var(--linea);box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.reg-pop-c{display:flex;flex-direction:column;margin-bottom:8px}
+.reg-pop-c small{color:var(--suave);font-weight:600}
+.reg-bots{display:flex;gap:8px}
+.reg-bots button{flex:1;height:40px;border-radius:12px;border:0;font:inherit;font-weight:800;font-size:17px;cursor:pointer;display:grid;place-items:center}
+.reg-mas{background:#16a34a;color:#fff}
+.reg-no{background:color-mix(in srgb,#ef4444 18%,transparent);color:#b91c1c}
+html:not(.claro) .reg-no{color:#fca5a5}
+.reg-com{background:rgba(var(--bl),.08);color:var(--tinta)}
+.reg-com.on{background:color-mix(in srgb,var(--oro) 30%,transparent)}
+.reg-nota{margin-top:8px}
+.reg-nota textarea{width:100%;box-sizing:border-box;border-radius:10px;border:1px solid var(--linea);padding:8px;font:inherit;font-size:14px;background:rgba(var(--bl),.04);color:var(--tinta);resize:vertical}
+.reg-nota p{margin:0;font-size:14px;white-space:pre-wrap}
+.reg-nota .btn{margin-top:6px}
 .ev-horas{display:inline-flex;align-items:center;gap:8px}
 .ev-guion{color:var(--suave);font-weight:700}
 .ev-dia-btn{font-weight:600}
@@ -1290,6 +1331,7 @@ html.claro .ev-ctx .ctx-hecho,html.claro .ev-ctx .ctx-hecho svg{color:#15803d}
 .ev-ctx .ctx-rep{display:flex;align-items:center;gap:14px;margin:0;padding:6px 16px 8px;font-size:13.5px;color:var(--suave)}
 .ev-ctx .ctx-rep svg{flex:none;margin-left:1px}
 .ep-rep{display:flex;align-items:center;gap:6px}
+.ep-cuenta b{color:var(--tinta)}
 .ev-ctx .ctx-borrar{color:#f87171}
 html.claro .ev-ctx .ctx-borrar{color:#dc2626}
 .ev-ctx .ctx-borrar svg{color:inherit}
@@ -2113,7 +2155,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.62';
+const VERSION = 'v5.63';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4124,6 +4166,7 @@ function dictarDesc(btn){
 }
 /* 4.93 (Gustavo): en el ordenador, si la descripción se alarga mucho, el día y la hora pasan arriba de la columna derecha (y vuelven si se acorta) */
 function descLarga(){
+  colocarHab(); if(evEd && evEd.tipo === 'habito') return;
   const ed = $('#ev-desc'), w = $('#ev-fecha-w'), der = $('#ev-col-der'), hoja = $('.ev-hoja'); if(!ed || !w || !der || !hoja) return;
   const ancho = matchMedia('(min-width:900px)').matches, larga = hoja.classList.contains('desc-larga');
   const alto = ed.scrollHeight, pasa = ancho && (larga ? alto > 170 : alto > 200);
@@ -5016,11 +5059,12 @@ function pintarEvento(e){
     <div class="campo-voz ev-titulo"><textarea id="ev-t" rows="1" maxlength="120" placeholder="Añade un título" aria-label="Título" oninput="tituloEv(this)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"></textarea>${botonMic()}</div>
     <div class="ev-desc">${svgT('<path d="M4 7h16M4 12h16M4 17h11"/>', 20)}<div class="ev-desc-c">${rtBarra()}
       <div class="rt-ed rt" id="ev-desc" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Descripción" data-ph="Añadir descripción" oninput="rtVacio(this); descLarga()" onpaste="event.preventDefault(); document.execCommand('insertText', false, (event.clipboardData || window.clipboardData).getData('text/plain'))"></div></div>${(Reconocer || esApp) ? `<button class="mic" type="button" aria-label="Dictar la descripción" onmousedown="event.preventDefault()" onclick="dictarDesc(this)">${MIC}</button>` : ''}</div>
+    <div id="ev-reg" class="ev-reg" hidden></div>
     <div id="ev-hab" ${hab ? '' : 'hidden'}>
       <div class="ev-meta"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92">
         <div><p>Una práctica integral es como una planta: hay que <b>regarla cada día</b>.</p>
         <button type="button" class="btn sec ev-meta-b" onclick="metaAbrir()">${ICO_BROTE.replace('width="12" height="12"', 'width="18" height="18"')} Importar prácticas de Metas Amables</button></div></div>
-      <div class="desps" style="margin-top:12px"><div class="desp" id="dc-frec"><button type="button" class="desp-btn" onclick="frecTocar(this)">${ICO_REP}<span class="desp-t">Frecuencia</span><span class="desp-v" id="dv-frec">${frecTxt()}</span>${FLECHA_ABAJO}</button>
+      <div class="desps" id="ev-hab-desps" style="margin-top:12px"><div class="desp" id="dc-frec"><button type="button" class="desp-btn" onclick="frecTocar(this)">${ICO_REP}<span class="desp-t">Frecuencia</span><span class="desp-v" id="dv-frec">${frecTxt()}</span>${FLECHA_ABAJO}</button>
       <div class="frec-panel" id="frec-panel" hidden>
       <select class="frec-sel" id="frec-sel" aria-label="Frecuencia" onchange="frecTipo(this.value)">${[['diario', 'Diario'], ['semanal', 'Semanal'], ['intervalo', 'Intervalo']].map(([k, t]) => `<option value="${k}" ${(evEd.frec || 'diario') === k ? 'selected' : ''}>${t}</option>`).join('')}</select>
       <div id="frec-diario" ${(evEd.frec || 'diario') === 'diario' ? '' : 'hidden'}><p class="peq suave frec-ayuda">Los días que lo haces:</p>
@@ -5049,7 +5093,7 @@ function pintarEvento(e){
       <div class="ev-fila2"><label class="ev-chk"><input type="checkbox" id="ev-todo" ${todo ? 'checked' : ''} onchange="evTodo(this.checked)"><span>Sin hora (tarea flexible)</span></label>
       <div id="ev-rep-c" class="ev-rep" ${hab ? 'hidden' : ''}>${despHTML('rep', 'Repetir', ICO_REP)}</div></div>
     </div></div></div>
-    </div><div class="ev-col" id="ev-col-der">
+    </div><div class="ev-col" id="ev-col-der"><div id="ev-der-hab"></div>
     <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
       <div id="ev-prio-c" ${hab ? 'hidden' : ''}>${despHTML('prio', 'Prioridad', ICO_BANDERA('currentColor').replace('width="14" height="14"', 'width="18" height="18"'))}</div>
@@ -5064,7 +5108,8 @@ function pintarEvento(e){
   $('#ev-t').value = e.t && e.t !== SIN_TITULO ? e.t : ''; tituloEv($('#ev-t'));
   const ds = $('#ev-desc'); if(ds) ds.innerHTML = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
   pintarDesp('dur');   // la duración ya con las horas puestas (y la línea del día)
-  descLarga();
+  regM = null; regK = null; regCom = false;
+  descLarga(); pintarRegistro();
   if(!evEd.id) setTimeout(() => { const t = $('#ev-t'); if(t && matchMedia('(hover: hover)').matches) t.focus(); }, 120);
 }
 /* La línea del día y la hora (como Google: «Lunes, 2 de noviembre · 10:00 – 11:00»); al tocarla se abre para cambiarla */
@@ -5331,6 +5376,12 @@ function metaTarjetaHTML(e){
     <p class="peq suave">Marcarlo aquí no lo registra en Amable Meta: regístralo también allí.</p>
     <a class="btn sec ep-meta-b" href="https://app.practicaintegral.club/?registrar=1" target="_blank" rel="noopener">Registrar en Amable Meta</a></div>`;
 }
+/* 5.63 (Gustavo): en la tarjeta de una práctica integral, cuántas veces está hecha esa semana y ese mes */
+function habCuentaHTML(e, k){
+  const h = e.hechos || [], l = lunesDe(k), m = k.slice(0, 7), hoy = hoyK();
+  const sem = h.filter(d => lunesDe(d) === l).length, mes = h.filter(d => d.slice(0, 7) === m).length, v = n => `<b>${n} ${n === 1 ? 'vez' : 'veces'}</b>`;
+  return `<p class="ep-cuenta">${lunesDe(hoy) === l ? 'Esta semana' : 'Esa semana'}: ${v(sem)} · ${hoy.slice(0, 7) === m ? 'Este mes' : 'Ese mes'}: ${v(mes)}</p>`;
+}
 function popHTML(e, k, enHoja){
   const ok = hechoEv(e, k), ars = areasEv(e), rep = repTxt(e), hab = e.tipo === 'habito';
   const rec = recTxtEv(e);
@@ -5338,7 +5389,7 @@ function popHTML(e, k, enHoja){
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}<button type="button" class="ep-focus" title="Ponerla la primera en tu bloque de Focus" onclick="popFocus('${e.id}','${k}')">${ICO_DIANA}Focus</button>${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Práctica importada de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
-      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
+      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}${hab ? habCuentaHTML(e, k) : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
     <div class="ep-bots">${objDe(e) && !ok ? (objHecho(e, k) ? `<span class="ep-obj-ok">✓ Objetivo ${objPer(objDe(e)) === 'semana' ? 'de la semana' : 'del mes'} cumplido</span>`
@@ -5969,7 +6020,7 @@ function evTipo(t){
   if($('#ev-tipo-ayuda')) $('#ev-tipo-ayuda').textContent = hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea;
   const prs = document.querySelector('.ev-prios'); if(prs) prs.style.display = hab ? 'none' : ''; const pnt = $('#ev-prio-info'); if(pnt) pnt.style.display = hab ? 'none' : ''; const pc = $('#ev-prio-c'); if(pc) pc.hidden = hab;   // 4.97: los hábitos no tienen prioridad
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
-  evResumen();
+  evResumen(); descLarga(); pintarRegistro();
 }
 /* Frecuencia del hábito (Gustavo): botón alargado como los demás; dentro, cuántas veces a la semana y qué días */
 const frecTxt = () => {
@@ -6041,6 +6092,72 @@ function popRepintar(e, k){
   const p = $('#ev-pop'), h = document.querySelector('#hoja .ep-en-hoja');
   if(p){ p.innerHTML = popHTML(e, k, false); if(popInfo){ popInfo.k = k; popInfo.hover = false; } if(typeof popEncajar === 'function') popEncajar(); }
   else if(h) h.innerHTML = popHTML(e, k, true);
+}
+/* 5.63 (Gustavo): en las prácticas integrales, en el ordenador, «Empieza el…», Frecuencia y Objetivo pasan arriba de la columna derecha,
+   y a la izquierda, debajo de la descripción, el «Registro» */
+function colocarHab(){
+  const w = $('#ev-fecha-w'), ds = $('#ev-hab-desps'), hab = $('#ev-hab'), sitio = $('#ev-der-hab'); if(!w || !ds || !hab || !sitio) return;
+  if(evEd && evEd.tipo === 'habito' && matchMedia('(min-width:900px)').matches){ if(w.parentNode !== sitio || ds.parentNode !== sitio) sitio.append(w, ds); }
+  else { if(ds.parentNode !== hab) hab.appendChild(ds); if(w.parentNode === sitio) hab.parentNode.insertBefore(w, hab.nextSibling); }
+}
+/* Registro (como Amable Meta): un calendario por meses (flechas o deslizar); al tocar un día, «+1» (verde), «✕» (no hecha)
+   y las tres rayas para un comentario de ese día. Se guarda al momento en la práctica (hechos, prog, fallos, notas). */
+let regM = null, regK = null, regCom = false, regX = 0;
+const regEv = () => evEd && evEd.id && evEd.tipo === 'habito' ? AG_().eventos.find(x => x.id === evEd.id) : null;
+function pintarRegistro(){
+  const r = $('#ev-reg'); if(!r) return;
+  const e = regEv(); r.hidden = !e; r.innerHTML = e ? regHTML(e) : '';
+}
+function regHTML(e){
+  if(!regM) regM = (evEd.k || hoyK()).slice(0, 7);
+  const [y, m] = regM.split('-').map(Number), d1 = regM + '-01', off = diaSem(d1), nd = new Date(y, m, 0).getDate(), hoy = hoyK();
+  let c = '', tot = 0;
+  for(let i = 0; i < off; i++) c += '<span></span>';
+  for(let d = 1; d <= nd; d++){
+    const k = regM + '-' + String(d).padStart(2, '0'), ok = (e.hechos || []).includes(k), no = (e.fallos || []).includes(k), pr = (e.prog || {})[k] || 0, nota = !!(e.notas || {})[k];
+    if(ok) tot++;
+    const cls = [ok ? 'ok' : no ? 'no' : pr ? 'parc' : '', k === hoy ? 'hoy' : '', k > hoy ? 'fut' : '', !ok && !no && !tocaEv(e, k) ? 'fuera' : '', k === regK ? 'sel' : ''].filter(Boolean).join(' ');
+    c += `<button type="button" class="reg-d ${cls}" ${k > hoy ? 'disabled' : ''} aria-label="${capi(fechaLarga(k))}" onclick="regDia('${k}')">${d}${pr && !ok ? `<small>${pr}</small>` : ''}${nota ? '<i></i>' : ''}</button>`;
+  }
+  return `<div class="reg-cab">${ICO_CALENDARIO}<b>Registro</b><span class="reg-nav"><button type="button" aria-label="Mes anterior" onclick="regMes(-1)">‹</button><span class="reg-mes">${capi(MESES[m - 1])} ${y}</span><button type="button" aria-label="Mes siguiente" onclick="regMes(1)">›</button></span></div>
+    <div class="reg-sem">${DIAS_CORTO.map(x => `<span>${x}</span>`).join('')}</div>
+    <div class="reg-grid" onpointerdown="regX = event.clientX" onpointerup="if(Math.abs(event.clientX - regX) > 50) regMes(event.clientX < regX ? 1 : -1)">${c}</div>
+    <p class="reg-tot">Registros en el mes: <b>${tot}</b></p>
+    ${regK && regK.startsWith(regM) ? regPopHTML(e, regK) : ''}`;
+}
+function regPopHTML(e, k){
+  const ok = (e.hechos || []).includes(k), no = (e.fallos || []).includes(k), o = objDe(e), nota = (e.notas || {})[k] || '';
+  const est = ok ? '✓ Hecha' : no ? '✕ No hecha' : o && objProg(e, k) ? `${objProg(e, k)} de ${o.n} ${esc(o.u)}` : 'Sin registrar';
+  return `<div class="reg-pop"><div class="reg-pop-c"><b>${capi(fechaLarga(k))}</b><small>${est}</small></div>
+    <div class="reg-bots"><button type="button" class="reg-mas" onclick="regMas('${k}')">+1</button><button type="button" class="reg-no" aria-label="No hecha" onclick="regNo('${k}')">✕</button><button type="button" class="reg-com ${regCom ? 'on' : ''}" aria-label="Comentario" onclick="regCom = !regCom; pintarRegistro()">${svgT('<path d="M5 7h14M5 12h14M5 17h14"/>', 20)}</button></div>
+    ${regCom ? `<div class="reg-nota"><textarea id="reg-txt" rows="3" maxlength="500" placeholder="Escribe un comentario de este día">${esc(nota)}</textarea><button type="button" class="btn sec" onclick="regNota('${k}')">Guardar comentario</button></div>`
+      : nota ? `<div class="reg-nota"><p>${esc(nota)}</p></div>` : ''}</div>`;
+}
+function regMes(n){ const [y, m] = regM.split('-').map(Number), d = new Date(y, m - 1 + n, 1); regM = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; regK = null; regCom = false; pintarRegistro(); }
+function regDia(k){ regK = regK === k ? null : k; regCom = false; pintarRegistro(); }
+function regGuardar(e){ e.mod = ahoraISO(); guardar(); pintarRegistro(); try{ rerenderDia(); }catch(x){} }
+function regMas(k){
+  const e = regEv(); if(!e) return; const o = objDe(e);
+  e.fallos = (e.fallos || []).filter(d => d !== k);
+  if(o){
+    if(objHecho(e, k)){ aviso('El objetivo ya está cumplido'); regGuardar(e); return; }
+    e.prog = Object.assign({}, e.prog || {}); e.prog[k] = (e.prog[k] || 0) + 1;
+    if(objProg(e, k) >= o.n && !(e.hechos || []).includes(k)){ e.hechos = [...(e.hechos || []), k]; sonarHecho(); }
+  } else if(!(e.hechos || []).includes(k)){ e.hechos = [...(e.hechos || []), k]; sonarHecho(); }
+  else aviso('Ese día ya está hecho');
+  regGuardar(e);
+}
+function regNo(k){
+  const e = regEv(); if(!e) return;
+  e.hechos = (e.hechos || []).filter(d => d !== k);
+  if(e.prog && e.prog[k]){ e.prog = Object.assign({}, e.prog); delete e.prog[k]; }
+  if(!(e.fallos || []).includes(k)) e.fallos = [...(e.fallos || []), k];
+  regGuardar(e);
+}
+function regNota(k){
+  const e = regEv(); if(!e) return; const t = (valor('reg-txt') || '').trim();
+  e.notas = Object.assign({}, e.notas || {}); if(t) e.notas[k] = t.slice(0, 500); else delete e.notas[k];
+  regCom = false; aviso(t ? 'Comentario guardado' : 'Comentario quitado'); regGuardar(e);
 }
 function frecTocar(b){
   const p = $('#frec-panel'), abrir = p.hidden;
