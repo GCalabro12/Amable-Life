@@ -1025,6 +1025,10 @@ html:not(.claro) .aj-eliminar .aj-sub > summary{color:#f87171}
 #ev-der-hab > #ev-fecha-w > :first-child{margin-top:0}
 #ev-der-hab > .desps{margin:0 0 10px!important}
 .hoja-in:has(.ev-hoja) .ev-hoja:has(#ev-reg:not([hidden])) .rt-ed{min-height:70px}   /* 5.63: con el registro, la descripción más apretada */
+.ev-area-et{display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-size:15px;font-weight:600;color:var(--suave)}
+.ev-area-et[hidden]{display:none}
+.ev-area-et b{font-weight:800;filter:brightness(.85)}
+.mini-flor{flex:none}
 .ev-reg{margin:12px 0 0;padding:12px;border-radius:16px;background:rgba(var(--bl),.04);border:1px solid var(--linea)}
 .reg-cab{display:flex;align-items:center;gap:8px;width:100%;margin:0;padding:0;border:0;background:none;font:inherit;text-align:left;color:var(--oro);cursor:pointer}
 .reg-cab[aria-expanded="true"]{margin-bottom:8px}
@@ -2181,7 +2185,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.66';
+const VERSION = 'v5.67';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5061,7 +5065,7 @@ function despElegir(id, k){
   const lista = id === 'rec' ? 'avisos' : 'areas';
   if(id === 'rec' && k !== 'no') k = +k;
   evEd[lista] = k === 'no' ? [] : evEd[lista].includes(k) ? evEd[lista].filter(x => x !== k) : [...evEd[lista], k];   // varias a la vez
-  pintarDesp(id);
+  pintarDesp(id); if(id === 'area') pintarAreaEt();
 }
 /* 4.90 (Gustavo): Tarea / Hábito arriba del todo, con lo que es cada uno; el título crece hasta 3 renglones */
 const AYUDA_TIPO = {tarea: 'Tarea: una acción con una hora o una fecha límite.', habito: 'Práctica integral: algo que repites cada semana para cuidar un área de tu vida.'};
@@ -5079,7 +5083,7 @@ function pintarEvento(e){
   const hab = evEd.tipo === 'habito', todo = !!e.todo;
   mostrarHoja(`<div class="ev-hoja"><div class="ev-cols"><div class="ev-col">
     <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" data-ayuda="${AYUDA_TIPO.tarea}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" data-ayuda="${AYUDA_TIPO.habito}" onclick="evTipo('habito')">Práctica integral</button>
-      <span class="ev-prios"${hab ? ' style="display:none"' : ''}>${PRIO_OPC.map(o => `<button type="button" class="ev-prio ${evEd.prio === o.v ? 'sel' : ''}" style="--c:${o.c}" title="${o.t}" aria-label="${o.t}" onclick="evPrioB('${o.v}', this)">${prioBtnHTML(o)}</button>`).join('')}</span></div>
+      <span class="ev-prios"${hab ? ' style="display:none"' : ''}>${PRIO_OPC.map(o => `<button type="button" class="ev-prio ${evEd.prio === o.v ? 'sel' : ''}" style="--c:${o.c}" title="${o.t}" aria-label="${o.t}" onclick="evPrioB('${o.v}', this)">${prioBtnHTML(o)}</button>`).join('')}</span><span class="ev-area-et" id="ev-area-et"></span></div>
     <p class="ev-tipo-ayuda" id="ev-tipo-ayuda">${hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea}</p>
     <p class="prio-nota" id="ev-prio-info"${hab ? ' style="display:none"' : ''}>${PRIO_NOTA[evEd.prio] || ''}</p>
     <div class="campo-voz ev-titulo"><textarea id="ev-t" rows="1" maxlength="120" placeholder="Añade un título" aria-label="Título" oninput="tituloEv(this)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"></textarea>${botonMic()}</div>
@@ -5135,7 +5139,7 @@ function pintarEvento(e){
   const ds = $('#ev-desc'); if(ds) ds.innerHTML = e.descH ? limpiarHTML(e.descH) : esc(e.desc || '').replace(/\n/g, '<br>');
   pintarDesp('dur');   // la duración ya con las horas puestas (y la línea del día)
   regM = null; regCerrarPop();
-  descLarga(); pintarRegistro();
+  descLarga(); pintarRegistro(); pintarAreaEt();
   if(!evEd.id) setTimeout(() => { const t = $('#ev-t'); if(t && matchMedia('(hover: hover)').matches) t.focus(); }, 120);
 }
 /* La línea del día y la hora (como Google: «Lunes, 2 de noviembre · 10:00 – 11:00»); al tocarla se abre para cambiarla */
@@ -6046,7 +6050,7 @@ function evTipo(t){
   if($('#ev-tipo-ayuda')) $('#ev-tipo-ayuda').textContent = hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea;
   const prs = document.querySelector('.ev-prios'); if(prs) prs.style.display = hab ? 'none' : ''; const pnt = $('#ev-prio-info'); if(pnt) pnt.style.display = hab ? 'none' : ''; const pc = $('#ev-prio-c'); if(pc) pc.hidden = hab;   // 4.97: los hábitos no tienen prioridad
   $('#ev-hab').hidden = !hab; $('#ev-rep-c').hidden = hab; $('#ev-dia-t').textContent = hab ? 'Empieza el' : 'Día';
-  evResumen(); descLarga(); pintarRegistro();
+  evResumen(); descLarga(); pintarRegistro(); pintarAreaEt();
 }
 /* Frecuencia del hábito (Gustavo): botón alargado como los demás; dentro, cuántas veces a la semana y qué días */
 const frecTxt = () => {
@@ -6121,6 +6125,19 @@ function popRepintar(e, k){
 }
 /* 5.63 (Gustavo): en las prácticas integrales, en el ordenador, «Empieza el…», Frecuencia y Objetivo pasan arriba de la columna derecha,
    y a la izquierda, debajo de la descripción, el «Registro» */
+/* 5.67 (Gustavo): junto a «Práctica integral», a qué área pertenece: una florecita con su pétalo en su color
+   (en el sitio que ocupa en la flor; los demás, grises) y «Área Sociedad» */
+function miniFlor(ids){
+  return `<svg class="mini-flor" viewBox="-25 -25 50 50" width="34" height="34" aria-hidden="true">${areasFlor().map((a, i) => `<path d="${petalo(19, 8)}" transform="rotate(${i * 45}) translate(0 -5)" fill="${ids.includes(a.id) ? a.color : 'rgba(150,140,175,.3)'}"/>`).join('')}<circle r="5.5" fill="#f7c35b"/></svg>`;
+}
+function pintarAreaEt(){
+  const el = $('#ev-area-et'); if(!el || !evEd) return;
+  const ars = (evEd.areas || []).map(areaDe).filter(Boolean);
+  el.hidden = evEd.tipo !== 'habito' || !ars.length;
+  if(el.hidden){ el.innerHTML = ''; return; }
+  const nom = ars.map(a => `<b style="color:${a.color}">${esc(a.nombre)}</b>`), lista = nom.length === 1 ? nom[0] : nom.slice(0, -1).join(', ') + ' y ' + nom[nom.length - 1];
+  el.innerHTML = `${miniFlor(ars.map(a => a.id))}<span>${ars.length === 1 ? 'Área' : 'Áreas'} ${lista}</span>`;
+}
 function colocarHab(){
   const w = $('#ev-fecha-w'), ds = $('#ev-hab-desps'), hab = $('#ev-hab'), sitio = $('#ev-der-hab'); if(!w || !ds || !hab || !sitio) return;
   if(evEd && evEd.tipo === 'habito' && matchMedia('(min-width:900px)').matches){ if(w.parentNode !== sitio || ds.parentNode !== sitio) sitio.append(w, ds); }
