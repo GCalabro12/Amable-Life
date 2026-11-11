@@ -843,6 +843,13 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 /* 5.60 (Gustavo): lápiz a la derecha de cada práctica integral del panel: abre directamente la ventana de editar */
 .pa-hab > span{flex:1}
 .pa-hab .lapiz{flex:none;margin-left:auto}
+.pa-desc-w{margin:-2px 0 4px;padding:6px 12px 8px;border-radius:0 0 12px 12px;background:color-mix(in srgb,var(--c) 8%,var(--tarjeta))}
+.pa-desc-t{display:flex;align-items:center;gap:7px;border:0;background:none;padding:2px 0;color:var(--suave);font:inherit;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.pa-desc-t::before{content:'';border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent currentColor;transform:rotate(90deg);transition:transform .15s}
+.pa-desc-w.cerrada .pa-desc-t::before{transform:none}
+.pa-desc-w.cerrada .pa-desc{display:none}
+.pa-desc{margin-top:4px;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.frec-uno{margin:8px 2px 0;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--oro) 18%,transparent)}
 .pa-hab b{font-size:15px;font-weight:700}
 .pa-hab small{font-size:13px;color:var(--suave);font-weight:600}
 .pa-hab.suelto{cursor:default}
@@ -2106,7 +2113,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.60';
+const VERSION = 'v5.61';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3482,8 +3489,21 @@ function habitosPanelHTML(a){
   const frec = e => { const f = e.frec || 'diario';
     if(f === 'diario'){ const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length ? d.map(k => DIAS_L[k]).join(' ') : 'Sin días'; }
     return txtHabito(e); };
-  return `<p class="pa-sub">Prácticas integrales</p><div class="pa-habs">${ev.map(e => `<div class="pa-hab" role="button" tabindex="0" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small>${objDe(e) ? `<small class="pa-obj">Objetivo: ${esc(objTxtO(objDe(e)))} · llevas ${objProg(e, hoyK())}${objPer(objDe(e)) === 'dia' ? ' hoy' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</small>` : ''}</span>${lapiz(`event.stopPropagation(); editarEvento('${e.id}','${hoyK()}')`)}</div>`).join('')}
+  return `<p class="pa-sub">Prácticas integrales</p><div class="pa-habs">${ev.map(e => `<div class="pa-hab" role="button" tabindex="0" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small>${objDe(e) ? `<small class="pa-obj">Objetivo: ${esc(objTxtO(objDe(e)))} · llevas ${objProg(e, hoyK())}${objPer(objDe(e)) === 'dia' ? ' hoy' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</small>` : ''}</span>${lapiz(`event.stopPropagation(); editarEvento('${e.id}','${hoyK()}')`)}</div>${paDescHTML(e)}`).join('')}
     ${sueltos.map(t => `<div class="pa-hab suelto">${ICO_BROTE}<span><b>${esc(t)}</b><small>Sin día ni hora · <button class="link" onclick="P = P || {}; empezarDefHab()">Definir día y hora</button></small></span></div>`).join('')}</div>`;
+}
+/* 5.61 (Gustavo): debajo de cada práctica integral del panel, su descripción, desplegada; el triángulo la pliega y se recuerda.
+   Las casillas y los bloques plegables de dentro se guardan al tocarlos. */
+const paDescCerr = new Set();
+function paDescHTML(e){
+  const h = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : ''; if(!h) return '';
+  return `<div class="pa-desc-w ${paDescCerr.has(e.id) ? 'cerrada' : ''}"><button type="button" class="pa-desc-t" aria-expanded="${!paDescCerr.has(e.id)}" onclick="paDesc('${e.id}', this)">Descripción</button>
+    <div class="pa-desc rt" data-ev="${e.id}">${h}</div></div>`;
+}
+function paDesc(id, b){
+  const w = b.parentElement, cerr = !w.classList.contains('cerrada');
+  w.classList.toggle('cerrada', cerr); b.setAttribute('aria-expanded', !cerr);
+  if(cerr) paDescCerr.add(id); else paDescCerr.delete(id);
 }
 function nuevaEnPanel(id){
   const t = valor(id ? 'pa-nueva-' + id : 'pa-nueva'); if(!t){ aviso('Escribe la tarea'); return; }
@@ -4216,7 +4236,9 @@ function tocaEv(e, k){
     const f = e.frec || 'diario';
     if(f === 'intervalo') return Math.round((fechaDe(k) - fechaDe(e.dia)) / 864e5) % Math.max(2, e.cada || 2) === 0;
     // semanal: sale cada día hasta que esa semana se ha hecho las veces pedidas (como TickTick)
-    if(f === 'semanal'){ const l = lunesDe(k), h = (e.hechos || []).filter(x => lunesDe(x) === l); return h.includes(k) || h.length < (e.veces || 3); }
+    if(f === 'semanal'){
+      if((e.veces || 3) === 1 && e.fijo != null) return diaSem(k) === e.fijo;   // 5.61: 1 día a la semana, el día elegido
+      const l = lunesDe(k), h = (e.hechos || []).filter(x => lunesDe(x) === l); return h.includes(k) || h.length < (e.veces || 3); }
     return (e.dias || []).includes(diaSem(k));
   }
   const r = e.rep || 'no';
@@ -4237,7 +4259,8 @@ const SIN_TITULO = '(Sin título)';
 const COLOR_HAB = '#22c55e';   // 4.94 (Gustavo): los hábitos, siempre verdes
 const colorEv = e => e.tipo === 'habito' ? COLOR_HAB : e.prio && PRIO[e.prio] ? PRIO[e.prio].c : (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
 const horaEv = e => e.todo ? 'Todo el día' : `${hm(e.ini)} – ${hm(e.fin)}`;
-const txtHabito = e => { if(e.frec === 'semanal') return `${e.veces || 3} ${(e.veces || 3) === 1 ? 'día' : 'días'} a la semana`; if(e.frec === 'intervalo') return `Cada ${e.cada || 2} días`; const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length === 5 && d.join() === '0,1,2,3,4' ? 'De lunes a viernes' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana`; };
+const fijoTxt = e => (e.veces || 3) === 1 && e.fijo != null && DIAS_LARGO[e.fijo] ? `: el ${DIAS_LARGO[e.fijo]}` : '';
+const txtHabito = e => { if(e.frec === 'semanal') return `${e.veces || 3} ${(e.veces || 3) === 1 ? 'día' : 'días'} a la semana${fijoTxt(e)}`; if(e.frec === 'intervalo') return `Cada ${e.cada || 2} días`; const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length === 5 && d.join() === '0,1,2,3,4' ? 'De lunes a viernes' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana`; };
 /* Números del día para Grow Panel: cuántos hay hoy, horas ocupadas (sin contar dos veces lo que se solapa) y hechos o ya pasados */
 function agendaDia(k){
   const evs = eventosDe(k), tramos = evs.filter(e => !e.todo).map(e => [e.ini, e.fin]).sort((a, b) => a[0] - b[0]);
@@ -4827,13 +4850,13 @@ let evEd = null;
 function nuevoEvento(k, ini, pre){
   const dia = k || agK || hoyK(), m = minutosHoy();
   const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
-  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], frec: 'diario', veces: 3, cada: 2, avisos: [], horasAviso: [], acc: (pre && pre.acc) || null};
+  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], frec: 'diario', veces: 3, cada: 2, fijo: null, avisos: [], horasAviso: [], acc: (pre && pre.acc) || null};
   pintarEvento({t: (pre && pre.t) || '', dia, todo: !!(pre && pre.todo), ini: base, fin: Math.min(base + ((pre && pre.dur) || 60), 1439)});
 }
 function editarEvento(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
   evEd = {id, k, tipo: e.tipo || 'tarea', rep: e.rep || 'no', prio: marcaDe(e.t) || e.prio || 0, areas: areasEv(e).map(a => a.id), dias: (e.dias || [diaSem(e.dia)]).slice(),
-    frec: e.frec || 'diario', veces: e.veces || 3, cada: e.cada || 2, ...avisosEditar(e), acc: e.acc || null, armado: false};
+    frec: e.frec || 'diario', veces: e.veces || 3, cada: e.cada || 2, fijo: e.fijo != null ? e.fijo : null, ...avisosEditar(e), acc: e.acc || null, armado: false};
   pintarEvento(e);
 }
 const FLECHA_ABAJO = '<svg class="desp-f" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
@@ -5000,8 +5023,12 @@ function pintarEvento(e){
       <div class="frec-panel" id="frec-panel" hidden>
       <select class="frec-sel" id="frec-sel" aria-label="Frecuencia" onchange="frecTipo(this.value)">${[['diario', 'Diario'], ['semanal', 'Semanal'], ['intervalo', 'Intervalo']].map(([k, t]) => `<option value="${k}" ${(evEd.frec || 'diario') === k ? 'selected' : ''}>${t}</option>`).join('')}</select>
       <div id="frec-diario" ${(evEd.frec || 'diario') === 'diario' ? '' : 'hidden'}><p class="peq suave frec-ayuda">Los días que lo haces:</p>
-      <div class="ev-dias">${DIAS_CORTO.map((x, i) => `<button data-d="${i}" class="${evEd.dias.includes(i) ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evDia(${i})">${x}</button>`).join('')}</div></div>
-      <div id="frec-semanal" ${evEd.frec === 'semanal' ? '' : 'hidden'}><label class="frec-l"><select id="frec-veces" onchange="evEd.veces = +this.value; pintarDias()">${[1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(evEd.veces || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}</select> días a la semana, los que tú quieras</label></div>
+      <div class="ev-dias">${DIAS_CORTO.map((x, i) => `<button data-d="${i}" class="${evEd.dias.includes(i) ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evDia(${i})">${x}</button>`).join('')}</div>
+      <p class="peq frec-uno" id="frec-uno" hidden>Con un solo día se guardará como <b>Semanal · 1 día a la semana</b>. Para «Diario», elige al menos 2 días.</p></div>
+      <div id="frec-semanal" ${evEd.frec === 'semanal' ? '' : 'hidden'}><label class="frec-l"><select id="frec-veces" onchange="evEd.veces = +this.value; pintarDias()">${[1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(evEd.veces || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}</select> <span id="frec-veces-t">${(evEd.veces || 3) === 1 ? 'día a la semana' : 'días a la semana, los que tú quieras'}</span></label>
+      <div id="frec-fijo" ${(evEd.veces || 3) === 1 ? '' : 'hidden'}><p class="peq suave frec-ayuda">¿Qué día?</p>
+      <div class="ev-dias ev-fijo">${DIAS_CORTO.map((x, i) => `<button data-f="${i}" class="${evEd.fijo === i ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evFijo(${i})">${x}</button>`).join('')}</div>
+      <p class="peq suave frec-ayuda" id="frec-fijo-n">${evEd.fijo == null ? 'Sin elegir día: sale cada día hasta que la hagas esa semana.' : ''}</p></div></div>
       <div id="frec-intervalo" ${evEd.frec === 'intervalo' ? '' : 'hidden'}><label class="frec-l">Cada <input type="number" id="frec-cada" min="2" max="60" value="${evEd.cada || 2}" oninput="evEd.cada = Math.max(2, Math.min(60, +this.value || 2)); pintarDias()"> días</label></div>
       </div></div>${objHojaHTML()}</div>
     </div>
@@ -5201,7 +5228,7 @@ function chkClic(e){
 }
 function chkGuardar(li){
   const nota = li.closest('.nota-ad'); if(nota){ notaGuardar(nota.dataset.id); return; }
-  const tj = li.closest('.ep-desc[data-ev]'); if(!tj) return;   // en la hoja de editar se guarda con Guardar
+  const tj = li.closest('.ep-desc[data-ev], .pa-desc[data-ev]'); if(!tj) return;   // en la hoja de editar se guarda con Guardar
   const e = AG_().eventos.find(x => x.id === tj.dataset.ev); if(!e) return;
   e.descH = limpiarHTML(tj.innerHTML).slice(0, 8000); e.mod = ahoraISO(); guardar();
   const el = document.querySelector(`.nota-ad[data-id="${e.id}"] .na-d`); if(el && !el.contains(document.activeElement)) el.innerHTML = limpiarHTML(e.descH);
@@ -5947,12 +5974,13 @@ function evTipo(t){
 const frecTxt = () => {
   if(!evEd) return '';
   const f = evEd.frec || 'diario';
-  if(f === 'semanal') return `Semanal · ${evEd.veces || 3} ${(evEd.veces || 3) === 1 ? 'día' : 'días'} a la semana`;
+  if(f === 'semanal') return `Semanal · ${evEd.veces || 3} ${(evEd.veces || 3) === 1 ? 'día' : 'días'} a la semana${fijoTxt(evEd)}`;
   if(f === 'intervalo') return `Intervalo · cada ${evEd.cada || 2} días`;
   const d = (evEd.dias || []).slice().sort(); if(!d.length) return 'Elige los días';
   return d.length === 7 ? 'Diario · cada día' : `Diario · ${d.map(i => DIAS_CORTO[i]).join(' ')}`;
 };
 function frecTipo(v){
+  if(v === 'semanal' && evEd.fijo == null && evEd.dias.length === 1){ evEd.fijo = evEd.dias[0]; evEd.veces = 1; const fv = $('#frec-veces'); if(fv) fv.value = '1'; }
   evEd.frec = v;
   ['diario', 'semanal', 'intervalo'].forEach(x => { const el = $('#frec-' + x); if(el) el.hidden = x !== v; });
   pintarDias();
@@ -6024,8 +6052,16 @@ function pintarDias(){
   const fv = $('#dv-frec'); if(fv) fv.textContent = frecTxt();
   document.querySelectorAll('.ev-dias button').forEach(b => b.classList.toggle('sel', evEd.dias.includes(+b.dataset.d)));
   document.querySelectorAll('.ev-veces button').forEach(b => b.classList.toggle('sel', +b.dataset.n === evEd.dias.length));
+  const uno = (evEd.veces || 3) === 1, fj = $('#frec-fijo'), fvt = $('#frec-veces-t'), fn = $('#frec-fijo-n'), fu = $('#frec-uno');
+  if(fj) fj.hidden = !uno;
+  if(fvt) fvt.textContent = uno ? 'día a la semana' : 'días a la semana, los que tú quieras';
+  document.querySelectorAll('.ev-fijo button').forEach(b => b.classList.toggle('sel', +b.dataset.f === evEd.fijo));
+  if(fn) fn.textContent = evEd.fijo == null ? 'Sin elegir día: sale cada día hasta que la hagas esa semana.' : '';
+  if(fu) fu.hidden = !((evEd.frec || 'diario') === 'diario' && evEd.dias.length === 1);
   evResumen();
 }
+/* 5.61 (Gustavo): con «Semanal · 1 día a la semana» se elige qué día (un solo día; tocarlo otra vez lo quita) */
+function evFijo(i){ evEd.fijo = evEd.fijo === i ? null : i; pintarDias(); }
 function evVeces(n){ evEd.dias = DIAS_VECES[n].slice(); pintarDias(); }
 function evDia(i){
   const d = evEd.dias; evEd.dias = d.includes(i) ? d.filter(x => x !== i) : [...d, i].sort();
@@ -6042,6 +6078,9 @@ function guardarEvento(){
   const e0 = evEd; if(!e0) return;
   const t = valor('ev-t') || SIN_TITULO;
   if(e0.tipo === 'habito' && (e0.frec || 'diario') === 'diario' && !e0.dias.length){ aviso('Elige qué días'); return; }
+  // 5.61 (Gustavo): «Diario» es de 2 días en adelante; con un solo día se guarda como «Semanal · 1 día a la semana», ese día
+  let aSemanal = false;
+  if(e0.tipo === 'habito' && (e0.frec || 'diario') === 'diario' && e0.dias.length === 1){ e0.frec = 'semanal'; e0.veces = 1; e0.fijo = e0.dias[0]; aSemanal = true; }
   const dia = valor('ev-dia') || e0.k, todo = $('#ev-todo').checked;
   let ini = minDeHora(valor('ev-ini')), fin = minDeHora(valor('ev-fin'));
   if(!todo){ if(ini == null){ aviso('Pon la hora de empezar'); return; } if(fin == null || fin <= ini) fin = Math.min(ini + 60, 1439); }
@@ -6049,10 +6088,11 @@ function guardarEvento(){
   const antE = e ? {dia: e.dia, ini: e.ini, todo: e.todo} : null;
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
   apuntarCambio(e, antE, e0.k || (antE && antE.dia));
   guardar(); sonarHecho();
-  aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Práctica integral añadida: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
+  if(aSemanal) aviso(`Guardada como Semanal · 1 día a la semana: el ${DIAS_LARGO[e.fijo]}`, 3500);
+  else aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Práctica integral añadida: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
   if(vista === 'agenda' && !e0.id) agK = dia;
   if((e.avisos || []).length) setTimeout(() => pedirAvisosWeb(false), 900);
