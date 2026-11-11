@@ -813,6 +813,27 @@ nav.abajo button{font-size:11px}
 .ag-dia i{display:flex;gap:3px;height:6px}
 .ag-dia em{width:6px;height:6px;border-radius:50%}
 .ag-lista{margin-top:14px}
+.ag-dia-evs .ag-h{font-weight:inherit}
+/* 5.70 (Gustavo, como Google Calendar en el móvil): el mes de borde a borde y hasta abajo (las 5 o 6 semanas), con rayas finas
+   y en cada día los nombres de lo que hay (el principio del texto, en su color), sin la hora */
+@media (max-width:899px){
+  .ag-mes.ag-mes-m{gap:0;width:100vw;margin-left:calc(50% - 50vw);border-top:1px solid rgba(var(--bl),.1)}
+  .gc-main:has(.ag-mes-m){box-shadow:none!important}
+  .ag-mes.ag-mes-m{position:relative;z-index:1;background:var(--fondo)}
+  .ag-mes-m .ag-ds{padding:3px 0;font-size:11px;border-bottom:1px solid rgba(var(--bl),.1)}
+  .ag-mes-m .ag-dia{aspect-ratio:auto;height:max(78px,calc((100vh - 215px) / var(--filas,6)));height:max(78px,calc((100dvh - 215px) / var(--filas,6)));justify-content:flex-start;align-items:stretch;gap:1px;padding:2px 1px 1px;border-radius:0;background:none;border-right:1px solid rgba(var(--bl),.1);border-bottom:1px solid rgba(var(--bl),.1);font-size:12px;overflow:hidden;min-width:0}
+  .ag-mes-m .ag-dia:nth-child(7n+7){border-right:0}
+  .ag-mes-m .ag-dia > span:first-child{align-self:center;width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px}
+  .ag-mes-m .ag-dia.hoy{box-shadow:none;color:var(--tinta)}
+  .ag-mes-m .ag-dia.hoy > span:first-child{background:var(--oro);color:#2a1d05}
+  .ag-mes-m .ag-dia.sel{background:rgba(247,195,91,.14);color:var(--tinta)}
+  .ag-mes-m .ag-dia i{display:none}
+  .ag-mes-m .ag-dia-evs{display:flex;flex-direction:column;gap:1px;min-width:0;overflow:hidden}
+  .ag-mes-m .ag-dia-evs small{display:block;font-size:9.5px;line-height:1.4;font-weight:600;padding:0 2px;border-radius:3px;background:color-mix(in srgb,var(--c) 55%,transparent);color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:clip;text-align:left;letter-spacing:-.1px}
+  .ag-mes-m .ag-dia-evs small .ag-h{display:none}
+  .ag-mes-m .ag-dia-evs small svg{width:9px;height:9px;vertical-align:-1px;margin-right:1px}
+  .ag-mes-m .ag-dia-evs em{font-style:normal;font-size:9px;color:var(--suave);text-align:left;padding-left:2px;width:auto;height:auto;border-radius:0}
+}
 .rj{margin:4px 0 12px}
 .rj-cuerpo{position:relative}
 .rj-h{position:absolute;left:44px;right:0;border-top:1px solid rgba(var(--bl),.24)}
@@ -2187,7 +2208,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.69';
+const VERSION = 'v5.70';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4573,9 +4594,10 @@ function vAgenda(){
     let g = ordenDias().filter(i => verFinde() || i < 5).map(i => `<span class="ag-ds">${DIAS_CORTO[i]}</span>`).join('');
     for(let n = 0; n < celdas; n++){ const k = sumarDias(ini, n), es = evsVer(k);
       if(nCols === 5 && diaSem(k) >= 5) continue;
-      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span>${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}<i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, 3).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : hm(e.ini) + ' '}${broteEv(e)}${esc(e.t)}</small>`).join('')}${es.length > 3 ? `<em>${es.length - 3} más</em>` : ''}</span></button>`; }
+      const nMax = ESCRITORIO.matches ? 3 : 4;   // 5.70: en el móvil caben 4 nombres por día
+      g += `<button class="ag-dia ${k.slice(0, 7) !== agK.slice(0, 7) ? 'fuera' : ''} ${k === hoy ? 'hoy' : ''} ${k === agK ? 'sel' : ''}" onclick="agElegir('${k}')"><span>${fechaDe(k).getDate()}</span>${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}<i>${es.slice(0, 3).map(e => `<em style="background:${colorEv(e)}"></em>`).join('')}</i><span class="ag-dia-evs">${es.slice(0, nMax).map(e => `<small style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${k}" onclick="event.stopPropagation(); verEvento('${e.id}','${k}', this)">${e.todo ? '' : `<b class="ag-h">${hm(e.ini)} </b>`}${broteEv(e)}${esc(e.t)}</small>`).join('')}${es.length > nMax ? `<em>${es.length - nMax} más</em>` : ''}</span></button>`; }
     const evs = evsVer(agK);
-    cuerpo = `<div class="ag-mes" style="grid-template-columns:repeat(${nCols},minmax(0,1fr))">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
+    cuerpo = `<div class="ag-mes ag-mes-m" style="grid-template-columns:repeat(${nCols},minmax(0,1fr));--filas:${celdas / 7}">${g}</div><div class="ag-lista"><p class="ag-gt">${fechaLarga(agK)}</p>${evs.length ? evs.map(e => filaEv(e, agK)).join('') : `<button class="ag-libre" onclick="nuevoEvento('${agK}')">Libre · ＋ añadir</button>`}</div>`;
   }
   return gcTop() + gcLado() + `<div class="gc-main">
     <div class="ag-modos">${[['dia', 'Día'], ...(ESCRITORIO.matches ? [['semana', 'Semana']] : []), ['mes', 'Mes']].map(([k, t]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')">${t}</button>`).join('')}</div>
