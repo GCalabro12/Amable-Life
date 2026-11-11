@@ -2087,7 +2087,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.55';
+const VERSION = 'v5.56';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2121,9 +2121,9 @@ const app = $('#app');
    D = {v:2, niveles:{area:'bien'|'una'|'mas'}, detalle:{trabajo:{gusta,dinero}}, comentarios:{}, nivelesMod,
         revisiones:[{id, fecha, niveles, detalle, comentarios}], acciones:[{id, area, texto, hecha, creada, hechaEn, mod}], borradas:[] } */
 const NIVELES = {
-  bien: {marca:'2+', titulo:'Practico más de uno', sub:'Más de un hábito a la semana', n:0, peso:0},
-  una:  {marca:'1',  titulo:'Tengo uno',           sub:'Un hábito a la semana',        n:1, peso:1},
-  mas:  {marca:'0',  titulo:'Ninguno',             sub:'Necesito hacer algún hábito',  n:2, peso:2},
+  bien: {marca:'2+', titulo:'Practico más de una', sub:'Más de una práctica integral a la semana', n:0, peso:0},
+  una:  {marca:'1',  titulo:'Tengo una',           sub:'Una práctica integral a la semana',        n:1, peso:1},
+  mas:  {marca:'0',  titulo:'Ninguna',             sub:'Necesito alguna práctica integral',  n:2, peso:2},
 };
 /* Salud (venido de Amable PC): agua, movimiento y pasos */
 const SALUD_DEF = {aguaOn:true, aguaMin:45, aguaGoal:8, movOn:true, movMin:60, aguaNext:0, movNext:0, days:{},
@@ -2359,9 +2359,9 @@ function flor(niveles, opc = {}){
   if(opc.clic) areasFlor().forEach((a,i) => { s += `<path d="${petalo(L + 20, 46)}" transform="rotate(${i*paso})" fill="transparent" style="cursor:pointer" onclick="abrirPetalo('${a.id}')"/>`; });
   return s + '</svg>';
 }
-const LEYENDA = `<div class="leyenda-niv"><span><i class="pt2"></i><i class="pt2"></i> Necesita algún hábito</span><span><i class="pt2"></i> Un hábito a la semana</span><span><b>✓</b> Más de un hábito</span></div>`;
+const LEYENDA = `<div class="leyenda-niv"><span><i class="pt2"></i><i class="pt2"></i> Necesita alguna práctica integral</span><span><i class="pt2"></i> Una práctica integral a la semana</span><span><b>✓</b> Más de una práctica integral</span></div>`;
 /* 4.63: leyenda de la flor de hábitos (al terminar la revisión) */
-const LEYENDA_HAB = `<div class="leyenda-niv leyenda-hab"><span><b>✓</b> Área con hábitos establecidos (uno o más)</span><span><i class="pt-peq"></i> Pétalo pequeño: le falta algún hábito</span></div>`;
+const LEYENDA_HAB = `<div class="leyenda-niv leyenda-hab"><span><b>✓</b> Área con prácticas integrales (una o más)</span><span><i class="pt-peq"></i> Pétalo pequeño: le falta alguna práctica integral</span></div>`;
 /* Logo: el girasol de la app (centro dorado grande con semillas; pétalos de colores alrededor; sin aro) */
 function logoInterior(){
   let s = '<defs><radialGradient id="lc"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient>'
@@ -2815,7 +2815,7 @@ function seccionAhora(pip){
   <div class="av-fila foco-top">${botonAvisosHTML()}${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
   <section class="ahora-blk foco-b foco-b3">
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : `<p class="peq suave" style="margin:0">Este bloque ya tiene ${MAX_ACT} tareas.</p>`}
-    <p class="peq suave foco-nota">Cualquier tarea o hábito de tu <b>calendario</b> también lo puedes traer aquí: ábrelo y pulsa <b>«Focus»</b>.</p>
+    <p class="peq suave foco-nota">Cualquier tarea o práctica integral de tu <b>calendario</b> también la puedes traer aquí: ábrelo y pulsa <b>«Focus»</b>.</p>
   </section>${hechasBloqueHTML(c)}`;
   return `<section class="ahora-blk" data-drop="ahora">
     <div class="ah-cab"><b class="ah-tit">FOCUS</b><span class="ah-sub">Trabajo en bloques de tiempo de 1,5 horas</span></div>
@@ -3355,8 +3355,8 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
       ${(opt.medalla.lineas || ['¡Flor', 'equilibrada!']).map((l, q) => `<text class="g-frase g-medalla" y="${-40 + q * 14}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`).join('')}`; }
   }
   else if(opt.frase){   // 4.76 (Gustavo): en el centro, la frase de la flor equilibrada (sin lo del bloque)
-    const L = ['Para tener una flor', 'equilibrada, ten al', 'menos una tarea o', 'hábito a la semana', 'en cada pétalo'];
-    s += L.map((l, k) => `<text class="g-frase" y="${(k - 2) * 14}" text-anchor="middle" dominant-baseline="central">${l}</text>`).join('');
+    const L = ['Para tener una flor', 'equilibrada, ten al', 'menos una tarea o', 'práctica integral', 'a la semana', 'en cada pétalo'];
+    s += L.map((l, k) => `<text class="g-frase" y="${(k - 2.5) * 14}" text-anchor="middle" dominant-baseline="central">${l}</text>`).join('');
   }
   else if(bloque && bloque.actual){ const pa = progresoBloque(bloque.ini, bloque.fin), pp = puntoAro(pa, R0 + 3);
     s += `<circle r="${R0 + 3}" fill="none" stroke="#22a35a" stroke-width="6"/>
@@ -3391,8 +3391,8 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
     // 5.13 (Gustavo): lo que está marcado se ve en la flor: un anillo de puntos que gira alrededor del centro (todos) o el borde del pétalo (esa área)
     FL.forEach((a, i) => { const {L: Lp, W} = TAM[i]; s += `<g transform="rotate(${i*paso}) translate(0 ${-R0 + 8})"><path class="marca-pet" data-a="${a.id}" d="${petalo(Lp, W)}" pathLength="100"/></g>`; });
     s += `<circle class="marca-anillo" r="${R0 + 4}" pathLength="100"/>`;
-    FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="habFijar('${a.id}')" onmouseenter="habResaltar('${a.id}')" onmouseleave="habResaltar()"><title>Marcar los hábitos de ${a.nombre}</title></path>`; });
-    s += `<circle class="g-centro" r="${R0}" fill="transparent" style="cursor:pointer" onclick="habFijar('*')" onmouseenter="habResaltar('*')" onmouseleave="habResaltar()"><title>Marcar todos tus hábitos</title></circle>`;
+    FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="habFijar('${a.id}')" onmouseenter="habResaltar('${a.id}')" onmouseleave="habResaltar()"><title>Marcar las prácticas integrales de ${a.nombre}</title></path>`; });
+    s += `<circle class="g-centro" r="${R0}" fill="transparent" style="cursor:pointer" onclick="habFijar('*')" onmouseenter="habResaltar('*')" onmouseleave="habResaltar()"><title>Marcar todas tus prácticas integrales</title></circle>`;
     return s + '</svg>';
   }
   FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="abrirPanelArea('${a.id}')" onmouseenter="if(matchMedia('(hover: hover)').matches) abrirPanelArea('${a.id}', true)"/>`; });
@@ -3446,7 +3446,7 @@ function habitosPanelHTML(a){
   const frec = e => { const f = e.frec || 'diario';
     if(f === 'diario'){ const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length ? d.map(k => DIAS_L[k]).join(' ') : 'Sin días'; }
     return txtHabito(e); };
-  return `<p class="pa-sub">Hábitos</p><div class="pa-habs">${ev.map(e => `<button class="pa-hab" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small>${objDe(e) ? `<small class="pa-obj">Objetivo: ${esc(objTxtO(objDe(e)))} · llevas ${objProg(e, hoyK())}${objPer(objDe(e)) === 'dia' ? ' hoy' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</small>` : ''}</span></button>`).join('')}
+  return `<p class="pa-sub">Prácticas integrales</p><div class="pa-habs">${ev.map(e => `<button class="pa-hab" onclick="verEvento('${e.id}','${hoyK()}', this)">${ICO_BROTE}<span><b>${esc(e.t)}</b><small>${frec(e)} · ${e.todo ? 'sin hora' : `${hm(e.ini)} – ${hm(e.fin)}`}</small>${objDe(e) ? `<small class="pa-obj">Objetivo: ${esc(objTxtO(objDe(e)))} · llevas ${objProg(e, hoyK())}${objPer(objDe(e)) === 'dia' ? ' hoy' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</small>` : ''}</span></button>`).join('')}
     ${sueltos.map(t => `<div class="pa-hab suelto">${ICO_BROTE}<span><b>${esc(t)}</b><small>Sin día ni hora · <button class="link" onclick="P = P || {}; empezarDefHab()">Definir día y hora</button></small></span></div>`).join('')}</div>`;
 }
 function nuevaEnPanel(){
@@ -3712,7 +3712,7 @@ function precargar(i){ const a = areasFlor()[i]; if(a) (new Image()).src = `img/
 const REL_HAB = {salud: 'tu cuerpo, tu energía y tu descanso', pareja: 'tu pareja o tu vida sentimental', familia: 'tu familia y tus amigos',
   trabajo: 'tu trabajo y tu dinero', crecimiento: 'tu aprendizaje y tu crecimiento personal', ocio: 'tu ocio y tu disfrute',
   proposito: 'tu propósito y tu espiritualidad', hogar: 'tu hogar y tu entorno'};
-const pregHab = a => `¿Cuántos hábitos a la semana practicas en relación a ${REL_HAB[a.id] || a.nombre.toLowerCase()}?`;
+const pregHab = a => `¿Cuántas prácticas integrales a la semana haces en relación a ${REL_HAB[a.id] || a.nombre.toLowerCase()}?`;
 function salirRevision(){ clearTimeout(tAvance); E = null; ir('dia'); }
 const ICO_ATRAS = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
 function masHabito(id){
@@ -3731,13 +3731,13 @@ function vEvaluar(){
   if(nv){
     const q = nv === 'mas' ? 'quiero' : 'tengo', n = nv === 'bien' ? Math.max(2, hb.tengo.length) : 1, lista = hb[q];
     const tit = nv === 'bien' ? '¿Cuáles haces?' : nv === 'una' ? '¿Cuál haces?' : '¿Cuál quisieras hacer?';
-    const ph = k => nv === 'mas' ? `Por ejemplo: ${a.ejemplos[k] || a.ejemplos[0]}` : nv === 'bien' ? `Hábito ${k + 1}` : 'Tu hábito';
+    const ph = k => nv === 'mas' ? `Por ejemplo: ${a.ejemplos[k] || a.ejemplos[0]}` : nv === 'bien' ? `Práctica integral ${k + 1}` : 'Tu práctica integral';
     preg = `<div class="ev-hab"><p class="pregunta">${tit}</p>
       ${Array.from({length: n}, (_, k) => `<div class="campo-voz"><input type="text" maxlength="120" value="${esc(lista[k] || '')}" placeholder="${esc(ph(k))}" oninput="E.hab['${a.id}'].${q}[${k}]=this.value" onkeydown="if(event.key==='Enter')this.blur()">${botonMic()}</div>`).join('')}
-      ${nv === 'bien' && n < 6 ? `<button class="link" onclick="masHabito('${a.id}')">＋ Otro hábito</button>` : ''}</div>`;
+      ${nv === 'bien' && n < 6 ? `<button class="link" onclick="masHabito('${a.id}')">＋ Otra práctica integral</button>` : ''}</div>`;
   }
   return `<div class="ev-pant" style="--c:${a.color}">
-    <div class="ev-top"><button class="ev-volver" onclick="salirRevision()" aria-label="Volver a Hábitos">${ICO_ATRAS}</button>
+    <div class="ev-top"><button class="ev-volver" onclick="salirRevision()" aria-label="Volver a Tus áreas">${ICO_ATRAS}</button>
       <h1 class="ev-area">${a.nombre}</h1><span class="ev-n">${E.i+1} de ${FL.length}</span></div>
     <div class="progreso">${FL.map((x,j) => `<i class="${j<E.i?'hecho':j===E.i?'actual':''}" style="--c:${x.color}"></i>`).join('')}</div>
     <section class="tarjeta eval">
@@ -3800,15 +3800,15 @@ function vPlanHab(){
   const FL = areasFlor(), H = D.habitosArea || {}, nuevas = (P && P.nuevas) || 0;
   const con = FL.filter(a => nivel(a.id) === 'bien' || nivel(a.id) === 'una').length;
   const filas = FL.map(a => { const nv = nivel(a.id), h = H[a.id] || {tengo: [], quiero: []};
-    const items = nv === 'mas' ? (h.quiero.length ? h.quiero.map(t => `<li class="falta">${ICO_BROTE} Quiero empezar: ${esc(t)}</li>`).join('') : '<li class="falta">Te falta algún hábito</li>')
+    const items = nv === 'mas' ? (h.quiero.length ? h.quiero.map(t => `<li class="falta">${ICO_BROTE} Quiero empezar: ${esc(t)}</li>`).join('') : '<li class="falta">Te falta alguna práctica integral</li>')
       : (h.tengo.length ? h.tengo.map(t => `<li>${ICO_BROTE} ${esc(t)}</li>`).join('') : `<li>${nv ? NIVELES[nv].titulo : 'Sin revisar'}</li>`);
     return `<div class="plan-area" style="--c:${a.color}"><h3>${ico(a)} ${a.nombre} ${nv === 'mas' || !nv ? '' : '<span class="ph-ok">✓</span>'}</h3><ul class="ph-lista">${items}</ul></div>`; }).join('');
-  return `<div class="res-tit"><h1>Tu flor de hábitos</h1><p class="suave">Áreas con hábitos establecidos: <b>${con} de ${FL.length}</b></p></div>
-    <section class="tarjeta flor-sec flor-hab">${flor(D.niveles, {hab: true, centro: con, centroTxt: con === 1 ? 'área con hábitos' : 'áreas con hábitos'})}${LEYENDA_HAB}</section>
-    ${nuevas ? `<p class="suave peq" style="text-align:center;margin:0 0 10px">Lo que te falta ya está como tarea en su pétalo, en Hábitos.</p>` : ''}
+  return `<div class="res-tit"><h1>Tu flor de prácticas integrales</h1><p class="suave">Áreas con prácticas integrales: <b>${con} de ${FL.length}</b></p></div>
+    <section class="tarjeta flor-sec flor-hab">${flor(D.niveles, {hab: true, centro: con, centroTxt: con === 1 ? 'área con prácticas' : 'áreas con prácticas'})}${LEYENDA_HAB}</section>
+    ${nuevas ? `<p class="suave peq" style="text-align:center;margin:0 0 10px">Lo que te falta ya está como tarea en su pétalo, en Tus áreas.</p>` : ''}
     ${filas}
-    ${habitosParaDefinir().length ? `<button class="btn prim ancho btn-definir" style="margin-top:18px" onclick="empezarDefHab()">${ICO_CAL} Define cuándo haces o quieres hacer estos hábitos</button>` : ''}
-    <div class="bots-eval"><button class="btn sec" onclick="P = null; ir('dia')">Ir a Hábitos</button></div>`;
+    ${habitosParaDefinir().length ? `<button class="btn prim ancho btn-definir" style="margin-top:18px" onclick="empezarDefHab()">${ICO_CAL} Define cuándo haces o quieres hacer estas prácticas integrales</button>` : ''}
+    <div class="bots-eval"><button class="btn sec" onclick="P = null; ir('dia')">Ir a Tus áreas</button></div>`;
 }
 
 /* ---------- 4.67 (Gustavo): definir cuándo haces (o quieres hacer) cada hábito, y ponerlo en el calendario ----------
@@ -3844,10 +3844,10 @@ function vDefHab(){
       <h1 class="ev-area">${a.nombre}</h1><span class="ev-n">${DH.i + 1} de ${n}</span></div>
     <div class="progreso">${DH.items.map((y, j) => `<i class="${j < DH.i ? 'hecho' : j === DH.i ? 'actual' : ''}" style="--c:${areaDe(y.area).color}"></i>`).join('')}</div>
     <section class="dh-caja">
-      <p class="dh-tipo">${ICO_BROTE} ${x.ya ? 'Hábito que ya haces' : 'Hábito que quieres empezar'}</p>
+      <p class="dh-tipo">${ICO_BROTE} ${x.ya ? 'Práctica integral que ya haces' : 'Práctica integral que quieres empezar'}</p>
       ${x.editando ? `<div class="dh-ed"><div class="campo-voz"><input type="text" id="dh-t" maxlength="120" value="${esc(x.t)}" onkeydown="if(event.key==='Enter')dhGuardarT()">${botonMic()}</div>
         <button class="btn prim" onclick="dhGuardarT()">Guardar</button></div>`
-        : `<h2 class="dh-t">${esc(x.t)}</h2><button class="dh-lapiz" onclick="dhEditar()" aria-label="Editar el hábito">${ICO_LAPIZ.replace('width="18" height="18"', 'width="22" height="22"')}</button>`}
+        : `<h2 class="dh-t">${esc(x.t)}</h2><button class="dh-lapiz" onclick="dhEditar()" aria-label="Editar la práctica integral">${ICO_LAPIZ.replace('width="18" height="18"', 'width="22" height="22"')}</button>`}
       <div class="${x.nodef ? 'dh-off' : ''}">
         <p class="dh-preg">¿Qué días de la semana?</p>
         <div class="dh-dias">${DIAS_L.map((d, k) => `<button class="${x.dias.includes(k) ? 'sel' : ''}" onclick="dhDia(${k})" aria-label="${DIAS_N[k]}" ${x.nodef ? 'disabled' : ''}>${d}</button>`).join('')}</div>
@@ -3856,7 +3856,7 @@ function vDefHab(){
           <select onchange="dhHora('fin', this.value)" ${x.nodef ? 'disabled' : ''}>${opcHoras(x.fin, x.ini)}</select></div>
       </div>
       <button class="dh-nodef ${x.nodef ? 'sel' : ''}" onclick="dhNodef()"><span class="dh-cas">${x.nodef ? '✓' : ''}</span> No lo tengo definido</button>
-      ${x.nodef ? `<p class="dh-preg">Te pongo un recordatorio por la mañana, desde las 10:00 (una hora para cada hábito, sin pisarse). ¿Qué día?</p>
+      ${x.nodef ? `<p class="dh-preg">Te pongo un recordatorio por la mañana, desde las 10:00 (una hora para cada práctica integral, sin pisarse). ¿Qué día?</p>
         <div class="dh-finde"><button class="${x.finde === 5 ? 'sel' : ''}" onclick="dhFinde(5)">Recordatorio el sábado por la mañana</button>
           <button class="${x.finde === 6 ? 'sel' : ''}" onclick="dhFinde(6)">Recordatorio el domingo por la mañana</button></div>` : ''}
     </section>
@@ -3868,7 +3868,7 @@ function vDefHab(){
 /* 4.73 (Gustavo): lápiz arriba a la derecha para corregir el nombre del hábito (también en tu flor y en su tarea, si la tiene) */
 function dhEditar(){ DH.items[DH.i].editando = true; dhPinta(); const el = $('#dh-t'); if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
 function dhGuardarT(){
-  const x = DH.items[DH.i], v = (valor('dh-t') || '').trim(); if(!v){ aviso('Escribe el hábito'); return; }
+  const x = DH.items[DH.i], v = (valor('dh-t') || '').trim(); if(!v){ aviso('Escribe la práctica integral'); return; }
   const viejo = x.t; x.t = v; x.editando = false;
   if(v !== viejo){
     const h = (D.habitosArea || {})[x.area], lista = h && h[x.ya ? 'tengo' : 'quiero'];
@@ -3934,10 +3934,10 @@ let habOrdenSesion = false;
 function vDefHabFin(){
   const fila = x => { const a = areaDe(x.area), d = x.nodef ? `${x.finde === 5 ? 'Sábado' : 'Domingo'} · ${hm(x.hIni)} – ${hm(x.hIni + 30)} (recordatorio)` : `${x.dias.map(k => DIAS_L[k]).join(' ')} · ${hm(x.ini)} – ${hm(x.fin)}`;
     return `<li style="--c:${a.color}">${ico(a)}<span><b>${esc(x.t)}</b><small>${d}</small></span></li>`; };
-  return `<div class="res-tit"><h1>Hábitos en tu calendario</h1><p class="suave">${DH.n === 1 ? 'Tu hábito ya está' : `Tus ${DH.n} hábitos ya están`} en el calendario, con un aviso a la hora.</p></div>
+  return `<div class="res-tit"><h1>Prácticas integrales en tu calendario</h1><p class="suave">${DH.n === 1 ? 'Tu práctica integral ya está' : `Tus ${DH.n} prácticas integrales ya están`} en el calendario, con un aviso a la hora.</p></div>
     <ul class="dh-lista">${DH.items.map(fila).join('')}</ul>
     <button class="btn prim ancho" style="margin-top:16px" onclick="DH = null; P = null; agModo = 'semana'; agK = hoyK(); ir('agenda')">Ver mi calendario</button>
-    <div class="bots-eval"><button class="btn sec" onclick="DH = null; P = null; ir('dia')">Ir a Hábitos</button></div>`;
+    <div class="bots-eval"><button class="btn sec" onclick="DH = null; P = null; ir('dia')">Ir a Tus áreas</button></div>`;
 }
 function vPlanViejo(){
   if(!P) P = {textos:{}};
@@ -4040,9 +4040,9 @@ function dictar(btn){
    Viajan por la nube por id (gana mod; borrar = id en D.borradas). Los recordatorios suenan con la app abierta. */
 const ICO_CAL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
 const ICO_CAMPANITA = '<svg class="campanita" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Con recordatorio"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>';
-const ICO_BROTE = '<svg class="brote" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Hábito"><path d="M12 21v-8"/><path d="M12 13c0-4 3-6.5 7.5-6.5 0 4-3 6.5-7.5 6.5z"/><path d="M12 15.5c0-3.3-2.5-5.5-6.5-5.5 0 3.3 2.5 5.5 6.5 5.5z"/></svg>';
+const ICO_BROTE = '<svg class="brote" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Práctica integral"><path d="M12 21v-8"/><path d="M12 13c0-4 3-6.5 7.5-6.5 0 4-3 6.5-7.5 6.5z"/><path d="M12 15.5c0-3.3-2.5-5.5-6.5-5.5 0 3.3 2.5 5.5 6.5 5.5z"/></svg>';
 /* 4.94 (Gustavo): en el calendario, en lugar del brote, la florecita de los hábitos (pétalos blancos y centro dorado, se ve sobre el verde) */
-const ICO_FLOR_HAB = '<svg class="brote flor-hab" viewBox="0 0 24 24" width="12" height="12" aria-label="Hábito"><g fill="#fff" stroke="#15803d" stroke-width=".9"><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(0 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(45 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(90 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(135 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(180 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(225 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(270 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(315 12 12)"/></g><circle cx="12" cy="12" r="4.6" fill="#f5b301" stroke="#b45309" stroke-width=".8"/></svg>';
+const ICO_FLOR_HAB = '<svg class="brote flor-hab" viewBox="0 0 24 24" width="12" height="12" aria-label="Práctica integral"><g fill="#fff" stroke="#15803d" stroke-width=".9"><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(0 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(45 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(90 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(135 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(180 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(225 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(270 12 12)"/><ellipse cx="12" cy="5.2" rx="2.9" ry="4.2" transform="rotate(315 12 12)"/></g><circle cx="12" cy="12" r="4.6" fill="#f5b301" stroke="#b45309" stroke-width=".8"/></svg>';
 const esMeta = e => !!(e && (e.metaId || e.metaReg));
 /* 4.96 (Gustavo): lo que viene de Amable Meta lleva en el calendario un rectangulito «Amable Meta» en lugar de la florecita, y en su tarjeta, Prácti regando en pequeño */
 /* 5.06 (Gustavo): delante de un hábito con área, su pétalo de color (uno por área); sin área, la florecita */
@@ -4133,7 +4133,7 @@ const eventosDe = k => AG_().eventos.filter(e => tocaEv(e, k)).sort((a, b) => (b
 const hechoEv = (e, k) => (e.hechos || []).includes(k) || !!(e.acc && !repite(e) && (D.acciones.find(x => x.id === e.acc) || {}).hecha);
 const pasadoEv = (e, k) => !e.todo && (k < hoyK() || (k === hoyK() && e.fin <= minutosHoy()));
 const areasEv = e => (e.areas && e.areas.length ? e.areas : e.area ? [e.area] : []).map(areaDe).filter(Boolean);
-const cabeceraEv = e => e && e.tipo === 'habito' ? ['Hábito', ...areasEv(e).map(a => a.nombre)].join(' · ').toUpperCase() : '';   // 4.86 (Gustavo): primera línea de los avisos de hábitos, «HÁBITO · SALUD» (en las tareas, no)
+const cabeceraEv = e => e && e.tipo === 'habito' ? ['Práctica integral', ...areasEv(e).map(a => a.nombre)].join(' · ').toUpperCase() : '';   // 4.86 (Gustavo): primera línea de los avisos de hábitos, «HÁBITO · SALUD» (en las tareas, no)
 const tituloAviso = (e, txt) => { const c = cabeceraEv(e); return c ? [c, e.t + '\n' + txt] : [e.t, txt]; };
 const SIN_TITULO = '(Sin título)';
 const COLOR_HAB = '#22c55e';   // 4.94 (Gustavo): los hábitos, siempre verdes
@@ -4155,7 +4155,7 @@ function evsBloqueHTML(k, b, que){
 const filaEv = (e, k) => { const ok = hechoEv(e, k), ar = e.area && areaDe(e.area);
   return `<div class="ev ${ok ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}" style="--c:${colorEv(e)}">
     <button class="check ${ok ? 'hecho' : ''}" ${e.prio && e.tipo !== 'habito' ? `style="--c:${prioDe(e).c}"` : ''} aria-label="${ok ? 'Desmarcar' : 'Marcar como hecho'}" onclick="alternarEv('${e.id}','${k}')">✓</button>
-    <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Hábito` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${repIco(e)}${campEv(e)}` : ''}</span><span class="ev-t">${broteEv(e)}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
+    <button class="ev-cuerpo" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><span class="ev-h">${horaEv(e)}${e.tipo === 'habito' ? ` · ${ICO_REP} Práctica` : repite(e) ? ` · ${ICO_REP}` : ''}${campEv(e) ? ` · ${repIco(e)}${campEv(e)}` : ''}</span><span class="ev-t">${broteEv(e)}${esc(e.t)}</span>${e.descH ? `<span class="ev-d rt">${limpiarHTML(e.descH)}</span>` : e.desc ? `<span class="ev-d">${esc(e.desc)}</span>` : ''}${areasEv(e).map(x => `<span class="ev-a">${ico(x)} ${x.nombre}</span>`).join('')}</button></div>`; };
 let agModo = 'dia', agK = null, agN = 7, agW = 2;   // agW: semanas seguidas al arrastrar más de 7 días   // agN: los días seguidos de una franja elegida arrastrando en el mes pequeño
 /* Vistas con columnas de días: Semana (de lunes a domingo), 7 días (desde el día elegido) y la franja arrastrada */
 const CON_COLS = ['semana', '7dias', '3dias', 'rango'];
@@ -4173,7 +4173,7 @@ const verFinde = () => gcPref.finde !== false, verHechas = () => gcPref.verHecha
 const gcVistaB = ([k, x, l]) => `<button class="${agModo === k ? 'sel' : ''}" onclick="agVer('${k}')"><span>${x}</span><kbd data-atajo="la tecla ${l}|para la vista ${x}">${l}</kbd></button>`;
 /* 5.23 (Gustavo): al pasar el ratón por un atajo, una etiqueta negra que dice qué tecla pulsar; y en el menú, «Atajos de teclado» */
 const icoTeclado = () => svgT('<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/>', 24);
-const ATAJOS = [['D', 'Vista Día'], ['W', 'Vista Semana'], ['M', 'Vista Mes'], ['Y', 'Vista Año'], ['A', 'Vista Agenda'], ['X', 'Vista de varios días (de entrada 3; en el desplegable, − y + para cambiarlos)'], ['T', 'Ir a hoy'], ['C', 'Crear una tarea o un hábito'],
+const ATAJOS = [['D', 'Vista Día'], ['W', 'Vista Semana'], ['M', 'Vista Mes'], ['Y', 'Vista Año'], ['A', 'Vista Agenda'], ['X', 'Vista de varios días (de entrada 3; en el desplegable, − y + para cambiarlos)'], ['T', 'Ir a hoy'], ['C', 'Crear una tarea o una práctica integral'],
   ['/', 'Buscar en el calendario'], ['→  o  J', 'Siguiente (día, semana o mes)'], ['←  o  K', 'Anterior'], ['Esc', 'Cerrar la ventana o el desplegable']];
 function abrirAtajos(){
   hojaAbierta = abrirAtajos;
@@ -4282,7 +4282,7 @@ function comoVaDia(k){
   const movidas = [...new Set([...idsApunte('dia', k), ...AG_().eventos.filter(e => e.tipo !== 'habito' && (e.aplazadaDe || []).includes(k)).map(e => e.id)])];
   const habs = eventosDe(k).filter(e => e.tipo === 'habito');
   return [{t: 'Tareas', f: [['Pendientes', pend], ['Hechas', hech], ['Cambiadas de hora', idsApunte('hora', k).map(nom)], ['Cambiadas de día', movidas.map(nom)], ['Borradas sin hacer', idsApunte('borr', k).map(nom)]]},
-    {t: 'Hábitos', f: [['Pendientes', habs.filter(e => !hechoEv(e, k)).map(nomHabDia)], ['Hechos', AG_().eventos.filter(e => e.tipo === 'habito' && (e.hechos || []).includes(k)).map(nomHabDia)]]}];
+    {t: 'Prácticas integrales', f: [['Pendientes', habs.filter(e => !hechoEv(e, k)).map(nomHabDia)], ['Hechas', AG_().eventos.filter(e => e.tipo === 'habito' && (e.hechos || []).includes(k)).map(nomHabDia)]]}];
 }
 function verDiaEst(ev, k, el){
   if(ev){ ev.stopPropagation(); ev.preventDefault(); }
@@ -4323,7 +4323,7 @@ addEventListener('scroll', () => { if($('#dia-est')) cerrarDiaEst(); }, {passive
 /* 5.00 (Gustavo): a la derecha del número del día, en pequeño, cuántas cosas hay ese día (tareas y hábitos, todo junto; lo que se ve) */
 function numDiaHTML(k){
   const n = evsVer(k).length;
-  return `<i class="rj-l2">${diaEstBtn(k)}<small class="rj-n${n ? '' : ' cero'}" title="${n} ${n === 1 ? 'tarea o hábito' : 'tareas y hábitos'}">${n}<em> ${n === 1 ? 'tarea' : 'tareas'}</em></small></i>`;   // 5.50: debajo del día
+  return `<i class="rj-l2">${diaEstBtn(k)}<small class="rj-n${n ? '' : ' cero'}" title="${n} ${n === 1 ? 'tarea o práctica integral' : 'tareas y prácticas integrales'}">${n}<em> ${n === 1 ? 'tarea' : 'tareas'}</em></small></i>`;   // 5.50: debajo del día
 }
 function vAgenda(){
   if(!agK) agK = hoyK();
@@ -4421,7 +4421,7 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}${marcaCls(e)}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · hábito' + objDia(e, k) : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}${marcaCls(e)}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · práctica' + objDia(e, k) : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
     return `<div class="rj-col" data-k="${k}" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   // 4.78 (Gustavo): «Tareas flexibles» (las de hoy sin hora): un óvalo a la altura de la hora de ahora (baja con ella),
@@ -4644,7 +4644,7 @@ function gcLado(){
   const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
   const h = +new Intl.DateTimeFormat('es-ES', Object.assign({hour: '2-digit', hour12: false}, fPref.zona ? {timeZone: fPref.zona} : {})).format(new Date()).slice(0, 2);
   return `<aside class="gc-lado">${menuSeccionesHTML('gc-secc')}
-    <button class="gc-crear" onclick="nuevoEvento()" data-atajo="la tecla C|para crear una tarea o un hábito">${ICO_MAS}Crear</button>
+    <button class="gc-crear" onclick="nuevoEvento()" data-atajo="la tecla C|para crear una tarea o una práctica integral">${ICO_MAS}Crear</button>
     <div><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
       ${mesPeq(m0, true)}</div>
@@ -4706,7 +4706,7 @@ function gcBuscarPintar(){
   const q = gcNorm(valor('gc-q'));
   if(!q){ box.innerHTML = '<p class="peq suave" style="margin:0">Busca por el nombre de lo que tienes en el calendario.</p>'; return; }
   const evs = AG_().eventos.filter(e => gcNorm(e.t).includes(q)).map(e => ({e, k: gcProximo(e)})).sort((a, b) => a.k.localeCompare(b.k)).slice(0, 40);
-  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio && e.tipo !== 'habito' ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · hábito' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
+  box.innerHTML = evs.length ? evs.map(({e, k}) => `<button class="gc-r" style="--c:${colorEv(e)}" onclick="gcIrA('${e.id}','${k}')"><b>${e.prio && e.tipo !== 'habito' ? ICO_BANDERA(prioDe(e).c) + ' ' : ''}${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b><span>${capi(fechaLarga(k))}${k.slice(0, 4) !== hoyK().slice(0, 4) ? ' de ' + k.slice(0, 4) : ''} · ${horaEv(e)}${e.tipo === 'habito' ? ' · práctica integral' : repite(e) ? ' · se repite' : ''}</span></button>`).join('')
     : '<p class="peq suave" style="margin:0">No hay nada con esa palabra.</p>';
 }
 function gcIrA(id, k){ cerrarHoja(); agK = k; gcMiniDes = 0; render(); agVerAhora(); editarEvento(id, k); }
@@ -4800,7 +4800,7 @@ function pintarDesp(id){
 }
 function durPersEv(inp){
   let m = leerHoras(inp); if(!m) return;
-  if(evEd.tipo === 'habito' && m > 120){ m = 120; aviso('Los hábitos duran como mucho 2 horas'); }
+  if(evEd.tipo === 'habito' && m > 120){ m = 120; aviso('Las prácticas integrales duran como mucho 2 horas'); }
   const i = minDeHora(valor('ev-ini')); if(i != null) $('#ev-fin').value = hhmm(Math.min(i + m, 1439));
   const l = $('#dl-dur'); if(l) l.querySelectorAll('.desp-op').forEach(o => { const si = o === inp.closest('.desp-op'); o.classList.toggle('sel', si); const t = o.querySelector('i'); if(t) t.textContent = si ? '✓' : ''; });
   const v = $('#dv-dur'); if(v) v.innerHTML = despValor('dur');
@@ -4873,7 +4873,7 @@ function despElegir(id, k){
   pintarDesp(id);
 }
 /* 4.90 (Gustavo): Tarea / Hábito arriba del todo, con lo que es cada uno; el título crece hasta 3 renglones */
-const AYUDA_TIPO = {tarea: 'Tarea: una acción con una hora o una fecha límite.', habito: 'Hábito: la práctica de una habilidad, que repites para que se quede contigo.'};
+const AYUDA_TIPO = {tarea: 'Tarea: una acción con una hora o una fecha límite.', habito: 'Práctica integral: algo que repites cada semana para cuidar un área de tu vida.'};
 function tituloEv(t){
   if(!t) return;
   if(/[\r\n]/.test(t.value)) t.value = t.value.replace(/[\r\n]+/g, ' ');
@@ -4887,7 +4887,7 @@ function pintarEvento(e){
   hojaAbierta = null;
   const hab = evEd.tipo === 'habito', todo = !!e.todo;
   mostrarHoja(`<div class="ev-hoja"><div class="ev-cols"><div class="ev-col">
-    <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" data-ayuda="${AYUDA_TIPO.tarea}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" data-ayuda="${AYUDA_TIPO.habito}" onclick="evTipo('habito')">Hábito</button>
+    <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" data-ayuda="${AYUDA_TIPO.tarea}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" data-ayuda="${AYUDA_TIPO.habito}" onclick="evTipo('habito')">Práctica integral</button>
       <span class="ev-prios"${hab ? ' style="display:none"' : ''}>${PRIO_OPC.map(o => `<button type="button" class="ev-prio ${evEd.prio === o.v ? 'sel' : ''}" style="--c:${o.c}" title="${o.t}" aria-label="${o.t}" onclick="evPrioB('${o.v}', this)">${prioBtnHTML(o)}</button>`).join('')}</span></div>
     <p class="ev-tipo-ayuda" id="ev-tipo-ayuda">${hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea}</p>
     <p class="prio-nota" id="ev-prio-info"${hab ? ' style="display:none"' : ''}>${PRIO_NOTA[evEd.prio] || ''}</p>
@@ -4896,8 +4896,8 @@ function pintarEvento(e){
       <div class="rt-ed rt" id="ev-desc" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Descripción" data-ph="Añadir descripción" oninput="rtVacio(this); descLarga()" onpaste="event.preventDefault(); document.execCommand('insertText', false, (event.clipboardData || window.clipboardData).getData('text/plain'))"></div></div>${(Reconocer || esApp) ? `<button class="mic" type="button" aria-label="Dictar la descripción" onmousedown="event.preventDefault()" onclick="dictarDesc(this)">${MIC}</button>` : ''}</div>
     <div id="ev-hab" ${hab ? '' : 'hidden'}>
       <div class="ev-meta"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92">
-        <div><p>Un hábito es como una planta: hay que <b>regarlo cada día</b>.</p>
-        <button type="button" class="btn sec ev-meta-b" onclick="metaAbrir()">${ICO_BROTE.replace('width="12" height="12"', 'width="18" height="18"')} Importar hábitos de Metas Amables</button></div></div>
+        <div><p>Una práctica integral es como una planta: hay que <b>regarla cada día</b>.</p>
+        <button type="button" class="btn sec ev-meta-b" onclick="metaAbrir()">${ICO_BROTE.replace('width="12" height="12"', 'width="18" height="18"')} Importar prácticas de Metas Amables</button></div></div>
       <div class="desps" style="margin-top:12px"><div class="desp" id="dc-frec"><button type="button" class="desp-btn" onclick="frecTocar(this)">${ICO_REP}<span class="desp-t">Frecuencia</span><span class="desp-v" id="dv-frec">${frecTxt()}</span>${FLECHA_ABAJO}</button>
       <div class="frec-panel" id="frec-panel" hidden>
       <select class="frec-sel" id="frec-sel" aria-label="Frecuencia" onchange="frecTipo(this.value)">${[['diario', 'Diario'], ['semanal', 'Semanal'], ['intervalo', 'Intervalo']].map(([k, t]) => `<option value="${k}" ${(evEd.frec || 'diario') === k ? 'selected' : ''}>${t}</option>`).join('')}</select>
@@ -5188,15 +5188,15 @@ const ICO_PAPELERA = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none
 const ICO_COPIA = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>';
 const ICO_LINEAS = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h11"/></svg>';
 function repTxt(e){
-  if(e.tipo === 'habito') return 'Hábito · ' + txtHabito(e).toLowerCase() + ((e.frec || 'diario') === 'diario' && (e.dias || []).length < 7 ? ': ' + (e.dias || []).slice().sort().map(d => DIAS_CORTO[d]).join(' · ') : '');
+  if(e.tipo === 'habito') return 'Práctica integral · ' + txtHabito(e).toLowerCase() + ((e.frec || 'diario') === 'diario' && (e.dias || []).length < 7 ? ': ' + (e.dias || []).slice().sort().map(d => DIAS_CORTO[d]).join(' · ') : '');
   const d = fechaDe(e.dia);
   return {dia: 'Cada día', semana: `Cada semana, el ${DIAS_LARGO[diaSem(e.dia)]}`, mes: `Cada mes, el día ${d.getDate()}`, anio: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`, lab: 'De lunes a viernes'}[e.rep] || '';
 }
 /* 4.95 (Gustavo): en la tarjeta de un hábito, arriba, en verde y en mayúsculas, «HÁBITO DEL ÁREA DE PAREJA» con su pétalo (en lugar de la línea del área de abajo) */
 function habAreaTxt(ars){
-  if(!ars.length) return 'Hábito';
+  if(!ars.length) return 'Práctica integral';
   const n = ars.map(a => a.nombre);
-  return ars.length === 1 ? `Hábito del área de ${n[0]}` : `Hábito de las áreas de ${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}`;
+  return ars.length === 1 ? `Práctica integral del área de ${n[0]}` : `Práctica integral de las áreas de ${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}`;
 }
 function metaTarjetaHTML(e){
   const hs = e.metaReg ? (e.metaHabitos || []) : [];
@@ -5211,12 +5211,12 @@ function popHTML(e, k, enHoja){
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
   return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}<button type="button" class="ep-focus" title="Ponerla la primera en tu bloque de Focus" onclick="popFocus('${e.id}','${k}')">${ICO_DIANA}Focus</button>${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
-    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Hábito importado de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
+    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Práctica importada de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
       <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
     <div class="ep-bots">${objDe(e) && !ok ? (objHecho(e, k) ? `<span class="ep-obj-ok">✓ Objetivo ${objPer(objDe(e)) === 'semana' ? 'de la semana' : 'del mes'} cumplido</span>`
-      : `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}${objPer(objDe(e)) === 'dia' ? '' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</button>`) : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : 'ep-prin'}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Hábito hecho · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar el hábito como hecho' : 'Marcar como hecho')}</button>
+      : `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}${objPer(objDe(e)) === 'dia' ? '' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</button>`) : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : 'ep-prin'}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Práctica hecha · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar como hecha' : 'Marcar como hecho')}</button>
       ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
     ${esMeta(e) ? metaTarjetaHTML(e) : ''}
@@ -5387,9 +5387,9 @@ function dlgBorrar(id, k){
   cerrarDlgBorrar();
   const hab = e.tipo === 'habito', d = fechaDe(k), w = document.createElement('div');
   w.id = 'borrar-dlg';
-  w.innerHTML = `<div class="bd-in" role="dialog" aria-modal="true"><p>${hab ? 'Es un hábito' : 'Se repite'}. ¿Qué quieres borrar?</p>
+  w.innerHTML = `<div class="bd-in" role="dialog" aria-modal="true"><p>${hab ? 'Es una práctica integral' : 'Se repite'}. ¿Qué quieres borrar?</p>
     <button class="btn peligro" onclick="cerrarDlgBorrar(); popBorrar2('${id}','${k}', false)">Solo el ${d.getDate()} de ${MESES[d.getMonth()]}</button>
-    <button class="btn peligro" onclick="cerrarDlgBorrar(); popBorrar2('${id}','${k}', true)">${hab ? 'Todo el hábito' : 'Todas las veces'}</button>
+    <button class="btn peligro" onclick="cerrarDlgBorrar(); popBorrar2('${id}','${k}', true)">${hab ? 'Toda la práctica integral' : 'Todas las veces'}</button>
     <button class="btn sec" onclick="cerrarDlgBorrar()">Cancelar</button></div>`;
   w.addEventListener('click', ev => { if(ev.target === w) cerrarDlgBorrar(); });
   document.body.appendChild(w);
@@ -5440,7 +5440,7 @@ function metaRegistro(df, crear, ini){
   const h = Number(df.horaAviso), hora = Number.isInteger(h) && h >= 7 && h <= 23 ? h : 20;
   const dur = !nuevoEv && e.ini != null && e.fin > e.ini ? e.fin - e.ini : 30;
   const i0 = ini != null && !isNaN(ini) ? +ini : !nuevoEv && e.ini != null ? e.ini : hora * 60;
-  const nuevo = {t: 'Hábitos de Amable Meta', tipo: 'habito', dias: [0, 1, 2, 3, 4, 5, 6], frec: 'diario', veces: 7, ini: i0, fin: Math.min(i0 + dur, 1439),
+  const nuevo = {t: 'Prácticas de Amable Meta', tipo: 'habito', dias: [0, 1, 2, 3, 4, 5, 6], frec: 'diario', veces: 7, ini: i0, fin: Math.min(i0 + dur, 1439),
     metaTexto: String(df.metaTexto || '').trim(), metaHabitos: (df.metasSencillas || []).filter(m => m && m.nombre).map(m => m.nombre)};
   if(Object.keys(nuevo).every(k => JSON.stringify(e[k]) === JSON.stringify(nuevo[k]))) return false;
   Object.assign(e, nuevo, {mod: ahoraISO()}); return true;
@@ -5448,7 +5448,11 @@ function metaRegistro(df, crear, ini){
 /* 4.99 (Gustavo): ya no va un hábito por cada meta de Amable Meta, sino uno solo al día con todo dentro. Los de antes (metaId) se quitan
    (a la papelera de la nube, D.borradas, para que no vuelvan) y, si aún no estaba el de «Hábitos de Amable Meta», se crea con sus nombres. */
 function metaUnificar(){
-  const A = AG_(), viejos = A.eventos.filter(x => x.metaId); if(!viejos.length) return false;
+  const A = AG_(), viejos = A.eventos.filter(x => x.metaId);
+  // 5.56 (Gustavo): «Hábitos de Amable Meta» pasa a llamarse «Prácticas de Amable Meta», también lo ya importado
+  let renombrado = false;
+  A.eventos.forEach(x => { if(x.metaReg && x.t === 'Hábitos de Amable Meta'){ x.t = 'Prácticas de Amable Meta'; x.mod = ahoraISO(); renombrado = true; } });
+  if(!viejos.length) return renombrado;
   if(!A.eventos.some(x => x.metaReg)) metaRegistro({metasSencillas: viejos.map(v => ({nombre: v.t})), metaTexto: ''}, true, viejos[0].ini);
   A.eventos = A.eventos.filter(x => !x.metaId); D.borradas = (D.borradas || []).concat(viejos.map(v => v.id));
   return true;
@@ -5462,9 +5466,9 @@ async function metaSync(){
 }
 function metaAbrir(){
   metaK = (evEd && (valor('ev-dia') || evEd.k)) || hoyK(); evEd = null;
-  mostrarHoja(`<div class="hoja-cab"><h2>Hábitos de Metas Amables</h2></div>
-    <div class="ev-meta meta-cab"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92"><div><p>Trae a tu calendario los hábitos que ya riegas en <b>Metas Amables</b>. Cada uno queda unido a su hábito de aquí.</p></div></div>
-    <div id="meta-cuerpo">${metaSesion() ? '<p class="suave">Buscando tus hábitos…</p>' : cuentaGoogle() ? metaBuscandoHTML() : metaLoginHTML()}</div>
+  mostrarHoja(`<div class="hoja-cab"><h2>Prácticas de Metas Amables</h2></div>
+    <div class="ev-meta meta-cab"><img src="img/meta-planta.jpg" alt="Prácti riega su planta" width="84" height="92"><div><p>Trae a tu calendario lo que ya riegas en <b>Metas Amables</b>. Cada uno queda unido a su práctica integral de aquí.</p></div></div>
+    <div id="meta-cuerpo">${metaSesion() ? '<p class="suave">Buscando tus metas…</p>' : cuentaGoogle() ? metaBuscandoHTML() : metaLoginHTML()}</div>
     <div class="meta-tiendas" id="meta-tiendas"${metaSesion() || cuentaGoogle() ? ' hidden' : ''}><p class="peq suave" id="meta-tiendas-t">¿Aún no tienes Amable Meta? Descárgala:</p><div>
       <a class="btn sec" href="https://play.google.com/store/apps/details?id=club.practicaintegral.metasamables" target="_blank" rel="noopener">Google Play</a>
       <a class="btn sec" href="https://apps.microsoft.com/detail/9P787TKFQXDH" target="_blank" rel="noopener">Microsoft Store</a>
@@ -5486,7 +5490,7 @@ async function metaConGmail(){
     const tok = await nube.usuario.getIdToken();
     const d = await metaPedir('/login-firebase', {idToken: tok});
     if(!document.body.contains(c)) return;
-    if(d.token){ try{ localStorage.setItem('equilibra.metaSesion', d.token); }catch(e){} c.innerHTML = '<p class="suave">Buscando tus hábitos…</p>'; metaCargar(); return; }
+    if(d.token){ try{ localStorage.setItem('equilibra.metaSesion', d.token); }catch(e){} c.innerHTML = '<p class="suave">Buscando tus metas…</p>'; metaCargar(); return; }
     if(d.nuevo){
       c.innerHTML = `<p>No hay ninguna cuenta de Amable Meta con tu Gmail <b>${esc(metaCorreo())}</b>.</p>
         <p class="peq suave" style="margin:6px 0 0"><button class="link" onclick="metaConClave()">¿La tienes con otro correo? Entra con tu nombre y contraseña</button></p>`;
@@ -5501,7 +5505,7 @@ function metaLoginHTML(msg){
     <input type="text" id="meta-nom" autocomplete="username" placeholder="Tu nombre en Metas Amables">
     <input type="password" id="meta-pass" autocomplete="current-password" placeholder="Tu contraseña" style="margin-top:8px" onkeydown="if(event.key === 'Enter') metaEntrar()">
     <p class="peq meta-error" id="meta-error">${msg ? esc(msg) : ''}</p>
-    <button class="btn prim ancho" id="meta-entrar" onclick="metaEntrar()">Entrar y ver mis hábitos</button>`;
+    <button class="btn prim ancho" id="meta-entrar" onclick="metaEntrar()">Entrar y ver mis metas</button>`;
 }
 async function metaEntrar(){
   const nombre = valor('meta-nom'), password = ($('#meta-pass') || {}).value || '';
@@ -5511,9 +5515,9 @@ async function metaEntrar(){
     const d = await metaPedir('/login', {nombre, password});
     if(!d.token) throw {msg: 'No he podido entrar'};
     try{ localStorage.setItem('equilibra.metaSesion', d.token); }catch(e){}
-    metaTiendas(false); $('#meta-cuerpo').innerHTML = '<p class="suave">Buscando tus hábitos…</p>';
+    metaTiendas(false); $('#meta-cuerpo').innerHTML = '<p class="suave">Buscando tus metas…</p>';
     metaCargar();
-  }catch(e){ b.disabled = false; b.textContent = 'Entrar y ver mis hábitos'; $('#meta-error').textContent = e.msg || 'No he podido entrar'; }
+  }catch(e){ b.disabled = false; b.textContent = 'Entrar y ver mis metas'; $('#meta-error').textContent = e.msg || 'No he podido entrar'; }
 }
 function metaSalir(){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(e){} metaConClave(); }
 const metaDias = m => { const l = m.frecuencia === 'semana' ? (DIAS_VECES[Math.max(1, Math.min(7, m.vecesSemana || 3))] || []).slice() : (m.diasSemana || []).map(x => DIAS_CORTO.indexOf(x)).filter(i => i >= 0); return l.length ? l.sort() : [0, 1, 2, 3, 4, 5, 6]; };
@@ -5528,24 +5532,24 @@ async function metaCargar(){
     const hh = Number(df.horaAviso), ini = ya && ya.ini != null ? ya.ini : (Number.isInteger(hh) && hh >= 7 && hh <= 23 ? hh : 20) * 60;
     const horas = []; for(let m = 300; m <= 1380; m += 15) horas.push(m);
     if(!document.body.contains(c)) return;
-    c.innerHTML = metaLista.length || metaT ? `<p class="peq" style="margin:6px 0">Irá <b>un solo hábito cada día</b>, «Hábitos de Amable Meta», con todo esto dentro:</p>
+    c.innerHTML = metaLista.length || metaT ? `<p class="peq" style="margin:6px 0">Irá <b>una sola práctica integral cada día</b>, «Prácticas de Amable Meta», con todo esto dentro:</p>
       <div class="ep-meta" style="margin:0 0 10px">${metaT ? `<p class="ep-meta-t">Tu meta con guía</p><p class="ep-meta-m">${esc(metaT)}</p>` : ''}
         ${metaLista.map((m, i) => `<p class="ep-meta-t">Tu meta sencilla ${i + 1}</p><p class="ep-meta-m">${ICO_FLOR_HAB}${esc(m.nombre)}</p>`).join('')}</div>
       <div class="meta-h"><span><b>¿A qué hora?</b><small>${ya ? 'Ya está en tu calendario: se pone al día' : 'La hora a la que Amable Meta te recuerda registrar'}</small></span>
         <select id="meta-hora" aria-label="Hora">${horas.map(h => `<option value="${h}" ${h === ini ? 'selected' : ''}>${hm(h)}</option>`).join('')}</select></div>
       <button class="btn prim ancho" style="margin-top:12px" onclick="metaImportar()">Añadir a mi calendario</button>
       <p class="peq suave" style="margin:10px 0 0"><button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`
-      : `<p>En Metas Amables aún no tienes hábitos. Créalos allí (en «Tus metas sencillas») y vuelve aquí para traerlos.</p><p class="peq suave"><button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`;
+      : `<p>En Metas Amables aún no tienes metas sencillas. Créalas allí (en «Tus metas sencillas») y vuelve aquí para traerlos.</p><p class="peq suave"><button class="link" onclick="metaSalir()">Entrar con otra cuenta</button></p>`;
   }catch(e){
     if(e.status === 401 || e.status === 403){ try{ localStorage.removeItem('equilibra.metaSesion'); }catch(x){} if(cuentaGoogle()) metaConGmail(); else metaConClave('Vuelve a entrar con tu contraseña de Amable Meta'); }
-    else c.innerHTML = `<p class="meta-error">${esc(e.msg || 'No he podido leer tus hábitos')}</p><button class="btn sec" onclick="metaCargar()">Probar otra vez</button>`;
+    else c.innerHTML = `<p class="meta-error">${esc(e.msg || 'No he podido leer tus metas')}</p><button class="btn sec" onclick="metaCargar()">Probar otra vez</button>`;
   }
 }
 function metaImportar(){
   if(!metaDF) return;
   const s = $('#meta-hora');
   metaRegistro(metaDF, true, s ? +s.value : null); metaUnificar();
-  guardar(); sonarHecho(); aviso('«Hábitos de Amable Meta» en tu calendario, cada día');
+  guardar(); sonarHecho(); aviso('«Prácticas de Amable Meta» en tu calendario, cada día');
   cerrarHoja(); if(vista === 'agenda') agK = hoyK(); rerenderDia();
 }
 /* ---------- Menú lateral (Gustavo, 3.84, como el de Google Calendar): tu cuenta, las vistas, Actualizar y las secciones ---------- */
@@ -5950,7 +5954,7 @@ function guardarEvento(){
     area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, mod: ahoraISO()});
   apuntarCambio(e, antE, e0.k || (antE && antE.dia));
   guardar(); sonarHecho();
-  aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Hábito añadido: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
+  aviso(e0.id ? 'Cambios guardados' : e.tipo === 'habito' ? `Práctica integral añadida: ${txtHabito(e).toLowerCase()}` : repite(e) ? `Añadido: ${despValor('rep').toLowerCase()}` : `Añadido al calendario el ${fechaDe(dia).getDate()} de ${MESES[fechaDe(dia).getMonth()]}`);
   evEd = null; cerrarHoja();
   if(vista === 'agenda' && !e0.id) agK = dia;
   if((e.avisos || []).length) setTimeout(() => pedirAvisosWeb(false), 900);
@@ -5961,7 +5965,7 @@ function borrarEvento(){
   const e = AG_().eventos.find(x => x.id === e0.id); if(!e) return;
   if(repite(e)){
     const hab = e.tipo === 'habito';
-    $('#ev-borrar-rep').innerHTML = `<p class="peq" style="margin:14px 0 6px">${hab ? 'Es un hábito' : 'Se repite'}. ¿Qué quieres borrar?</p><div class="ed-bots"><button class="btn peligro" onclick="borrarEvento2(false)">Solo el ${fechaDe(e0.k).getDate()} de ${MESES[fechaDe(e0.k).getMonth()]}</button><button class="btn peligro" onclick="borrarEvento2(true)">${hab ? 'Todo el hábito' : 'Todas las veces'}</button></div>`;
+    $('#ev-borrar-rep').innerHTML = `<p class="peq" style="margin:14px 0 6px">${hab ? 'Es una práctica integral' : 'Se repite'}. ¿Qué quieres borrar?</p><div class="ed-bots"><button class="btn peligro" onclick="borrarEvento2(false)">Solo el ${fechaDe(e0.k).getDate()} de ${MESES[fechaDe(e0.k).getMonth()]}</button><button class="btn peligro" onclick="borrarEvento2(true)">${hab ? 'Toda la práctica integral' : 'Todas las veces'}</button></div>`;
     return;
   }
   if(!e0.armado){ e0.armado = true; const b = $('#ev-borrar'); if(b) b.textContent = '¿Seguro?'; return; }
@@ -6174,7 +6178,7 @@ function faltaTxt(e, k){
 }
 /* ref = el día en el que sale la alarma: si es otro, se dice qué día */
 function cuandoTxt(e, k, ref){
-  const qu = e.tipo === 'habito' ? 'Hábito' : 'Tarea', dia = k === ref ? '' : `el ${fechaLarga(k).toLowerCase()} `;
+  const qu = e.tipo === 'habito' ? 'Práctica integral' : 'Tarea', dia = k === ref ? '' : `el ${fechaLarga(k).toLowerCase()} `;
   return e.todo ? `${qu} para ${dia ? dia.trim() : 'hoy'}` : `${qu} para realizar ${dia}a las ${hm(e.ini)}`;
 }
 /* lo que necesita la ventana del teléfono para escribir lo mismo (APK 2.49) */
@@ -6395,7 +6399,7 @@ function avPCHTML(){
 }
 setTimeout(() => { if(!esApp && avPC() === 'delante') arrancarIdle(false); }, 800);
 function textoRecord(e, a, falta){
-  if(e.tipo === 'habito' && a !== 0) return e.todo ? 'Tu hábito de hoy' : `Tu hábito de las ${hm(e.ini)}`;
+  if(e.tipo === 'habito' && a !== 0) return e.todo ? 'Tu práctica integral de hoy' : `Tu práctica integral de las ${hm(e.ini)}`;
   if(e.todo) return a === 0 ? 'Hoy' : a === 1440 ? 'Mañana' : a === 2880 ? 'Pasado mañana' : a === 10080 ? 'Dentro de una semana' : `Dentro de ${Math.round(a / 1440)} días`;
   if(a === 0) return `Ahora · ${hm(e.ini)} – ${hm(e.fin)}`;
   if(a === 1440) return `Mañana a las ${hm(e.ini)}`;
@@ -6410,7 +6414,7 @@ function enviarRecordatorios(){
     const k = sumarDias(hoy, n);
     eventosDe(k).forEach(e => { if(hechoEv(e, k)) return; (e.avisos || []).forEach(a => {
       const at = fechaDe(k).getTime() + (e.todo ? 540 : e.ini) * 60000 - a * 60000;
-      if(at > ahora) lista.push(Object.assign({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : ''), ev: e.id, k, ul: completaEn(a), dur: alarmaDur(), gr: alarmaGradual()}, extraAlarma(e, k, at), {ent: entTxt(e, a)}));
+      if(at > ahora) lista.push(Object.assign({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · práctica integral' : ''), ev: e.id, k, ul: completaEn(a), dur: alarmaDur(), gr: alarmaGradual()}, extraAlarma(e, k, at), {ent: entTxt(e, a)}));
     }); });
   }
   lista.sort((x, y) => x.at - y.at);
@@ -6531,7 +6535,7 @@ function vDia(){
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0, {medalla: {ok: !sinHab.length, faltan: sinHab.length}})}</div>
     ${medallaMsgHTML(sinHab).replace(/<\/p>$/, `<button type="button" class="mm-i" aria-label="Más información" aria-expanded="false" onclick="const n = document.getElementById('flor-frase'); n.hidden = !n.hidden; this.setAttribute('aria-expanded', !n.hidden)">${ICO_INFO}</button></p>`)}
-    <p class="peq suave flor-frase" id="flor-frase" hidden>Para tener una flor equilibrada, ten al menos una tarea o hábito a la semana en cada área.</p>
+    <p class="peq suave flor-frase" id="flor-frase" hidden>Para tener una flor equilibrada, ten al menos una tarea o práctica integral a la semana en cada área.</p>
     <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos una tarea por semana en cada área</button>
 
     </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
@@ -7466,7 +7470,7 @@ function cuentaHTML(){
     ${copiaHTML()}`;
 }
 /* Copia de seguridad y restauración (Gustavo, 3.97, como en TickTick): todo Amable Life en un archivo, y recuperarlo */
-const copiaHTML = () => `<div class="cta-b"><h4>Copia de seguridad y restauración</h4><p class="peq suave">Guarda todo Amable Life en un archivo (tareas, flor, calendario, hábitos…) o recupera una copia que guardaste.</p>
+const copiaHTML = () => `<div class="cta-b"><h4>Copia de seguridad y restauración</h4><p class="peq suave">Guarda todo Amable Life en un archivo (tareas, flor, calendario, prácticas integrales…) o recupera una copia que guardaste.</p>
   <div class="bots copia-bots"><button class="btn sec" onclick="exportar()">Generar copia de seguridad</button><button class="btn sec" onclick="$('#importar').click()">Importar una copia</button>
   <input type="file" id="importar" accept=".json,application/json" hidden onchange="importar(this)"></div></div>`;
 const esCuentaPin = u => !!(u && (u.providerData || []).some(p => p.providerId === 'password'));
@@ -7493,7 +7497,7 @@ function abrirEliminarCuenta(){
   const u = nube.usuario; if(!u) return;
   const pin = esCuentaPin(u);
   mostrarHoja(`<div class="hoja-cab"><h2>Eliminar cuenta</h2></div>
-    <p>Se borrará <b>para siempre</b> tu cuenta (${esc(u.email || 'tu correo')}) y todo lo tuyo en Amable Life: tareas, flor, calendario, hábitos y estadísticas, en la nube y en este aparato.</p>
+    <p>Se borrará <b>para siempre</b> tu cuenta (${esc(u.email || 'tu correo')}) y todo lo tuyo en Amable Life: tareas, flor, calendario, prácticas integrales y estadísticas, en la nube y en este aparato.</p>
     <p class="peq suave">Antes, si quieres, guarda una copia de seguridad.</p>
     <div class="bots"><button class="btn sec" onclick="exportar()">Generar copia de seguridad</button></div>
     <p class="peq suave">Los números que compartiste con Grow Panel se borran desde Grow Panel → Ajustes → Tus datos.</p>
@@ -7685,13 +7689,13 @@ const PREMIUM_PRECIO = '25 €';   // al año, IVA incluido (Gustavo)
 const ICO_PREMIUM = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8l4.2 3.6L12 5l4.3 6.6L20.5 8l-1.8 10H5.3z"/><path d="M5.3 18h13.4"/></svg>';
 const pIco = d => `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const PREMIUM_EXTRAS = [
-  ['#8b5cf6', pIco('<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>'), 'Estadísticas completas', 'Mira tus tareas, tu Focus y tus hábitos de todo el año: por área, a qué hora rindes más y la racha de cada hábito.'],
-  ['#16a34a', pIco('<path d="M12 21v-8"/><path d="M12 13c0-4 3-6.5 7.5-6.5 0 4-3 6.5-7.5 6.5z"/><path d="M12 15.5c0-3.3-2.5-5.5-6.5-5.5 0 3.3 2.5 5.5 6.5 5.5z"/>'), 'Hábitos sin límite', 'Tantos hábitos como quieras, con frecuencia diaria, semanal o cada pocos días, y recordatorios a la hora que elijas.'],
+  ['#8b5cf6', pIco('<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>'), 'Estadísticas completas', 'Mira tus tareas, tu Focus y tus prácticas integrales de todo el año: por área, a qué hora rindes más y la racha de cada práctica integral.'],
+  ['#16a34a', pIco('<path d="M12 21v-8"/><path d="M12 13c0-4 3-6.5 7.5-6.5 0 4-3 6.5-7.5 6.5z"/><path d="M12 15.5c0-3.3-2.5-5.5-6.5-5.5 0 3.3 2.5 5.5 6.5 5.5z"/>'), 'Prácticas integrales sin límite', 'Tantas prácticas integrales como quieras, con frecuencia diaria, semanal o cada pocos días, y recordatorios a la hora que elijas.'],
   ['#2b7fd4', pIco('<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M9.2 4.5v15M14.8 4.5v15"/>'), 'Todas las vistas del calendario', 'Además de Día, Semana y Mes: Año, Agenda, 3 días, 7 días y varias semanas seguidas, arrastrando en el mes pequeño.'],
-  ['#d9731c', pIco('<path d="M12 4v11M7 10.5l5 5 5-5"/><path d="M5 19.5h14"/>'), 'Importar y exportar', 'Trae tu calendario de Google, Outlook o Apple, llévate el tuyo en .ics o .csv, e importa tus hábitos de Metas Amables.'],
+  ['#d9731c', pIco('<path d="M12 4v11M7 10.5l5 5 5-5"/><path d="M5 19.5h14"/>'), 'Importar y exportar', 'Trae tu calendario de Google, Outlook o Apple, llévate el tuyo en .ics o .csv, e importa tus prácticas de Metas Amables.'],
   ['#e2456b', pIco('<rect x="3" y="4" width="18" height="13" rx="2"/><rect x="12" y="9" width="7" height="6" rx="1"/><path d="M8 21h8"/>'), 'Ventana flotante de Focus', 'Tu bloque de ahora, su cuenta atrás y sus tareas siempre a la vista, encima de lo que estés haciendo, en el ordenador y en el móvil.'],
-  ['#0f766e', pIco('<path d="M4 7h16M4 12h16M4 17h11"/><path d="M17 15.5l2 2 3-3.5"/>'), 'Descripciones con formato', 'Negrita, colores, listas y enlaces en tus tareas y hábitos, como en un documento.']];
-const PREMIUM_GRATIS = ['Tu flor de las áreas y todas tus tareas', 'Focus: bloques del día, cuenta atrás y compromiso', 'Calendario Día, Semana y Mes con recordatorios', 'Hasta 3 hábitos', 'Cuerpo: pasos, agua y movimiento', 'Lo mismo en el móvil y en el ordenador, con tu cuenta', 'Modo día y modo noche'];
+  ['#0f766e', pIco('<path d="M4 7h16M4 12h16M4 17h11"/><path d="M17 15.5l2 2 3-3.5"/>'), 'Descripciones con formato', 'Negrita, colores, listas y enlaces en tus tareas y prácticas integrales, como en un documento.']];
+const PREMIUM_GRATIS = ['Tu flor de las áreas y todas tus tareas', 'Focus: bloques del día, cuenta atrás y compromiso', 'Calendario Día, Semana y Mes con recordatorios', 'Hasta 3 prácticas integrales', 'Cuerpo: pasos, agua y movimiento', 'Lo mismo en el móvil y en el ordenador, con tu cuenta', 'Modo día y modo noche'];
 function vPremium(){
   const nom = nombrePila ? nombrePila() : '';
   return `<div class="prem">
@@ -7829,7 +7833,7 @@ function estFocus(){
 }
 function estHabitosTab(){
   const hs = estHabitos(), dias = estDiasPer(), G = estGrupos();
-  if(!hs.length) return `<div class="ec-grid">${estCard('Tus hábitos', '<p class="ec-vacio">Aún no tienes hábitos. Crea uno en el Calendario con «＋» → Hábito.</p>')}</div>`;
+  if(!hs.length) return `<div class="ec-grid">${estCard('Tus prácticas integrales', '<p class="ec-vacio">Aún no tienes prácticas integrales. Crea una en el Calendario con «＋» → Práctica integral.</p>')}</div>`;
   const dDia = k => { let h = 0, e = 0; hs.forEach(x => { const st = estHabEstado(x, k); if(st === 'hecho'){ h++; e++; } else if(st === 'falta') e++; }); return {h, e}; };
   const gv = G.map(g => g.dias.reduce((a, k) => { const r = dDia(k); return {h: a.h + r.h, e: a.e + r.e}; }, {h: 0, e: 0}));
   let H = 0, E = 0; hs.forEach(x => { const c = estHabCumple(x, dias); H += c.hecho; E += c.esp; });
@@ -7838,10 +7842,10 @@ function estHabitosTab(){
     return `<div class="eha"><div class="eha-c"><b>${ICO_BROTE.replace('width="12" height="12"', 'width="15" height="15"')} ${esc(x.t)}</b><small>${txtHabito(x)}</small></div>
       <div class="eha-n"><b>${pct == null ? '—' : pct + '%'}</b><small>racha ${rachas[i].n} ${rachas[i].u}</small></div>
       <div class="eha-p" aria-label="Últimos 14 días">${ult.map(k => { const st = estHabEstado(x, k); return `<i class="p-${st}" data-tip="${esc(estFecha(k))}: ${st === 'hecho' ? 'hecho' : st === 'falta' ? 'sin hacer' : 'no tocaba'}"></i>`; }).join('')}</div></div>`; }).join('');
-  return `<div class="et-fila">${estTile(E ? Math.round(H / E * 100) + '%' : '—', `de cumplimiento ${estP().txt}`, `${H} de ${E} veces`)}${estTile(mejor.n, `${mejor.u} de racha`, 'tu mejor racha ahora')}${estTile(hs.length, hs.length === 1 ? 'hábito' : 'hábitos')}</div>
-    <div class="ec-grid">${estCard(estTitGraf('Hábitos hechos'), estBarras(gv.map(x => x.h), G.map(g => g.l), G.map((g, i) => `${g.tip}: ${gv[i].h} de ${gv[i].e} hechos`), EST_COL.habitos, {fondo: gv.map(x => x.e), aria: 'Hábitos hechos'}),
+  return `<div class="et-fila">${estTile(E ? Math.round(H / E * 100) + '%' : '—', `de cumplimiento ${estP().txt}`, `${H} de ${E} veces`)}${estTile(mejor.n, `${mejor.u} de racha`, 'tu mejor racha ahora')}${estTile(hs.length, hs.length === 1 ? 'práctica integral' : 'prácticas integrales')}</div>
+    <div class="ec-grid">${estCard(estTitGraf('Prácticas hechas'), estBarras(gv.map(x => x.h), G.map(g => g.l), G.map((g, i) => `${g.tip}: ${gv[i].h} de ${gv[i].e} hechos`), EST_COL.habitos, {fondo: gv.map(x => x.e), aria: 'Prácticas hechas'}),
       `<div class="eley"><span><i style="background:${EST_COL.habitos}"></i>Hechos</span><span><i style="background:${EST_COL.habitos};opacity:.28"></i>Tocaban</span></div>`)}
-    ${estCard('Cada hábito', `<div class="eha-lista">${filas}</div><div class="eley eley-p"><span><i class="p-hecho"></i>Hecho</span><span><i class="p-falta"></i>Sin hacer</span><span><i class="p-no"></i>No tocaba</span><span>· puntos: últimos 14 días</span></div>`, `<span class="ec-sub">% ${estP().txt}</span>`)}</div>`;
+    ${estCard('Cada práctica integral', `<div class="eha-lista">${filas}</div><div class="eley eley-p"><span><i class="p-hecho"></i>Hecho</span><span><i class="p-falta"></i>Sin hacer</span><span><i class="p-no"></i>No tocaba</span><span>· puntos: últimos 14 días</span></div>`, `<span class="ec-sub">% ${estP().txt}</span>`)}</div>`;
 }
 function estResumen(){
   const H = estHechasPorDia(), dias = estDiasPer(), G = estGrupos(), hoy = hoyK(), cal = {}; const cd = k => cal[k] || (cal[k] = estCalDia(k));
@@ -7856,15 +7860,15 @@ function estResumen(){
   const card = (tab, tit, color, num, txt, sub, gr) => `<section class="ec ec-res" onclick="estTab = '${tab}'; render(); window.scrollTo(0, 0)" role="button" tabindex="0">
     <div class="ec-cab"><h3><i class="ec-pt" style="background:${color}"></i>${tit}</h3><span class="ec-mas">Ver más ›</span></div>
     <div class="ec-num"><b>${num}</b><span>${txt}</span></div>${sub ? `<p class="ec-sub2">${sub}</p>` : ''}${gr}</section>`;
-  return `<div class="et-fila et-tot">${estTile(total, 'tareas completadas en total')}${estTile(hs.length, hs.length === 1 ? 'hábito activo' : 'hábitos activos')}${estTile(diasUso, diasUso === 1 ? 'día con Amable Life' : 'días con Amable Life')}</div>
+  return `<div class="et-fila et-tot">${estTile(total, 'tareas completadas en total')}${estTile(hs.length, hs.length === 1 ? 'práctica integral activa' : 'prácticas integrales activas')}${estTile(diasUso, diasUso === 1 ? 'día con Amable Life' : 'días con Amable Life')}</div>
     <p class="est-per-txt">Resumen de <b>${estPer === 'dia' ? 'hoy' : estP().txt.replace('en ', 'los últimos ').replace('los últimos 12 meses', 'los últimos 12 meses')}</b></p>
     <div class="ec-grid ec-grid3">
     ${card('tareas', 'Tareas', EST_COL.tareas, tPer, `tareas completadas ${estP().txt}`, estDelta(tPer, tAnt), graf(tv, EST_COL.tareas, G.map((g, i) => `${g.tip}: ${tv[i]} ${tv[i] === 1 ? 'tarea' : 'tareas'}`)))}
     ${card('enfoque', 'Focus', EST_COL.enfoque, estHc(fPer), `cumplidas en tu calendario ${estP().txt}`, fPlan ? `${Math.round(fPer / fPlan * 100)}% de ${estHc(fPlan)} planificadas` : '', graf(fv.map(x => x / 60), EST_COL.enfoque, G.map((g, i) => `${g.tip}: ${estH(fv[i])}`), v => v + ' h'))}
-    ${card('habitos', 'Hábitos', EST_COL.habitos, hs.length ? (EE ? Math.round(HH / EE * 100) + '%' : '—') : '—', hs.length ? `de cumplimiento ${estP().txt}` : 'aún no tienes hábitos', hs.length ? `${HH} de ${EE} veces` : '', graf(hv, EST_COL.habitos, G.map((g, i) => `${g.tip}: ${hv[i]} ${hv[i] === 1 ? 'hábito hecho' : 'hábitos hechos'}`)))}</div>`;
+    ${card('habitos', 'Prácticas integrales', EST_COL.habitos, hs.length ? (EE ? Math.round(HH / EE * 100) + '%' : '—') : '—', hs.length ? `de cumplimiento ${estP().txt}` : 'aún no tienes prácticas integrales', hs.length ? `${HH} de ${EE} veces` : '', graf(hv, EST_COL.habitos, G.map((g, i) => `${g.tip}: ${hv[i]} ${hv[i] === 1 ? 'práctica hecha' : 'prácticas hechas'}`)))}</div>`;
 }
 function vEstad(){
-  const tabs = [['resumen', 'Resumen'], ['tareas', 'Tareas'], ['enfoque', 'Focus'], ['habitos', 'Hábitos']];
+  const tabs = [['resumen', 'Resumen'], ['tareas', 'Tareas'], ['enfoque', 'Focus'], ['habitos', 'Prácticas']];
   const cuerpo = {resumen: estResumen, tareas: estTareas, enfoque: estFocus, habitos: estHabitosTab}[estTab] || estResumen;
   return `<div class="est">
     <div class="est-cab"><button class="link est-volver" onclick="abrirMenu()">${ICO_IZQ.replace('width="24" height="24"', 'width="18" height="18"')} Menú</button></div>
@@ -7961,7 +7965,7 @@ function vAjustes(){
         ${!mia && enAndroidWeb() ? `<p class="suave" style="margin-top:12px">Instala la app de Android para que suene la música al abrir y cuente tus pasos.</p>${pasosInstalar}<div class="bots"><a class="btn prim" href="${APK}" download="Amable Life.apk">${icoBaja}Descargar Amable Life ${APK_ULTIMA}</a></div>` : ''}`;
       }},
     {k: 'premium', ico: ICO_PREMIUM, t: 'Suscripción', sub: 'Amable Life Premium · 25 €/año · de momento, todo gratis', html: () => ''},
-    {k: 'estad', ico: ICO_ESTAD, t: 'Estadísticas', sub: 'Tus tareas, tu Focus y tus hábitos, con gráficas', html: () => ''},
+    {k: 'estad', ico: ICO_ESTAD, t: 'Estadísticas', sub: 'Tus tareas, tu Focus y tus prácticas integrales, con gráficas', html: () => ''},
     {k: 'fecha', ico: ICO_RELOJ.replace('width="12" height="12"', 'width="24" height="24"'), t: 'Fecha y hora',
       sub: `${fPref.h12 ? '12 horas' : '24 horas'} · la semana empieza el ${fPref.dom ? 'domingo' : 'lunes'}${fPref.cal ? ' · ' + (CAL_EXTRA.find(c => c[0] === fPref.cal) || ['', ''])[1].toLowerCase() : ''}`,
       html: () => fechaAjHTML()},
@@ -8447,12 +8451,12 @@ function borrarDelCalendario(id, k, todo){
   if(todo){ A.eventos = A.eventos.filter(x => x !== e); D.borradas = (D.borradas || []).concat(e.id); }
   else { e.saltar = [...new Set([...(e.saltar || []), k])]; e.mod = ahoraISO(); }
   guardar(); rerenderDia();
-  avisoDeshacer(todo ? (hab ? 'Hábito eliminado' : e.t === SIN_TITULO ? 'Tarea eliminada' : `«${e.t.length > 28 ? e.t.slice(0, 27) + '…' : e.t}» eliminada`) : `Quitado el ${d.getDate()} de ${MESES[d.getMonth()]}`, () => {
+  avisoDeshacer(todo ? (hab ? 'Práctica integral eliminada' : e.t === SIN_TITULO ? 'Tarea eliminada' : `«${e.t.length > 28 ? e.t.slice(0, 27) + '…' : e.t}» eliminada`) : `Quitado el ${d.getDate()} de ${MESES[d.getMonth()]}`, () => {
     const B = AG_();
     if(todo){ D.borradas = (D.borradas || []).filter(b => b !== copia.id); if(!B.eventos.some(x => x.id === copia.id)) B.eventos.push(Object.assign(copia, {mod: ahoraISO()})); }
     else { const x = B.eventos.find(z => z.id === id); if(x){ x.saltar = (x.saltar || []).filter(z => z !== k); x.mod = ahoraISO(); } }
     if(ap) quitarApunte('borr', k, id);
-    guardar(); rerenderDia(); aviso(hab ? 'Hábito recuperado' : 'Tarea recuperada');
+    guardar(); rerenderDia(); aviso(hab ? 'Práctica integral recuperada' : 'Tarea recuperada');
   }, 5000);
 }
 function deshacer(){
@@ -8474,7 +8478,7 @@ function enviarResumen(){
       // 4.56 (Gustavo, vía Grow Panel): estas cuatro y en este orden. Pendientes = todas las de tus áreas; realizadas y hábitos = hoy
       {valor: pendientes().length, etiqueta:'tareas pendientes'},
       {valor: resumenDia(hoyK()).tareas_hechas, etiqueta:'tareas realizadas'},
-      {valor: habitosHechos(hoyK()), etiqueta:'hábitos realizados'},
+      {valor: habitosHechos(hoyK()), etiqueta:'prácticas integrales realizadas'},
       {valor: areasAccion(), etiqueta:'áreas que piden acción'}]};
   }
   window.growPanelResumen = r;
