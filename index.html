@@ -2087,7 +2087,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.56';
+const VERSION = 'v5.57';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2295,9 +2295,9 @@ function habitosTotal(){
 }
 /* 5.02 (Gustavo): debajo de la flor de Hábitos, felicidades si todas las áreas tienen algún hábito; si no, cuáles faltan para la medalla */
 function medallaMsgHTML(sin){
-  if(!sin.length) return '<p class="medalla-msg ok">¡Felicidades! Tienes al menos una tarea en cada una de tus áreas.</p>';
+  if(!sin.length) return '<p class="medalla-msg ok">¡Felicidades! Tienes al menos una práctica integral en cada una de tus áreas.</p>';
   const nom = sin.map(a => a.nombre), lista = nom.length === 1 ? nom[0] : nom.slice(0, -1).join(', ') + ' y ' + nom[nom.length - 1];
-  return `<p class="medalla-msg falta">${sin.length === 1 ? 'Tienes 1 área sin atender' : `Tienes ${sin.length} áreas sin atender`}: ${esc(lista)}. Si pones al menos una tarea en ${sin.length === 1 ? 'ella' : 'cada una'}, tendrás tu medalla.</p>`;
+  return `<p class="medalla-msg falta">${sin.length === 1 ? 'Tienes 1 área sin atender' : `Tienes ${sin.length} áreas sin atender`}: ${esc(lista)}. Si pones al menos una práctica integral en ${sin.length === 1 ? 'ella' : 'cada una'}, tendrás tu medalla.</p>`;
 }
 function areasCubiertasHTML(){
   const faltan = AREAS.filter(a => !habitosDeArea(a.id)).length;
@@ -3355,8 +3355,8 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
       ${(opt.medalla.lineas || ['¡Flor', 'equilibrada!']).map((l, q) => `<text class="g-frase g-medalla" y="${-40 + q * 14}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`).join('')}`; }
   }
   else if(opt.frase){   // 4.76 (Gustavo): en el centro, la frase de la flor equilibrada (sin lo del bloque)
-    const L = ['Para tener una flor', 'equilibrada, ten al', 'menos una tarea o', 'práctica integral', 'a la semana', 'en cada pétalo'];
-    s += L.map((l, k) => `<text class="g-frase" y="${(k - 2.5) * 14}" text-anchor="middle" dominant-baseline="central">${l}</text>`).join('');
+    const L = ['Para tener una flor', 'equilibrada, ten al', 'menos una práctica', 'integral a la semana', 'en cada pétalo'];
+    s += L.map((l, k) => `<text class="g-frase" y="${(k - 2) * 14}" text-anchor="middle" dominant-baseline="central">${l}</text>`).join('');
   }
   else if(bloque && bloque.actual){ const pa = progresoBloque(bloque.ini, bloque.fin), pp = puntoAro(pa, R0 + 3);
     s += `<circle r="${R0 + 3}" fill="none" stroke="#22a35a" stroke-width="6"/>
@@ -3395,7 +3395,7 @@ function florGirasol(niveles, bloque, pendientesN, opt = {}){
     s += `<circle class="g-centro" r="${R0}" fill="transparent" style="cursor:pointer" onclick="habFijar('*')" onmouseenter="habResaltar('*')" onmouseleave="habResaltar()"><title>Marcar todas tus prácticas integrales</title></circle>`;
     return s + '</svg>';
   }
-  FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="abrirPanelArea('${a.id}')" onmouseenter="if(matchMedia('(hover: hover)').matches) abrirPanelArea('${a.id}', true)"/>`; });
+  FL.forEach((a, i) => { const Lp = TAM[i].L; s += `<path class="pet-hit" d="${petalo(Lp + 10, 52)}" transform="rotate(${i*paso}) translate(0 ${-R0 + 4})" fill="transparent" style="cursor:pointer" onclick="abrirPanelArea('${a.id}')"/>`; });   // 5.57 (Gustavo): el pétalo se abre solo al clicarlo, no al pasar el ratón
   s += `<circle class="g-centro" r="${R0}" fill="transparent" ${bloque ? 'data-drop="ahora"' : ''} style="cursor:pointer" onclick="${bloque && bloque.clic ? bloque.clic : "ir('dia')"}"/>`;
   return s + '</svg>';
 }
@@ -6535,10 +6535,10 @@ function vDia(){
     <div class="flor-nav">
       ${florGirasol(D.niveles, {actual: bSel === cur, ini: b.ini, fin: b.fin, tareas: acts.map(a => a.t), hora: hm(b.ini), txt: `a ${hm(b.fin)} · ${acts.length} ${acts.length === 1 ? 'tarea' : 'tareas'}`, clic: 'abrirTareasAreas()'}, 0, {medalla: {ok: !sinHab.length, faltan: sinHab.length}})}</div>
     ${medallaMsgHTML(sinHab).replace(/<\/p>$/, `<button type="button" class="mm-i" aria-label="Más información" aria-expanded="false" onclick="const n = document.getElementById('flor-frase'); n.hidden = !n.hidden; this.setAttribute('aria-expanded', !n.hidden)">${ICO_INFO}</button></p>`)}
-    <p class="peq suave flor-frase" id="flor-frase" hidden>Para tener una flor equilibrada, ten al menos una tarea o práctica integral a la semana en cada área.</p>
-    <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos una tarea por semana en cada área</button>
+    <p class="peq suave flor-frase" id="flor-frase" hidden>Para tener una flor equilibrada, ten al menos una práctica integral a la semana en cada área.</p>
+    <button class="btn prim ancho btn-definir" onclick="empezar()">${ICO_BROTE.replace('width="12" height="12"', 'width="22" height="22"')} Define al menos una práctica integral por semana en cada área</button>
 
-    </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Pasa el ratón por un pétalo o tócalo para ver aquí sus tareas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
+    </div><div class="dia-pan">${panelArea() || '<p class="pan-vacio">Toca un pétalo para ver aquí sus tareas</p>'}</div></div>`;   // 4.77 (Gustavo): fuera los bloques de aquí (se ven en el calendario y en Focus)
 }
 /* 4.51 (Gustavo): en la barra, el bloque de ahora está en el medio; los de antes, a la izquierda, y los de después, a la derecha,
    cada uno en su puntito. El punto salta de puntito en puntito */
