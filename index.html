@@ -2214,7 +2214,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.71';
+const VERSION = 'v5.72';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -7219,18 +7219,24 @@ const TXT_PAUSA = {
   tareas: [ICO_PAUSA_B + 'Pausar avisos de tareas', ICO_PLAY_B + 'Avisos de tareas en pausa · toca para activarlos'],
   todo: [ICO_PAUSA_B + 'Pausar todos los avisos', ICO_PLAY_B + 'Todos los avisos en pausa · toca para activarlos']};
 /* Hora del próximo aviso de tareas: recordatorio, empiezo de bloque o las 22:00 */
-function proximoAviso(){
+function proximoAvisoQ(){
   const B = B_(), ahora = Date.now(), c = bloqueAhora(), hoy = new Date().setHours(0, 0, 0, 0), op = [];
-  if(B.remindOn && c >= 0 && actsDe(hoyK(), c).some(a => !hechaAct(a))) op.push(recordarDesde + B.remindMin * 60000);
-  if(B.startVoice){ const sig = BLOQUES.find(b => hoy + b.ini * 60000 > ahora); if(sig) op.push(hoy + sig.ini * 60000); }
-  if(B.sleepOn && minutosHoy() < 1320) op.push(hoy + 1320 * 60000);
-  return op.length ? Math.max(ahora, Math.min(...op)) : null;
+  if(B.remindOn && c >= 0 && actsDe(hoyK(), c).some(a => !hechaAct(a))) op.push({t: recordarDesde + B.remindMin * 60000, q: 'rec'});
+  if(B.startVoice){ const sig = BLOQUES.find(b => hoy + b.ini * 60000 > ahora); if(sig) op.push({t: hoy + sig.ini * 60000, q: 'blq', h: sig.ini}); }
+  if(B.sleepOn && minutosHoy() < 1320) op.push({t: hoy + 1320 * 60000, q: 'dormir'});
+  if(!op.length) return null;
+  const m = op.reduce((a, b) => b.t < a.t ? b : a); return Object.assign({}, m, {t: Math.max(ahora, m.t)});
 }
+function proximoAviso(){ const p = proximoAvisoQ(); return p ? p.t : null; }
+/* 5.72 (Gustavo: «ponía próximo en 7 min y al bajarlo a 4 me puso 184 minutos»): sin tareas pendientes en el bloque no hay
+   recordatorio de la tarea, y el siguiente era el de las 22:00. Ahora dice cuál es y, si falta más de una hora, «en 3 h 4 min» */
 function txtAvisos(){
   if(pausa.tareas) return 'Avisos de Focus desactivados';   // 5.40 (Gustavo): que se entienda de qué son
-  const t = proximoAviso(); if(t === null) return 'Avisos de Focus activados';
-  const q = Math.round((t - Date.now()) / 1000);
-  return `Avisos de Focus activados · próximo en ${Math.floor(q / 60)}:${String(q % 60).padStart(2, '0')}`;
+  const p = proximoAvisoQ(); if(p === null) return 'Avisos de Focus activados';
+  const q = Math.round((p.t - Date.now()) / 1000);
+  const cuando = q >= 3600 ? `en ${Math.floor(q / 3600)} h ${Math.floor(q % 3600 / 60)} min` : `en ${Math.floor(q / 60)}:${String(q % 60).padStart(2, '0')}`;
+  const que = p.q === 'rec' ? 'recordatorio de la tarea' : p.q === 'blq' ? `bloque de las ${hm(p.h)}` : 'a dormir (22:00)';
+  return `Avisos de Focus activados · ${que} ${cuando}`;
 }
 /* 4.51 (Gustavo): el botón gris de los avisos (donde estaba «Nueva tarea»): dice si están activados y cuándo es el próximo,
    y abre lo mismo que abría el lápiz */
