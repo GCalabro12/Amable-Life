@@ -1134,6 +1134,7 @@ html.claro .ep-tit p.ep-hab{color:#15803d}
 /* 5.53 (Gustavo): «Marcar como hecho», el botón que más se pulsa en la tarjeta, con reborde y letra verdes */
 .ep-hecho.ep-prin{border:2px solid #16a34a;color:#15803d;padding:6px 15px}
 .ep-hecho.ep-prin:hover{background:rgba(22,163,74,.1)}
+.ed-hecho{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin:14px 0 0;padding:10px 15px;font-size:15px}
 html:not(.claro) .ep-hecho.ep-prin{border-color:#4ade80;color:#4ade80}
 .ep-desc{max-height:200px;overflow:auto;min-width:0;word-break:break-word}
 .ep-conf{margin:6px 0 4px 36px;display:flex;flex-direction:column;gap:8px}
@@ -1213,9 +1214,10 @@ body.li-moviendo,body.li-moviendo *{cursor:grabbing!important;user-select:none}
 .af-dia{margin:6px 0 28px;font-size:15px;color:#a99fca}
 .af-bots{display:flex;flex-direction:column;gap:10px}
 .af-b{border:0;border-radius:16px;padding:16px;font:inherit;font-size:18px;font-weight:800;cursor:pointer;color:#fff}
-.af-ok{background:#16a34a}
+/* 5.54 (Gustavo): Enterado en verde (es lo que más se pulsa); «Tarea completada» discreto y solo en las alarmas de 5 min antes o menos */
+.af-ok{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.35)}
 .af-pos{background:#8b5cf6}
-.af-ent{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.35)}
+.af-ent{background:#16a34a}
 .af-ent-txt{margin:-4px 0 4px;font-size:13px;color:#cfc6ec;text-align:center}
 .af-sinson{display:block;margin:0 auto 14px;border:0;border-radius:99px;padding:10px 18px;background:#f7c35b;color:#2a1f52;font:inherit;font-weight:800;cursor:pointer;animation:alarmaMueve .6s ease-in-out infinite alternate}
 .af-nosuena{display:block;margin:18px auto 0;border:0;background:none;color:#c9c2ea;font:inherit;font-size:15px;text-decoration:underline;cursor:pointer}
@@ -2078,7 +2080,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.53';
+const VERSION = 'v5.54';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3517,6 +3519,7 @@ function pintarEdicion(texto){
     ${chipsPrio('edicion.prio', edicion.prio)}
     <p class="eti" style="margin-top:6px">Duración</p>
     ${chipsDur('edicion.dur', edicion.dur)}
+    ${edicion.id && !(D.acciones.find(a => a.id === edicion.id) || {}).hecha ? `<button type="button" class="ep-hecho ep-prin ed-hecho" onclick="hechoEdicion()">${svgT('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 18)} Marcar como hecho</button>` : ''}
     <div class="ed-bots"><button class="btn prim" onclick="guardarEdicion()">Guardar</button><button class="btn peligro" id="ed-borrar" onclick="borrarEdicion()">Borrar</button><button class="btn sec" onclick="salirEdicion()">Cancelar</button></div>
     <button type="button" class="compro-link ed-compro" onclick="comprometerEdicion()">${ICO_FIRMA} Me quiero comprometer</button>
     <button type="button" class="compro-link ed-compro" onclick="tareaAlCalendario()">${ICO_CAL} Poner en el calendario</button>`, '#8b5cf6');
@@ -3555,6 +3558,12 @@ function borrarEdicion(){
   if(e.id) borrarAccion(e.id);
   else quitarActividad(e.k, e.i, e.j);
   salirEdicion();
+}
+/* 5.54 (Gustavo): «Marcar como hecho» también al abrir una tarea de tus áreas (el botón que más se pulsa, en verde) */
+function hechoEdicion(){
+  const id = edicion && edicion.id; if(!id) return;
+  const t0 = valor('ed-texto'); if(t0) guardarEdicion(); else salirEdicion();
+  alternarAccion(id);
 }
 function salirEdicion(){
   const v = edicion && edicion.volver; edicion = null;
@@ -6110,6 +6119,9 @@ function entTxt(e, a){
   if(a === 0) return e.todo ? 'Solo quita el aviso de hoy' : 'Solo quita este aviso de la hora de empezar';
   return `Solo quita este aviso de ${largoMin(a)} antes`;
 }
+/* 5.54 (Gustavo): «Tarea completada» solo sale en las alarmas de 5 minutos antes o menos (a la hora, después…).
+   En las de 1 día, 1 hora o 10 minutos antes, solo Enterado y Posponer: así no se marca hecha por error una tarea de mañana. */
+const completaEn = a => a <= 5;
 function hojaAlarma(e, k, txt, ultima, a){
   // 4.25: antes llamaba a alarmaCerrar(), que paraba el sonido que se acababa de empezar (la ventana salía en silencio)
   const vieja = $('#alarma-full'); if(vieja){ vieja.id = ''; vieja.remove(); }
@@ -6330,7 +6342,7 @@ function enviarRecordatorios(){
     const k = sumarDias(hoy, n);
     eventosDe(k).forEach(e => { if(hechoEv(e, k)) return; (e.avisos || []).forEach(a => {
       const at = fechaDe(k).getTime() + (e.todo ? 540 : e.ini) * 60000 - a * 60000;
-      if(at > ahora) lista.push(Object.assign({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : ''), ev: e.id, k, ul: a === Math.min(...e.avisos), dur: alarmaDur(), gr: alarmaGradual()}, extraAlarma(e, k, at), {ent: entTxt(e, a)}));
+      if(at > ahora) lista.push(Object.assign({id: `${e.id}|${k}|${a}`, at, tit: e.t, txt: textoRecord(e, a) + (e.tipo === 'habito' ? ' · hábito' : ''), ev: e.id, k, ul: completaEn(a), dur: alarmaDur(), gr: alarmaGradual()}, extraAlarma(e, k, at), {ent: entTxt(e, a)}));
     }); });
   }
   lista.sort((x, y) => x.at - y.at);
@@ -6355,8 +6367,8 @@ function avisarEventos(){
       if(!avisaAqui()) return;   // 5.31: en el ordenador, si no estás delante (o elegiste «solo el móvil»), no suena aquí
       if(esApp && document.visibilityState !== 'visible' && recordNativo()) return;   // la notificación del teléfono ya avisa
       const txt = `${textoRecord(e, a, Math.max(1, Math.round((base - ahora) / 60000)))}: ${e.t}`;   // con lo que falta de verdad
-      sonarAlarma(); hojaAlarma(e, k, txt, a === Math.min(...e.avisos), a);
-      notifWeb(...tituloAviso(e, txt.replace(': ' + e.t, '')), clave, false, {requireInteraction: true, renotify: true, silent: false, actions: ACC_ALARMA, data: {ev: e.id, k, ul: a === Math.min(...e.avisos)}});
+      sonarAlarma(); hojaAlarma(e, k, txt, completaEn(a), a);
+      notifWeb(...tituloAviso(e, txt.replace(': ' + e.t, '')), clave, false, {requireInteraction: true, renotify: true, silent: false, actions: ACC_ALARMA, data: {ev: e.id, k, ul: completaEn(a)}});
       setTimeout(() => hablar(txt.replace(/\(en (\d+) min\)/, 'dentro de $1 minutos').replace('(en 1 hora)', 'dentro de una hora') + '.', 'tareas'), 3500);
     }));
   }
@@ -6655,7 +6667,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.52';   // última app Android publicada
+const APK_ULTIMA = '2.53';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
