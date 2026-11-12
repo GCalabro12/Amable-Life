@@ -381,6 +381,9 @@ img,svg{-webkit-user-drag:none}
 .voz-lista li.ahora{font-weight:700}
 .voz-atajos{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
 /* 5.75: cuadro propio de asistente (en la app ya no sale el de Google) */
+.voz-cab{display:flex;align-items:center;justify-content:center;gap:12px;text-align:left}
+.voz-cab h2{margin:0}
+.aria-cara{width:64px;height:64px;flex:none;border-radius:50%;box-shadow:0 4px 16px rgba(139,92,246,.4)}
 .voz-quien{margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
 .voz-saludo{margin:2px 0 14px;font-size:17px;color:var(--tinta)}
 .voz-cara{--nivel:0;position:relative;width:132px;height:132px;margin:0 auto;display:grid;place-items:center}
@@ -2247,7 +2250,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.77';
+const VERSION = 'v5.78';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4294,7 +4297,9 @@ let vozRec = null, vozHabla = false;
 const vozSinAcentos = t => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 /* 5.75 (Gustavo: «que cuando haya un emoji no te lo lea, lo salte») */
 const vozSinEmojis = t => (t || '').replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u200d\ufe0f\u20e3]/gu, '').replace(/\s{2,}/g, ' ').trim();
-const NOMBRE_ASIS = 'Aria';   // 5.76 (Gustavo eligió el nombre: «Aria», se entiende igual en inglés y en español)
+const NOMBRE_ASIS = 'Aria';
+/* 5.78 (Gustavo: «una imagen femenina, como de inteligencia artificial»): la cara de Aria, dibujada aquí (a la espera de la de Gemini) */
+const ARIA_CARA = '<svg class="aria-cara" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="arF" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#f472b6"/></linearGradient><radialGradient id="arL" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><clipPath id="arC"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#arC)"><rect width="100" height="100" fill="url(#arF)"/><circle cx="50" cy="44" r="40" fill="url(#arL)"/><path d="M50 13C27 13 17 31 19 52c1 15-5 25-9 33 18 4 26-3 29-10h22c3 7 11 14 29 10-4-8-10-18-9-33 2-21-8-39-31-39z" fill="#4c1d95"/><path d="M44 66h12v10H44z" fill="#f9d5e5"/><path d="M22 104c2-17 14-25 28-25s26 8 28 25z" fill="#ede9fe"/><ellipse cx="50" cy="49" rx="16.5" ry="20" fill="#fde4ef"/><path d="M33 46c0-14 9-21 18-21 10 0 17 8 16 21-6-8-13-11-19-11-5 3-10 6-15 11z" fill="#4c1d95"/><path d="M40.5 51q3.2 2.6 6.4 0M53.1 51q3.2 2.6 6.4 0" stroke="#4c1d95" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="41" cy="57" r="2.6" fill="#f9a8d4" opacity=".7"/><circle cx="59" cy="57" r="2.6" fill="#f9a8d4" opacity=".7"/><path d="M45.5 60.5q4.5 3.4 9 0" stroke="#be185d" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M27 38L23 55L29 70M73 38L77 55L71 70M27 38L37 22M73 38L63 22" stroke="#67e8f9" stroke-width="1.1" fill="none" opacity=".85"/><g fill="#a5f3fc"><circle cx="27" cy="38" r="2.2"/><circle cx="23" cy="55" r="1.9"/><circle cx="29" cy="70" r="1.7"/><circle cx="73" cy="38" r="2.2"/><circle cx="77" cy="55" r="1.9"/><circle cx="71" cy="70" r="1.7"/><circle cx="37" cy="22" r="1.6"/><circle cx="63" cy="22" r="1.6"/></g><path d="M82 14l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff"/></g></svg>';   // 5.76 (Gustavo eligió el nombre: «Aria», se entiende igual en inglés y en español)
 function vozHora(m, franjaAntes){
   const h = Math.floor(m / 60) % 24, mm = m % 60, hh = h % 12 || 12;
   const franja = h < 6 ? 'de la madrugada' : h < 12 ? 'de la mañana' : h < 13 ? 'del mediodía' : h < 21 ? 'de la tarde' : 'de la noche';
@@ -4419,7 +4424,7 @@ window.nativeEscucha = (tipo, texto) => {
 function abrirVoz(){
   vozParar();
   const n = nombrePila();
-  mostrarHoja(`<div class="voz-hoja"><p class="voz-quien">Tu asistente de Amable Life</p><h2>${NOMBRE_ASIS}</h2>
+  mostrarHoja(`<div class="voz-hoja"><div class="voz-cab">${ARIA_CARA}<div><p class="voz-quien">Tu asistente de Amable Life</p><h2>${NOMBRE_ASIS}</h2></div></div>
     <p class="voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</p>
     <div class="voz-cara" id="voz-cara"><i></i><i></i><button type="button" class="mic voz-mic" id="voz-mic" aria-label="Preguntar con la voz" onclick="vozEscuchar(this)">${MIC_LINEA}</button></div>
     <p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
