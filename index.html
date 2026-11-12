@@ -859,7 +859,7 @@ nav.abajo button{font-size:11px}
   .ag-mes-m .ag-dia-evs em{font-style:normal;font-size:9px;color:var(--suave);text-align:left;padding-left:2px;width:auto;height:auto;border-radius:0}
 }
 .rj{margin:4px 0 12px}
-.rj-cuerpo{position:relative}
+.rj-cuerpo{position:relative;isolation:isolate}   /* 5.74 (Gustavo): lo de dentro (el óvalo de «Tareas flexibles») pasa por debajo de la barra fija de la fecha, no por encima */
 .rj-h{position:absolute;left:44px;right:0;border-top:1px solid rgba(var(--bl),.24)}
 .rj-h span{position:absolute;left:-44px;top:-8px;width:38px;text-align:right;font-size:11px;font-weight:700;color:var(--suave)}
 .rj-m{position:absolute;left:44px;right:0;height:1px;background:repeating-linear-gradient(90deg,rgba(var(--bl),.32) 0 2px,transparent 2px 6px)}
@@ -2232,7 +2232,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.73';
+const VERSION = 'v5.74';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
