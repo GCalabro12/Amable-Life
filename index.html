@@ -2224,7 +2224,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
     <div class="marca"><svg id="logo-cab"></svg>Amable Life</div>
     <span class="ver" id="ver"></span>
     <span id="cab-secc"></span>
-    <div class="der"><span id="cab-vista"></span><span id="grow-panel-boton"></span><button type="button" class="cab-voz" aria-label="Pregúntame qué tienes hoy" title="Pregúntame: «¿Qué tengo hoy?»" onclick="abrirVoz()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
+    <div class="der"><span id="cab-vista"></span><span id="grow-panel-boton"></span><button type="button" class="cab-voz" aria-label="Aria, tu asistente: pregúntale qué tienes hoy" title="Aria, tu asistente: «¿Qué tengo hoy?»" onclick="abrirVoz()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
   </div>
 </header>
 
@@ -2245,7 +2245,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.75';
+const VERSION = 'v5.76';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4292,7 +4292,7 @@ let vozRec = null, vozHabla = false;
 const vozSinAcentos = t => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 /* 5.75 (Gustavo: «que cuando haya un emoji no te lo lea, lo salte») */
 const vozSinEmojis = t => (t || '').replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u200d\ufe0f\u20e3]/gu, '').replace(/\s{2,}/g, ' ').trim();
-const NOMBRE_ASIS = 'Pregúntame';   // 5.75: el nombre del asistente (Gustavo lo elige)
+const NOMBRE_ASIS = 'Aria';   // 5.76 (Gustavo eligió el nombre: «Aria», se entiende igual en inglés y en español)
 function vozHora(m, franjaAntes){
   const h = Math.floor(m / 60) % 24, mm = m % 60, hh = h % 12 || 12;
   const franja = h < 6 ? 'de la madrugada' : h < 12 ? 'de la mañana' : h < 13 ? 'del mediodía' : h < 21 ? 'de la tarde' : 'de la noche';
