@@ -363,6 +363,24 @@ img,svg{-webkit-user-drag:none}
 .campo-voz.area .mic{top:14px;transform:none}
 .mic.escuchando{background:var(--acento2);color:#fff;animation:latido 1s ease-in-out infinite}
 @keyframes latido{50%{box-shadow:0 0 0 8px rgba(226,69,107,.25)}}
+/* 5.73 (Gustavo): «Pregúntame»: micrófono en la cabecera que lee tu agenda en voz alta */
+.cab-voz{width:42px;height:42px;border:0;border-radius:50%;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0;flex:none}
+.cab-voz:hover{background:rgba(var(--bl),.1)}
+.voz-hoja{text-align:center;padding:4px 0}
+.voz-hoja h2{font-size:24px;margin:4px 0}
+.voz-hoja .voz-estado{margin:0 0 14px;color:var(--suave)}
+.voz-mic{position:static;transform:none;width:72px;height:72px;margin:0 auto;cursor:pointer}
+.voz-mic svg{width:34px;height:34px}
+.voz-oido{min-height:1.3em;margin:12px 0 4px;font-style:italic;color:var(--suave)}
+.voz-resp{text-align:left}
+.voz-resp .voz-titulo{margin:6px 0 8px;font-weight:700;color:var(--tinta)}
+.voz-lista{list-style:none;margin:0;padding:0}
+.voz-lista li{display:flex;gap:12px;padding:8px 0;border-top:1px solid rgba(var(--bl),.12)}
+.voz-lista li b{flex:none;min-width:92px;font-variant-numeric:tabular-nums}
+.voz-lista li.ok span{color:var(--suave);text-decoration:line-through}
+.voz-lista li.ahora{font-weight:700}
+.voz-atajos{display:flex;gap:8px;justify-content:center;margin-top:16px}
+.voz-atajos .btn{min-width:110px}
 
 /* v1.09 · Hoja del pétalo */
 .hoja{position:fixed;inset:0;z-index:25;background:rgba(8,5,20,0);transition:background .3s;display:flex;align-items:flex-end;justify-content:center}
@@ -2193,7 +2211,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
     <div class="marca"><svg id="logo-cab"></svg>Amable Life</div>
     <span class="ver" id="ver"></span>
     <span id="cab-secc"></span>
-    <div class="der"><span id="cab-vista"></span><span id="grow-panel-boton"></span><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
+    <div class="der"><span id="cab-vista"></span><span id="grow-panel-boton"></span><button type="button" class="cab-voz" aria-label="Pregúntame qué tienes hoy" title="Pregúntame: «¿Qué tengo hoy?»" onclick="abrirVoz()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button><button type="button" class="cab-menu" aria-label="Menú: tu cuenta y las vistas" onclick="abrirMenu()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
   </div>
 </header>
 
@@ -2214,7 +2232,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.72';
+const VERSION = 'v5.73';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -3825,7 +3843,7 @@ document.addEventListener('mousedown', ev => {
 }, true);
 // al soltar fuera de la ventana, ese clic no la cierra
 addEventListener('click', ev => { if(Date.now() - redimFin < 400){ ev.stopPropagation(); ev.preventDefault(); } }, true);
-function cerrarHoja(){ if(typeof regCerrarPop === 'function') regCerrarPop(); if(alarmaGain) pararAlarma(); hojaAbierta = null; const h = $('#hoja'); if(h){ h.id = ''; h.classList.remove('ver'); setTimeout(() => h.remove(), 300); } }
+function cerrarHoja(){ if($('#hoja[data-voz]')) vozParar(); if(typeof regCerrarPop === 'function') regCerrarPop(); if(alarmaGain) pararAlarma(); hojaAbierta = null; const h = $('#hoja'); if(h){ h.id = ''; h.classList.remove('ver'); setTimeout(() => h.remove(), 300); } }
 const cerrarPetalo = cerrarHoja;
 /* La cruz (y tocar fuera) cierra cada hoja como su propio botón de salir */
 function cerrarHojaX(){
@@ -4249,6 +4267,118 @@ function dictar(btn){
   r.onend = () => { btn.classList.remove('escuchando'); reconocimiento = null; };
   btn.classList.add('escuchando'); reconocimiento = r;
   try{ r.start(); }catch(e){ btn.classList.remove('escuchando'); reconocimiento = null; }
+}
+
+/* ---------- 5.73 (Gustavo): «Pregúntame» ----------
+   Botón con micrófono en la cabecera. Le dices «¿Qué tengo hoy?» (o mañana, pasado mañana, ayer, el viernes…) y te lo lee en voz alta:
+   Helena en el ordenador (si no está, otra voz en español); en la app del móvil, la voz del teléfono. Lee tu agenda real: lo del
+   calendario (tareas y prácticas integrales) y las tareas de tus bloques de Focus, sin repetir las que vienen del calendario.
+   Hoy dice solo lo que te queda y cuántas ya has hecho. Sin micrófono, los botones «Hoy» y «Mañana» hacen lo mismo. */
+const MIC_LINEA = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>';
+let vozRec = null, vozHabla = false;
+const vozSinAcentos = t => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function vozHora(m, franjaAntes){
+  const h = Math.floor(m / 60) % 24, mm = m % 60, hh = h % 12 || 12;
+  const franja = h < 6 ? 'de la madrugada' : h < 12 ? 'de la mañana' : h < 13 ? 'del mediodía' : h < 21 ? 'de la tarde' : 'de la noche';
+  const min = mm === 0 ? '' : mm === 15 ? ' y cuarto' : mm === 30 ? ' y media' : ' y ' + mm;
+  return {txt: `${hh === 1 ? 'a la 1' : 'a las ' + hh}${min}${franja === franjaAntes ? '' : ' ' + franja}`, franja};
+}
+/* Qué día pregunta: hoy si no dice otro */
+function vozDia(texto){
+  let t = vozSinAcentos(texto); const hoy = hoyK();
+  if(/pasado manana/.test(t)) return [sumarDias(hoy, 2), 'Pasado mañana'];
+  t = t.replace(/(esta|por la|de la|la) manana/g, ' ');
+  if(/\bmanana\b/.test(t)) return [sumarDias(hoy, 1), 'Mañana'];
+  if(/\bayer\b/.test(t)) return [sumarDias(hoy, -1), 'Ayer'];
+  const nom = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'], i = nom.findIndex(d => new RegExp('\\b' + d + '\\b').test(t));
+  if(i >= 0){ const n = (i - diaSem(hoy) + 7) % 7; return n ? [sumarDias(hoy, n), 'El ' + DIAS_LARGO[i]] : [hoy, 'Hoy']; }
+  return [hoy, 'Hoy'];
+}
+/* Lo que hay ese día: {texto que se lee, html que se ve} */
+function vozAgenda(k, nom){
+  const hoy = hoyK(), esHoy = k === hoy, pasado = k < hoy, m = minutosHoy(), evs = eventosDe(k);
+  const items = evs.map(e => ({todo: !!e.todo, ini: e.todo ? -1 : e.ini || 0, fin: e.fin || 0, t: (e.t || '').trim() || SIN_TITULO, ok: hechoEv(e, k)}));
+  BLOQUES.forEach((b, i) => actsDe(k, i).forEach(a => {
+    if(!a || !(a.t || '').trim() || (a.acc && evs.some(e => e.acc === a.acc))) return;
+    items.push({todo: false, ini: b.ini, fin: b.fin, t: a.t.trim(), ok: hechaAct(a), focus: true});
+  }));
+  items.sort((a, b) => a.ini - b.ini);
+  const fecha = fechaLarga(k), fechaMin = fecha.charAt(0).toLowerCase() + fecha.slice(1);
+  const hechas = items.filter(x => x.ok).length;
+  // hoy: lo que te queda (sin lo hecho ni lo que ya pasó); otros días: todo
+  const lista = esHoy ? items.filter(x => !x.ok && (x.todo || x.fin > m)) : pasado ? items : items.filter(x => !x.ok);
+  const plural = (n, a, b) => n === 1 ? a : b;
+  let txt;
+  if(!items.length) txt = `${nom}, ${fechaMin}, no tienes nada en tu agenda.` + (pasado ? '' : ' Es un buen momento para planificar.');
+  else if(esHoy) txt = `Hoy, ${fechaMin}, ` + (lista.length ? `te ${plural(lista.length, 'queda', 'quedan')} ${lista.length} ${plural(lista.length, 'cosa', 'cosas')}` : 'ya no te queda nada pendiente') + (hechas ? `, y ya has hecho ${hechas}.` : '.');
+  else if(pasado) txt = `${nom}, ${fechaMin}, tenías ${items.length} ${plural(items.length, 'cosa', 'cosas')} y hiciste ${hechas}.`;
+  else txt = `${nom}, ${fechaMin}, tienes ${lista.length} ${plural(lista.length, 'cosa', 'cosas')}.`;
+  const MAXV = 12; let franja = '';
+  const frases = lista.slice(0, MAXV).map(x => {
+    if(x.todo) return `Para todo el día: ${x.t}.`;
+    if(esHoy && x.ini <= m && m < x.fin) return `Ahora${x.focus ? ', en Focus' : ''}: ${x.t}.`;
+    const h = vozHora(x.ini, franja); franja = h.franja;
+    return `${h.txt.charAt(0).toUpperCase() + h.txt.slice(1)}${x.focus ? ', en Focus' : ''}: ${x.t}.`;
+  });
+  if(lista.length > MAXV) frases.push(`Y ${lista.length - MAXV} más.`);
+  const texto = [txt, ...frases].join(' ');
+  const filas = lista.map(x => `<li class="${x.ok ? 'ok' : ''}${esHoy && !x.todo && x.ini <= m && m < x.fin ? ' ahora' : ''}"><b>${x.todo ? 'Todo el día' : hm(x.ini)}</b><span>${esc(x.t)}${x.focus ? ' · Focus' : ''}</span></li>`).join('');
+  return {texto, html: `<p class="voz-titulo">${esc(txt)}</p>${filas ? `<ul class="voz-lista">${filas}</ul>` : ''}`};
+}
+function vozDecir(texto){
+  if(esApp){ try{ AndroidEquilibra.speak(texto); }catch(e){} return; }
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const vs = speechSynthesis.getVoices(), v = vs.find(x => /Helena/i.test(x.name)) || vs.find(x => x.lang === 'es-ES') || vs.find(x => /^es/i.test(x.lang));
+  // frase a frase: Chrome corta las lecturas muy largas
+  const partes = texto.split(/(?<=[.:])\s+/).filter(Boolean);
+  vozHabla = true;
+  partes.forEach((t, i) => { const u = new SpeechSynthesisUtterance(t); u.lang = 'es-ES'; if(v) u.voice = v;
+    if(i === partes.length - 1) u.onend = u.onerror = () => { vozHabla = false; }; speechSynthesis.speak(u); });
+}
+function vozParar(){
+  if(vozRec){ try{ vozRec.abort(); }catch(e){} vozRec = null; }
+  if(vozHabla && 'speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} }
+  vozHabla = false;
+}
+function vozResponder(texto, oido){
+  const [k, nom] = vozDia(texto), r = vozAgenda(k, nom);
+  const o = $('#voz-oido'); if(o) o.textContent = oido && texto ? `«${texto}»` : '';
+  const re = $('#voz-resp'); if(re) re.innerHTML = r.html;
+  const es = $('#voz-estado'); if(es) es.textContent = 'Toca el micrófono para preguntar otra vez.';
+  vozDecir(r.texto);
+}
+function vozEscuchar(btn){
+  btn = btn || $('#voz-mic'); if(!btn) return;
+  if(vozRec){ vozRec.stop(); return; }
+  if(vozHabla){ try{ speechSynthesis.cancel(); }catch(e){} vozHabla = false; }
+  const es = $('#voz-estado'), o = $('#voz-oido');
+  if(esApp){
+    campoDictado = {get value(){ return ''; }, set value(v){ btn.classList.remove('escuchando'); vozResponder(v, true); }, maxLength: 500, dispatchEvent(){}};
+    btn.classList.add('escuchando'); if(es) es.textContent = 'Te escucho…'; AndroidEquilibra.dictar(); return;
+  }
+  if(!Reconocer){ if(es) es.textContent = 'Este navegador no deja usar el micrófono: toca «Hoy» o «Mañana».'; return; }
+  const r = new Reconocer(); let dicho = '';
+  r.lang = 'es-ES'; r.interimResults = true; r.continuous = false;
+  r.onresult = e => { dicho = ''; for(const x of e.results) dicho += x[0].transcript; if(o) o.textContent = `«${dicho}»`; };
+  r.onerror = e => {
+    if(!es) return;
+    if(e.error === 'not-allowed' || e.error === 'service-not-allowed') es.textContent = 'Permite el micrófono para preguntarme. Mientras, toca «Hoy» o «Mañana».';
+    else if(e.error === 'no-speech') es.textContent = 'No te he oído. Toca el micrófono y pregunta otra vez.';
+  };
+  r.onend = () => { btn.classList.remove('escuchando'); if(vozRec !== r) return; vozRec = null; if(dicho.trim()) vozResponder(dicho.trim(), true); };
+  btn.classList.add('escuchando'); if(es) es.textContent = 'Te escucho…'; if(o) o.textContent = ''; vozRec = r;
+  try{ r.start(); }catch(e){ btn.classList.remove('escuchando'); vozRec = null; }
+}
+function abrirVoz(){
+  vozParar();
+  mostrarHoja(`<div class="voz-hoja"><h2>Pregúntame</h2>
+    <p class="voz-estado" id="voz-estado">Pregunta, por ejemplo, «¿Qué tengo hoy?»</p>
+    <button type="button" class="mic voz-mic" id="voz-mic" aria-label="Preguntar con la voz" onclick="vozEscuchar(this)">${MIC_LINEA}</button>
+    <p class="voz-oido" id="voz-oido"></p><div class="voz-resp" id="voz-resp"></div>
+    <div class="voz-atajos"><button type="button" class="btn sec" onclick="vozResponder('hoy')">Hoy</button><button type="button" class="btn sec" onclick="vozResponder('mañana')">Mañana</button></div></div>`, '#8b5cf6');
+  const h = $('#hoja'); if(h) h.dataset.voz = '1';
+  vozEscuchar($('#voz-mic'));
 }
 
 /* ---------- Calendario propio (web 3.64; idea de Grow Panel, fase 1 aprobada por Gustavo) ----------
