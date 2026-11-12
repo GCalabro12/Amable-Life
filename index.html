@@ -2263,7 +2263,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.83';
+const VERSION = 'v5.84';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4313,7 +4313,7 @@ const vozSinEmojis = t => (t || '').replace(/[\p{Extended_Pictographic}\u{1F1E6}
 const NOMBRE_ASIS = 'Gaia';   // 5.79 (Gustavo): de «Aria» a «Gaia», que lleva «AI» (inglés) e «IA» (español)
 /* 5.78 (Gustavo: «una imagen femenina, como de inteligencia artificial»): la cara de Aria, dibujada aquí (a la espera de la de Gemini) */
 // 5.83 (Gustavo): la cara de Gaia es su imagen (Gemini + ojos abiertos y la flor de Amable Life con «AI» en el pelo)
-const ARIA_CARA = '<img class="aria-cara" src="img/gaia.jpg" alt="" aria-hidden="true" draggable="false">';
+const ARIA_CARA = '<img class="aria-cara" src="img/gaia-2.jpg" alt="" aria-hidden="true" draggable="false">';
 const caraGaia = cls => ARIA_CARA.replace('class="aria-cara"', `class="${cls}"`);
 document.querySelectorAll('.cab-voz').forEach(b => { b.innerHTML = caraGaia('gaia-mini'); });
 function vozHora(m, franjaAntes){
