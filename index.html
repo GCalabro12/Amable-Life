@@ -2079,6 +2079,11 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   .gc-dias.sel .gc-dl{color:var(--oro);font-weight:800}
   .gc-crear{align-self:center;flex:none;display:flex;align-items:center;gap:12px;height:58px;padding:0 34px 0 24px;margin:8px 0 6px !important;font-size:17px !important;border-radius:18px;border:0;background:#2e2458;color:var(--tinta);font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer;margin-top:2px}
   .gc-crear:hover{background:#372b69}
+  .gc-acc{display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:6px}
+  .gc-acc .gc-crear{margin:0 !important}
+  .gc-gaia{display:flex;align-items:center;gap:10px;height:50px;padding:0 20px 0 8px;border:1.5px solid rgba(139,92,246,.45);border-radius:999px;background:rgba(139,92,246,.1);color:var(--tinta);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+  .gc-gaia:hover{background:rgba(139,92,246,.18)}
+  .gc-gaia:hover .gaia-mini{transform:scale(1.08)}
   .gc-crear svg{width:26px;height:26px}
   body.ancho .rj-cab button{cursor:default}
   .gc-mini-cab{display:flex;align-items:center;gap:2px;padding-left:8px;margin-bottom:4px}
@@ -2253,7 +2258,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.80';
+const VERSION = 'v5.81';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5055,8 +5060,11 @@ let gcMiniDes = 0;
 function gcLado(){
   const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
   const h = +new Intl.DateTimeFormat('es-ES', Object.assign({hour: '2-digit', hour12: false}, fPref.zona ? {timeZone: fPref.zona} : {})).format(new Date()).slice(0, 2);
-  return `<aside class="gc-lado">${menuSeccionesHTML('gc-secc')}
+  // 5.81 (Gustavo): «Crear» arriba del todo y debajo Gaia, «Asistente IA»; luego Calendario · Áreas · Focus · Cuerpo
+  return `<aside class="gc-lado"><div class="gc-acc">
     <button class="gc-crear" onclick="nuevoEvento()" data-atajo="la tecla C|para crear una tarea o una práctica integral">${ICO_MAS}Crear</button>
+    <button class="gc-gaia" onclick="abrirVoz()" aria-label="Gaia, tu asistente: pregúntale qué tienes hoy">${caraGaia('gaia-mini', 'l')}<span>Asistente IA</span></button></div>
+    ${menuSeccionesHTML('gc-secc')}
     <div><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
       <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
       ${mesPeq(m0, true)}</div>
