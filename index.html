@@ -266,6 +266,7 @@ nav.abajo button.act .nav-flor{color:var(--oro);opacity:1}
 .pi-seal:hover{border-color:#4ADE80}
 html.en-app nav.abajo{padding-bottom:0}
 html.en-app .ag-fab{bottom:80px}
+html.en-app .ag-gaia{bottom:152px}
 .sellos.sellos-fila{flex-wrap:nowrap;gap:6px;margin-top:22px}
 .sellos-fila .pi-seal,.sellos-fila .gp-seal{font-size:11px;padding:5px 9px;gap:6px;letter-spacing:0}
 .gp-seal:hover{border-color:#8b5cf6}
@@ -958,6 +959,10 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .ag-fab{position:fixed;right:max(18px,calc(50% - 242px));bottom:calc(80px + env(safe-area-inset-bottom));width:60px;height:60px;border-radius:50%;border:0;display:grid;place-items:center;
   background:linear-gradient(135deg,var(--acento),var(--acento2));color:#fff;box-shadow:0 8px 24px rgba(226,69,107,.45);z-index:5}
 .ag-fab:active{transform:scale(.96)}
+/* 5.82 (Gustavo: «en el móvil que aparezca, donde hay un hueco»): Gaia encima del botón + */
+.ag-gaia{position:fixed;right:max(18px,calc(50% - 242px));bottom:calc(152px + env(safe-area-inset-bottom));z-index:5;display:flex;align-items:center;gap:8px;height:46px;padding:0 16px 0 6px;border:1.5px solid rgba(139,92,246,.45);border-radius:999px;background:var(--tarjeta);color:var(--tinta);font:inherit;font-size:14px;font-weight:700;box-shadow:0 6px 18px rgba(139,92,246,.28);cursor:pointer}
+.ag-gaia::before{content:'';position:absolute;inset:0;border-radius:inherit;background:rgba(139,92,246,.1);pointer-events:none}
+.ag-gaia:active{transform:scale(.96)}
 .desps{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .desps > div[hidden]{display:none}
 .desp{position:relative}
@@ -2050,7 +2055,7 @@ input.blk-barra::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:
   body.ancho .gc-top{grid-area:top;display:flex;align-items:center;gap:4px;position:sticky;top:0;z-index:9;height:64px;padding:0 4px 0 10px;background:rgba(20,15,38,.97);backdrop-filter:blur(8px)}
   body.ancho .gc-lado{grid-area:lado;display:flex;flex-direction:column;gap:20px;position:sticky;top:64px;max-height:calc(100vh - 64px);overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(var(--bl),.2) transparent;padding:6px 14px 24px 14px}
   body.ancho .gc-main{grid-area:main;background:var(--fondo2);border-radius:24px;padding:4px 14px 18px 6px;min-height:calc(100vh - 80px)}
-  body.ancho .gc-main > .tit-acc,body.ancho .ag-modos,body.ancho .ag-nav,body.ancho .ag-acc,body.ancho .ag-fab,body.ancho .ag-esp,body.ancho .ag-vacio{display:none}
+  body.ancho .gc-main > .tit-acc,body.ancho .ag-modos,body.ancho .ag-nav,body.ancho .ag-acc,body.ancho .ag-fab,body.ancho .ag-gaia,body.ancho .ag-esp,body.ancho .ag-vacio{display:none}
   .gc-ico{width:44px;height:44px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
   .gc-ico:hover,.gc-hoy:hover,.gc-vista:hover{background:rgba(var(--bl),.08)}
   .gc-marca{display:flex;align-items:center;gap:10px;margin:0 26px 0 6px;white-space:nowrap}
@@ -2258,7 +2263,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.81';
+const VERSION = 'v5.82';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4802,6 +4807,7 @@ function vAgenda(){
 ${fijo}</div>
     ${conHoy ? '' : '<div class="ag-acc"><button class="link" onclick="agHoy()">Volver a hoy</button></div>'}
     ${cuerpo}<div class="ag-esp" style="height:76px"></div>
+    <button class="ag-gaia" onclick="abrirVoz()" aria-label="Gaia, tu asistente: pregúntale qué tienes hoy">${caraGaia('gaia-mini', 'm')}<span>Asistente IA</span></button>
     <button class="ag-fab" aria-label="Añadir al calendario" onclick="nuevoEvento()"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>`;
 }
 /* Rejilla de horas: de 5:00 a 23:00 (o más, si hay algo antes o después), 52 px por hora.
