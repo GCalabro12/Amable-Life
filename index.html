@@ -392,10 +392,12 @@ img,svg{-webkit-user-drag:none}
 .voz-lista li.ok span{color:var(--suave);text-decoration:line-through}
 .voz-lista li.ahora{font-weight:700}
 .voz-atajos{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
-.voz-escribe{display:flex;gap:8px;max-width:420px;margin:14px auto 0}
-.voz-escribe input{flex:1;min-width:0;border:1.5px solid rgba(139,92,246,.4);border-radius:999px;padding:10px 16px;font:inherit;background:var(--tarjeta);color:var(--tinta)}
+/* 5.89 (Gustavo): el botón de enviar dentro del cuadro, a la derecha, con el triángulo de enviar */
+.voz-escribe{position:relative;display:flex;max-width:440px;margin:14px auto 0}
+.voz-escribe input{flex:1;min-width:0;border:1.5px solid rgba(139,92,246,.4);border-radius:999px;padding:12px 54px 12px 18px;font:inherit;background:var(--tarjeta);color:var(--tinta)}
 .voz-escribe input:focus{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.18)}
-.voz-escribe button{border:0;border-radius:999px;padding:0 18px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,#8b5cf6,#ec4899);cursor:pointer}
+.voz-escribe button{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:50%;display:grid;place-items:center;padding:0 0 0 3px;color:#fff;background:linear-gradient(135deg,#8b5cf6,#ec4899);box-shadow:0 3px 10px rgba(139,92,246,.35);cursor:pointer}
+.voz-escribe button:active{transform:translateY(-50%) scale(.94)}
 /* 5.75: cuadro propio de asistente (en la app ya no sale el de Google) */
 .voz-cab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}   /* 5.87 (Gustavo: «que Gaia se vea en grande»): la cara arriba, grande y en el centro */
 .voz-cab h2{margin:0}
@@ -2283,7 +2285,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.88';
+const VERSION = 'v5.89';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4566,7 +4568,7 @@ function abrirVoz(){
     <div class="voz-cara" id="voz-cara"><i></i><i></i><button type="button" class="mic voz-mic" id="voz-mic" aria-label="Preguntar con la voz" onclick="vozEscuchar(this)">${MIC_LINEA}</button></div>
     <p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
     <p class="voz-oido" id="voz-oido"></p><div class="voz-resp" id="voz-resp"></div>
-    <form class="voz-escribe" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="O escríbeme: ¿qué tengo el viernes?" aria-label="Escribe tu pregunta"><button type="submit">Preguntar</button></form>
+    <form class="voz-escribe" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="O escríbeme: ¿qué tengo el viernes?" aria-label="Escribe tu pregunta"><button type="submit" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>
     <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('hoy')">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('mañana')">¿Y mañana?</button></div>
     ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
