@@ -389,19 +389,20 @@ img,svg{-webkit-user-drag:none}
 .voz-escribe input:focus{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.18)}
 .voz-escribe button{border:0;border-radius:999px;padding:0 18px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,#8b5cf6,#ec4899);cursor:pointer}
 /* 5.75: cuadro propio de asistente (en la app ya no sale el de Google) */
-.voz-cab{display:flex;align-items:center;justify-content:center;gap:12px;text-align:left}
+.voz-cab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}   /* 5.87 (Gustavo: «que Gaia se vea en grande»): la cara arriba, grande y en el centro */
 .voz-cab h2{margin:0}
-.gaia-viva{position:relative;flex:none;width:86px;height:86px;border-radius:50%;overflow:hidden;box-shadow:0 4px 16px rgba(139,92,246,.4);transition:box-shadow .3s}
+.gaia-viva{position:relative;flex:none;width:clamp(150px,46vw,220px);height:clamp(150px,46vw,220px);border-radius:50%;overflow:hidden;box-shadow:0 4px 16px rgba(139,92,246,.4);transition:box-shadow .3s}
 .gaia-viva .aria-cara,.gaia-viva video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;box-shadow:none}
 .gaia-viva video{opacity:0;transition:opacity .25s;pointer-events:none}
 .gaia-viva.habla video{opacity:1}
+/* 5.87: la imagen quieta es el primer cuadro del vídeo (img/gaia-quieta.jpg), así al cambiar no se ve doble */
 .gaia-viva.habla{animation:gaiaAura 1.6s ease-in-out infinite}
 @keyframes gaiaAura{0%,100%{box-shadow:0 0 0 3px rgba(139,92,246,.35),0 4px 16px rgba(139,92,246,.4)}50%{box-shadow:0 0 0 7px rgba(236,72,153,.25),0 4px 22px rgba(139,92,246,.55)}}
 @media (prefers-reduced-motion:reduce){.gaia-viva.habla{animation:none}}
 .aria-cara{width:64px;height:64px;flex:none;object-fit:cover;border-radius:50%;box-shadow:0 4px 16px rgba(139,92,246,.4)}
 .voz-quien{margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
 .voz-saludo{margin:2px 0 14px;font-size:17px;color:var(--tinta)}
-.voz-cara{--nivel:0;position:relative;width:132px;height:132px;margin:0 auto;display:grid;place-items:center}
+.voz-cara{--nivel:0;position:relative;width:112px;height:112px;margin:0 auto;display:grid;place-items:center}
 .voz-cara i{position:absolute;inset:22px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.28),rgba(139,92,246,.08) 70%);transform:scale(.9);transition:transform .12s ease-out,opacity .2s;opacity:.5}
 .voz-cara.escuchando i:first-child{transform:scale(calc(1.05 + var(--nivel) * .45));opacity:.9}
 .voz-cara.escuchando i:last-child{animation:vozOnda 1.6s ease-out infinite;opacity:.8}
@@ -2274,7 +2275,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.86';
+const VERSION = 'v5.87';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4328,7 +4329,7 @@ const ARIA_CARA = '<img class="aria-cara" src="img/gaia-2.jpg" alt="" aria-hidde
 const caraGaia = cls => ARIA_CARA.replace('class="aria-cara"', `class="${cls}"`);
 /* 5.86 (Gustavo: «que cuando esté hablando la IA aparezca Gaia hablando»): vídeo de Gemini en bucle (img/gaia-habla.mp4, 9 s, sin saltos)
    encima de la imagen; solo se ve y se mueve mientras Gaia habla (gaiaHabla). */
-const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva">' + ARIA_CARA + '<video src="img/gaia-habla.mp4" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
+const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-quieta.jpg" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-habla.mp4?v=2" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
 let gaiaT = 0;
 function gaiaHabla(on){
   clearTimeout(gaiaT);
