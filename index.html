@@ -384,6 +384,10 @@ img,svg{-webkit-user-drag:none}
 .voz-lista li.ok span{color:var(--suave);text-decoration:line-through}
 .voz-lista li.ahora{font-weight:700}
 .voz-atajos{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.voz-escribe{display:flex;gap:8px;max-width:420px;margin:14px auto 0}
+.voz-escribe input{flex:1;min-width:0;border:1.5px solid rgba(139,92,246,.4);border-radius:999px;padding:10px 16px;font:inherit;background:var(--tarjeta);color:var(--tinta)}
+.voz-escribe input:focus{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.18)}
+.voz-escribe button{border:0;border-radius:999px;padding:0 18px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,#8b5cf6,#ec4899);cursor:pointer}
 /* 5.75: cuadro propio de asistente (en la app ya no sale el de Google) */
 .voz-cab{display:flex;align-items:center;justify-content:center;gap:12px;text-align:left}
 .voz-cab h2{margin:0}
@@ -2263,7 +2267,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.84';
+const VERSION = 'v5.85';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4406,18 +4410,44 @@ function vozEscuchar(btn){
     campoDictado = {get value(){ return ''; }, set value(v){ btn.classList.remove('escuchando'); vozResponder(v, true); }, maxLength: 500, dispatchEvent(){}};
     btn.classList.add('escuchando'); if(es) es.textContent = 'Te escucho…'; AndroidEquilibra.dictar(); return;
   }
-  if(!Reconocer){ if(es) es.textContent = 'Este navegador no deja usar el micrófono: toca «Hoy» o «Mañana».'; return; }
-  const r = new Reconocer(); let dicho = '';
+  if(!Reconocer){ if(es) es.textContent = 'Este navegador no deja preguntar con la voz: escríbeme abajo o toca «¿Qué tengo hoy?».'; vozFoco(); return; }
+  // 5.85 (Gustavo: «le doy al botón de hablar y no pasa nada» en el ordenador): todos los errores dicen algo,
+  // «Te escucho…» solo cuando el micrófono arranca de verdad, y si no arranca en 5 s se avisa; siempre se puede escribir.
+  const r = new Reconocer(); let dicho = '', fallo = false, oye = false;
   r.lang = 'es-ES'; r.interimResults = true; r.continuous = false;
+  const msg = t => { if(es) es.textContent = t; };
+  r.onstart = () => { oye = true; msg('Te escucho…'); };
+  r.onaudiostart = () => { oye = true; msg('Te escucho…'); };
   r.onresult = e => { dicho = ''; for(const x of e.results) dicho += x[0].transcript; if(o) o.textContent = `«${dicho}»`; };
   r.onerror = e => {
-    if(!es) return;
-    if(e.error === 'not-allowed' || e.error === 'service-not-allowed') es.textContent = 'Permite el micrófono para preguntarme. Mientras, toca «Hoy» o «Mañana».';
-    else if(e.error === 'no-speech') es.textContent = 'No te he oído. Toca el micrófono y pregunta otra vez.';
+    fallo = true;
+    const m = {
+      'not-allowed': 'No tengo permiso para usar el micrófono. Permítelo en el candado de la barra de direcciones, o escríbeme abajo.',
+      'service-not-allowed': 'Este navegador no deja preguntar con la voz. Escríbeme abajo o toca «¿Qué tengo hoy?».',
+      'audio-capture': 'No encuentro ningún micrófono en este aparato. Escríbeme abajo.',
+      'network': 'El reconocimiento de voz del navegador necesita internet y ahora no responde. Escríbeme abajo.',
+      'no-speech': 'No te he oído. Toca el micrófono y pregunta otra vez, o escríbeme abajo.',
+      'language-not-supported': 'Este navegador no entiende el español hablado. Escríbeme abajo.',
+      'aborted': 'Toca el micrófono para preguntar.'
+    }[e.error];
+    msg(m || `No he podido escucharte (${e.error}). Escríbeme abajo.`);
+    if(e.error !== 'aborted' && e.error !== 'no-speech') vozFoco();
   };
-  r.onend = () => { vozEstado(''); if(vozRec !== r) return; vozRec = null; if(dicho.trim()) vozResponder(dicho.trim(), true); };
-  vozEstado('escuchando'); if(es) es.textContent = 'Te escucho…'; if(o) o.textContent = ''; vozRec = r;
-  try{ r.start(); }catch(e){ vozEstado(''); vozRec = null; }
+  r.onend = () => {
+    clearTimeout(r._vigia); vozEstado(''); if(vozRec !== r) return; vozRec = null;
+    if(dicho.trim()) vozResponder(dicho.trim(), true);
+    else if(!fallo) msg('No te he oído. Toca el micrófono y pregunta otra vez, o escríbeme abajo.');
+  };
+  vozEstado('escuchando'); msg('Abriendo el micrófono…'); if(o) o.textContent = ''; vozRec = r;
+  r._vigia = setTimeout(() => { if(vozRec === r && !oye){ fallo = true; msg('El micrófono no arranca en este navegador. Escríbeme abajo tu pregunta.'); try{ r.abort(); }catch(e){} vozFoco(); } }, 5000);
+  try{ r.start(); }catch(e){ clearTimeout(r._vigia); vozEstado(''); vozRec = null; msg('No he podido abrir el micrófono. Escríbeme abajo tu pregunta.'); vozFoco(); }
+}
+/* 5.85: preguntar escribiendo (por si el micrófono del navegador no funciona) */
+function vozFoco(){ const t = $('#voz-txt'); if(t && ESCRITORIO.matches) t.focus(); }
+function vozEscrito(){
+  const t = $('#voz-txt'); if(!t) return; const q = t.value.trim(); if(!q){ t.focus(); return; }
+  if(vozRec){ const r = vozRec; vozRec = null; try{ r.abort(); }catch(e){} vozEstado(''); }
+  t.value = ''; vozResponder(q, true);
 }
 /* 5.75: cómo está el asistente (escuchando / pensando) y el nivel de la voz para los aros */
 function vozEstado(q){
@@ -4445,6 +4475,7 @@ function abrirVoz(){
     <div class="voz-cara" id="voz-cara"><i></i><i></i><button type="button" class="mic voz-mic" id="voz-mic" aria-label="Preguntar con la voz" onclick="vozEscuchar(this)">${MIC_LINEA}</button></div>
     <p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
     <p class="voz-oido" id="voz-oido"></p><div class="voz-resp" id="voz-resp"></div>
+    <form class="voz-escribe" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="O escríbeme: ¿qué tengo el viernes?" aria-label="Escribe tu pregunta"><button type="submit">Preguntar</button></form>
     <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('hoy')">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('mañana')">¿Y mañana?</button></div></div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
   vozEscuchar($('#voz-mic'));
