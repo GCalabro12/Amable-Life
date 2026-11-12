@@ -1,5 +1,5 @@
 /* Amable Life (antes Equilibra): service worker. Subir CACHE con cada versión (igual que VERSION en index.html). */
-const CACHE = 'equilibra-v5.85';
+const CACHE = 'equilibra-v5.86';
 const BASE = ['./', 'index.html', 'manifest.json', 'img/icono-life-192.png', 'img/gaia-2.jpg',
   'img/salud.jpg', 'img/pareja.jpg', 'img/familia.jpg', 'img/trabajo.jpg',
   'img/crecimiento.jpg', 'img/ocio.jpg', 'img/proposito.jpg', 'img/hogar.jpg', 'sonido/inicio.mp3'];
@@ -14,7 +14,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   // solo lo de Amable Life: el botón de Grow Panel y las otras apps de gcalabro12.github.io van siempre a la red
   if(!url.pathname.startsWith('/Amable-Life/')) return;   // 4.17: antes /Equilibra/
-  if(e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.endsWith('.apk') || url.searchParams.has('v')) return;
+  if(e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.endsWith('.apk') || url.pathname.endsWith('.mp4') || url.searchParams.has('v')) return;
   // 5.29 (receta de Amable Sleep): todo primero de la red, preguntando al servidor (GitHub Pages guarda 10 minutos); sin red, la copia guardada
   // (solo de su propia caché, no las de otras apps). Antes las imágenes iban primero de la caché.
   const nav = e.request.mode === 'navigate';
