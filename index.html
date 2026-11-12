@@ -372,6 +372,14 @@ img,svg{-webkit-user-drag:none}
 .cab-voz:hover .gaia-mini,.gc-voz:hover .gaia-mini{transform:scale(1.08)}
 .voz-hoja{text-align:center;padding:4px 0}
 .voz-hoja h2{font-size:24px;margin:4px 0}
+.voz-lista-t{margin:6px 0 0;font-size:17px;font-weight:600;line-height:1.45;text-align:left}
+.voz-cambiar{display:block;margin:16px auto 0;font-size:14px}
+.voz-voces{display:flex;flex-direction:column;gap:6px;margin-top:10px;text-align:left}
+.voz-v-t{margin:0 0 4px;font-size:14px;color:var(--suave);text-align:center}
+.voz-v{position:relative;display:flex;flex-direction:column;gap:2px;padding:10px 40px 10px 14px;border:1.5px solid rgba(139,92,246,.3);border-radius:14px;background:var(--tarjeta);color:var(--tinta);font:inherit;text-align:left;cursor:pointer}
+.voz-v span{font-size:13px;color:var(--suave)}
+.voz-v.sel{border-color:#8b5cf6;background:rgba(139,92,246,.1)}
+.voz-v i{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-style:normal;font-weight:800;color:#8b5cf6}
 .voz-hoja .voz-estado{margin:0 0 14px;color:var(--suave)}
 .voz-mic{position:static;transform:none;width:72px;height:72px;margin:0 auto;cursor:pointer}
 .voz-mic svg{width:34px;height:34px}
@@ -2275,7 +2283,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.87';
+const VERSION = 'v5.88';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4329,7 +4337,7 @@ const ARIA_CARA = '<img class="aria-cara" src="img/gaia-2.jpg" alt="" aria-hidde
 const caraGaia = cls => ARIA_CARA.replace('class="aria-cara"', `class="${cls}"`);
 /* 5.86 (Gustavo: «que cuando esté hablando la IA aparezca Gaia hablando»): vídeo de Gemini en bucle (img/gaia-habla.mp4, 9 s, sin saltos)
    encima de la imagen; solo se ve y se mueve mientras Gaia habla (gaiaHabla). */
-const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-quieta.jpg" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-habla.mp4?v=2" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
+const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-quieta.jpg" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-habla.mp4?v=3" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
 let gaiaT = 0;
 function gaiaHabla(on){
   clearTimeout(gaiaT);
@@ -4394,8 +4402,10 @@ function vozDecir(texto){
   texto = vozSinEmojis(texto);
   if(esApp){
     try{ if(appAsis('hablarAsistente')) AndroidEquilibra.hablarAsistente(texto); else AndroidEquilibra.speak(texto); }catch(e){}
-    gaiaHabla(true); const pal = texto.split(/\s+/).filter(Boolean).length;
-    gaiaT = setTimeout(() => gaiaHabla(false), Math.min(90000, 900 + pal * 430)); return;
+    gaiaHabla(true);
+    if(appAsis('vocesAsistente')) return;   // 5.88: la app 2.56 avisa de cuándo acaba (window.nativeHabla)
+    const pal = texto.split(/\s+/).filter(Boolean).length;
+    gaiaT = setTimeout(() => gaiaHabla(false), Math.min(90000, 600 + pal * 360)); return;
   }
   if(!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
@@ -4415,8 +4425,35 @@ function vozParar(){
   if(vozHabla && 'speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} }
   vozHabla = false; gaiaHabla(false);
 }
+/* 5.88 (Gustavo: «pregunté cómo te llamas y me puso a listar todos los pendientes»): antes de leer la agenda, mira qué le preguntas */
+function vozIntento(texto){
+  const t = vozSinAcentos(texto || '').replace(/[¿?¡!.,;:]/g, ' ').replace(/\s+/g, ' ').trim();
+  const n = nombrePila(), tu = n ? ', ' + n : '';
+  const r = x => ({texto: x, html: `<p class="voz-lista-t">${esc(x)}</p>`});
+  const DIA = /\b(hoy|manana|pasado|ayer|lunes|martes|miercoles|jueves|viernes|sabado|domingo|semana)\b/;
+  const AGENDA = /\b(tengo|tareas?|agenda|pendientes?|hacer|planes?|citas?|reunion|reuniones|habitos?|calendario|ocupad[oa]|libre|queda|quedan|toca|que hay)\b/;
+  if(/\b(como te llamas|quien eres|cual es tu nombre|tu nombre|como te llamo|que eres)\b/.test(t))
+    return r(`Me llamo Gaia y soy tu asistente de Amable Life. Te cuento lo que tienes en tu agenda: pregúntame qué tienes hoy, mañana o cualquier día de la semana.`);
+  if(/\b(que (puedes|sabes) hacer|en que me (puedes )?ayudar|ayuda|para que sirves|como funcionas)\b/.test(t))
+    return r(`De momento te cuento tu agenda: lo que tienes hoy, lo que te queda, lo de mañana o lo de cualquier día de la semana. Pregúntame, por ejemplo: ¿qué tengo el viernes?`);
+  if(/\b(gracias|muchas gracias|genial|perfecto)\b/.test(t) && !AGENDA.test(t))
+    return r(`De nada${tu}. Aquí estoy cuando me necesites.`);
+  if(/\b(que hora es|que hora tenemos|dime la hora)\b/.test(t)){
+    const d = new Date(); return r(`Son las ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}.`);
+  }
+  if(/\b(que dia es|a que (dia )?estamos|que fecha|en que dia)\b/.test(t) && !AGENDA.test(t)){
+    const f = fechaLarga(hoyK()); return r(`Hoy es ${f.charAt(0).toLowerCase() + f.slice(1)}.`);
+  }
+  if(/^(hola|buenas|buenos dias|buenas tardes|buenas noches|hey|ey)( gaia)?$/.test(t))
+    return r(`¡Hola${tu}! ¿Quieres saber qué tienes hoy?`);
+  if(/\b(como estas|que tal estas|que tal)\b/.test(t) && !AGENDA.test(t) && !DIA.test(t))
+    return r(`Muy bien, gracias por preguntar. ¿Te cuento qué tienes hoy?`);
+  if(DIA.test(t) || AGENDA.test(t)) return null;   // es de la agenda
+  return r(`Todavía no sé responder a eso. De momento te cuento tu agenda: pregúntame «¿qué tengo hoy?», «¿y mañana?» o «¿qué tengo el viernes?».`);
+}
 function vozResponder(texto, oido){
-  const [k, nom] = vozDia(texto), r = vozAgenda(k, nom);
+  const i = vozIntento(texto);
+  const [k, nom] = vozDia(texto), r = i || vozAgenda(k, nom);
   const o = $('#voz-oido'); if(o) o.textContent = oido && texto ? `«${texto}»` : '';
   const re = $('#voz-resp'); if(re) re.innerHTML = r.html;
   const es = $('#voz-estado'); if(es) es.textContent = 'Toca el micrófono para preguntar otra vez.';
@@ -4483,6 +4520,33 @@ function vozEstado(q){
   if(b) b.classList.toggle('escuchando', q === 'escuchando');
   if(q !== 'escuchando') c.style.setProperty('--nivel', 0);
 }
+/* 5.88: la app 2.56 avisa de cuándo Gaia empieza y acaba de hablar */
+window.nativeHabla = tipo => gaiaHabla(tipo === 'empieza');
+/* 5.88 (Gustavo: «sale una voz de hombre»): en la app 2.56, elegir la voz de Gaia entre las del teléfono */
+function vozElegir(){
+  const c = $('#voz-voces'); if(!c) return;
+  if(!c.hidden){ c.hidden = true; return; }
+  c.hidden = false; c.innerHTML = '<p class="voz-v-t">Buscando las voces del teléfono…</p>';
+  try{ AndroidEquilibra.prepararVozAsistente(); }catch(e){}
+  let n = 0;
+  const pinta = () => {
+    let L = []; try{ L = JSON.parse(AndroidEquilibra.vocesAsistente() || '[]'); }catch(e){}
+    if(!L.length && n++ < 10){ setTimeout(pinta, 400); return; }
+    if(!L.length){ c.innerHTML = '<p class="voz-v-t">No encuentro voces en español en este teléfono. Puedes instalarlas en Ajustes del teléfono → Idioma → Texto a voz.</p>'; return; }
+    L.sort((a, b) => (b.mujer - a.mujer) || (a.hombre - b.hombre) || a.l.localeCompare(b.l));
+    const pais = l => ({'es-ES': 'España', 'es-US': 'Latinoamérica', 'es-MX': 'México', 'es-AR': 'Argentina', 'es-CO': 'Colombia'})[l] || l;
+    c.innerHTML = `<p class="voz-v-t">Toca una voz para oírla y quedártela.</p>` + L.map((v, i) => `<button type="button" class="voz-v ${v.sel ? 'sel' : ''}" onclick="vozPonerVoz(${i})" data-n="${esc(v.n)}">
+      <b>Voz ${i + 1}${v.mujer ? ' · mujer' : v.hombre ? ' · hombre' : ''}</b><span>${pais(v.l)}${v.red ? ' · necesita internet' : ''}</span>${v.sel ? '<i>✓</i>' : ''}</button>`).join('');
+  };
+  pinta();
+}
+function vozPonerVoz(i){
+  const b = [...document.querySelectorAll('#voz-voces .voz-v')][i]; if(!b) return;
+  [...document.querySelectorAll('#voz-voces .voz-v')].forEach(x => { x.classList.toggle('sel', x === b); const k = x.querySelector('i'); if(k) k.remove(); });
+  b.insertAdjacentHTML('beforeend', '<i>✓</i>');
+  try{ AndroidEquilibra.elegirVozAsistente(b.dataset.n, 'Hola, soy Gaia. Así sonará mi voz.'); }catch(e){}
+  gaiaHabla(true);
+}
 /* Lo que manda la app 2.55 mientras escucha */
 window.nativeEscucha = (tipo, texto) => {
   const es = $('#voz-estado'), o = $('#voz-oido'); if(!$('#voz-cara')) return;
@@ -4503,7 +4567,8 @@ function abrirVoz(){
     <p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
     <p class="voz-oido" id="voz-oido"></p><div class="voz-resp" id="voz-resp"></div>
     <form class="voz-escribe" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="O escríbeme: ¿qué tengo el viernes?" aria-label="Escribe tu pregunta"><button type="submit">Preguntar</button></form>
-    <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('hoy')">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('mañana')">¿Y mañana?</button></div></div>`, '#8b5cf6');
+    <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('hoy')">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('mañana')">¿Y mañana?</button></div>
+    ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
   vozEscuchar($('#voz-mic'));
 }
@@ -4866,7 +4931,6 @@ function vAgenda(){
 ${fijo}</div>
     ${conHoy ? '' : '<div class="ag-acc"><button class="link" onclick="agHoy()">Volver a hoy</button></div>'}
     ${cuerpo}<div class="ag-esp" style="height:76px"></div>
-    <button class="ag-gaia" onclick="abrirVoz()" aria-label="Gaia, tu asistente: pregúntale qué tienes hoy">${caraGaia('gaia-mini')}<span>Asistente IA</span></button>
     <button class="ag-fab" aria-label="Añadir al calendario" onclick="nuevoEvento()"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>`;
 }
 /* Rejilla de horas: de 5:00 a 23:00 (o más, si hay algo antes o después), 52 px por hora.
@@ -7390,7 +7454,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.55';   // última app Android publicada
+const APK_ULTIMA = '2.56';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
