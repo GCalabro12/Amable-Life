@@ -379,8 +379,21 @@ img,svg{-webkit-user-drag:none}
 .voz-lista li b{flex:none;min-width:92px;font-variant-numeric:tabular-nums}
 .voz-lista li.ok span{color:var(--suave);text-decoration:line-through}
 .voz-lista li.ahora{font-weight:700}
-.voz-atajos{display:flex;gap:8px;justify-content:center;margin-top:16px}
-.voz-atajos .btn{min-width:110px}
+.voz-atajos{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+/* 5.75: cuadro propio de asistente (en la app ya no sale el de Google) */
+.voz-quien{margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
+.voz-saludo{margin:2px 0 14px;font-size:17px;color:var(--tinta)}
+.voz-cara{--nivel:0;position:relative;width:132px;height:132px;margin:0 auto;display:grid;place-items:center}
+.voz-cara i{position:absolute;inset:22px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.28),rgba(139,92,246,.08) 70%);transform:scale(.9);transition:transform .12s ease-out,opacity .2s;opacity:.5}
+.voz-cara.escuchando i:first-child{transform:scale(calc(1.05 + var(--nivel) * .45));opacity:.9}
+.voz-cara.escuchando i:last-child{animation:vozOnda 1.6s ease-out infinite;opacity:.8}
+.voz-cara.pensando i:first-child{animation:vozPiensa 1s ease-in-out infinite;opacity:.9}
+@keyframes vozOnda{0%{transform:scale(.95);opacity:.7}100%{transform:scale(1.5);opacity:0}}
+@keyframes vozPiensa{50%{transform:scale(1.15)}}
+.voz-cara .voz-mic{position:relative;top:auto;right:auto;z-index:1;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;box-shadow:0 6px 18px rgba(139,92,246,.45)}
+.voz-cara .voz-mic.escuchando{background:linear-gradient(135deg,#e2456b,#f97316);animation:none}
+.voz-chip{border:1.5px solid rgba(139,92,246,.45);background:rgba(139,92,246,.08);color:var(--tinta);border-radius:999px;padding:9px 14px;font:inherit;font-weight:700;cursor:pointer}
+.voz-chip:hover{background:rgba(139,92,246,.16)}
 
 /* v1.09 · Hoja del pétalo */
 .hoja{position:fixed;inset:0;z-index:25;background:rgba(8,5,20,0);transition:background .3s;display:flex;align-items:flex-end;justify-content:center}
@@ -2232,7 +2245,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.74';
+const VERSION = 'v5.75';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4277,6 +4290,9 @@ function dictar(btn){
 const MIC_LINEA = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>';
 let vozRec = null, vozHabla = false;
 const vozSinAcentos = t => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+/* 5.75 (Gustavo: «que cuando haya un emoji no te lo lea, lo salte») */
+const vozSinEmojis = t => (t || '').replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u200d\ufe0f\u20e3]/gu, '').replace(/\s{2,}/g, ' ').trim();
+const NOMBRE_ASIS = 'Pregúntame';   // 5.75: el nombre del asistente (Gustavo lo elige)
 function vozHora(m, franjaAntes){
   const h = Math.floor(m / 60) % 24, mm = m % 60, hh = h % 12 || 12;
   const franja = h < 6 ? 'de la madrugada' : h < 12 ? 'de la mañana' : h < 13 ? 'del mediodía' : h < 21 ? 'de la tarde' : 'de la noche';
@@ -4315,18 +4331,21 @@ function vozAgenda(k, nom){
   else txt = `${nom}, ${fechaMin}, tienes ${lista.length} ${plural(lista.length, 'cosa', 'cosas')}.`;
   const MAXV = 12; let franja = '';
   const frases = lista.slice(0, MAXV).map(x => {
-    if(x.todo) return `Para todo el día: ${x.t}.`;
-    if(esHoy && x.ini <= m && m < x.fin) return `Ahora${x.focus ? ', en Focus' : ''}: ${x.t}.`;
+    const tv = vozSinEmojis(x.t).replace(/[.:;]+$/, '') || 'una tarea sin título';
+    if(x.todo) return `Para todo el día: ${tv}.`;
+    if(esHoy && x.ini <= m && m < x.fin) return `Ahora${x.focus ? ', en Focus' : ''}: ${tv}.`;
     const h = vozHora(x.ini, franja); franja = h.franja;
-    return `${h.txt.charAt(0).toUpperCase() + h.txt.slice(1)}${x.focus ? ', en Focus' : ''}: ${x.t}.`;
+    return `${h.txt.charAt(0).toUpperCase() + h.txt.slice(1)}${x.focus ? ', en Focus' : ''}: ${tv}.`;
   });
   if(lista.length > MAXV) frases.push(`Y ${lista.length - MAXV} más.`);
   const texto = [txt, ...frases].join(' ');
   const filas = lista.map(x => `<li class="${x.ok ? 'ok' : ''}${esHoy && !x.todo && x.ini <= m && m < x.fin ? ' ahora' : ''}"><b>${x.todo ? 'Todo el día' : hm(x.ini)}</b><span>${esc(x.t)}${x.focus ? ' · Focus' : ''}</span></li>`).join('');
   return {texto, html: `<p class="voz-titulo">${esc(txt)}</p>${filas ? `<ul class="voz-lista">${filas}</ul>` : ''}`};
 }
+const appAsis = f => esApp && typeof window.AndroidEquilibra[f] === 'function';   // 5.75: funciones de la app 2.55
 function vozDecir(texto){
-  if(esApp){ try{ AndroidEquilibra.speak(texto); }catch(e){} return; }
+  texto = vozSinEmojis(texto);
+  if(esApp){ try{ if(appAsis('hablarAsistente')) AndroidEquilibra.hablarAsistente(texto); else AndroidEquilibra.speak(texto); }catch(e){} return; }
   if(!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
   const vs = speechSynthesis.getVoices(), v = vs.find(x => /Helena/i.test(x.name)) || vs.find(x => x.lang === 'es-ES') || vs.find(x => /^es/i.test(x.lang));
@@ -4337,6 +4356,8 @@ function vozDecir(texto){
     if(i === partes.length - 1) u.onend = u.onerror = () => { vozHabla = false; }; speechSynthesis.speak(u); });
 }
 function vozParar(){
+  if(appAsis('dejarDeEscuchar')){ try{ AndroidEquilibra.dejarDeEscuchar(); AndroidEquilibra.callarAsistente(); }catch(e){} }
+  vozEstado('');
   if(vozRec){ try{ vozRec.abort(); }catch(e){} vozRec = null; }
   if(vozHabla && 'speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} }
   vozHabla = false;
@@ -4353,6 +4374,11 @@ function vozEscuchar(btn){
   if(vozRec){ vozRec.stop(); return; }
   if(vozHabla){ try{ speechSynthesis.cancel(); }catch(e){} vozHabla = false; }
   const es = $('#voz-estado'), o = $('#voz-oido');
+  if(appAsis('escuchar')){   // 5.75: la app 2.55 escucha dentro de este cuadro, sin la ventana de Google
+    if(btn.classList.contains('escuchando')){ AndroidEquilibra.dejarDeEscuchar(); vozEstado(''); if(es) es.textContent = 'Toca el micrófono para preguntar.'; return; }
+    try{ AndroidEquilibra.callarAsistente(); }catch(e){}
+    if(o) o.textContent = ''; vozEstado('escuchando'); if(es) es.textContent = 'Te escucho…'; AndroidEquilibra.escuchar(); return;
+  }
   if(esApp){
     campoDictado = {get value(){ return ''; }, set value(v){ btn.classList.remove('escuchando'); vozResponder(v, true); }, maxLength: 500, dispatchEvent(){}};
     btn.classList.add('escuchando'); if(es) es.textContent = 'Te escucho…'; AndroidEquilibra.dictar(); return;
@@ -4366,17 +4392,37 @@ function vozEscuchar(btn){
     if(e.error === 'not-allowed' || e.error === 'service-not-allowed') es.textContent = 'Permite el micrófono para preguntarme. Mientras, toca «Hoy» o «Mañana».';
     else if(e.error === 'no-speech') es.textContent = 'No te he oído. Toca el micrófono y pregunta otra vez.';
   };
-  r.onend = () => { btn.classList.remove('escuchando'); if(vozRec !== r) return; vozRec = null; if(dicho.trim()) vozResponder(dicho.trim(), true); };
-  btn.classList.add('escuchando'); if(es) es.textContent = 'Te escucho…'; if(o) o.textContent = ''; vozRec = r;
-  try{ r.start(); }catch(e){ btn.classList.remove('escuchando'); vozRec = null; }
+  r.onend = () => { vozEstado(''); if(vozRec !== r) return; vozRec = null; if(dicho.trim()) vozResponder(dicho.trim(), true); };
+  vozEstado('escuchando'); if(es) es.textContent = 'Te escucho…'; if(o) o.textContent = ''; vozRec = r;
+  try{ r.start(); }catch(e){ vozEstado(''); vozRec = null; }
 }
+/* 5.75: cómo está el asistente (escuchando / pensando) y el nivel de la voz para los aros */
+function vozEstado(q){
+  const c = $('#voz-cara'), b = $('#voz-mic'); if(!c) return;
+  c.classList.toggle('escuchando', q === 'escuchando'); c.classList.toggle('pensando', q === 'pensando');
+  if(b) b.classList.toggle('escuchando', q === 'escuchando');
+  if(q !== 'escuchando') c.style.setProperty('--nivel', 0);
+}
+/* Lo que manda la app 2.55 mientras escucha */
+window.nativeEscucha = (tipo, texto) => {
+  const es = $('#voz-estado'), o = $('#voz-oido'); if(!$('#voz-cara')) return;
+  if(tipo === 'listo'){ vozEstado('escuchando'); if(es) es.textContent = 'Te escucho…'; }
+  else if(tipo === 'nivel'){ const n = Math.max(0, Math.min(1, ((parseFloat(texto) || 0) + 2) / 12)); $('#voz-cara').style.setProperty('--nivel', n.toFixed(2)); }
+  else if(tipo === 'parcial'){ if(o) o.textContent = `«${texto}»`; }
+  else if(tipo === 'pensando'){ vozEstado('pensando'); if(es) es.textContent = 'Un momento…'; }
+  else if(tipo === 'final'){ vozEstado(''); vozResponder(texto, true); }
+  else if(tipo === 'nohay'){ vozEstado(''); if(es) es.textContent = 'Este teléfono no tiene reconocimiento de voz: toca «¿Qué tengo hoy?».'; }
+  else if(tipo === 'error'){ vozEstado(''); if(es) es.textContent = texto || 'No he podido escucharte.'; }
+};
 function abrirVoz(){
   vozParar();
-  mostrarHoja(`<div class="voz-hoja"><h2>Pregúntame</h2>
-    <p class="voz-estado" id="voz-estado">Pregunta, por ejemplo, «¿Qué tengo hoy?»</p>
-    <button type="button" class="mic voz-mic" id="voz-mic" aria-label="Preguntar con la voz" onclick="vozEscuchar(this)">${MIC_LINEA}</button>
+  const n = nombrePila();
+  mostrarHoja(`<div class="voz-hoja"><p class="voz-quien">Tu asistente de Amable Life</p><h2>${NOMBRE_ASIS}</h2>
+    <p class="voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</p>
+    <div class="voz-cara" id="voz-cara"><i></i><i></i><button type="button" class="mic voz-mic" id="voz-mic" aria-label="Preguntar con la voz" onclick="vozEscuchar(this)">${MIC_LINEA}</button></div>
+    <p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
     <p class="voz-oido" id="voz-oido"></p><div class="voz-resp" id="voz-resp"></div>
-    <div class="voz-atajos"><button type="button" class="btn sec" onclick="vozResponder('hoy')">Hoy</button><button type="button" class="btn sec" onclick="vozResponder('mañana')">Mañana</button></div></div>`, '#8b5cf6');
+    <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('hoy')">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('mañana')">¿Y mañana?</button></div></div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
   vozEscuchar($('#voz-mic'));
 }
@@ -7258,7 +7304,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.54';   // última app Android publicada
+const APK_ULTIMA = '2.55';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
