@@ -2201,6 +2201,8 @@ html.claro .desp-lista{background:#fff;box-shadow:0 10px 28px rgba(40,20,90,.2);
 html.claro .ev-h{color:color-mix(in srgb,var(--c) 50%,#1f1838)}
 html.claro .aj-aviso{color:#a16207}
 html.claro .btn.peligro{color:#e11d48}
+/* 5.77 (Gustavo): al borrar algo que se repite, «Todas las veces» en negro (letra del texto) */
+html .btn.peligro.todas{color:var(--tinta)}
 html.claro .pi-seal,html.claro .gp-seal{color:#5b5280}
 </style>
 <script>/* 4.37: dentro de la app de Android (que ya deja el sitio de la barra del sistema) */ try{ if(window.AndroidEquilibra) document.documentElement.classList.add('en-app'); }catch(e){}</script>
@@ -2245,7 +2247,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.76';
+const VERSION = 'v5.77';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5027,7 +5029,8 @@ function gcTop(){
     <button class="gc-ico" aria-label="Siguiente" data-atajo="la flecha → (o la tecla J)|para ir a lo siguiente" onclick="agMover(1)">${ICO_DER}</button>
     <h1 class="gc-tit">${t}</h1>${fPref.numSem && ['dia', 'semana', '7dias', '3dias', 'rango'].includes(agModo) ? `<span class="gc-chip">Semana ${semanaISO(agK)}</span>` : ''}
     <span class="gc-hueco"></span>
-    <button class="gc-ico" aria-label="Buscar" data-atajo="la tecla /|para buscar" onclick="gcBuscar()">${ICO_LUPA}</button>
+    <button class="gc-ico gc-voz" aria-label="Aria, tu asistente: pregúntale qué tienes hoy" title="Aria, tu asistente: «¿Qué tengo hoy?»" onclick="abrirVoz()">${MIC_LINEA}</button>
+    <button class="gc-ico" aria-label="Buscar" data-atajo="la tecla /|para buscar" onclick="gcBuscar()">${ICO_LUPA}</button>   <!-- 5.77 (Gustavo: «¿dónde sale Aria en el ordenador?»): el micrófono también en la barra del calendario del ordenador -->
     <button class="gc-ico" aria-label="${temaClaro() ? 'Modo noche' : 'Modo día'}" title="${temaClaro() ? 'Modo noche' : 'Modo día'}" onclick="ponerTema(temaClaro() ? 'oscuro' : 'claro')">${temaClaro() ? ICO_LUNA : ICO_SOL}</button>
     <button class="gc-ico" aria-label="Ajustes" title="Ajustes" onclick="ir('ajustes')">${ICO_RUEDA}</button>
     <div class="gc-vista-w"><button class="gc-vista" aria-haspopup="true" onclick="gcPop('gc-vistas', event)">${nom}${ICO_BAJA}</button>
@@ -5800,7 +5803,7 @@ function dlgBorrar(id, k){
   w.id = 'borrar-dlg';
   w.innerHTML = `<div class="bd-in" role="dialog" aria-modal="true"><p>${hab ? 'Es una práctica integral' : 'Se repite'}. ¿Qué quieres borrar?</p>
     <button class="btn peligro" onclick="cerrarDlgBorrar(); popBorrar2('${id}','${k}', false)">Solo el ${d.getDate()} de ${MESES[d.getMonth()]}</button>
-    <button class="btn peligro" onclick="cerrarDlgBorrar(); popBorrar2('${id}','${k}', true)">${hab ? 'Toda la práctica integral' : 'Todas las veces'}</button>
+    <button class="btn peligro todas" onclick="cerrarDlgBorrar(); popBorrar2('${id}','${k}', true)">${hab ? 'Toda la práctica integral' : 'Todas las veces'}</button>
     <button class="btn sec" onclick="cerrarDlgBorrar()">Cancelar</button></div>`;
   w.addEventListener('click', ev => { if(ev.target === w) cerrarDlgBorrar(); });
   document.body.appendChild(w);
@@ -6512,7 +6515,7 @@ function borrarEvento(){
   const e = AG_().eventos.find(x => x.id === e0.id); if(!e) return;
   if(repite(e)){
     const hab = e.tipo === 'habito';
-    $('#ev-borrar-rep').innerHTML = `<p class="peq" style="margin:14px 0 6px">${hab ? 'Es una práctica integral' : 'Se repite'}. ¿Qué quieres borrar?</p><div class="ed-bots"><button class="btn peligro" onclick="borrarEvento2(false)">Solo el ${fechaDe(e0.k).getDate()} de ${MESES[fechaDe(e0.k).getMonth()]}</button><button class="btn peligro" onclick="borrarEvento2(true)">${hab ? 'Toda la práctica integral' : 'Todas las veces'}</button></div>`;
+    $('#ev-borrar-rep').innerHTML = `<p class="peq" style="margin:14px 0 6px">${hab ? 'Es una práctica integral' : 'Se repite'}. ¿Qué quieres borrar?</p><div class="ed-bots"><button class="btn peligro" onclick="borrarEvento2(false)">Solo el ${fechaDe(e0.k).getDate()} de ${MESES[fechaDe(e0.k).getMonth()]}</button><button class="btn peligro todas" onclick="borrarEvento2(true)">${hab ? 'Toda la práctica integral' : 'Todas las veces'}</button></div>`;
     return;
   }
   if(!e0.armado){ e0.armado = true; const b = $('#ev-borrar'); if(b) b.textContent = '¿Seguro?'; return; }
