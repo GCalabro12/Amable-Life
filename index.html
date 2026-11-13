@@ -2366,7 +2366,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.06';
+const VERSION = 'v6.07';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4584,7 +4584,14 @@ const GAIA_FRASES = [
   'Ser amable contigo también cuenta como hacer algo bien.'];
 /* 6.03 (Gustavo: «que tenga 4 o 5 respuestas diferentes, para que no sea siempre igual»): 11 chistes y 11 frases,
    y nunca sale la misma dos veces seguidas */
-const unoDe = L => { let i = Math.floor(Math.random() * L.length); if(L.length > 1 && i === L._ult) i = (i + 1 + Math.floor(Math.random() * (L.length - 1))) % L.length; L._ult = i; return L[i]; };
+/* 6.07 (Gustavo: «podrían ir correlativas; nadie va a memorizar 11»): salen por orden, uno detrás de otro, y se recuerda por cuál
+   vas en este aparato (equilibra.gaiaSig), así no se repite ninguno hasta pasar los 11 */
+const unoDe = (L, k) => {
+  let m = {}; try{ m = JSON.parse(localStorage.getItem('equilibra.gaiaSig') || '{}') || {}; }catch(e){}
+  const i = Number.isInteger(m[k]) ? (m[k] + 1) % L.length : 0;
+  m[k] = i; try{ localStorage.setItem('equilibra.gaiaSig', JSON.stringify(m)); }catch(e){}
+  return L[i];
+};
 function vozIntento(texto){
   const t = vozSinAcentos(texto || '').toLowerCase().replace(/[¿?¡!.,;:«»"]/g, ' ').replace(/\s+/g, ' ').trim();
   const n = nombrePila(), tu = n ? ', ' + n : '';
@@ -4637,8 +4644,8 @@ function vozIntento(texto){
     return r(`Todavía no puedo mirar el tiempo. Te recomiendo echar un vistazo por la ventana: es la previsión más fiable.`);
   // ánimo
   // 6.03: más flexible (Gustavo: «le dije "dame un poco de ánimo" y ya no me respondió»)
-  if(h(/\b(chistes?|gracios[oa]|hazme reir|reirme|divertid[oa]|bromas?|chascarrillo)\b/)) return r(unoDe(GAIA_CHISTES));
-  if(h(/\b(frases?|motiva(me|r|rme|cion)?|motivad[oa]|anima(me|r|rme)?|animos?|alienta(me)?|aliento|inspira(me|cion)?|consejos?|fuerzas|empujon|positiv[oa])\b/)) return r(unoDe(GAIA_FRASES));
+  if(h(/\b(chistes?|gracios[oa]|hazme reir|reirme|divertid[oa]|bromas?|chascarrillo)\b/)) return r(unoDe(GAIA_CHISTES, 'chistes'));
+  if(h(/\b(frases?|motiva(me|r|rme|cion)?|motivad[oa]|anima(me|r|rme)?|animos?|alienta(me)?|aliento|inspira(me|cion)?|consejos?|fuerzas|empujon|positiv[oa])\b/)) return r(unoDe(GAIA_FRASES, 'frases'));
   if(h(/\b(estoy|me siento|ando) (muy )?(cansad[oa]|agotad[oa]|reventad[oa])\b/))
     return r(`Gracias por decírmelo${tu}. Descansar también es avanzar. ¿Qué tal una pausa de diez minutos, un vaso de agua y estirar un poco? Luego sigue solo con lo más importante.`);
   if(h(/\b(estoy|me siento|ando) (muy )?(triste|mal|baj[oa]|desanimad[oa]|sol[oa])\b/))
