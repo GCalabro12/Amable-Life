@@ -427,7 +427,15 @@ img,svg{-webkit-user-drag:none}
 .voz-hoja{flex:1 0 auto;display:flex;flex-direction:column;min-width:0}
 .voz-hoja .voz-x{position:absolute;top:14px;right:14px;float:none;margin:0}
 .voz-hoja .voz-cab{position:sticky;top:-16px;z-index:1;margin:-16px -18px 0;padding:calc(16px + env(safe-area-inset-top)) 18px 10px;background:var(--tarjeta);box-shadow:0 8px 12px -10px rgba(60,30,110,.25)}
-.voz-hoja .gaia-viva{width:clamp(110px,32vw,150px);height:clamp(110px,32vw,150px)}
+/* 5.95 (Gustavo: «que Gaia sea en forma de banner, como el vídeo de Gemini, con un borde bonito como el del redondo»):
+   el vídeo entero en horizontal (img/gaia-banner.mp4, 16:9), con un marco de degradado morado y rosa y su sombra */
+.voz-hoja .gaia-viva{width:100%;max-width:520px;height:auto;aspect-ratio:16/9;border-radius:22px;padding:4px;
+  background:linear-gradient(135deg,#c4b5fd,#8b5cf6 35%,#ec4899 70%,#fbcfe8);box-shadow:0 6px 20px rgba(139,92,246,.35),0 0 0 1px rgba(255,255,255,.6) inset}
+.voz-hoja .gaia-viva .aria-cara,.voz-hoja .gaia-viva video{inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);border-radius:18px}
+.voz-hoja .gaia-viva.habla{animation:gaiaAuraB 1.6s ease-in-out infinite}
+@keyframes gaiaAuraB{0%,100%{box-shadow:0 6px 20px rgba(139,92,246,.35),0 0 0 0 rgba(236,72,153,0)}50%{box-shadow:0 8px 26px rgba(139,92,246,.5),0 0 0 6px rgba(236,72,153,.22)}}
+.voz-hoja .voz-cab{gap:8px}
+.voz-hoja .voz-x{z-index:3;top:calc(22px + env(safe-area-inset-top));right:24px;background:rgba(20,10,40,.35)}
 .voz-chat{flex:1;display:flex;flex-direction:column;gap:10px;padding:14px 0 10px;text-align:left}
 .voz-ella{align-self:stretch;min-width:0;color:var(--tinta);line-height:1.45;overflow-wrap:anywhere}
 .voz-ella .voz-lista li > *{min-width:0;overflow-wrap:anywhere}
@@ -2314,7 +2322,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.94';
+const VERSION = 'v5.95';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4368,7 +4376,7 @@ const ARIA_CARA = '<img class="aria-cara" src="img/gaia-2.jpg" alt="" aria-hidde
 const caraGaia = cls => ARIA_CARA.replace('class="aria-cara"', `class="${cls}"`);
 /* 5.86 (Gustavo: «que cuando esté hablando la IA aparezca Gaia hablando»): vídeo de Gemini en bucle (img/gaia-habla.mp4, 9 s, sin saltos)
    encima de la imagen; solo se ve y se mueve mientras Gaia habla (gaiaHabla). */
-const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-quieta.jpg" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-habla.mp4?v=3" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
+const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-banner.jpg" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-banner.mp4" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
 let gaiaT = 0;
 /* 5.94 (Gustavo: «que conforme vaya leyendo, el texto vaya avanzando y se vea siempre en el medio lo que está leyendo»):
    se calcula por dónde va (lo que dura la lectura, unos 14 caracteres por segundo) y la ventana baja para que eso quede en el
