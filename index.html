@@ -1443,6 +1443,18 @@ body.ancho .rj-cab .cal-x{font-size:11px}
 body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 #cab-vista{position:relative;display:flex}
 .cab-vbtn{display:flex;align-items:center;gap:4px;height:36px;padding:0 8px 0 14px;border-radius:99px;border:1px solid rgba(var(--bl),.3);background:none;color:var(--tinta);font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
+/* 6.15 (Gustavo, captura con «2 semanas»: «no se alcanza a ver la barra de arriba entera ni los botones de abajo»): en los móviles
+   estrechos la cabecera (logo, «Amable Life», «2 semanas» y Gaia) medía más que la pantalla y el móvil ensanchaba toda la página,
+   así que se cortaban la derecha y la barra de abajo. Ahora la cabecera encoge (letra y huecos) y nada puede ensanchar la página. */
+html, body{overflow-x:clip}
+@media (max-width:420px){
+  .cab-in{padding-left:10px;padding-right:8px;gap:6px}
+  .cab-in > *{min-width:0}
+  .cab-in .marca{flex:0 1 auto;gap:6px;font-size:clamp(15px,4.8vw,19px)}
+  .cab-in .marca svg{width:26px;height:26px}
+  .cab-in .der{gap:4px}
+  .cab-vbtn{padding:0 4px 0 10px;font-size:clamp(12px,3.6vw,14px)}
+}
 .cab-pop{position:absolute;top:calc(100% + 8px);right:0;z-index:30;min-width:190px;background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);padding:6px 0}
 .cab-pop[hidden]{display:none}
 .cab-pop button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--tinta);padding:11px 18px;font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer}
@@ -2396,7 +2408,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.14';
+const VERSION = 'v6.15';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
