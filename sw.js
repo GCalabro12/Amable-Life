@@ -1,5 +1,5 @@
 /* Amable Life (antes Equilibra): service worker. Subir CACHE con cada versión (igual que VERSION en index.html). */
-const CACHE = 'equilibra-v6.16';
+const CACHE = 'equilibra-v6.17';
 const BASE = ['./', 'index.html', 'manifest.json', 'img/icono-life-192.png', 'img/gaia-2.jpg',
   'img/salud.jpg', 'img/pareja.jpg', 'img/familia.jpg', 'img/trabajo.jpg',
   'img/crecimiento.jpg', 'img/ocio.jpg', 'img/proposito.jpg', 'img/hogar.jpg', 'sonido/inicio.mp3'];

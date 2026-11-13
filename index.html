@@ -2408,7 +2408,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.16';
+const VERSION = 'v6.17';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2652,7 +2652,7 @@ function flor(niveles, opc = {}){
     const extra = !nv ? `stroke="${a.color}" stroke-width="1.5" stroke-dasharray="4 4"` : '';
     s += `<g transform="rotate(${i*paso}) translate(0 ${-base})"><path class="${mini?'':'petalo'}" style="animation-delay:${i*70}ms" d="${petalo(LH(nv), WH(nv))}" fill="${a.color}" fill-opacity="${op}" ${extra}/></g>`;
   });
-  s += `<g class="${mini?'':'centro'}"><circle r="${R0}" fill="url(#centro${n})"/><circle r="${R0}" fill="url(#semi${n})"/>`;
+  s += `<g class="${mini?'':'centro'}"><circle r="${R0}" fill="url(#centro${n})"/>${cuadrosCal(R0)}`;   // 6.17: cuadraditos de calendario
   if(!mini && opc.centro != null) s += `<text class="centro-num" y="-3" text-anchor="middle" dominant-baseline="central">${opc.centro}</text><text class="centro-txt" y="14" text-anchor="middle" dominant-baseline="central">${opc.centroTxt || ''}</text>`;
   s += '</g>';
   if(!mini){
@@ -2685,11 +2685,20 @@ const LEYENDA = `<div class="leyenda-niv"><span><i class="pt2"></i><i class="pt2
 /* 4.63: leyenda de la flor de hábitos (al terminar la revisión) */
 const LEYENDA_HAB = `<div class="leyenda-niv leyenda-hab"><span><b>✓</b> Área con prácticas integrales (una o más)</span><span><i class="pt-peq"></i> Pétalo pequeño: le falta alguna práctica integral</span></div>`;
 /* Logo: el girasol de la app (centro dorado grande con semillas; pétalos de colores alrededor; sin aro) */
+/* 6.17 (Gustavo, opción 2 de «Flor con centro de calendario»): en el centro de la flor, en lugar de los puntitos, 3 filas de 4
+   cuadraditos redondeados, como los días de un calendario (mismas medidas que Android/icono_girasol.py) */
+function cuadrosCal(R){
+  const lado = R * 2 * .70 / 4, q = lado * .70, rad = q * .22, x0 = -lado * 2, y0 = -lado * 1.5 + lado * .08;
+  let s = '';
+  for(let f = 0; f < 3; f++) for(let c = 0; c < 4; c++)
+    s += `<rect x="${(x0 + lado * (c + .5) - q / 2).toFixed(2)}" y="${(y0 + lado * (f + .5) - q / 2).toFixed(2)}" width="${q.toFixed(2)}" height="${q.toFixed(2)}" rx="${rad.toFixed(2)}" fill="#7a4310" fill-opacity=".47"/>`;
+  return s;
+}
 function logoInterior(){
   let s = '<defs><radialGradient id="lc"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient>'
     + '<pattern id="lsem" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.5" fill="#7a4310" fill-opacity=".4"/></pattern></defs>';
   areasFlor().forEach((a,i) => { s += `<g transform="rotate(${i*45}) translate(0 -36)"><path class="petalo" style="animation-delay:${i*110}ms" d="${petalo(60, 26)}" fill="${a.color}"/></g>`; });
-  return s + '<g class="centro"><circle r="44" fill="url(#lc)"/><circle r="44" fill="url(#lsem)"/></g>';
+  return s + `<g class="centro"><circle r="44" fill="url(#lc)"/>${cuadrosCal(44)}</g>`;
 }
 function logoSVG(){ return `<svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">${logoInterior()}</svg>`; }
 /* Icono de cada área: un pétalo de su color */
@@ -7903,7 +7912,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.58';   // última app Android publicada
+const APK_ULTIMA = '2.59';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
