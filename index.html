@@ -2322,7 +2322,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.95';
+const VERSION = 'v5.96';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4378,7 +4378,7 @@ const caraGaia = cls => ARIA_CARA.replace('class="aria-cara"', `class="${cls}"`)
    encima de la imagen; solo se ve y se mueve mientras Gaia habla (gaiaHabla). */
 const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-banner.jpg" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-banner.mp4" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
 let gaiaT = 0;
-/* 5.94 (Gustavo: «que conforme vaya leyendo, el texto vaya avanzando y se vea siempre en el medio lo que está leyendo»):
+/* 5.96: un 10 % más rápido (Gustavo). 5.94 (Gustavo: «que conforme vaya leyendo, el texto vaya avanzando y se vea siempre en el medio lo que está leyendo»):
    se calcula por dónde va (lo que dura la lectura, unos 14 caracteres por segundo) y la ventana baja para que eso quede en el
    medio. Si tocas o desplazas tú la ventana, deja de seguir. */
 let gaiaLee = null, gaiaLeeT = 0;
@@ -4386,7 +4386,7 @@ function gaiaSeguir(el, texto){
   clearInterval(gaiaLeeT); gaiaLee = null;
   const hi = $('#hoja .hoja-in'); if(!el || !hi) return;
   const txt = vozSinEmojis(texto || ''), frases = (txt.match(/[.:!?]/g) || []).length;
-  gaiaLee = {el, hi, ini: 0, dur: Math.max(1500, txt.length / 14 * 1000 + frases * 350), fin: false};
+  gaiaLee = {el, hi, ini: 0, dur: Math.max(1400, (txt.length / 14 * 1000 + frases * 350) / 1.1), fin: false};
   if(!hi._seguir){ hi._seguir = 1; ['wheel', 'touchstart', 'mousedown'].forEach(t => hi.addEventListener(t, ev => { if(!ev.target.closest('.voz-pie')) gaiaLee = null; }, {passive: true})); }
   gaiaLeeT = setInterval(() => {
     const L = gaiaLee; if(!L || !L.el.isConnected){ clearInterval(gaiaLeeT); return; }
