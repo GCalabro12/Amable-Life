@@ -2285,7 +2285,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.89';
+const VERSION = 'v5.90';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4568,7 +4568,7 @@ function abrirVoz(){
     <div class="voz-cara" id="voz-cara"><i></i><i></i><button type="button" class="mic voz-mic" id="voz-mic" aria-label="Preguntar con la voz" onclick="vozEscuchar(this)">${MIC_LINEA}</button></div>
     <p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
     <p class="voz-oido" id="voz-oido"></p><div class="voz-resp" id="voz-resp"></div>
-    <form class="voz-escribe" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="O escríbeme: ¿qué tengo el viernes?" aria-label="Escribe tu pregunta"><button type="submit" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>
+    <form class="voz-escribe" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escríbeme tu pregunta" aria-label="Escribe tu pregunta"><button type="submit" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>
     <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('hoy')">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('mañana')">¿Y mañana?</button></div>
     ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
