@@ -1424,7 +1424,12 @@ body.ancho .rj-cab .cal-x{font-size:11px}
 .ag-mini-m .gc-mini-cab{display:flex;align-items:center;gap:4px;padding-left:6px;margin-bottom:6px}
 .ag-mini-m .gc-mini-cab b{flex:1;font-size:16px;font-weight:800}
 .ag-mini-m .gc-ico{width:38px;height:38px;border:0;border-radius:50%;background:rgba(var(--bl),.08);color:var(--tinta);display:grid;place-items:center;padding:0;flex:none}
-.ag-mini-m .gc-mini{display:grid;grid-template-columns:repeat(8,1fr);row-gap:4px;text-align:center;touch-action:none;user-select:none;-webkit-user-select:none}
+.ag-mini-m .gc-mini{display:grid;grid-template-columns:repeat(8,1fr);row-gap:4px;text-align:center;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+/* 6.14: mientras mantienes pulsado, el día se va iluminando; al encenderse, late una vez */
+.ag-mini-m .gc-mini button.carga{animation:gcCarga .7s linear forwards}
+@keyframes gcCarga{from{box-shadow:0 0 0 0 rgba(247,195,91,0);background:rgba(247,195,91,.08)}to{box-shadow:0 0 0 4px rgba(247,195,91,.55);background:rgba(247,195,91,.45)}}
+.ag-mini-m .gc-mini button.pulsa{animation:gcPulsa .35s ease-out}
+@keyframes gcPulsa{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
 .ag-mini-m .gc-mini.sin-sem{grid-template-columns:repeat(7,1fr)}
 .ag-mini-m .gc-mini span{color:var(--suave);font-weight:700;font-size:12px;line-height:30px}
 .ag-mini-m .gc-mini .gc-msem{font-size:11px;opacity:.7;line-height:38px}
@@ -2391,7 +2396,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.13';
+const VERSION = 'v6.14';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5577,7 +5582,7 @@ function miniMovilHTML(){
   const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
   return `<section class="ag-mini-m"><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
     <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
-    ${mesPeq(m0, true)}<p class="ag-mini-ayuda">Toca un día, o arrastra el dedo por varios para verlos juntos.</p></section>`;
+    ${mesPeq(m0, true)}<p class="ag-mini-ayuda">Toca un día para verlo. Para ver varios juntos, mantén pulsado el primero hasta que se ilumine y arrastra el dedo.</p></section>`;
 }
 function gcLado(){
   const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
@@ -5610,20 +5615,45 @@ document.addEventListener('mouseover', e => {
   if(b && b.dataset.k !== gcArr.b){ gcArr.b = b.dataset.k; gcArrPintar(); }
 });
 document.addEventListener('mouseup', () => { if(gcArr && !gcArr.t) gcArrFin(); });
-/* 6.12: con el dedo (mes pequeño del móvil): el botón no recibe los «mouseover», así que se mira qué día hay debajo del dedo */
-const gcArrDia = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest && el.closest('.gc-mini button[data-k]'); };
-document.addEventListener('pointerdown', e => {
-  if(e.pointerType === 'mouse') return;
-  const b = e.target.closest && e.target.closest('.ag-mini-m .gc-mini button[data-k]'); if(!b) return;
-  e.preventDefault(); gcArr = {a: b.dataset.k, b: b.dataset.k, t: true}; gcArrPintar();
-});
-document.addEventListener('pointermove', e => {
-  if(!gcArr || !gcArr.t) return;
-  const b = gcArrDia(e.clientX, e.clientY);
-  if(b && b.dataset.k !== gcArr.b){ gcArr.b = b.dataset.k; gcArrPintar(); }
-});
-document.addEventListener('pointerup', () => { if(gcArr && gcArr.t) gcArrFin(); });
-document.addEventListener('pointercancel', () => { if(gcArr && gcArr.t){ gcArr = null; document.querySelectorAll('.gc-mini button.arr').forEach(b => b.classList.remove('arr')); } });
+/* 6.14 (Gustavo: «es muy sensible: en cuanto le das a desplazar te selecciona semanas»): con el dedo, el mes de abajo se desplaza
+   como siempre. Para elegir días hay que mantener pulsado un día 0,7 s sin mover el dedo: el día se va iluminando, se enciende
+   (y el móvil vibra un poco) y desde ahí, arrastrando, se eligen los días. Un toque corto abre ese día. */
+const GC_PULSA = 700;
+const gcArrDia = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest && el.closest('.ag-mini-m .gc-mini button[data-k]'); };
+let gcToque = null;
+function gcToqueFin(){ if(gcToque){ clearTimeout(gcToque.t); if(gcToque.b) gcToque.b.classList.remove('carga'); } gcToque = null; }
+document.addEventListener('touchstart', e => {
+  gcToqueFin();
+  const b = e.touches.length === 1 && e.target.closest && e.target.closest('.ag-mini-m .gc-mini button[data-k]'); if(!b) return;
+  const t0 = e.touches[0];
+  gcToque = {b, x: t0.clientX, y: t0.clientY, activo: false, t: setTimeout(() => {
+    if(!gcToque) return;
+    gcToque.activo = true; b.classList.remove('carga');
+    gcArr = {a: b.dataset.k, b: b.dataset.k, t: true}; gcArrPintar(); b.classList.add('pulsa');
+    try{ if(navigator.vibrate) navigator.vibrate(18); }catch(err){}
+  }, GC_PULSA)};
+  b.classList.add('carga');
+}, {passive: true});
+document.addEventListener('touchmove', e => {
+  if(!gcToque) return;
+  const t = e.touches[0];
+  if(!gcToque.activo){   // se mueve antes de tiempo: es desplazar la página
+    if(Math.hypot(t.clientX - gcToque.x, t.clientY - gcToque.y) > 10) gcToqueFin();
+    return;
+  }
+  if(e.cancelable) e.preventDefault();   // eligiendo días: la página no se mueve
+  const b = gcArrDia(t.clientX, t.clientY);
+  if(gcArr && b && b.dataset.k !== gcArr.b){ gcArr.b = b.dataset.k; gcArrPintar(); }
+}, {passive: false});
+document.addEventListener('touchend', e => {
+  if(!gcToque) return;
+  const T = gcToque; gcToqueFin();
+  if(e.cancelable) e.preventDefault();   // sin los clics de ratón que el móvil añade después
+  if(T.activo){ if(gcArr) gcArrFin(); return; }
+  agElegir(T.b.dataset.k);   // toque corto: abre ese día
+}, {passive: false});
+document.addEventListener('touchcancel', () => { const act = gcToque && gcToque.activo; gcToqueFin(); if(act && gcArr){ gcArr = null; document.querySelectorAll('.gc-mini button.arr').forEach(b => b.classList.remove('arr')); } });
+document.addEventListener('contextmenu', e => { if(e.target.closest && e.target.closest('.ag-mini-m')) e.preventDefault(); });   // mantener pulsado no saca el menú del navegador
 function gcArrFin(){
   const [x, y] = [gcArr.a, gcArr.b].sort(); gcArr = null;
   if(x === y){ agElegir(x); return; }
