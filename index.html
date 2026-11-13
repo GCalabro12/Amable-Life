@@ -435,7 +435,24 @@ img,svg{-webkit-user-drag:none}
 .voz-hoja .gaia-viva.habla{animation:gaiaAuraB 1.6s ease-in-out infinite}
 @keyframes gaiaAuraB{0%,100%{box-shadow:0 6px 20px rgba(139,92,246,.35),0 0 0 0 rgba(236,72,153,0)}50%{box-shadow:0 8px 26px rgba(139,92,246,.5),0 0 0 6px rgba(236,72,153,.22)}}
 .voz-hoja .voz-cab{gap:8px}
-.voz-hoja .voz-x{z-index:3;top:calc(22px + env(safe-area-inset-top));right:24px;background:rgba(20,10,40,.35)}
+/* 5.98 (Gustavo): arriba una fila con el logo a la izquierda, «Gaia» en el centro y la cruz a la derecha (ya no tapa el vídeo);
+   la cabecera fija acaba justo debajo del vídeo y «Tu asistente de Amable Life» sube con el texto */
+.voz-top{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;width:100%;max-width:520px;gap:6px}
+.voz-top h2{margin:0;font-size:24px;line-height:1.1}
+.voz-logo{display:grid;place-items:center;width:40px;height:40px}
+.voz-hoja .voz-x{position:static;z-index:auto;width:38px;height:38px;margin:0;justify-self:end;background:rgba(139,92,246,.12);color:#6d28d9}
+.voz-hoja .voz-x:active{background:rgba(139,92,246,.24)}
+.voz-chat > .voz-quien{text-align:center;margin:0 0 2px}
+.voz-pregs{position:relative;margin:0 0 8px}
+.voz-pregs-b{display:flex;align-items:center;gap:6px;margin:0 auto;padding:6px 14px;border:0;border-radius:999px;background:rgba(139,92,246,.1);color:#6d28d9;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.voz-pregs-b svg{transition:transform .2s}
+.voz-pregs-b.abierto svg{transform:rotate(180deg)}
+.voz-pregs-l{max-height:min(52vh,420px);overflow:auto;margin:0 0 8px;padding:12px;border:1.5px solid rgba(139,92,246,.3);border-radius:18px;background:var(--tarjeta);text-align:left}
+.voz-pregs-g{margin:6px 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
+.voz-pregs-g:first-child{margin-top:0}
+.voz-pregs-c{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.voz-pregs-c .voz-chip{padding:7px 12px;font-size:14px}
+.voz-pro{position:sticky;bottom:-12px;margin:8px -12px -12px;padding:10px 14px 12px;border-radius:0 0 16px 16px;background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(236,72,153,.14)),var(--tarjeta);box-shadow:0 -6px 10px -8px rgba(60,30,110,.25);color:var(--tinta);font-size:14px;line-height:1.4}
 .voz-chat{flex:1;display:flex;flex-direction:column;gap:10px;padding:14px 0 10px;text-align:left}
 .voz-ella{align-self:stretch;min-width:0;color:var(--tinta);line-height:1.45;overflow-wrap:anywhere}
 .voz-ella .voz-lista li > *{min-width:0;overflow-wrap:anywhere}
@@ -2322,7 +2339,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.97';
+const VERSION = 'v5.98';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4528,14 +4545,14 @@ function vozIntento(texto){
     return r(`Me gusta el morado, las flores y ver cómo tachas tareas. Esa es mi música favorita.`);
   // qué sabe hacer y la app
   if(h(/\b(que (puedes|sabes) hacer|en que me (puedes )?ayudar|ayuda|para que sirves|como funcionas|que te puedo preguntar)\b/))
-    return r(`Te cuento tu agenda: lo que tienes hoy, lo que te queda, lo de mañana o cualquier día de la semana, y tus prácticas integrales. También te digo la hora, la fecha, una frase para animarte o un chiste. Pronto, con Amable Life Premium, podré responder a cualquier pregunta.`);
+    return r(`Te cuento tu agenda: lo que tienes hoy, lo que te queda, lo de mañana o cualquier día de la semana, y tus prácticas integrales. También te digo la hora, la fecha, una frase para animarte o un chiste. Abajo, en «Preguntas que respondo», las tienes todas. Con la cuenta Pro podrás preguntarme cualquier cosa.`);
   if(h(/\b(que es amable life|para que sirve (la app|amable life|esta app))\b/))
     return r(`Amable Life te ayuda a equilibrar tu vida: tus tareas por áreas en la flor, tu calendario, tus bloques de Focus de hora y media y tu cuerpo. Con amabilidad, sin agobios.`);
   if(h(/\b(que es (el )?focus|que son los bloques|como funciona (el )?focus)\b/))
     return r(`Focus divide tu día en bloques de hora y media. En cada bloque pones pocas tareas y te concentras en ellas, con una cuenta atrás para no despistarte.`);
   if(h(/\b(como (anado|pongo|creo|apunto|meto) (una )?(tarea|cita|cosa|evento)|como se (anade|crea) (una )?tarea)\b/))
     return r(`Toca el botón redondo con el más, abajo a la derecha del calendario, o un hueco de la hora que quieras. Escribe el nombre y guarda.`);
-  if(h(/\b(que es premium|cuanto cuesta|precio|suscripcion)\b/))
+  if(h(/\b(que es premium|que es (la cuenta )?pro|cuenta pro|hacerme pro|cuanto cuesta|precio|suscripcion)\b/))
     return r(`Lo esencial de Amable Life es gratis para siempre. Premium costará ${PREMIUM_PRECIO} al año, pero de momento no se cobra nada. Lo tienes en el menú, en Suscripción.`);
   // prácticas integrales (hábitos)
   if(h(/\b(habitos?|practicas?( integrales?)?)\b/) && !h(/\b(hoy|manana)\b/)){
@@ -4582,7 +4599,7 @@ function vozIntento(texto){
   if(h(/\b(como estas|que tal estas|que tal)\b/) && !agenda)
     return r(`Muy bien, gracias por preguntar. ¿Te cuento qué tienes hoy?`);
   if(agenda || h(/\b(hacer)\b/)) return null;   // es de la agenda
-  return r(`Todavía no sé responder a eso. De momento te cuento tu agenda: pregúntame «¿qué tengo hoy?», «¿y mañana?» o «¿qué tengo el viernes?». Pronto, con Amable Life Premium, podré responder a cualquier pregunta.`);
+  return r(`Todavía no sé responder a eso. De momento te cuento tu agenda: pregúntame «¿qué tengo hoy?», «¿y mañana?» o «¿qué tengo el viernes?»; abajo, en «Preguntas que respondo», tienes todas las que sé. Con la cuenta Pro podrás preguntarme cualquier cosa.`);
 }
 function vozResponder(texto, oido){
   const i = vozIntento(texto);
@@ -4698,16 +4715,37 @@ window.nativeEscucha = (tipo, texto) => {
   else if(tipo === 'nohay'){ vozEstado(''); if(es) es.textContent = 'Este teléfono no tiene reconocimiento de voz: toca «¿Qué tengo hoy?».'; }
   else if(tipo === 'error'){ vozEstado(''); if(es) es.textContent = texto || 'No he podido escucharte.'; }
 };
+/* 5.98 (Gustavo): encima del recuadro, «Preguntas que respondo»: al tocarlo se despliega la lista (tocar una se la pregunta a Gaia)
+   y abajo «Con la cuenta Pro podrás preguntarme cualquier cosa» */
+const GAIA_PREGS = [
+  ['Tu agenda', ['¿Qué tengo hoy?', '¿Y mañana?', '¿Qué tengo el viernes?', '¿Qué tuve ayer?', '¿Cuáles son mis hábitos?']],
+  ['Sobre mí', ['¿Cómo te llamas?', '¿Qué significa tu nombre?', '¿Cuántos años tienes?', '¿Quién te ha creado?', '¿Dónde vives?']],
+  ['Amable Life', ['¿Qué es Amable Life?', '¿Qué es Focus?', '¿Cómo añado una tarea?', '¿Cuánto cuesta?']],
+  ['Para tu día', ['¿Qué hora es?', '¿Qué día es hoy?', 'Cuéntame un chiste', 'Dame ánimo', 'No llego a todo']]];
+function vozPregsHTML(){
+  return `<div class="voz-pregs" id="voz-pregs"><div class="voz-pregs-l" id="voz-pregs-l" hidden>
+    ${GAIA_PREGS.map(([g, L]) => `<p class="voz-pregs-g">${esc(g)}</p><div class="voz-pregs-c">${L.map(q => `<button type="button" class="voz-chip" onclick="vozPregElegir(this)">${esc(q)}</button>`).join('')}</div>`).join('')}
+    <p class="voz-pro"><b>Hazte Pro:</b> con la cuenta Pro podrás preguntarme cualquier cosa.</p></div>
+    <button type="button" class="voz-pregs-b" aria-expanded="false" aria-controls="voz-pregs-l" onclick="vozPregs()"><span>Preguntas que respondo</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button></div>`;
+}
+function vozPregs(abrir){
+  const l = $('#voz-pregs-l'), b = $('.voz-pregs-b'); if(!l || !b) return;
+  const on = abrir === undefined ? l.hidden : !!abrir;
+  l.hidden = !on; b.setAttribute('aria-expanded', on ? 'true' : 'false'); b.classList.toggle('abierto', on);
+  if(on) l.scrollTop = 0;
+}
+function vozPregElegir(btn){ vozPregs(false); vozResponder(btn.textContent, true); }
 function abrirVoz(){
   vozParar();
   const n = nombrePila();
   // 5.93 (Gustavo): una conversación: tus preguntas en un cuadro a la izquierda; al subir, sube todo menos Gaia (fija arriba);
   // el recuadro de escribir siempre abajo del todo
-  mostrarHoja(`<div class="voz-hoja"><div class="voz-cab"><button class="hoja-x voz-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button>${GAIA_VIVA}<div><p class="voz-quien">Tu asistente de Amable Life</p><h2>${NOMBRE_ASIS}</h2></div></div>
-    <div class="voz-chat" id="voz-chat"><div class="voz-ella voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</div>
+  mostrarHoja(`<div class="voz-hoja"><div class="voz-cab"><div class="voz-top"><span class="voz-logo" aria-label="Amable Life"><svg viewBox="-100 -100 200 200" width="34" height="34" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1V')}</svg></span><h2>${NOMBRE_ASIS}</h2><button class="hoja-x voz-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button></div>${GAIA_VIVA}</div>
+    <div class="voz-chat" id="voz-chat"><p class="voz-quien">Tu asistente de Amable Life</p><div class="voz-ella voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</div>
       <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('¿Qué tengo hoy?', true)">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('¿Y mañana?', true)">¿Y mañana?</button></div>
       ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>
     <div class="voz-pie"><p class="voz-oido" id="voz-oido"></p><p class="voz-estado" id="voz-estado"></p>
+    ${vozPregsHTML()}
     <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form></div></div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
   vozEscuchar($('#voz-mic'));
