@@ -1419,6 +1419,22 @@ html.claro .s-tile .s-est{color:color-mix(in srgb,var(--c) 55%,#1f1838)}
 .rj-cab .cal-x{font-size:9.5px}
 body.ancho .rj-cab .cal-x{font-size:11px}
 .gc-mini.sin-sem{grid-template-columns:repeat(7,1fr)}
+/* 6.12: el mes pequeño abajo del calendario en el móvil (con dedos: días más grandes) */
+.ag-mini-m{margin:18px 2px 0;padding:12px 10px 10px;border-radius:18px;background:var(--tarjeta);border:1px solid var(--linea)}
+.ag-mini-m .gc-mini-cab{display:flex;align-items:center;gap:4px;padding-left:6px;margin-bottom:6px}
+.ag-mini-m .gc-mini-cab b{flex:1;font-size:16px;font-weight:800}
+.ag-mini-m .gc-ico{width:38px;height:38px;border:0;border-radius:50%;background:rgba(var(--bl),.08);color:var(--tinta);display:grid;place-items:center;padding:0;flex:none}
+.ag-mini-m .gc-mini{display:grid;grid-template-columns:repeat(8,1fr);row-gap:4px;text-align:center;touch-action:none;user-select:none;-webkit-user-select:none}
+.ag-mini-m .gc-mini.sin-sem{grid-template-columns:repeat(7,1fr)}
+.ag-mini-m .gc-mini span{color:var(--suave);font-weight:700;font-size:12px;line-height:30px}
+.ag-mini-m .gc-mini .gc-msem{font-size:11px;opacity:.7;line-height:38px}
+.ag-mini-m .gc-mini button{width:38px;height:38px;margin:auto;border-radius:50%;border:0;background:none;color:var(--tinta);font:inherit;font-size:15px;padding:0;-webkit-tap-highlight-color:transparent}
+.ag-mini-m .gc-mini button.fuera{color:var(--suave);opacity:.6}
+.ag-mini-m .gc-mini button.rango{background:rgba(247,195,91,.18);border-radius:8px}
+.ag-mini-m .gc-mini button.sel{background:rgba(247,195,91,.4)}
+.ag-mini-m .gc-mini button.arr{background:rgba(247,195,91,.55);border-radius:8px}
+.ag-mini-m .gc-mini button.hoy{background:var(--oro);color:#2a1d05;font-weight:800}
+.ag-mini-ayuda{margin:8px 4px 0;font-size:12.5px;color:var(--suave);text-align:center}
 body.h12 .rj-h span{font-size:9.5px;width:40px;left:-46px}
 #cab-vista{position:relative;display:flex}
 .cab-vbtn{display:flex;align-items:center;gap:4px;height:36px;padding:0 8px 0 14px;border-radius:99px;border:1px solid rgba(var(--bl),.3);background:none;color:var(--tinta);font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
@@ -2366,7 +2382,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.11';
+const VERSION = 'v6.12';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5288,7 +5304,7 @@ function vAgenda(){
     <div class="ag-fijo"><div class="ag-nav"><button class="fn-flecha" onclick="agMover(-1)" aria-label="Anterior">‹</button><b>${tit}</b><button class="fn-flecha" onclick="agMover(1)" aria-label="Siguiente">›</button></div>
 ${fijo}</div>
     ${conHoy ? '' : '<div class="ag-acc"><button class="link" onclick="agHoy()">Volver a hoy</button></div>'}
-    ${cuerpo}<div class="ag-esp" style="height:76px"></div>
+    ${cuerpo}${miniMovilHTML()}<div class="ag-esp" style="height:76px"></div>
     <button class="ag-fab" aria-label="Añadir al calendario" onclick="nuevoEvento()"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>`;
 }
 /* Rejilla de horas: de 5:00 a 23:00 (o más, si hay algo antes o después), 52 px por hora.
@@ -5544,6 +5560,16 @@ function gcTop(){
   </div>`;
 }
 let gcMiniDes = 0;
+/* 6.12 (Gustavo): en el móvil, en Agenda, Día y 3 días (y la franja de días que eliges aquí), abajo del todo el mes pequeño del
+   ordenador: tocar un día lo abre; arrastrar el dedo por varios días (por ejemplo del 10 al 12) los enseña juntos; más de 7, por semanas.
+   La página acaba ahí. */
+function miniMovilHTML(){
+  if(ESCRITORIO.matches || !['dia', '3dias', 'rango', 'agenda'].includes(agModo)) return '';
+  const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
+  return `<section class="ag-mini-m"><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
+    <button class="gc-ico" aria-label="Mes anterior" onclick="gcMiniDes--; render()">${ICO_IZQ}</button><button class="gc-ico" aria-label="Mes siguiente" onclick="gcMiniDes++; render()">${ICO_DER}</button></div>
+    ${mesPeq(m0, true)}<p class="ag-mini-ayuda">Toca un día, o arrastra el dedo por varios para verlos juntos.</p></section>`;
+}
 function gcLado(){
   const b = fechaDe(agK), m0 = new Date(b.getFullYear(), b.getMonth() + gcMiniDes, 1);
   const h = +new Intl.DateTimeFormat('es-ES', Object.assign({hour: '2-digit', hour12: false}, fPref.zona ? {timeZone: fPref.zona} : {})).format(new Date()).slice(0, 2);
@@ -5574,8 +5600,22 @@ document.addEventListener('mouseover', e => {
   const b = e.target.closest && e.target.closest('.gc-mini button[data-k]');
   if(b && b.dataset.k !== gcArr.b){ gcArr.b = b.dataset.k; gcArrPintar(); }
 });
-document.addEventListener('mouseup', () => {
-  if(!gcArr) return;
+document.addEventListener('mouseup', () => { if(gcArr && !gcArr.t) gcArrFin(); });
+/* 6.12: con el dedo (mes pequeño del móvil): el botón no recibe los «mouseover», así que se mira qué día hay debajo del dedo */
+const gcArrDia = (x, y) => { const el = document.elementFromPoint(x, y); return el && el.closest && el.closest('.gc-mini button[data-k]'); };
+document.addEventListener('pointerdown', e => {
+  if(e.pointerType === 'mouse') return;
+  const b = e.target.closest && e.target.closest('.ag-mini-m .gc-mini button[data-k]'); if(!b) return;
+  e.preventDefault(); gcArr = {a: b.dataset.k, b: b.dataset.k, t: true}; gcArrPintar();
+});
+document.addEventListener('pointermove', e => {
+  if(!gcArr || !gcArr.t) return;
+  const b = gcArrDia(e.clientX, e.clientY);
+  if(b && b.dataset.k !== gcArr.b){ gcArr.b = b.dataset.k; gcArrPintar(); }
+});
+document.addEventListener('pointerup', () => { if(gcArr && gcArr.t) gcArrFin(); });
+document.addEventListener('pointercancel', () => { if(gcArr && gcArr.t){ gcArr = null; document.querySelectorAll('.gc-mini button.arr').forEach(b => b.classList.remove('arr')); } });
+function gcArrFin(){
   const [x, y] = [gcArr.a, gcArr.b].sort(); gcArr = null;
   if(x === y){ agElegir(x); return; }
   const n = Math.round((fechaDe(y) - fechaDe(x)) / 864e5) + 1;
@@ -5583,7 +5623,7 @@ document.addEventListener('mouseup', () => {
   else { agK = inicioSem(x); agW = Math.min(6, Math.round((fechaDe(inicioSem(y)) - fechaDe(agK)) / (7 * 864e5)) + 1); agModo = 'semanas'; }
   gcMiniDes = 0;
   render(); agVerAhora();
-});
+}
 /* Los desplegables de arriba (menú y vista) */
 function gcPop(id, ev){
   if(ev) ev.stopPropagation();
@@ -9451,7 +9491,7 @@ const PESTANAS = ['agenda', 'dia', 'inicio', 'salud', 'ajustes'];   // Historial
 let toque = null;
 app.addEventListener('touchstart', e => {
   const t = e.target;
-  if(e.touches.length !== 1 || t.closest('input, textarea, button.mic, .hoja, .asa')) { toque = null; return; }
+  if(e.touches.length !== 1 || t.closest('input, textarea, button.mic, .hoja, .asa, .ag-mini-m')) { toque = null; return; }
   toque = {x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), flor: !!t.closest('.girasol')};
 }, {passive: true});
 app.addEventListener('touchend', e => {
