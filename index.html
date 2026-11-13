@@ -460,7 +460,17 @@ img,svg{-webkit-user-drag:none}
 html.en-app .voz-hoja .voz-cab{padding-top:10px}
 html.en-app .voz-pie{padding-bottom:10px}
 .voz-panel{max-height:min(52vh,420px);overflow:auto;margin:0 0 8px;padding:12px;border:1.5px solid rgba(139,92,246,.3);border-radius:18px;background:var(--tarjeta);text-align:left}
-.voz-panel.voz-voces{display:flex;flex-direction:column;gap:6px}
+.voz-panel .voz-voces{display:block;margin:0}
+.voz-panel .voz-voces .voz-v{width:100%;margin-top:6px}
+.voz-panel .voz-voces .voz-v-t{min-height:40px;margin:0;padding-top:4px}
+/* 6.06 (Gustavo): cruz arriba a la derecha en las listas de preguntas y de voces */
+.voz-panel-x{position:sticky;top:0;float:right;z-index:2;width:34px;height:34px;margin:-4px -4px 6px 10px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(139,92,246,.14);color:#6d28d9;cursor:pointer}
+.voz-panel-x:active{background:rgba(139,92,246,.26)}
+.voz-panel .voz-v-t{text-align:left}
+/* 6.06: altavoz para silenciar a Gaia, arriba a la derecha del vídeo */
+.gaia-son{position:absolute;top:10px;right:10px;z-index:3;width:38px;height:38px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(20,10,40,.42);color:#fff;cursor:pointer;backdrop-filter:blur(4px)}
+.gaia-son.muda{background:rgba(226,69,107,.85)}
+.gaia-son:active{transform:scale(.92)}
 .voz-panel[hidden]{display:none}
 .voz-pregs-g{margin:6px 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
 .voz-pregs-g:first-child{margin-top:0}
@@ -2356,7 +2366,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.05';
+const VERSION = 'v6.06';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4411,7 +4421,26 @@ const ARIA_CARA = '<img class="aria-cara" src="img/gaia-2.jpg" alt="" aria-hidde
 const caraGaia = cls => ARIA_CARA.replace('class="aria-cara"', `class="${cls}"`);
 /* 5.86 (Gustavo: «que cuando esté hablando la IA aparezca Gaia hablando»): vídeo de Gemini en bucle (img/gaia-habla.mp4, 9 s, sin saltos)
    encima de la imagen; solo se ve y se mueve mientras Gaia habla (gaiaHabla). */
-const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-banner.jpg?v=2" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-banner2.mp4" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
+const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-banner.jpg?v=2" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-banner2.mp4" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video><button type="button" class="gaia-son" id="gaia-son" onclick="gaiaSilencio()"></button></span>';
+/* 6.06 (Gustavo): arriba a la derecha del vídeo, un altavoz para silenciar a Gaia (se recuerda en este aparato, equilibra.gaiaMuda).
+   Callada, la boca se mueve igual y el texto avanza como si hablara */
+const ICO_SON_SI = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
+const ICO_SON_NO = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+function gaiaMuda(){ try{ return localStorage.getItem('equilibra.gaiaMuda') === '1'; }catch(e){ return false; } }
+function gaiaPintarSon(){
+  const b = $('#gaia-son'); if(!b) return; const m = gaiaMuda();
+  b.innerHTML = m ? ICO_SON_NO : ICO_SON_SI; b.classList.toggle('muda', m);
+  b.setAttribute('aria-label', m ? 'Gaia está en silencio. Tocar para que hable' : 'Silenciar a Gaia'); b.title = m ? 'Activar la voz' : 'Silenciar';
+}
+function gaiaSilencio(){
+  const m = !gaiaMuda(); try{ localStorage.setItem('equilibra.gaiaMuda', m ? '1' : '0'); }catch(e){}
+  if(m){   // callar lo que esté diciendo
+    if(esApp){ try{ if(appAsis('callarAsistente')) AndroidEquilibra.callarAsistente(); }catch(e){} }
+    else if('speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} vozHabla = false; }
+    gaiaHabla(false);
+  }
+  gaiaPintarSon(); aviso(m ? 'Gaia en silencio' : 'Gaia vuelve a hablar');
+}
 let gaiaT = 0;
 /* 5.96: un 10 % más rápido (Gustavo). 5.94 (Gustavo: «que conforme vaya leyendo, el texto vaya avanzando y se vea siempre en el medio lo que está leyendo»):
    se calcula por dónde va (lo que dura la lectura, unos 14 caracteres por segundo) y la ventana baja para que eso quede en el
@@ -4495,8 +4524,12 @@ function vozAgenda(k, nom){
   return {texto, html: `<p class="voz-titulo">${esc(txt)}</p>${filas ? `<ul class="voz-lista">${filas}</ul>` : ''}`};
 }
 const appAsis = f => esApp && typeof window.AndroidEquilibra[f] === 'function';   // 5.75: funciones de la app 2.55
-function vozDecir(texto){
+function vozDecir(texto, forzar){
   texto = vozSinEmojis(texto);
+  if(gaiaMuda() && !forzar){   // 6.06: en silencio, sin voz; la boca y el texto avanzan como si hablara
+    const pal = texto.split(/\s+/).filter(Boolean).length;
+    gaiaHabla(true); gaiaT = setTimeout(() => gaiaHabla(false), Math.min(90000, 600 + pal * 330)); return;
+  }
   if(esApp){
     try{ if(appAsis('hablarAsistente')) AndroidEquilibra.hablarAsistente(texto); else AndroidEquilibra.speak(texto); }catch(e){}
     gaiaHabla(true);
@@ -4714,8 +4747,8 @@ function vozEstado(q){
 window.nativeHabla = tipo => gaiaHabla(tipo === 'empieza');
 /* 5.88 (Gustavo: «sale una voz de hombre»): en la app 2.56, elegir la voz de Gaia entre las del teléfono */
 function vozElegir(){
-  const c = $('#voz-voces'); if(!c) return;
-  if(!c.hidden){ vozVoces(false); return; }
+  const c = $('#voz-voces'), w = $('#voz-voces-w'); if(!c || !w) return;
+  if(!w.hidden){ vozVoces(false); return; }
   vozPregs(false); vozVoces(true);
   if(!appAsis('vocesAsistente')){ vozElegirWeb(c); return; }
   c.innerHTML = '<p class="voz-v-t">Buscando las voces del teléfono…</p>';
@@ -4764,7 +4797,7 @@ function vozPonerVozWeb(i){
   bs.forEach(x => { x.classList.toggle('sel', x === b); const k = x.querySelector('i'); if(k) k.remove(); });
   b.insertAdjacentHTML('beforeend', '<i>✓</i>');
   try{ localStorage.setItem('equilibra.vozGaia', b.dataset.n); }catch(e){}
-  vozDecir('Hola, soy Gaia. Así sonará mi voz.');
+  vozDecir('Hola, soy Gaia. Así sonará mi voz.', true);
 }
 function vozPonerVoz(i){
   const b = [...document.querySelectorAll('#voz-voces .voz-v')][i]; if(!b) return;
@@ -4792,7 +4825,7 @@ const GAIA_PREGS = [
   ['Para tu día', ['¿Qué hora es?', '¿Qué día es hoy?', 'Cuéntame un chiste', 'Dame ánimo', 'No llego a todo']],
   ['Sobre Gaia', ['¿Cómo te llamas?', '¿Qué significa tu nombre?', '¿Cuántos años tienes?', '¿Quién te ha creado?', '¿Dónde vives?']]];   // 6.03 (Gustavo): al final y «Sobre Gaia»
 function vozPregsHTML(){
-  return `<div class="voz-panel voz-pregs-l" id="voz-pregs-l" hidden><p class="voz-pregs-aviso">Toca una, o escríbela o dila <b>tal cual</b>. Si la cambias mucho, puede que no te entienda.</p>
+  return `<div class="voz-panel voz-pregs-l" id="voz-pregs-l" hidden><button type="button" class="voz-panel-x" aria-label="Cerrar las preguntas" onclick="vozPregs(false)">${ICO_CRUZ}</button><p class="voz-pregs-aviso">Toca una, o escríbela o dila <b>tal cual</b>. Si la cambias mucho, puede que no te entienda.</p>
     ${GAIA_PREGS.map(([g, L]) => `<p class="voz-pregs-g">${esc(g)}</p><div class="voz-pregs-c">${L.map(q => `<button type="button" class="voz-chip" onclick="vozPregElegir(this)">${esc(q)}</button>`).join('')}</div>`).join('')}
     <p class="voz-pro"><b>Hazte Pro:</b> con la cuenta Pro podrás preguntarme cualquier cosa.</p></div>`;
 }
@@ -4831,7 +4864,7 @@ function vozPregsJuntar(){
   });
 }
 function vozVoces(abrir){
-  const c = $('#voz-voces'), b = $('.voz-voz-b'); if(!c) return;
+  const c = $('#voz-voces-w'), b = $('.voz-voz-b'); if(!c) return;
   c.hidden = !abrir; if(b){ b.setAttribute('aria-expanded', abrir ? 'true' : 'false'); b.classList.toggle('abierto', !!abrir); }
 }
 function vozPregElegir(btn){ vozPregs(false); vozResponder(btn.textContent, true); }
@@ -4845,9 +4878,10 @@ function abrirVoz(){
       <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('¿Qué tengo hoy?', true)">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('¿Y mañana?', true)">¿Y mañana?</button></div>
 </div>
     <div class="voz-pie"><p class="voz-oido" id="voz-oido"></p><p class="voz-estado" id="voz-estado"></p>
-    ${vozPregsHTML()}<div class="voz-panel voz-voces" id="voz-voces" hidden></div>
+    ${vozPregsHTML()}<div class="voz-panel" id="voz-voces-w" hidden><button type="button" class="voz-panel-x" aria-label="Cerrar las voces" onclick="vozVoces(false)">${ICO_CRUZ}</button><div class="voz-voces" id="voz-voces"></div></div>
     <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>${vozFilaHTML()}</div></div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
+  gaiaPintarSon();
   // 5.99 (Gustavo): ya no empieza escuchando (nadie reacciona en ese segundo); se escucha al tocar el micrófono
 }
 
