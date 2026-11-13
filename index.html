@@ -2366,7 +2366,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.07';
+const VERSION = 'v6.08';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4439,7 +4439,7 @@ function gaiaSilencio(){
     else if('speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} vozHabla = false; }
     gaiaHabla(false);
   }
-  gaiaPintarSon(); aviso(m ? 'Gaia en silencio' : 'Gaia vuelve a hablar');
+  gaiaPintarSon(); aviso(m ? 'Gaia en silencio' : 'Gaia vuelve a hablar'); gaiaNota('');
 }
 let gaiaT = 0;
 /* 5.96: un 10 % más rápido (Gustavo). 5.94 (Gustavo: «que conforme vaya leyendo, el texto vaya avanzando y se vea siempre en el medio lo que está leyendo»):
@@ -4528,12 +4528,18 @@ function vozDecir(texto, forzar){
   texto = vozSinEmojis(texto);
   if(gaiaMuda() && !forzar){   // 6.06: en silencio, sin voz; la boca y el texto avanzan como si hablara
     const pal = texto.split(/\s+/).filter(Boolean).length;
-    gaiaHabla(true); gaiaT = setTimeout(() => gaiaHabla(false), Math.min(90000, 600 + pal * 330)); return;
+    gaiaHabla(true); gaiaT = setTimeout(() => gaiaHabla(false), Math.min(90000, 600 + pal * 330));
+    gaiaNota('Gaia está en silencio. Toca el altavoz rojo de arriba para oírla.'); return;
   }
   if(esApp){
     try{ if(appAsis('hablarAsistente')) AndroidEquilibra.hablarAsistente(texto); else AndroidEquilibra.speak(texto); }catch(e){}
     gaiaHabla(true);
-    if(appAsis('vocesAsistente')) return;   // 5.88: la app 2.56 avisa de cuándo acaba (window.nativeHabla)
+    if(appAsis('vocesAsistente')){   // 5.88: la app 2.56 avisa de cuándo acaba (window.nativeHabla)
+      // 6.08 (Gustavo: «no se la escucha»): si la voz elegida no arranca en 3,5 s (o falla nada más empezar), habla con la voz normal del teléfono
+      clearTimeout(gaiaVigiaT); gaiaPide = {texto, ini: Date.now(), empezo: false, rescate: false};
+      gaiaVigiaT = setTimeout(() => { if(gaiaPide && !gaiaPide.empezo && !gaiaPide.rescate) gaiaRescate(); }, 3500);
+      return;
+    }
     const pal = texto.split(/\s+/).filter(Boolean).length;
     gaiaT = setTimeout(() => gaiaHabla(false), Math.min(90000, 600 + pal * 360)); return;
   }
@@ -4543,10 +4549,28 @@ function vozDecir(texto, forzar){
   // frase a frase: Chrome corta las lecturas muy largas
   const partes = texto.split(/(?<=[.:])\s+/).filter(Boolean);
   vozHabla = true;
-  partes.forEach((t, i) => { const u = new SpeechSynthesisUtterance(t); u.lang = 'es-ES'; if(v) u.voice = v;
-    if(i === 0) u.onstart = () => gaiaHabla(true);
+  const pide = {empezo: false}; gaiaPideWeb = pide;
+  partes.forEach((t, i) => { const u = new SpeechSynthesisUtterance(t); u.lang = 'es-ES'; if(v && !forzar?.sinVoz) u.voice = v;
+    if(i === 0) u.onstart = () => { pide.empezo = true; gaiaHabla(true); };
     if(i === partes.length - 1) u.onend = u.onerror = () => { vozHabla = false; gaiaHabla(false); }; speechSynthesis.speak(u); });
   gaiaHabla(true);
+  // 6.08 (Gustavo: «no se la escucha»): si en 3 s no ha empezado, se prueba con la voz del sistema; si tampoco, se avisa
+  clearTimeout(gaiaVigiaT);
+  gaiaVigiaT = setTimeout(() => {
+    if(pide.empezo || gaiaPideWeb !== pide) return;
+    if(!forzar?.sinVoz){ try{ speechSynthesis.cancel(); }catch(e){} vozDecir(texto, {sinVoz: true}); return; }
+    vozHabla = false; gaiaNota('No me sale la voz. Sube el volumen del móvil o prueba otra voz en «Cambiar la voz».');
+    const pal = texto.split(/\s+/).filter(Boolean).length; gaiaT = setTimeout(() => gaiaHabla(false), Math.min(90000, 600 + pal * 330));
+  }, 3000);
+}
+let gaiaVigiaT = 0, gaiaPide = null, gaiaPideWeb = null;
+const gaiaNota = t => { const e = $('#voz-estado'); if(e) e.textContent = t; };   // 6.08: aviso pequeño encima del recuadro
+function gaiaRescate(){
+  const P = gaiaPide; if(!P) return; P.rescate = true;
+  try{ AndroidEquilibra.speak(P.texto); }catch(e){}
+  gaiaNota('No me sale la voz elegida: te hablo con la del teléfono. Si no me oyes, sube el volumen multimedia.');
+  gaiaHabla(true); const pal = P.texto.split(/\s+/).filter(Boolean).length;
+  clearTimeout(gaiaT); gaiaT = setTimeout(() => gaiaHabla(false), Math.min(90000, 600 + pal * 360));
 }
 function vozParar(){
   if(appAsis('dejarDeEscuchar')){ try{ AndroidEquilibra.dejarDeEscuchar(); AndroidEquilibra.callarAsistente(); }catch(e){} }
@@ -4751,7 +4775,15 @@ function vozEstado(q){
   if(q !== 'escuchando') c.style.setProperty('--nivel', 0);
 }
 /* 5.88: la app 2.56 avisa de cuándo Gaia empieza y acaba de hablar */
-window.nativeHabla = tipo => gaiaHabla(tipo === 'empieza');
+window.nativeHabla = tipo => {
+  const P = gaiaPide;
+  if(P && !P.rescate){
+    if(tipo === 'empieza') P.empezo = true;
+    else if(!P.empezo && Date.now() - P.ini < 3000){ gaiaRescate(); return; }   // falló sin llegar a empezar
+  }
+  if(P && P.rescate) return;   // la voz de rescate lleva su propio tiempo
+  gaiaHabla(tipo === 'empieza');
+};
 /* 5.88 (Gustavo: «sale una voz de hombre»): en la app 2.56, elegir la voz de Gaia entre las del teléfono */
 function vozElegir(){
   const c = $('#voz-voces'), w = $('#voz-voces-w'); if(!c || !w) return;
@@ -4763,7 +4795,7 @@ function vozElegir(){
   let n = 0;
   const pinta = () => {
     let L = []; try{ L = JSON.parse(AndroidEquilibra.vocesAsistente() || '[]'); }catch(e){}
-    if(!L.length && n++ < 10){ setTimeout(pinta, 400); return; }
+    if(!L.length && n++ < 30){ setTimeout(pinta, 400); return; }   // 6.08: hasta 12 s (la voz del teléfono tarda en arrancar si Gaia aún no ha hablado)
     if(!L.length){ c.innerHTML = '<p class="voz-v-t">No encuentro voces en español en este teléfono. Puedes instalarlas en Ajustes del teléfono → Idioma → Texto a voz.</p>'; return; }
     L.sort((a, b) => (b.mujer - a.mujer) || (a.hombre - b.hombre) || a.l.localeCompare(b.l));
     const pais = l => ({'es-ES': 'España', 'es-US': 'Latinoamérica', 'es-MX': 'México', 'es-AR': 'Argentina', 'es-CO': 'Colombia'})[l] || l;
@@ -4889,6 +4921,8 @@ function abrirVoz(){
     <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>${vozFilaHTML()}</div></div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
   gaiaPintarSon();
+  if(appAsis('prepararVozAsistente')){ try{ AndroidEquilibra.prepararVozAsistente(); }catch(e){} }   // 6.08: la voz del teléfono se prepara al abrir (aunque esté en silencio)
+  if(gaiaMuda()) gaiaNota('Gaia está en silencio. Toca el altavoz rojo de arriba para oírla.');   // 6.08
   // 5.99 (Gustavo): ya no empieza escuchando (nadie reacciona en ese segundo); se escucha al tocar el micrófono
 }
 
