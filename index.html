@@ -456,6 +456,7 @@ html.en-app .voz-pie{padding-bottom:10px}
 .voz-panel[hidden]{display:none}
 .voz-pregs-g{margin:6px 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
 .voz-pregs-g:first-child{margin-top:0}
+.voz-pregs-aviso{margin:0 0 10px;font-size:13.5px;line-height:1.4;color:var(--tinta)}
 .voz-pregs-c{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .voz-pregs-c .voz-chip{padding:6px 11px;font-size:13.5px}
 .voz-pro{position:sticky;bottom:-12px;margin:8px -12px -12px;padding:10px 14px 12px;border-radius:0 0 16px 16px;background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(236,72,153,.14)),var(--tarjeta);box-shadow:0 -6px 10px -8px rgba(60,30,110,.25);color:var(--tinta);font-size:14px;line-height:1.4}
@@ -2345,7 +2346,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.02';
+const VERSION = 'v6.03';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4518,14 +4519,28 @@ const GAIA_CHISTES = [
   '¿Por qué el calendario está tan tranquilo? Porque tiene los días contados.',
   'Mi plan para hoy era hacer una lista de cosas por hacer. Ya la he hecho: estoy en racha.',
   '¿Qué hace una tarea pendiente en el gimnasio? Pesas… pero nunca termina.',
-  'Le pregunté al reloj cómo estaba y me dijo: aquí, dando vueltas.'];
+  'Le pregunté al reloj cómo estaba y me dijo: aquí, dando vueltas.',
+  '¿Por qué la flor fue a la reunión? Porque quería echar raíces en el equipo.',
+  '¿Qué le dijo el lunes al viernes? No sé cómo lo haces, pero todo el mundo te quiere.',
+  'Me apunté a un curso para dejar de procrastinar. Empiezo mañana.',
+  '¿Cuál es el colmo de un reloj? Que nunca tenga tiempo para sí mismo.',
+  '¿Qué le dijo un hábito a otro? Nos vemos mañana a la misma hora.',
+  'Tengo tantas tareas que mi lista de pendientes tiene su propia lista de pendientes.'];
 const GAIA_FRASES = [
   'Un paso pequeño hoy vale más que un plan perfecto mañana.',
   'No hace falta hacerlo todo: basta con hacer bien lo siguiente.',
   'Cuida tu energía como cuidas tu agenda: también es tu tiempo.',
   'Hecho es mejor que perfecto. Empieza por cinco minutos.',
-  'Celebra lo que ya has hecho hoy, aunque sea poco.'];
-const unoDe = L => L[Math.floor(Math.random() * L.length)];
+  'Celebra lo que ya has hecho hoy, aunque sea poco.',
+  'Vas mejor de lo que crees. Mira todo lo que ya has tachado.',
+  'Respira hondo: no tienes que tenerlo todo resuelto hoy.',
+  'Lo que haces cada día pesa más que lo que haces de vez en cuando.',
+  'Descansar también es avanzar. Una pausa a tiempo te devuelve la energía.',
+  'Elige una sola cosa importante y dale lo mejor de ti. Con eso basta.',
+  'Ser amable contigo también cuenta como hacer algo bien.'];
+/* 6.03 (Gustavo: «que tenga 4 o 5 respuestas diferentes, para que no sea siempre igual»): 11 chistes y 11 frases,
+   y nunca sale la misma dos veces seguidas */
+const unoDe = L => { let i = Math.floor(Math.random() * L.length); if(L.length > 1 && i === L._ult) i = (i + 1 + Math.floor(Math.random() * (L.length - 1))) % L.length; L._ult = i; return L[i]; };
 function vozIntento(texto){
   const t = vozSinAcentos(texto || '').toLowerCase().replace(/[¿?¡!.,;:«»"]/g, ' ').replace(/\s+/g, ' ').trim();
   const n = nombrePila(), tu = n ? ', ' + n : '';
@@ -4577,8 +4592,9 @@ function vozIntento(texto){
   if(h(/\b(que tiempo hace|va a llover|temperatura|hace frio|hace calor|el tiempo)\b/))
     return r(`Todavía no puedo mirar el tiempo. Te recomiendo echar un vistazo por la ventana: es la previsión más fiable.`);
   // ánimo
-  if(h(/\b(chiste|algo gracioso|hazme reir)\b/)) return r(unoDe(GAIA_CHISTES));
-  if(h(/\b(frase|motivame|animame|dame (un )?(consejo|animo)|motivacion|inspirame)\b/)) return r(unoDe(GAIA_FRASES));
+  // 6.03: más flexible (Gustavo: «le dije "dame un poco de ánimo" y ya no me respondió»)
+  if(h(/\b(chistes?|gracios[oa]|hazme reir|reirme|divertid[oa]|bromas?|chascarrillo)\b/)) return r(unoDe(GAIA_CHISTES));
+  if(h(/\b(frases?|motiva(me|r|rme|cion)?|motivad[oa]|anima(me|r|rme)?|animos?|alienta(me)?|aliento|inspira(me|cion)?|consejos?|fuerzas|empujon|positiv[oa])\b/)) return r(unoDe(GAIA_FRASES));
   if(h(/\b(estoy|me siento|ando) (muy )?(cansad[oa]|agotad[oa]|reventad[oa])\b/))
     return r(`Gracias por decírmelo${tu}. Descansar también es avanzar. ¿Qué tal una pausa de diez minutos, un vaso de agua y estirar un poco? Luego sigue solo con lo más importante.`);
   if(h(/\b(estoy|me siento|ando) (muy )?(triste|mal|baj[oa]|desanimad[oa]|sol[oa])\b/))
@@ -4761,11 +4777,11 @@ window.nativeEscucha = (tipo, texto) => {
    y abajo «Con la cuenta Pro podrás preguntarme cualquier cosa» */
 const GAIA_PREGS = [
   ['Tu agenda', ['¿Qué tengo hoy?', '¿Y mañana?', '¿Qué tengo el viernes?', '¿Qué tuve ayer?', '¿Cuáles son mis hábitos?']],
-  ['Sobre mí', ['¿Cómo te llamas?', '¿Qué significa tu nombre?', '¿Cuántos años tienes?', '¿Quién te ha creado?', '¿Dónde vives?']],
   ['Amable Life', ['¿Qué es Amable Life?', '¿Qué es Focus?', '¿Cómo añado una tarea?', '¿Cuánto cuesta?']],
-  ['Para tu día', ['¿Qué hora es?', '¿Qué día es hoy?', 'Cuéntame un chiste', 'Dame ánimo', 'No llego a todo']]];
+  ['Para tu día', ['¿Qué hora es?', '¿Qué día es hoy?', 'Cuéntame un chiste', 'Dame ánimo', 'No llego a todo']],
+  ['Sobre Gaia', ['¿Cómo te llamas?', '¿Qué significa tu nombre?', '¿Cuántos años tienes?', '¿Quién te ha creado?', '¿Dónde vives?']]];   // 6.03 (Gustavo): al final y «Sobre Gaia»
 function vozPregsHTML(){
-  return `<div class="voz-panel voz-pregs-l" id="voz-pregs-l" hidden>
+  return `<div class="voz-panel voz-pregs-l" id="voz-pregs-l" hidden><p class="voz-pregs-aviso">Toca una, o escríbela o dila <b>tal cual</b>. Si la cambias mucho, puede que no te entienda.</p>
     ${GAIA_PREGS.map(([g, L]) => `<p class="voz-pregs-g">${esc(g)}</p><div class="voz-pregs-c">${L.map(q => `<button type="button" class="voz-chip" onclick="vozPregElegir(this)">${esc(q)}</button>`).join('')}</div>`).join('')}
     <p class="voz-pro"><b>Hazte Pro:</b> con la cuenta Pro podrás preguntarme cualquier cosa.</p></div>`;
 }
