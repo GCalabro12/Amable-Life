@@ -2322,7 +2322,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.96';
+const VERSION = 'v5.97';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4376,7 +4376,7 @@ const ARIA_CARA = '<img class="aria-cara" src="img/gaia-2.jpg" alt="" aria-hidde
 const caraGaia = cls => ARIA_CARA.replace('class="aria-cara"', `class="${cls}"`);
 /* 5.86 (Gustavo: «que cuando esté hablando la IA aparezca Gaia hablando»): vídeo de Gemini en bucle (img/gaia-habla.mp4, 9 s, sin saltos)
    encima de la imagen; solo se ve y se mueve mientras Gaia habla (gaiaHabla). */
-const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-banner.jpg" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-banner.mp4" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
+const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-banner.jpg?v=2" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-banner2.mp4" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
 let gaiaT = 0;
 /* 5.96: un 10 % más rápido (Gustavo). 5.94 (Gustavo: «que conforme vaya leyendo, el texto vaya avanzando y se vea siempre en el medio lo que está leyendo»):
    se calcula por dónde va (lo que dura la lectura, unos 14 caracteres por segundo) y la ventana baja para que eso quede en el
