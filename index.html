@@ -2366,7 +2366,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.08';
+const VERSION = 'v6.09';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4620,6 +4620,8 @@ function vozIntento(texto){
   const t = vozSinAcentos(texto || '').toLowerCase().replace(/[¿?¡!.,;:«»"]/g, ' ').replace(/\s+/g, ' ').trim();
   const n = nombrePila(), tu = n ? ', ' + n : '';
   const r = x => ({texto: x, html: `<p class="voz-lista-t">${esc(x)}</p>`});
+  // 6.09 (Gustavo): después de un chiste, «Cuéntame otro chiste»; después de una frase de ánimo, «Dame más ánimos»
+  const otro = (o, q) => ({texto: o.texto, html: o.html + `<div class="voz-atajos voz-otro"><button type="button" class="voz-chip" onclick="vozResponder('${q}', true)">${q}</button></div>`});
   const h = re => re.test(t);
   const DIA = /\b(hoy|manana|pasado|ayer|lunes|martes|miercoles|jueves|viernes|sabado|domingo|semana|finde|fin de semana)\b/;
   const AGENDA = /\b(tengo|tareas?|agenda|pendientes?|planes?|citas?|reunion|reuniones|calendario|ocupad[oa]|libre|queda|quedan|toca|que hay|que viene|siguiente|proxima)\b/;
@@ -4668,8 +4670,8 @@ function vozIntento(texto){
     return r(`Todavía no puedo mirar el tiempo. Te recomiendo echar un vistazo por la ventana: es la previsión más fiable.`);
   // ánimo
   // 6.03: más flexible (Gustavo: «le dije "dame un poco de ánimo" y ya no me respondió»)
-  if(h(/\b(chistes?|gracios[oa]|hazme reir|reirme|divertid[oa]|bromas?|chascarrillo)\b/)) return r(unoDe(GAIA_CHISTES, 'chistes'));
-  if(h(/\b(frases?|motiva(me|r|rme|cion)?|motivad[oa]|anima(me|r|rme)?|animos?|alienta(me)?|aliento|inspira(me|cion)?|consejos?|fuerzas|empujon|positiv[oa])\b/)) return r(unoDe(GAIA_FRASES, 'frases'));
+  if(h(/\b(chistes?|gracios[oa]|hazme reir|reirme|divertid[oa]|bromas?|chascarrillo)\b/)) return otro(r(unoDe(GAIA_CHISTES, 'chistes')), 'Cuéntame otro chiste');
+  if(h(/\b(frases?|motiva(me|r|rme|cion)?|motivad[oa]|anima(me|r|rme)?|animos?|alienta(me)?|aliento|inspira(me|cion)?|consejos?|fuerzas|empujon|positiv[oa])\b/)) return otro(r(unoDe(GAIA_FRASES, 'frases')), 'Dame más ánimos');
   if(h(/\b(estoy|me siento|ando) (muy )?(cansad[oa]|agotad[oa]|reventad[oa])\b/))
     return r(`Gracias por decírmelo${tu}. Descansar también es avanzar. ¿Qué tal una pausa de diez minutos, un vaso de agua y estirar un poco? Luego sigue solo con lo más importante.`);
   if(h(/\b(estoy|me siento|ando) (muy )?(triste|mal|baj[oa]|desanimad[oa]|sol[oa])\b/))
@@ -4705,6 +4707,7 @@ function vozResponder(texto, oido){
   const chat = $('#voz-chat');
   if(chat){   // 5.93: se añade a la conversación y se sube hasta tu pregunta
     const q = (texto || '').trim(), pq = q.charAt(0).toUpperCase() + q.slice(1);
+    chat.querySelectorAll('.voz-otro').forEach(x => x.remove());   // 6.09: solo el botón de la última respuesta
     chat.insertAdjacentHTML('beforeend', `<div class="voz-yo">${esc(pq)}</div><div class="voz-ella">${r.html}</div>`);
     const hi = $('#hoja .hoja-in'), yo = chat.querySelectorAll('.voz-yo'), ult = yo[yo.length - 1], cab = $('.voz-cab');
     if(hi && ult) requestAnimationFrame(() => { hi.scrollTop += ult.getBoundingClientRect().top - hi.getBoundingClientRect().top - (cab ? cab.offsetHeight : 0) - 12; });
