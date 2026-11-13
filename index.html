@@ -2408,7 +2408,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.15';
+const VERSION = 'v6.16';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -7903,7 +7903,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.57';   // última app Android publicada
+const APK_ULTIMA = '2.58';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
