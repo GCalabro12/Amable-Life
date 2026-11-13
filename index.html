@@ -458,7 +458,7 @@ img,svg{-webkit-user-drag:none}
 .voz-pregs-g{margin:6px 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
 .voz-pregs-g:first-child{margin-top:0}
 .voz-pregs-c{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
-.voz-pregs-c .voz-chip{padding:7px 12px;font-size:14px}
+.voz-pregs-c .voz-chip{padding:6px 11px;font-size:13.5px}
 .voz-pro{position:sticky;bottom:-12px;margin:8px -12px -12px;padding:10px 14px 12px;border-radius:0 0 16px 16px;background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(236,72,153,.14)),var(--tarjeta);box-shadow:0 -6px 10px -8px rgba(60,30,110,.25);color:var(--tinta);font-size:14px;line-height:1.4}
 .voz-chat{flex:1;display:flex;flex-direction:column;gap:10px;padding:14px 0 10px;text-align:left}
 .voz-ella{align-self:stretch;min-width:0;color:var(--tinta);line-height:1.45;overflow-wrap:anywhere}
@@ -2346,7 +2346,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.99';
+const VERSION = 'v6.00';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4779,7 +4779,26 @@ function vozPregs(abrir){
   const l = $('#voz-pregs-l'), b = $('.voz-pregs-b'); if(!l || !b) return;
   const on = abrir === undefined ? l.hidden : !!abrir;
   l.hidden = !on; b.setAttribute('aria-expanded', on ? 'true' : 'false'); b.classList.toggle('abierto', on);
-  if(on){ l.scrollTop = 0; vozVoces(false); }
+  if(on){ l.scrollTop = 0; vozVoces(false); vozPregsJuntar(); }
+}
+/* 6.00 (Gustavo: «compacta el ¿Dónde vives?, ponlo en el renglón de arriba, que hay espacio, y así en otros casos»):
+   al abrir la lista, en cada grupo se reparten las preguntas en el menor número de renglones (las más largas primero, cada una en el
+   primer renglón donde quepa) y dentro de cada renglón se deja su orden de siempre. Se rehace con el ancho de cada pantalla. */
+function vozPregsJuntar(){
+  document.querySelectorAll('.voz-pregs-c').forEach(c => {
+    const W = c.clientWidth, cs = getComputedStyle(c), g = parseFloat(cs.columnGap || cs.gap) || 6;
+    if(!W) return;
+    const L = [...c.children].map((b, i) => ({b, i: +(b.dataset.i ?? (b.dataset.i = i)), w: b.getBoundingClientRect().width}));
+    L.sort((a, b) => a.i - b.i);
+    const filas = [];
+    [...L].sort((a, b) => b.w - a.w || a.i - b.i).forEach(x => {
+      const f = filas.find(f => f.usado + g + x.w <= W + .5);
+      if(f){ f.usado += g + x.w; f.L.push(x); } else filas.push({usado: x.w, L: [x]});
+    });
+    filas.forEach(f => f.L.sort((a, b) => a.i - b.i));
+    filas.sort((a, b) => a.L[0].i - b.L[0].i);
+    filas.forEach(f => f.L.forEach(x => c.appendChild(x.b)));
+  });
 }
 function vozVoces(abrir){
   const c = $('#voz-voces'), b = $('.voz-voz-b'); if(!c) return;
