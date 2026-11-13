@@ -420,12 +420,17 @@ img,svg{-webkit-user-drag:none}
 .voz-quien{margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
 .voz-saludo{font-size:17px}
 /* 5.93: la ventana de Gaia como una conversación */
-.hoja-in:has(.voz-hoja){background:var(--tarjeta);padding-bottom:0;height:min(86vh,760px)}
-.voz-hoja{display:flex;flex-direction:column;min-height:calc(min(86vh,760px) - 46px)}
-.voz-hoja .voz-cab{position:sticky;top:-16px;z-index:1;margin:-16px -18px 0;padding:16px 18px 10px;background:var(--tarjeta);box-shadow:0 8px 12px -10px rgba(60,30,110,.25)}
+/* 5.94 (Gustavo): a pantalla completa en el móvil; la cruz va dentro de la cabecera fija (la flotante estrechaba la ventana y el texto asomaba por la derecha) */
+.hoja-in:has(.voz-hoja){background:var(--tarjeta);padding-bottom:0;display:flex;flex-direction:column;height:100vh;height:100dvh;max-height:100dvh;border-radius:0;max-width:none}
+.hoja-in:has(.voz-hoja) > .hoja-x,.hoja-in:has(.voz-hoja) > .hoja-asa{display:none}
+@media (min-width:900px){ .hoja-in:has(.voz-hoja){height:min(90vh,820px);max-height:min(90vh,820px);max-width:560px;border-radius:24px} }
+.voz-hoja{flex:1 0 auto;display:flex;flex-direction:column;min-width:0}
+.voz-hoja .voz-x{position:absolute;top:14px;right:14px;float:none;margin:0}
+.voz-hoja .voz-cab{position:sticky;top:-16px;z-index:1;margin:-16px -18px 0;padding:calc(16px + env(safe-area-inset-top)) 18px 10px;background:var(--tarjeta);box-shadow:0 8px 12px -10px rgba(60,30,110,.25)}
 .voz-hoja .gaia-viva{width:clamp(110px,32vw,150px);height:clamp(110px,32vw,150px)}
 .voz-chat{flex:1;display:flex;flex-direction:column;gap:10px;padding:14px 0 10px;text-align:left}
-.voz-ella{align-self:stretch;color:var(--tinta);line-height:1.45}
+.voz-ella{align-self:stretch;min-width:0;color:var(--tinta);line-height:1.45;overflow-wrap:anywhere}
+.voz-ella .voz-lista li > *{min-width:0;overflow-wrap:anywhere}
 .voz-yo{align-self:flex-start;max-width:85%;padding:10px 14px;border-radius:16px 16px 16px 4px;background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.25);color:var(--tinta);font-weight:600;text-align:left;white-space:pre-wrap;word-break:break-word;margin-top:6px}
 .voz-chat .voz-atajos{justify-content:flex-start;margin-top:2px}
 .voz-chat .voz-cambiar{margin:4px 0 0}
@@ -433,7 +438,9 @@ img,svg{-webkit-user-drag:none}
 .voz-pie .voz-oido{min-height:0;margin:0 0 4px;text-align:left}
 .voz-pie .voz-oido:empty{display:none}
 .voz-hoja .voz-pie .voz-estado{margin:0 0 6px;font-size:13px;text-align:left}
-.voz-pie .voz-escribe{margin:0 auto}
+.voz-pie .voz-escribe{margin:0;max-width:none}
+.voz-pie .voz-estado:empty{display:none}
+.voz-pie{padding-top:10px}
 .voz-cara{--nivel:0;position:relative;width:112px;height:112px;margin:0 auto;display:grid;place-items:center}
 .voz-cara i{position:absolute;inset:22px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.28),rgba(139,92,246,.08) 70%);transform:scale(.9);transition:transform .12s ease-out,opacity .2s;opacity:.5}
 .voz-cara.escuchando i:first-child{transform:scale(calc(1.05 + var(--nivel) * .45));opacity:.9}
@@ -2307,7 +2314,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.93';
+const VERSION = 'v5.94';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4363,8 +4370,31 @@ const caraGaia = cls => ARIA_CARA.replace('class="aria-cara"', `class="${cls}"`)
    encima de la imagen; solo se ve y se mueve mientras Gaia habla (gaiaHabla). */
 const GAIA_VIVA = '<span class="gaia-viva" id="gaia-viva"><img class="aria-cara" src="img/gaia-quieta.jpg" alt="" aria-hidden="true" draggable="false"><video src="img/gaia-habla.mp4?v=3" muted loop playsinline preload="auto" aria-hidden="true" disablepictureinpicture></video></span>';
 let gaiaT = 0;
+/* 5.94 (Gustavo: «que conforme vaya leyendo, el texto vaya avanzando y se vea siempre en el medio lo que está leyendo»):
+   se calcula por dónde va (lo que dura la lectura, unos 14 caracteres por segundo) y la ventana baja para que eso quede en el
+   medio. Si tocas o desplazas tú la ventana, deja de seguir. */
+let gaiaLee = null, gaiaLeeT = 0;
+function gaiaSeguir(el, texto){
+  clearInterval(gaiaLeeT); gaiaLee = null;
+  const hi = $('#hoja .hoja-in'); if(!el || !hi) return;
+  const txt = vozSinEmojis(texto || ''), frases = (txt.match(/[.:!?]/g) || []).length;
+  gaiaLee = {el, hi, ini: 0, dur: Math.max(1500, txt.length / 14 * 1000 + frases * 350), fin: false};
+  if(!hi._seguir){ hi._seguir = 1; ['wheel', 'touchstart', 'mousedown'].forEach(t => hi.addEventListener(t, ev => { if(!ev.target.closest('.voz-pie')) gaiaLee = null; }, {passive: true})); }
+  gaiaLeeT = setInterval(() => {
+    const L = gaiaLee; if(!L || !L.el.isConnected){ clearInterval(gaiaLeeT); return; }
+    if(!L.ini) return;   // aún no ha empezado a hablar
+    const p = L.fin ? 1 : Math.min(1, (Date.now() - L.ini) / L.dur);
+    const hr = L.hi.getBoundingClientRect(), er = L.el.getBoundingClientRect();
+    const cab = $('.voz-cab'), pie = $('.voz-pie'), ch = cab ? cab.offsetHeight : 0, ph = pie ? pie.offsetHeight : 0;
+    const medio = hr.top + ch + (hr.height - ch - ph) / 2, punto = er.top + er.height * p;
+    const d = punto - medio;
+    if(d > 2) L.hi.scrollTop += Math.max(1, d * .2);
+    if(L.fin && d <= 2){ clearInterval(gaiaLeeT); gaiaLee = null; }
+  }, 60);
+}
 function gaiaHabla(on){
   clearTimeout(gaiaT);
+  if(gaiaLee){ if(on && !gaiaLee.ini) gaiaLee.ini = Date.now(); if(!on && gaiaLee.ini && Date.now() - gaiaLee.ini > 700) gaiaLee.fin = true; }   // el cancel de la lectura anterior no cuenta
   const g = $('#gaia-viva'); if(!g) return; const v = g.querySelector('video');
   g.classList.toggle('habla', !!on);
   if(!v) return;
@@ -4557,7 +4587,8 @@ function vozResponder(texto, oido){
     const hi = $('#hoja .hoja-in'), yo = chat.querySelectorAll('.voz-yo'), ult = yo[yo.length - 1], cab = $('.voz-cab');
     if(hi && ult) requestAnimationFrame(() => { hi.scrollTop += ult.getBoundingClientRect().top - hi.getBoundingClientRect().top - (cab ? cab.offsetHeight : 0) - 12; });
   }
-  const es = $('#voz-estado'); if(es) es.textContent = 'Toca el micrófono para preguntar otra vez.';
+  const es = $('#voz-estado'); if(es) es.textContent = '';
+  gaiaSeguir(chat ? chat.lastElementChild : null, r.texto);
   vozDecir(r.texto);
 }
 function vozEscuchar(btn){
@@ -4567,7 +4598,7 @@ function vozEscuchar(btn){
   gaiaHabla(false); if(esApp){ try{ if(appAsis('callarAsistente')) AndroidEquilibra.callarAsistente(); }catch(e){} }
   const es = $('#voz-estado'), o = $('#voz-oido');
   if(appAsis('escuchar')){   // 5.75: la app 2.55 escucha dentro de este cuadro, sin la ventana de Google
-    if(btn.classList.contains('escuchando')){ AndroidEquilibra.dejarDeEscuchar(); vozEstado(''); if(es) es.textContent = 'Toca el micrófono para preguntar.'; return; }
+    if(btn.classList.contains('escuchando')){ AndroidEquilibra.dejarDeEscuchar(); vozEstado(''); if(es) es.textContent = ''; return; }
     try{ AndroidEquilibra.callarAsistente(); }catch(e){}
     if(o) o.textContent = ''; vozEstado('escuchando'); if(es) es.textContent = 'Te escucho…'; AndroidEquilibra.escuchar(); return;
   }
@@ -4593,9 +4624,9 @@ function vozEscuchar(btn){
       'network': 'El reconocimiento de voz del navegador necesita internet y ahora no responde. Escríbeme en el recuadro.',
       'no-speech': 'No te he oído. Toca el micrófono y pregunta otra vez, o escríbeme en el recuadro.',
       'language-not-supported': 'Este navegador no entiende el español hablado. Escríbeme en el recuadro.',
-      'aborted': 'Toca el micrófono para preguntar.'
+      'aborted': ''
     }[e.error];
-    msg(m || `No he podido escucharte (${e.error}). Escríbeme en el recuadro.`);
+    msg(m === '' ? '' : m || `No he podido escucharte (${e.error}). Escríbeme en el recuadro.`);
     if(e.error !== 'aborted' && e.error !== 'no-speech') vozFoco();
   };
   r.onend = () => {
@@ -4664,11 +4695,11 @@ function abrirVoz(){
   const n = nombrePila();
   // 5.93 (Gustavo): una conversación: tus preguntas en un cuadro a la izquierda; al subir, sube todo menos Gaia (fija arriba);
   // el recuadro de escribir siempre abajo del todo
-  mostrarHoja(`<div class="voz-hoja"><div class="voz-cab">${GAIA_VIVA}<div><p class="voz-quien">Tu asistente de Amable Life</p><h2>${NOMBRE_ASIS}</h2></div></div>
+  mostrarHoja(`<div class="voz-hoja"><div class="voz-cab"><button class="hoja-x voz-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button>${GAIA_VIVA}<div><p class="voz-quien">Tu asistente de Amable Life</p><h2>${NOMBRE_ASIS}</h2></div></div>
     <div class="voz-chat" id="voz-chat"><div class="voz-ella voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</div>
       <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('¿Qué tengo hoy?', true)">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('¿Y mañana?', true)">¿Y mañana?</button></div>
       ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>
-    <div class="voz-pie"><p class="voz-oido" id="voz-oido"></p><p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
+    <div class="voz-pie"><p class="voz-oido" id="voz-oido"></p><p class="voz-estado" id="voz-estado"></p>
     <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form></div></div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
   vozEscuchar($('#voz-mic'));
