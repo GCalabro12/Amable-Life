@@ -443,11 +443,18 @@ img,svg{-webkit-user-drag:none}
 .voz-hoja .voz-x{position:static;z-index:auto;width:38px;height:38px;margin:0;justify-self:end;background:rgba(139,92,246,.12);color:#6d28d9}
 .voz-hoja .voz-x:active{background:rgba(139,92,246,.24)}
 .voz-chat > .voz-quien{text-align:center;margin:0 0 2px}
-.voz-pregs{position:relative;margin:0 0 8px}
-.voz-pregs-b{display:flex;align-items:center;gap:6px;margin:0 auto;padding:6px 14px;border:0;border-radius:999px;background:rgba(139,92,246,.1);color:#6d28d9;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+/* 5.99: renglón debajo del recuadro con «Cambiar la voz» y «¿Qué responde Gaia?»; sus listas se abren encima del recuadro */
+.voz-fila{display:flex;gap:8px;margin:10px 0 0}
+.voz-fila-b{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 10px;border:0;border-radius:999px;background:rgba(139,92,246,.1);color:#6d28d9;font:inherit;font-size:clamp(12.5px,3.5vw,14px);letter-spacing:-.01em;font-weight:800;cursor:pointer;white-space:nowrap}
+.voz-fila-b span{overflow:hidden;text-overflow:ellipsis}
+.voz-fila .voz-voz-b{flex:0 1 auto}
+.voz-fila-b svg{flex:none}
+.voz-fila-b.abierto{background:rgba(139,92,246,.2)}
 .voz-pregs-b svg{transition:transform .2s}
 .voz-pregs-b.abierto svg{transform:rotate(180deg)}
-.voz-pregs-l{max-height:min(52vh,420px);overflow:auto;margin:0 0 8px;padding:12px;border:1.5px solid rgba(139,92,246,.3);border-radius:18px;background:var(--tarjeta);text-align:left}
+.voz-panel{max-height:min(52vh,420px);overflow:auto;margin:0 0 8px;padding:12px;border:1.5px solid rgba(139,92,246,.3);border-radius:18px;background:var(--tarjeta);text-align:left}
+.voz-panel.voz-voces{display:flex;flex-direction:column;gap:6px}
+.voz-panel[hidden]{display:none}
 .voz-pregs-g{margin:6px 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
 .voz-pregs-g:first-child{margin-top:0}
 .voz-pregs-c{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
@@ -2339,7 +2346,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.98';
+const VERSION = 'v5.99';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4488,7 +4495,7 @@ function vozDecir(texto){
   }
   if(!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
-  const vs = speechSynthesis.getVoices(), v = vs.find(x => /Helena/i.test(x.name)) || vs.find(x => x.lang === 'es-ES') || vs.find(x => /^es/i.test(x.lang));
+  const v = vozWebElegida();   // 5.99: la que elegiste en «Cambiar la voz» (si no, Helena o la primera de mujer en español)
   // frase a frase: Chrome corta las lecturas muy largas
   const partes = texto.split(/(?<=[.:])\s+/).filter(Boolean);
   vozHabla = true;
@@ -4682,8 +4689,10 @@ window.nativeHabla = tipo => gaiaHabla(tipo === 'empieza');
 /* 5.88 (Gustavo: «sale una voz de hombre»): en la app 2.56, elegir la voz de Gaia entre las del teléfono */
 function vozElegir(){
   const c = $('#voz-voces'); if(!c) return;
-  if(!c.hidden){ c.hidden = true; return; }
-  c.hidden = false; c.innerHTML = '<p class="voz-v-t">Buscando las voces del teléfono…</p>';
+  if(!c.hidden){ vozVoces(false); return; }
+  vozPregs(false); vozVoces(true);
+  if(!appAsis('vocesAsistente')){ vozElegirWeb(c); return; }
+  c.innerHTML = '<p class="voz-v-t">Buscando las voces del teléfono…</p>';
   try{ AndroidEquilibra.prepararVozAsistente(); }catch(e){}
   let n = 0;
   const pinta = () => {
@@ -4696,6 +4705,40 @@ function vozElegir(){
       <b>Voz ${i + 1}${v.mujer ? ' · mujer' : v.hombre ? ' · hombre' : ''}</b><span>${pais(v.l)}${v.red ? ' · necesita internet' : ''}</span>${v.sel ? '<i>✓</i>' : ''}</button>`).join('');
   };
   pinta();
+}
+/* 5.99: en el navegador, las voces en español del sistema; la elegida se recuerda en este aparato (equilibra.vozGaia) */
+const VOZ_MUJER = /helena|laura|elvira|sabina|paulina|monica|mónica|lucia|lucía|dalia|elena|marisol|paloma|conchita|ximena|abril|camila|catalina|salome|salomé|larissa|penelope|penélope|lupe|female|mujer|google español/i;
+const VOZ_HOMBRE = /pablo|jorge|alvaro|álvaro|raul|raúl|diego|enrique|miguel|juan|carlos|gonzalo|tomas|tomás|jose|josé|male|hombre/i;
+function vozWebLista(){
+  const vs = 'speechSynthesis' in window ? speechSynthesis.getVoices().filter(v => /^es/i.test(v.lang)) : [];
+  const m = v => VOZ_MUJER.test(v.name) && !/\bmale\b/i.test(v.name) ? 1 : 0, h = v => VOZ_HOMBRE.test(v.name) ? 1 : 0;
+  return vs.map(v => ({v, mujer: m(v), hombre: h(v) && !m(v)})).sort((a, b) => (b.mujer - a.mujer) || (a.hombre - b.hombre) || (b.v.lang === 'es-ES') - (a.v.lang === 'es-ES') || a.v.name.localeCompare(b.v.name));
+}
+function vozWebElegida(){
+  const L = vozWebLista(); let n = ''; try{ n = localStorage.getItem('equilibra.vozGaia') || ''; }catch(e){}
+  const f = n && L.find(x => x.v.name === n);
+  return f ? f.v : (L.find(x => /Helena/i.test(x.v.name)) || L.find(x => x.mujer && x.v.lang === 'es-ES') || L.find(x => x.mujer) || L.find(x => x.v.lang === 'es-ES') || L[0] || {}).v || null;
+}
+function vozElegirWeb(c){
+  let n = 0;
+  const pinta = () => {
+    const L = vozWebLista();
+    if(!L.length && n++ < 10){ c.innerHTML = '<p class="voz-v-t">Buscando las voces…</p>'; setTimeout(pinta, 300); return; }
+    if(!L.length){ c.innerHTML = '<p class="voz-v-t">Este navegador no tiene voces en español.</p>'; return; }
+    const sel = vozWebElegida();
+    const pais = l => ({'es-ES': 'España', 'es-US': 'Latinoamérica', 'es-MX': 'México', 'es-AR': 'Argentina', 'es-CO': 'Colombia'})[l] || l;
+    const nom = v => v.name.replace(/^(Microsoft|Google)\s+/i, '').replace(/\s*[-–(].*$/, '').replace(/\s+Online.*$/i, '').trim() || v.name;
+    c.innerHTML = `<p class="voz-v-t">Toca una voz para oírla y quedártela.</p>` + L.map((x, i) => `<button type="button" class="voz-v ${x.v === sel ? 'sel' : ''}" onclick="vozPonerVozWeb(${i})" data-n="${esc(x.v.name)}">
+      <b>${esc(nom(x.v))}${x.mujer ? ' · mujer' : x.hombre ? ' · hombre' : ''}</b><span>${pais(x.v.lang)}${x.v.localService === false ? ' · necesita internet' : ''}</span>${x.v === sel ? '<i>✓</i>' : ''}</button>`).join('');
+  };
+  pinta();
+}
+function vozPonerVozWeb(i){
+  const bs = [...document.querySelectorAll('#voz-voces .voz-v')], b = bs[i]; if(!b) return;
+  bs.forEach(x => { x.classList.toggle('sel', x === b); const k = x.querySelector('i'); if(k) k.remove(); });
+  b.insertAdjacentHTML('beforeend', '<i>✓</i>');
+  try{ localStorage.setItem('equilibra.vozGaia', b.dataset.n); }catch(e){}
+  vozDecir('Hola, soy Gaia. Así sonará mi voz.');
 }
 function vozPonerVoz(i){
   const b = [...document.querySelectorAll('#voz-voces .voz-v')][i]; if(!b) return;
@@ -4723,16 +4766,24 @@ const GAIA_PREGS = [
   ['Amable Life', ['¿Qué es Amable Life?', '¿Qué es Focus?', '¿Cómo añado una tarea?', '¿Cuánto cuesta?']],
   ['Para tu día', ['¿Qué hora es?', '¿Qué día es hoy?', 'Cuéntame un chiste', 'Dame ánimo', 'No llego a todo']]];
 function vozPregsHTML(){
-  return `<div class="voz-pregs" id="voz-pregs"><div class="voz-pregs-l" id="voz-pregs-l" hidden>
+  return `<div class="voz-panel voz-pregs-l" id="voz-pregs-l" hidden>
     ${GAIA_PREGS.map(([g, L]) => `<p class="voz-pregs-g">${esc(g)}</p><div class="voz-pregs-c">${L.map(q => `<button type="button" class="voz-chip" onclick="vozPregElegir(this)">${esc(q)}</button>`).join('')}</div>`).join('')}
-    <p class="voz-pro"><b>Hazte Pro:</b> con la cuenta Pro podrás preguntarme cualquier cosa.</p></div>
-    <button type="button" class="voz-pregs-b" aria-expanded="false" aria-controls="voz-pregs-l" onclick="vozPregs()"><span>Preguntas que respondo</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button></div>`;
+    <p class="voz-pro"><b>Hazte Pro:</b> con la cuenta Pro podrás preguntarme cualquier cosa.</p></div>`;
+}
+/* 5.99 (Gustavo): debajo del recuadro, en un renglón, «Cambiar la voz» y «¿Qué responde Gaia?»; cada uno abre su lista encima del recuadro */
+function vozFilaHTML(){
+  const voz = appAsis('vocesAsistente') || (!esApp && 'speechSynthesis' in window);
+  return `<div class="voz-fila">${voz ? `<button type="button" class="voz-fila-b voz-voz-b" aria-expanded="false" aria-controls="voz-voces" onclick="vozElegir()">${ICO_ALTAVOZ}<span>Cambiar la voz</span></button>` : ''}<button type="button" class="voz-fila-b voz-pregs-b" aria-expanded="false" aria-controls="voz-pregs-l" onclick="vozPregs()"><span>¿Qué responde Gaia?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button></div>`;
 }
 function vozPregs(abrir){
   const l = $('#voz-pregs-l'), b = $('.voz-pregs-b'); if(!l || !b) return;
   const on = abrir === undefined ? l.hidden : !!abrir;
   l.hidden = !on; b.setAttribute('aria-expanded', on ? 'true' : 'false'); b.classList.toggle('abierto', on);
-  if(on) l.scrollTop = 0;
+  if(on){ l.scrollTop = 0; vozVoces(false); }
+}
+function vozVoces(abrir){
+  const c = $('#voz-voces'), b = $('.voz-voz-b'); if(!c) return;
+  c.hidden = !abrir; if(b){ b.setAttribute('aria-expanded', abrir ? 'true' : 'false'); b.classList.toggle('abierto', !!abrir); }
 }
 function vozPregElegir(btn){ vozPregs(false); vozResponder(btn.textContent, true); }
 function abrirVoz(){
@@ -4743,12 +4794,12 @@ function abrirVoz(){
   mostrarHoja(`<div class="voz-hoja"><div class="voz-cab"><div class="voz-top"><span class="voz-logo" aria-label="Amable Life"><svg viewBox="-100 -100 200 200" width="34" height="34" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1V')}</svg></span><h2>${NOMBRE_ASIS}</h2><button class="hoja-x voz-x" type="button" aria-label="Cerrar" onclick="cerrarHojaX()">${ICO_CRUZ}</button></div>${GAIA_VIVA}</div>
     <div class="voz-chat" id="voz-chat"><p class="voz-quien">Tu asistente de Amable Life</p><div class="voz-ella voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</div>
       <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('¿Qué tengo hoy?', true)">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('¿Y mañana?', true)">¿Y mañana?</button></div>
-      ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>
+</div>
     <div class="voz-pie"><p class="voz-oido" id="voz-oido"></p><p class="voz-estado" id="voz-estado"></p>
-    ${vozPregsHTML()}
-    <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form></div></div>`, '#8b5cf6');
+    ${vozPregsHTML()}<div class="voz-panel voz-voces" id="voz-voces" hidden></div>
+    <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>${vozFilaHTML()}</div></div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
-  vozEscuchar($('#voz-mic'));
+  // 5.99 (Gustavo): ya no empieza escuchando (nadie reacciona en ese segundo); se escucha al tocar el micrófono
 }
 
 /* ---------- Calendario propio (web 3.64; idea de Grow Panel, fase 1 aprobada por Gustavo) ----------
