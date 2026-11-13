@@ -385,7 +385,7 @@ img,svg{-webkit-user-drag:none}
 .voz-mic svg{width:34px;height:34px}
 .voz-oido{min-height:1.3em;margin:12px 0 4px;font-style:italic;color:var(--suave)}
 .voz-resp{text-align:left}
-.voz-resp .voz-titulo{margin:6px 0 8px;font-weight:700;color:var(--tinta)}
+.voz-resp .voz-titulo,.voz-ella .voz-titulo{margin:6px 0 8px;font-weight:700;color:var(--tinta)}
 .voz-lista{list-style:none;margin:0;padding:0}
 .voz-lista li{display:flex;gap:12px;padding:8px 0;border-top:1px solid rgba(var(--bl),.12)}
 .voz-lista li b{flex:none;min-width:92px;font-variant-numeric:tabular-nums}
@@ -418,7 +418,22 @@ img,svg{-webkit-user-drag:none}
 @media (prefers-reduced-motion:reduce){.gaia-viva.habla{animation:none}}
 .aria-cara{width:64px;height:64px;flex:none;object-fit:cover;border-radius:50%;box-shadow:0 4px 16px rgba(139,92,246,.4)}
 .voz-quien{margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6}
-.voz-saludo{margin:2px 0 14px;font-size:17px;color:var(--tinta)}
+.voz-saludo{font-size:17px}
+/* 5.93: la ventana de Gaia como una conversación */
+.hoja-in:has(.voz-hoja){background:var(--tarjeta);padding-bottom:0;height:min(86vh,760px)}
+.voz-hoja{display:flex;flex-direction:column;min-height:calc(min(86vh,760px) - 46px)}
+.voz-hoja .voz-cab{position:sticky;top:-16px;z-index:1;margin:-16px -18px 0;padding:16px 18px 10px;background:var(--tarjeta);box-shadow:0 8px 12px -10px rgba(60,30,110,.25)}
+.voz-hoja .gaia-viva{width:clamp(110px,32vw,150px);height:clamp(110px,32vw,150px)}
+.voz-chat{flex:1;display:flex;flex-direction:column;gap:10px;padding:14px 0 10px;text-align:left}
+.voz-ella{align-self:stretch;color:var(--tinta);line-height:1.45}
+.voz-yo{align-self:flex-start;max-width:85%;padding:10px 14px;border-radius:16px 16px 16px 4px;background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.25);color:var(--tinta);font-weight:600;text-align:left;white-space:pre-wrap;word-break:break-word;margin-top:6px}
+.voz-chat .voz-atajos{justify-content:flex-start;margin-top:2px}
+.voz-chat .voz-cambiar{margin:4px 0 0}
+.voz-pie{position:sticky;bottom:0;z-index:1;margin:0 -18px;padding:6px 18px calc(14px + env(safe-area-inset-bottom));background:var(--tarjeta);box-shadow:0 -8px 12px -10px rgba(60,30,110,.25)}
+.voz-pie .voz-oido{min-height:0;margin:0 0 4px;text-align:left}
+.voz-pie .voz-oido:empty{display:none}
+.voz-hoja .voz-pie .voz-estado{margin:0 0 6px;font-size:13px;text-align:left}
+.voz-pie .voz-escribe{margin:0 auto}
 .voz-cara{--nivel:0;position:relative;width:112px;height:112px;margin:0 auto;display:grid;place-items:center}
 .voz-cara i{position:absolute;inset:22px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.28),rgba(139,92,246,.08) 70%);transform:scale(.9);transition:transform .12s ease-out,opacity .2s;opacity:.5}
 .voz-cara.escuchando i:first-child{transform:scale(calc(1.05 + var(--nivel) * .45));opacity:.9}
@@ -2292,7 +2307,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.92';
+const VERSION = 'v5.93';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4534,8 +4549,14 @@ function vozIntento(texto){
 function vozResponder(texto, oido){
   const i = vozIntento(texto);
   const [k, nom] = vozDia(texto), r = i || vozAgenda(k, nom);
-  const o = $('#voz-oido'); if(o) o.textContent = oido && texto ? `«${texto}»` : '';
-  const re = $('#voz-resp'); if(re) re.innerHTML = r.html;
+  const o = $('#voz-oido'); if(o) o.textContent = '';
+  const chat = $('#voz-chat');
+  if(chat){   // 5.93: se añade a la conversación y se sube hasta tu pregunta
+    const q = (texto || '').trim(), pq = q.charAt(0).toUpperCase() + q.slice(1);
+    chat.insertAdjacentHTML('beforeend', `<div class="voz-yo">${esc(pq)}</div><div class="voz-ella">${r.html}</div>`);
+    const hi = $('#hoja .hoja-in'), yo = chat.querySelectorAll('.voz-yo'), ult = yo[yo.length - 1], cab = $('.voz-cab');
+    if(hi && ult) requestAnimationFrame(() => { hi.scrollTop += ult.getBoundingClientRect().top - hi.getBoundingClientRect().top - (cab ? cab.offsetHeight : 0) - 12; });
+  }
   const es = $('#voz-estado'); if(es) es.textContent = 'Toca el micrófono para preguntar otra vez.';
   vozDecir(r.texto);
 }
@@ -4641,13 +4662,14 @@ window.nativeEscucha = (tipo, texto) => {
 function abrirVoz(){
   vozParar();
   const n = nombrePila();
+  // 5.93 (Gustavo): una conversación: tus preguntas en un cuadro a la izquierda; al subir, sube todo menos Gaia (fija arriba);
+  // el recuadro de escribir siempre abajo del todo
   mostrarHoja(`<div class="voz-hoja"><div class="voz-cab">${GAIA_VIVA}<div><p class="voz-quien">Tu asistente de Amable Life</p><h2>${NOMBRE_ASIS}</h2></div></div>
-    <p class="voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</p>
-    <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>
-    <p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
-    <p class="voz-oido" id="voz-oido"></p><div class="voz-resp" id="voz-resp"></div>
-    <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('hoy')">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('mañana')">¿Y mañana?</button></div>
-    ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>`, '#8b5cf6');
+    <div class="voz-chat" id="voz-chat"><div class="voz-ella voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</div>
+      <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('¿Qué tengo hoy?', true)">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('¿Y mañana?', true)">¿Y mañana?</button></div>
+      ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>
+    <div class="voz-pie"><p class="voz-oido" id="voz-oido"></p><p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
+    <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form></div></div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
   vozEscuchar($('#voz-mic'));
 }
