@@ -394,10 +394,17 @@ img,svg{-webkit-user-drag:none}
 .voz-atajos{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
 /* 5.89 (Gustavo): el botón de enviar dentro del cuadro, a la derecha, con el triángulo de enviar */
 .voz-escribe{position:relative;display:flex;max-width:440px;margin:14px auto 0}
-.voz-escribe input{flex:1;min-width:0;border:1.5px solid rgba(139,92,246,.4);border-radius:999px;padding:12px 54px 12px 18px;font:inherit;background:var(--tarjeta);color:var(--tinta)}
+.voz-escribe input{flex:1;min-width:0;border:1.5px solid rgba(139,92,246,.4);border-radius:999px;padding:12px 98px 12px 18px;font:inherit;background:var(--tarjeta);color:var(--tinta)}
 .voz-escribe input:focus{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.18)}
-.voz-escribe button{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:50%;display:grid;place-items:center;padding:0 0 0 3px;color:#fff;background:linear-gradient(135deg,#8b5cf6,#ec4899);box-shadow:0 3px 10px rgba(139,92,246,.35);cursor:pointer}
-.voz-escribe button:active{transform:translateY(-50%) scale(.94)}
+.voz-escribe .voz-env{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:50%;display:grid;place-items:center;padding:0 0 0 3px;color:#fff;background:linear-gradient(135deg,#8b5cf6,#ec4899);box-shadow:0 3px 10px rgba(139,92,246,.35);cursor:pointer}
+.voz-escribe .voz-env:active,.voz-escribe .voz-mic-in:active{transform:translateY(-50%) scale(.94)}
+/* 5.91 (Gustavo): el micrófono dentro del recuadro, justo a la izquierda de enviar; rojo y latiendo mientras escucha */
+.voz-escribe .voz-mic-in{position:absolute;right:50px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:50%;display:grid;place-items:center;padding:0;color:#8b5cf6;background:rgba(139,92,246,.12);cursor:pointer}
+.voz-escribe .voz-mic-in.escuchando{color:#fff;background:linear-gradient(135deg,#e2456b,#f97316);animation:micLate 1.2s ease-in-out infinite}
+.voz-escribe.escuchando input{border-color:#e2456b;box-shadow:0 0 0 calc(3px + var(--nivel,0) * 5px) rgba(226,69,107,.18)}
+.voz-escribe.pensando input{border-color:#8b5cf6}
+@keyframes micLate{0%,100%{box-shadow:0 0 0 0 rgba(226,69,107,.45)}50%{box-shadow:0 0 0 7px rgba(226,69,107,0)}}
+.voz-hoja .voz-escribe + .voz-estado{margin-top:10px}
 /* 5.75: cuadro propio de asistente (en la app ya no sale el de Google) */
 .voz-cab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}   /* 5.87 (Gustavo: «que Gaia se vea en grande»): la cara arriba, grande y en el centro */
 .voz-cab h2{margin:0}
@@ -2285,7 +2292,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v5.90';
+const VERSION = 'v5.91';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -4476,7 +4483,7 @@ function vozEscuchar(btn){
     campoDictado = {get value(){ return ''; }, set value(v){ btn.classList.remove('escuchando'); vozResponder(v, true); }, maxLength: 500, dispatchEvent(){}};
     btn.classList.add('escuchando'); if(es) es.textContent = 'Te escucho…'; AndroidEquilibra.dictar(); return;
   }
-  if(!Reconocer){ if(es) es.textContent = 'Este navegador no deja preguntar con la voz: escríbeme abajo o toca «¿Qué tengo hoy?».'; vozFoco(); return; }
+  if(!Reconocer){ if(es) es.textContent = 'Este navegador no deja preguntar con la voz: escríbeme en el recuadro o toca «¿Qué tengo hoy?».'; vozFoco(); return; }
   // 5.85 (Gustavo: «le doy al botón de hablar y no pasa nada» en el ordenador): todos los errores dicen algo,
   // «Te escucho…» solo cuando el micrófono arranca de verdad, y si no arranca en 5 s se avisa; siempre se puede escribir.
   const r = new Reconocer(); let dicho = '', fallo = false, oye = false;
@@ -4488,25 +4495,25 @@ function vozEscuchar(btn){
   r.onerror = e => {
     fallo = true;
     const m = {
-      'not-allowed': 'No tengo permiso para usar el micrófono. Permítelo en el candado de la barra de direcciones, o escríbeme abajo.',
-      'service-not-allowed': 'Este navegador no deja preguntar con la voz. Escríbeme abajo o toca «¿Qué tengo hoy?».',
-      'audio-capture': 'No encuentro ningún micrófono en este aparato. Escríbeme abajo.',
-      'network': 'El reconocimiento de voz del navegador necesita internet y ahora no responde. Escríbeme abajo.',
-      'no-speech': 'No te he oído. Toca el micrófono y pregunta otra vez, o escríbeme abajo.',
-      'language-not-supported': 'Este navegador no entiende el español hablado. Escríbeme abajo.',
+      'not-allowed': 'No tengo permiso para usar el micrófono. Permítelo en el candado de la barra de direcciones, o escríbeme en el recuadro.',
+      'service-not-allowed': 'Este navegador no deja preguntar con la voz. Escríbeme en el recuadro o toca «¿Qué tengo hoy?».',
+      'audio-capture': 'No encuentro ningún micrófono en este aparato. Escríbeme en el recuadro.',
+      'network': 'El reconocimiento de voz del navegador necesita internet y ahora no responde. Escríbeme en el recuadro.',
+      'no-speech': 'No te he oído. Toca el micrófono y pregunta otra vez, o escríbeme en el recuadro.',
+      'language-not-supported': 'Este navegador no entiende el español hablado. Escríbeme en el recuadro.',
       'aborted': 'Toca el micrófono para preguntar.'
     }[e.error];
-    msg(m || `No he podido escucharte (${e.error}). Escríbeme abajo.`);
+    msg(m || `No he podido escucharte (${e.error}). Escríbeme en el recuadro.`);
     if(e.error !== 'aborted' && e.error !== 'no-speech') vozFoco();
   };
   r.onend = () => {
     clearTimeout(r._vigia); vozEstado(''); if(vozRec !== r) return; vozRec = null;
     if(dicho.trim()) vozResponder(dicho.trim(), true);
-    else if(!fallo) msg('No te he oído. Toca el micrófono y pregunta otra vez, o escríbeme abajo.');
+    else if(!fallo) msg('No te he oído. Toca el micrófono y pregunta otra vez, o escríbeme en el recuadro.');
   };
   vozEstado('escuchando'); msg('Abriendo el micrófono…'); if(o) o.textContent = ''; vozRec = r;
-  r._vigia = setTimeout(() => { if(vozRec === r && !oye){ fallo = true; msg('El micrófono no arranca en este navegador. Escríbeme abajo tu pregunta.'); try{ r.abort(); }catch(e){} vozFoco(); } }, 5000);
-  try{ r.start(); }catch(e){ clearTimeout(r._vigia); vozEstado(''); vozRec = null; msg('No he podido abrir el micrófono. Escríbeme abajo tu pregunta.'); vozFoco(); }
+  r._vigia = setTimeout(() => { if(vozRec === r && !oye){ fallo = true; msg('El micrófono no arranca en este navegador. Escríbeme tu pregunta en el recuadro.'); try{ r.abort(); }catch(e){} vozFoco(); } }, 5000);
+  try{ r.start(); }catch(e){ clearTimeout(r._vigia); vozEstado(''); vozRec = null; msg('No he podido abrir el micrófono. Escríbeme tu pregunta en el recuadro.'); vozFoco(); }
 }
 /* 5.85: preguntar escribiendo (por si el micrófono del navegador no funciona) */
 function vozFoco(){ const t = $('#voz-txt'); if(t && ESCRITORIO.matches) t.focus(); }
@@ -4565,10 +4572,9 @@ function abrirVoz(){
   const n = nombrePila();
   mostrarHoja(`<div class="voz-hoja"><div class="voz-cab">${GAIA_VIVA}<div><p class="voz-quien">Tu asistente de Amable Life</p><h2>${NOMBRE_ASIS}</h2></div></div>
     <p class="voz-saludo">Hola${n ? ', ' + esc(n) : ''}. ¿Qué quieres saber de tu día?</p>
-    <div class="voz-cara" id="voz-cara"><i></i><i></i><button type="button" class="mic voz-mic" id="voz-mic" aria-label="Preguntar con la voz" onclick="vozEscuchar(this)">${MIC_LINEA}</button></div>
+    <form class="voz-escribe" id="voz-cara" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escribe o habla" aria-label="Escribe o habla tu pregunta"><button type="button" class="voz-mic-in" id="voz-mic" aria-label="Preguntar con la voz" title="Hablar" onclick="vozEscuchar(this)">${MIC_LINEA}</button><button type="submit" class="voz-env" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>
     <p class="voz-estado" id="voz-estado">Toca el micrófono y pregunta.</p>
     <p class="voz-oido" id="voz-oido"></p><div class="voz-resp" id="voz-resp"></div>
-    <form class="voz-escribe" onsubmit="event.preventDefault(); vozEscrito()"><input id="voz-txt" type="text" autocomplete="off" maxlength="200" placeholder="Escríbeme tu pregunta" aria-label="Escribe tu pregunta"><button type="submit" aria-label="Enviar la pregunta" title="Enviar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4.5 20.5 12 4 19.5l2.6-7.5L4 4.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 12H13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></button></form>
     <div class="voz-atajos"><button type="button" class="voz-chip" onclick="vozResponder('hoy')">¿Qué tengo hoy?</button><button type="button" class="voz-chip" onclick="vozResponder('mañana')">¿Y mañana?</button></div>
     ${appAsis('vocesAsistente') ? '<button type="button" class="link voz-cambiar" onclick="vozElegir()">Cambiar la voz de Gaia</button><div class="voz-voces" id="voz-voces" hidden></div>' : ''}</div>`, '#8b5cf6');
   const h = $('#hoja'); if(h) h.dataset.voz = '1';
