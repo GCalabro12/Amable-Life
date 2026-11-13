@@ -981,10 +981,10 @@ nav.abajo button{font-size:11px}
 }
 .rj{margin:4px 0 12px}
 .rj-cuerpo{position:relative;isolation:isolate}   /* 5.74 (Gustavo): lo de dentro (el óvalo de «Tareas flexibles») pasa por debajo de la barra fija de la fecha, no por encima */
-.rj-h{position:absolute;left:44px;right:0;border-top:1px solid rgba(var(--bl),.24)}
-.rj-h span{position:absolute;left:-44px;top:-8px;width:38px;text-align:right;font-size:11px;font-weight:700;color:var(--suave)}
-.rj-m{position:absolute;left:44px;right:0;height:1px;background:repeating-linear-gradient(90deg,rgba(var(--bl),.32) 0 2px,transparent 2px 6px)}
-.rj-cols{position:absolute;top:0;bottom:0;left:44px;right:0;display:grid}
+.rj-h{position:absolute;left:var(--eje,44px);right:0;border-top:1px solid rgba(var(--bl),.24)}
+.rj-h span{position:absolute;left:calc(-1 * var(--eje,44px));top:-8px;width:calc(var(--eje,44px) - 6px);text-align:right;font-size:11px;font-weight:700;color:var(--suave)}
+.rj-m{position:absolute;left:var(--eje,44px);right:0;height:1px;background:repeating-linear-gradient(90deg,rgba(var(--bl),.32) 0 2px,transparent 2px 6px)}
+.rj-cols{position:absolute;top:0;bottom:0;left:var(--eje,44px);right:0;display:grid}
 .rj-col{position:relative;border-left:1px solid rgba(var(--bl),.06);cursor:pointer}
 .rj-ev{cursor:pointer}
 .rj-tir{position:absolute;left:0;right:0;bottom:0;height:7px;cursor:ns-resize}
@@ -1739,6 +1739,15 @@ html.claro .frec-sel,html.claro .frec-l select,html.claro .frec-l input,html.cla
 html.claro .ag-fijo{background:rgba(243,240,249,.97)}
 .ag-fijo .ag-nav{margin:2px 0}
 .ag-fijo .rj-cab{margin-top:0}
+/* 6.13 (Gustavo: «aprovecha más el borde de la pantalla, hay como 3 mm a cada lado; si solo pones la hora en punto, quita el :00»):
+   en el calendario del móvil, 4 px a los lados en vez de 16 y la columna de las horas de 44 px a 24 px (sin «:00») */
+@media (max-width:899px){
+  body.ancho .envoltura{padding-left:4px;padding-right:4px}
+  body.ancho .ag-fijo{margin:0 -4px;padding:2px 4px 4px}
+  body.ancho .ag-nav, body.ancho .ag-acc{padding-left:8px;padding-right:8px}
+  body.ancho:not(.h12){--eje:24px}
+  body.ancho:not(.h12) .rj-h span{font-size:12px;text-align:center;width:var(--eje)}
+}
 @media (max-width:899px){ .ag-modos{margin-top:12px} .rj.sem .rj-ev .campanita{width:11px;height:11px;margin-right:1px;vertical-align:-1px} }
 @media (min-width:900px){ body.ancho .ag-fijo{top:64px;margin:0;padding:0;background:var(--fondo2);backdrop-filter:none} body.ancho .ag-fijo .rj-cab{position:static} }
 .aj-ico svg{display:block;margin:auto;color:var(--oro)}
@@ -1838,7 +1847,7 @@ html.claro .meta-error{color:#dc2626}
 .rj-ev.pasado:not(.ok){opacity:.7}
 .rj-ahora{position:absolute;left:0;right:0;border-top:2px solid #ef4444;z-index:2;pointer-events:none}
 .rj-ahora::before{content:'';position:absolute;left:-5px;top:-6px;width:10px;height:10px;border-radius:50%;background:#ef4444}
-.rj-cab{display:grid;grid-template-columns:44px repeat(7,1fr);margin-top:4px}
+.rj-cab{display:grid;grid-template-columns:var(--eje,44px) repeat(7,1fr);margin-top:4px}
 .rj-cab button{border:0;background:none;color:var(--tinta);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;font-weight:800}
 .rj-cab button b{font-size:11px;color:var(--suave)}
 .rj-cab button span{font-size:15px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
@@ -1877,7 +1886,7 @@ html.claro .dia-est-pop{box-shadow:0 10px 28px rgba(40,20,90,.22)}
 .rj-cab button.hoy .rj-l1{border-color:var(--oro)}
 .rj-cab button.hoy span{background:linear-gradient(135deg,var(--acento),var(--acento2));color:#fff}
 @media (max-width:899px){ .rj-cab.muchas .rj-l1{gap:1px;padding:1px 2px} .rj-cab.muchas .rj-l1 span{width:26px;height:26px;font-size:14px} .rj-cab.muchas .dia-est svg{width:11px;height:11px} .rj-cab.muchas .rj-l2{font-size:10px;gap:2px} .rj-cab.muchas .rj-n em{display:none} }
-.rj-todo{display:grid;grid-template-columns:44px repeat(7,1fr);gap:2px;margin:2px 0 8px}
+.rj-todo{display:grid;grid-template-columns:var(--eje,44px) repeat(7,1fr);gap:2px;margin:2px 0 8px}
 .rj-todo em{font-style:normal;font-size:10px;line-height:1.1;color:var(--suave);align-self:center}
 .rj-todo div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .rj-todo button{border:0;border-radius:5px;padding:2px 3px;font-size:10px;font-weight:500;background:color-mix(in srgb,var(--c) 40%,transparent);color:var(--tinta);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:left}
@@ -2382,7 +2391,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.12';
+const VERSION = 'v6.13';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5260,7 +5269,7 @@ function vAgenda(){
     const todosD = colsDias(), sinFinde = todosD.filter(k => diaSem(k) < 5), dias = verFinde() || !sinFinde.length ? todosD : sinFinde;
     tit = rangoTxt(todosD[0], todosD[todosD.length - 1]);
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
-    const cols = `grid-template-columns:44px repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !(k === hoy && esFlexible(e))));
+    const cols = `grid-template-columns:var(--eje,44px) repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !(k === hoy && esFlexible(e))));
     fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')"><i class="rj-l1"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></i>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
     cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div>${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
@@ -7569,7 +7578,7 @@ const FPREF0 = {h12: false, dom: false, cal: '', numSem: true, zona: 'Europe/Mad
 const fPref = (() => { try{ return Object.assign({}, FPREF0, JSON.parse(localStorage.getItem('equilibra.fecha') || '{}')); }catch(e){ return Object.assign({}, FPREF0); } })();
 function fPrefPoner(k, v){ fPref[k] = v; try{ localStorage.setItem('equilibra.fecha', JSON.stringify(fPref)); }catch(e){} const y = window.scrollY; render(); window.scrollTo(0, y); }
 const hm = m => { const h = Math.floor(m / 60), mm = String(m % 60).padStart(2, '0'); return fPref.h12 ? `${h % 12 || 12}:${mm} ${h < 12 ? 'a. m.' : 'p. m.'}` : `${h}:${mm}`; };
-const horaEje = h => fPref.h12 ? `${h % 12 || 12} ${h % 24 < 12 ? 'a. m.' : 'p. m.'}` : `${h}:00`;
+const horaEje = h => fPref.h12 ? `${h % 12 || 12} ${h % 24 < 12 ? 'a. m.' : 'p. m.'}` : ESCRITORIO.matches ? `${h}:00` : `${h}`;   // 6.13 (Gustavo): en el móvil, sin «:00» (solo hay horas en punto)
 /* la semana para ver (los hábitos «semanales» y Grow Panel siguen contando de lunes a domingo) */
 const inicioSem = k => fPref.dom ? sumarDias(k, -((diaSem(k) + 1) % 7)) : sumarDias(k, -diaSem(k));
 const desdeInicio = k => fPref.dom ? (diaSem(k) + 1) % 7 : diaSem(k);
