@@ -1032,6 +1032,12 @@ body.rj-estirando, body.rj-estirando *{cursor:ns-resize!important;user-select:no
 .fx-cab .ep-ico{margin-left:auto}
 .fx-lista{display:flex;flex-direction:column;gap:6px}
 .fx-f{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:12px;background:color-mix(in srgb,var(--c) 14%,transparent);border-left:3px solid var(--c)}
+.fx-prox-t{margin:14px 0 6px;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--suave)}
+.fx-prox .fx-t b{cursor:pointer}
+/* 6.20: lo de la fila «sin hora» se puede arrastrar con el ratón */
+@media (hover:hover){ .rj-todo button[data-ev]{cursor:grab} }
+.sin-orig{opacity:.35}
+.sin-fant{position:fixed;z-index:400;pointer-events:none;padding:5px 10px;border-radius:8px;background:var(--c);color:#fff;font-size:13px;font-weight:800;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.35)}
 .fx-cas{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid color-mix(in srgb,var(--c) 70%,var(--tinta));background:none;color:#fff;font-weight:900;font-size:15px;display:grid;place-items:center;cursor:pointer;padding:0;margin-top:1px}
 .fx-f.ok .fx-cas{background:#16a34a;border-color:#16a34a}
 .fx-f.ok .fx-t b{text-decoration:line-through;opacity:.6}
@@ -1501,7 +1507,7 @@ body.redimensionando iframe{pointer-events:none}
 .af-in > .af-ico{margin-top:16px}
 .af-hora{margin:8px 0 0;font-size:18px;font-weight:600;color:#e9e4ff}
 .af-ico{color:#f7c35b;display:inline-block;animation:alarmaMueve .5s ease-in-out infinite alternate}
-.alarma-full h1{margin:4px 0 10px;font-size:30px;line-height:1.2;word-break:break-word}
+.alarma-full h1{margin:4px 0 28px;font-size:30px;line-height:1.2;word-break:break-word}   /* 6.20: sin la línea de debajo, el hueco va aquí */
 .af-falta{margin:6px 0 0;font-size:21px;font-weight:800;color:#f7c35b}
 .af-cuando{margin:0 0 28px;font-size:18px;color:#e9e4ff}
 .af-dia{margin:6px 0 28px;font-size:15px;color:#a99fca}
@@ -2424,7 +2430,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.19';
+const VERSION = 'v6.20';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5106,7 +5112,7 @@ const tituloAviso = (e, txt) => { const c = cabeceraEv(e); return c ? [c, e.t + 
 const SIN_TITULO = '(Sin título)';
 const COLOR_HAB = '#22c55e';   // 4.94 (Gustavo): los hábitos, siempre verdes
 const colorEv = e => e.tipo === 'habito' ? COLOR_HAB : e.prio && PRIO[e.prio] ? PRIO[e.prio].c : (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
-const horaEv = e => e.todo ? 'Todo el día' : `${hm(e.ini)} – ${hm(e.fin)}`;
+const horaEv = e => e.todo ? (esFlexible(e) ? 'Sin hora (tarea flexible)' : 'Todo el día') : `${hm(e.ini)} – ${hm(e.fin)}`;   // 6.20 (Gustavo): el mismo nombre que en «Editar»
 const fijoTxt = e => (e.veces || 3) === 1 && e.fijo != null && DIAS_LARGO[e.fijo] ? `: el ${DIAS_LARGO[e.fijo]}` : '';
 const txtHabito = e => { if(e.frec === 'semanal') return `${e.veces || 3} ${(e.veces || 3) === 1 ? 'día' : 'días'} a la semana${fijoTxt(e)}`; if(e.frec === 'intervalo') return `Cada ${e.cada || 2} días`; const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length === 5 && d.join() === '0,1,2,3,4' ? 'De lunes a viernes' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana`; };
 /* Números del día para Grow Panel: cuántos hay hoy, horas ocupadas (sin contar dos veces lo que se solapa) y hechos o ya pasados */
@@ -5313,7 +5319,7 @@ function vAgenda(){
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:var(--eje,44px) repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !(k === hoy && esFlexible(e))));
     fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')"><i class="rj-l1"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></i>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
-    cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div>${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
+    cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div data-ksin="${dias[n]}">${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
     const ds = semsDias(), nCols = verFinde() ? 7 : 5;
@@ -5392,7 +5398,7 @@ function rejillaHTML(dias){
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
       return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}${marcaCls(e)}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · práctica' + objDia(e, k) : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
-    return `<div class="rj-col" data-k="${k}" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
+    return `<div class="rj-col" data-k="${k}" data-h0="${h0}" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   // 4.78 (Gustavo): «Tareas flexibles» (las de hoy sin hora): un óvalo a la altura de la hora de ahora (baja con ella),
   // en la columna del día siguiente apuntando a hoy (si hoy es la última, a la derecha de hoy); al tocarlo, la lista
@@ -5439,7 +5445,15 @@ function flexHTML(){
   const ejemplos = ['Llamar al banco', 'Comprar pilas y bombillas', 'Contestar el correo pendiente'];
   return `<div class="fx-cab"><b>Tareas flexibles</b><span>${!L.length ? 'Tareas de hoy sin hora concreta' : pend ? `${pend} sin hacer · sin hora concreta` : 'Todas hechas · sin hora concreta'}</span><button class="ep-ico" aria-label="Cerrar" onclick="cerrarFlex()">${ICO_CRUZ}</button></div>
     <div class="fx-lista">${L.length ? L.map(fila).join('') : `<p class="fx-vacio">Aún no tienes ninguna. Por ejemplo:</p>${ejemplos.map(t => `<div class="fx-f fx-ej" style="--c:#8b5cf6"><span class="fx-cas"></span><div class="fx-t"><b>${t}</b></div><button class="fx-b" onclick="flexEjemplo('${t}')">＋ Añadir</button></div>`).join('')}`}</div>
+    ${flexProxHTML()}
     <button class="fx-nueva" onclick="cerrarFlex(); nuevoEvento(hoyK(), null, {todo: true})">＋ Añadir tarea flexible</button>`;
+}
+/* 6.20 (Gustavo: «la tarea sin hora del domingo no me aparece en Tareas flexibles»): debajo, las de los próximos 7 días sin hacer */
+function flexProxHTML(){
+  const hoy = hoyK(), L = [];
+  for(let n = 1; n <= 7; n++){ const k = sumarDias(hoy, n); eventosDe(k).filter(e => esFlexible(e) && !hechoEv(e, k)).forEach(e => L.push({e, k, n})); }
+  if(!L.length) return '';
+  return `<p class="fx-prox-t">Para los próximos días</p><div class="fx-lista">${L.map(({e, k, n}) => `<div class="fx-f fx-prox" style="--c:${colorEv(e)}"><div class="fx-t"><b onclick="cerrarFlex(); verEvento('${e.id}','${k}')">${esc(e.t)}</b><small>${n === 1 ? 'Mañana' : capi(DIAS_LARGO[diaSem(k)])} ${fechaDe(k).getDate()}</small></div></div>`).join('')}</div>`;
 }
 const minDe = iso => { const d = new Date(iso); return d.getHours() * 60 + d.getMinutes(); };
 function flexAbrir(btn){
@@ -5525,6 +5539,58 @@ function rjSoltar(cancelar){
   avisoDeshacer(t, () => { Object.assign(e, antes, {mod: ahoraISO()}); if(ap) quitarApunte(ap[0], ap[1], e.id); guardar(); rerenderDia(); }, 5000);
 }
 document.addEventListener('pointerup', () => rjSoltar(false));
+/* 6.20 (Gustavo: «si me pongo encima de la de todo el día, me tendría que dejar cambiarla»): con el ratón, lo de la fila
+   «sin hora» se arrastra a otro día de esa fila o a una hora de la rejilla (de 15 en 15 min; dura lo de su Duración o 1 h).
+   Lo que se repite no cambia de día. Al soltar, aviso con Deshacer; un clic sin mover sigue abriendo la tarjeta. */
+let sinArr = null;
+document.addEventListener('pointerdown', ev => {
+  if(ev.button !== 0 || ev.pointerType === 'touch') return;
+  const el = ev.target.closest && ev.target.closest('.rj-todo button[data-ev]'); if(!el) return;
+  const e = AG_().eventos.find(x => x.id === el.dataset.ev); if(!e) return;
+  sinArr = {el, e, k: el.dataset.k, x0: ev.clientX, y0: ev.clientY, movido: false, dest: null};
+  ev.preventDefault();
+});
+document.addEventListener('pointermove', ev => {
+  const a = sinArr; if(!a) return;
+  if(!a.movido){
+    if(Math.hypot(ev.clientX - a.x0, ev.clientY - a.y0) < 5) return;
+    a.movido = true; clearTimeout(popT); if(typeof cerrarPop === 'function') cerrarPop();
+    a.g = document.createElement('div'); a.g.className = 'sin-fant'; a.g.style.setProperty('--c', colorEv(a.e)); document.body.appendChild(a.g);
+    a.el.classList.add('sin-orig'); document.body.classList.add('rj-moviendo');
+  }
+  const pila = document.elementsFromPoint(ev.clientX, ev.clientY);
+  const col = pila.find(x => x.classList && x.classList.contains('rj-col')), fila = pila.find(x => x.dataset && x.dataset.ksin);
+  let dest = null;
+  if(col){
+    const r = col.getBoundingClientRect(), h0 = +col.dataset.h0 || 0, dur = a.e.tipo === 'habito' ? Math.min(120, a.e.dur || 60) : (a.e.dur || 60);
+    const ini = Math.max(0, Math.min(24 * 60 - dur, Math.round((h0 * 60 + (ev.clientY - r.top) / AG_PX * 60) / 15) * 15));
+    dest = {k: col.dataset.k, ini, fin: ini + dur};
+  } else if(fila) dest = {k: fila.dataset.ksin, todo: true};
+  if(dest && repite(a.e) && dest.k !== a.k) dest = dest.todo ? null : Object.assign(dest, {k: a.k});
+  a.dest = dest;
+  const dia = k => `${capi(DIAS_LARGO[diaSem(k)])} ${fechaDe(k).getDate()}`;
+  a.g.textContent = dest ? `${dia(dest.k)} · ${dest.todo ? 'sin hora' : hm(dest.ini) + ' – ' + hm(dest.fin)}` : a.e.t;
+  a.g.style.left = (ev.clientX + 14) + 'px'; a.g.style.top = (ev.clientY + 14) + 'px';
+});
+function sinSoltar(cancelar){
+  const a = sinArr; sinArr = null; if(!a) return;
+  document.body.classList.remove('rj-moviendo'); if(a.g) a.g.remove(); a.el.classList.remove('sin-orig');
+  if(!a.movido) return;
+  finArrastre = Date.now();
+  const d = a.dest;
+  if(cancelar || !d || (d.todo && d.k === a.k)){ rerenderDia(); return; }
+  const e = a.e, antes = {ini: e.ini, fin: e.fin, dia: e.dia, todo: e.todo};
+  if(d.todo){ if(!repite(e)) e.dia = d.k; }
+  else { e.todo = false; e.ini = d.ini; e.fin = d.fin; if(d.k !== a.k && !repite(e)) e.dia = d.k; }
+  e.mod = ahoraISO();
+  const ap = apuntarCambio(e, antes, a.k);
+  guardar(); rerenderDia();
+  const t = d.todo ? `«${e.t}» movida al ${fechaLarga(d.k)}` : `«${e.t}»: ${d.k !== a.k ? fechaLarga(d.k) + ', ' : ''}de ${hm(e.ini)} a ${hm(e.fin)}`;
+  avisoDeshacer(t, () => { const x = AG_().eventos.find(y => y.id === e.id) || e; Object.assign(x, antes, {mod: ahoraISO()}); if(ap) quitarApunte(ap[0], ap[1], e.id); guardar(); rerenderDia(); }, 5000);
+}
+document.addEventListener('pointerup', () => sinSoltar(false));
+document.addEventListener('pointercancel', () => sinSoltar(true));
+document.addEventListener('keydown', ev => { if(ev.key === 'Escape' && sinArr) sinSoltar(true); });
 document.addEventListener('pointercancel', () => rjSoltar(true));
 document.addEventListener('keydown', ev => { if(ev.key === 'Escape' && rjArr) rjSoltar(true); });
 /* Tocar un hueco de la rejilla: algo nuevo a esa media hora */
@@ -7366,6 +7432,8 @@ function faltaTxt(e, k){
   return `${/^1 /.test(t) ? 'Falta' : 'Faltan'} ${t} para`;
 }
 /* ref = el día en el que sale la alarma: si es otro, se dice qué día */
+/* 6.20 (Gustavo): en la ventana de la alarma, «Son las 10:32. Para realizar a las 10:00» en un renglón (sin «Tarea» ni «Práctica integral») */
+const paraTxt = (e, k) => capi(cuandoTxt(e, k, hoyK()).replace(/^(Tarea|Práctica integral|Hábito)\s+/, ''));
 function cuandoTxt(e, k, ref){
   const qu = e.tipo === 'habito' ? 'Práctica integral' : 'Tarea', dia = k === ref ? '' : `el ${fechaLarga(k).toLowerCase()} `;
   return e.todo ? `${qu} para ${dia ? dia.trim() : 'hoy'}` : `${qu} para realizar ${dia}a las ${hm(e.ini)}`;
@@ -7412,10 +7480,9 @@ function hojaAlarma(e, k, txt, ultima, a){
     ${esPractica(e) && !esMeta(e) ? `<div class="af-prac"><span class="af-flor">${florPracticaSVG(e)}</span><div class="af-img-c"><span class="af-img af-txt"><small>${pracTxt(e)[0]}</small><b>${esc(pracTxt(e)[1])}</b></span><span class="af-ico af-ico-peq">${ICO_CAMPANA.replace('width="18" height="18"', 'width="34" height="34"')}</span></div></div>`
       : esPractica(e) ? `<div class="af-img-c">${imgAlarma(e)}<span class="af-ico af-ico-peq">${ICO_CAMPANA.replace('width="18" height="18"', 'width="34" height="34"')}</span></div>`
       : `<div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="64" height="64"')}</div>`}
-    <p class="af-hora" id="af-hora">${sonLas()}</p>
+    <p class="af-hora"><span id="af-hora">${sonLas()}</span>. ${esc(paraTxt(e, k))}</p>
     <p class="af-falta">${esc(faltaTxt(e, k))}</p>
     <h1>${esPractica(e) ? '' : broteEv(e)}${esc(e.t)}</h1>
-    <p class="af-cuando">${esc(cuandoTxt(e, k, hoyK()))}</p>
     <div class="af-bots">
       <button type="button" class="af-b af-ent${ultima ? ' af-gris' : ''}" onclick="alarmaCerrar()">Enterado</button>
       <p class="af-ent-txt">${esc(entTxt(e, a))}</p>
@@ -7427,7 +7494,7 @@ function hojaAlarma(e, k, txt, ultima, a){
     </div>`;
   document.body.appendChild(d);
   requestAnimationFrame(() => d.classList.add('ver'));
-  alarmaAct = {id: e.id, k, ul: !!ultima, t: e.t, falta: faltaTxt(e, k), cuando: cuandoTxt(e, k, hoyK()), c: colAlarma(e), okt: okAlarma(e)};
+  alarmaAct = {id: e.id, k, ul: !!ultima, t: e.t, falta: faltaTxt(e, k), cuando: cuandoTxt(e, k, hoyK()), para: paraTxt(e, k), c: colAlarma(e), okt: okAlarma(e)};
   alarmaPip();
   clearInterval(horaAlarmaT);   // la hora sigue al día mientras la ventana está abierta
   horaAlarmaT = setInterval(() => { const h = document.getElementById('af-hora'); if(!h){ clearInterval(horaAlarmaT); return; } h.textContent = sonLas();
@@ -7473,8 +7540,8 @@ function alarmaPip(){
   const x = alarmaAct; if(!x) return;
   d.body.insertAdjacentHTML('beforeend', `<div id="pip-alarma" class="pip-alarma" style="--c:${x.c}" role="alertdialog" aria-label="Recordatorio">
     <div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="40" height="40"')}</div>
-    <p id="pa-hora" style="margin:2px 0 0;font-size:14px;font-weight:600;opacity:.9">${sonLas()}</p>
-    <p class="pa-falta">${esc(x.falta)}</p><h2>${esc(x.t)}</h2><p class="pa-cuando">${esc(x.cuando)}</p>
+    <p style="margin:2px 0 0;font-size:14px;font-weight:600;opacity:.9"><span id="pa-hora">${sonLas()}</span>. ${esc(x.para || '')}</p>
+    <p class="pa-falta">${esc(x.falta)}</p><h2>${esc(x.t)}</h2>
     <button type="button" class="af-b af-ent${x.ul ? ' af-gris' : ''}" data-onclick="alarmaCerrar()">Enterado</button>
     <button type="button" class="af-b af-pos" data-onclick="posponerAlarma('${x.id}','${x.k}',5,${x.ul ? 1 : 0})">Posponer 5 min</button>
     ${x.ul ? `<button type="button" class="af-b af-ok" data-onclick="alarmaCompletar('${x.id}','${x.k}')">${x.okt || 'Tarea completada'}</button>` : ''}</div>`);
@@ -7966,7 +8033,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.61';   // última app Android publicada
+const APK_ULTIMA = '2.62';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
