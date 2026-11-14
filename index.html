@@ -2439,7 +2439,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.26';
+const VERSION = 'v6.27';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -2509,6 +2509,7 @@ function normalizar(d){
   r.salud = nuevaSalud(r.salud || {});
   r.bloques = nuevosBloques(r.bloques || {});
   r.agenda = {eventos: Array.isArray((r.agenda || {}).eventos) ? r.agenda.eventos : []};
+  r.agenda.eventos.forEach(arreglarDescEv);   // 6.27: descripciones importadas con etiquetas
   return r;
 }
 function cargar(){
@@ -5547,6 +5548,7 @@ function rjSoltar(cancelar){
   const kN = (a.colN && a.colN.dataset.k) || a.k;
   if(cancelar || (a.nIni === a.ini && a.nFin === a.fin && kN === a.k)){ rerenderDia(); return; }
   const e = a.e, antes = {ini: e.ini, fin: e.fin, dia: e.dia};
+  if(repite(e) && e.tipo !== 'habito'){ rerenderDia(); preguntarRepeticion(e, a.k, {ini: a.nIni, fin: a.nFin, todo: false, dia: kN}, a.estirar); return; }   // 6.27
   e.ini = a.nIni; e.fin = a.nFin; if(kN !== a.k && !repite(e)) e.dia = kN; e.mod = ahoraISO();
   const ap = apuntarCambio(e, Object.assign({todo: e.todo}, antes), a.k);
   guardar(); rerenderDia();
@@ -5554,6 +5556,51 @@ function rjSoltar(cancelar){
   avisoDeshacer(t, () => { Object.assign(e, antes, {mod: ahoraISO()}); if(ap) quitarApunte(ap[0], ap[1], e.id); guardar(); rerenderDia(); }, 5000);
 }
 document.addEventListener('pointerup', () => rjSoltar(false));
+/* 6.27 (Gustavo: «al ser una tarea repetitiva, si la cambio de hora, me tiene que preguntar: ¿solo al 20 de noviembre o a todas
+   las repeticiones?»). «Solo este día»: ese día se quita de la serie y queda una copia suelta con el cambio (también puede ir a otro día).
+   «Todas»: la hora cambia en todas (el día de la serie no se mueve). Con Deshacer. */
+function separarRepeticion(e, k, cambios){
+  const n = JSON.parse(JSON.stringify(e));
+  ['impId', 'metaId', 'habRev'].forEach(c => delete n[c]);
+  Object.assign(n, {id: uid(), creada: ahoraISO(), rep: 'no', dia: k, saltar: [], hechos: (e.hechos || []).includes(k) ? [k] : [], acc: null, mod: ahoraISO()}, cambios || {});
+  e.saltar = [...new Set([...(e.saltar || []), k])]; e.hechos = (e.hechos || []).filter(x => x !== k); e.mod = ahoraISO();
+  AG_().eventos.push(n);
+  return n;
+}
+let repPend = null;
+function preguntarRepeticion(e, k, c, estirar){
+  repPend = {id: e.id, k, c, estirar};
+  const d = fechaDe(k), hora = c.todo ? 'sin hora' : `${hm(c.ini)} – ${hm(c.fin)}`;
+  mostrarHoja(`<div id="hoja-rep"><h3 style="margin:0 0 6px">Esta tarea se repite</h3>
+    <p class="peq" style="margin:0 0 14px">«${esc(e.t)}» pasa a ${c.dia && c.dia !== k ? fechaLarga(c.dia) + ', ' : ''}${hora}. ¿A qué quieres aplicar el cambio?</p>
+    <button class="btn prim ancho" onclick="repAplicar('uno')">Solo el ${d.getDate()} de ${MESES[d.getMonth()]}</button>
+    <button class="btn sec ancho" style="margin-top:10px" onclick="repAplicar('todas')">A todas las repeticiones</button>
+    <button class="link" style="margin-top:8px" onclick="repPend = null; cerrarHoja()">Cancelar</button></div>`, colorEv(e));
+}
+function repAplicar(modo){
+  const p = repPend; repPend = null; cerrarHoja(); if(!p) return;
+  const A = AG_(), e = A.eventos.find(x => x.id === p.id); if(!e) return;
+  const antes = {ini: e.ini, fin: e.fin, dia: e.dia, todo: e.todo, saltar: (e.saltar || []).slice(), hechos: (e.hechos || []).slice()};
+  const c = p.c, cuando = () => c.todo ? 'sin hora' : `${hm(c.ini)} – ${hm(c.fin)}`;
+  if(modo === 'uno'){
+    const n = separarRepeticion(e, p.k, {todo: !!c.todo, ini: c.todo ? null : c.ini, fin: c.todo ? null : c.fin, dia: c.dia || p.k});
+    const ap = apuntarCambio(n, {ini: antes.ini, fin: antes.fin, dia: p.k, todo: antes.todo}, p.k);
+    guardar(); rerenderDia();
+    avisoDeshacer(`Solo el ${fechaDe(p.k).getDate()} de ${MESES[fechaDe(p.k).getMonth()]}: «${e.t}» a ${n.dia !== p.k ? fechaLarga(n.dia) + ', ' : ''}${cuando()}`, () => {
+      const B = AG_(); B.eventos = B.eventos.filter(x => x.id !== n.id); D.borradas = (D.borradas || []).concat(n.id);
+      const x = B.eventos.find(y => y.id === e.id) || e; Object.assign(x, {saltar: antes.saltar, hechos: antes.hechos, mod: ahoraISO()});
+      if(ap) quitarApunte(ap[0], ap[1], n.id); guardar(); rerenderDia();
+    }, 6000);
+    return;
+  }
+  Object.assign(e, {todo: !!c.todo, ini: c.todo ? null : c.ini, fin: c.todo ? null : c.fin, mod: ahoraISO()});
+  const ap = apuntarCambio(e, {ini: antes.ini, fin: antes.fin, dia: antes.dia, todo: antes.todo}, p.k);
+  guardar(); rerenderDia();
+  avisoDeshacer(`Todas las repeticiones: «${e.t}» ${p.estirar ? `ahora es de ${hm(e.ini)} a ${hm(e.fin)}` : 'a ' + cuando()}`, () => {
+    const x = AG_().eventos.find(y => y.id === e.id) || e; Object.assign(x, {ini: antes.ini, fin: antes.fin, todo: antes.todo, mod: ahoraISO()});
+    if(ap) quitarApunte(ap[0], ap[1], e.id); guardar(); rerenderDia();
+  }, 6000);
+}
 /* 6.20 (Gustavo: «si me pongo encima de la de todo el día, me tendría que dejar cambiarla»): con el ratón, lo de la fila
    «sin hora» se arrastra a otro día de esa fila o a una hora de la rejilla (de 15 en 15 min; dura lo de su Duración o 1 h).
    Lo que se repite no cambia de día. Al soltar, aviso con Deshacer; un clic sin mover sigue abriendo la tarjeta. */
@@ -5595,6 +5642,7 @@ function sinSoltar(cancelar){
   const d = a.dest;
   if(cancelar || !d || (d.todo && d.k === a.k)){ rerenderDia(); return; }
   const e = a.e, antes = {ini: e.ini, fin: e.fin, dia: e.dia, todo: e.todo};
+  if(repite(e) && e.tipo !== 'habito'){ rerenderDia(); preguntarRepeticion(e, a.k, d.todo ? {todo: true, ini: null, fin: null, dia: d.k} : {todo: false, ini: d.ini, fin: d.fin, dia: d.k}, false); return; }   // 6.27
   if(d.todo){ if(!repite(e)) e.dia = d.k; }
   else { e.todo = false; e.ini = d.ini; e.fin = d.fin; if(d.k !== a.k && !repite(e)) e.dia = d.k; }
   e.mod = ahoraISO();
@@ -6065,6 +6113,19 @@ function evResumen(){
   if(bf && f != null) bf.textContent = hm(f);
 }
 /* Texto con formato de la descripción: solo se guarda lo permitido (negrita, cursiva, subrayado, color, listas, enlaces) */
+/* 6.27 (Gustavo: «el texto importado se ve con <b>, <br>…»): algunas descripciones importadas (TickTick, .ics) traían HTML
+   guardado como texto. Se pasa a descripción con formato (descH) y el texto queda limpio. No cambia «mod»: cada aparato lo
+   arregla igual al cargar. */
+const DESC_HTML = /<\/?(b|i|u|br|span|p|div|ul|ol|li|a|strong|em|font)\b[^>]*>/i;
+function htmlATexto(h){
+  const t = document.createElement('template');
+  t.innerHTML = String(h).replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|p|li)>/gi, '\n');
+  return (t.content.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+}
+function arreglarDescEv(e){
+  if(!e || e.descH || typeof e.desc !== 'string' || !DESC_HTML.test(e.desc)) return;
+  try{ e.descH = limpiarHTML(e.desc).replace(/^(\s|<br>|<(b|i|u)>(<br>)?<\/(b|i|u)>)+/, ''); e.desc = htmlATexto(e.desc).slice(0, 2000); }catch(x){}
+}
 function limpiarHTML(h){
   if(!h) return '';
   const t = document.createElement('template'); t.innerHTML = h;
@@ -7204,10 +7265,19 @@ function guardarEvento(){
   let ini = minDeHora(valor('ev-ini')), fin = minDeHora(valor('ev-fin'));
   if(!todo){ if(ini == null){ aviso('Pon la hora de empezar'); return; } if(fin == null || fin <= ini) fin = Math.min(ini + 60, 1439); }
   const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
-  const antE = e ? {dia: e.dia, ini: e.ini, todo: e.todo} : null;
+  // 6.27: tarea que se repite y cambia de hora o de día → «¿Solo este día o todas?»
+  if(e && e0.k && !e0.ambito && e.tipo !== 'habito' && e0.tipo !== 'habito' && repite(e) && (e0.rep || 'no') === (e.rep || 'no')
+     && (todo !== !!e.todo || (!todo && (ini !== e.ini || fin !== e.fin)) || dia !== e.dia)){
+    const d = fechaDe(e0.k), w = $('#ev-borrar-rep');
+    if(w){ w.innerHTML = `<p class="peq" style="margin:14px 0 6px"><b>Esta tarea se repite.</b> ¿A qué quieres aplicar el cambio?</p><div class="ed-bots"><button class="btn prim" onclick="evEd.ambito='uno'; guardarEvento()">Solo el ${d.getDate()} de ${MESES[d.getMonth()]}</button><button class="btn sec" onclick="evEd.ambito='todas'; guardarEvento()">A todas las repeticiones</button></div>`; w.scrollIntoView({block: 'nearest'}); return; }
+  }
+  let unoK = null, unoDia = null;
+  if(e && e0.ambito === 'uno'){ unoK = e0.k; unoDia = dia !== e.dia ? dia : e0.k; e = separarRepeticion(e, e0.k, {}); }
+  const antE = e ? {dia: unoK || e.dia, ini: e.ini, todo: e.todo} : null;
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
     area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
+  if(unoK){ e.rep = 'no'; e.acc = null; e.dia = unoDia; }   // 6.27: copia suelta de ese día (o del día que hayas puesto)
   apuntarCambio(e, antE, e0.k || (antE && antE.dia));
   guardar(); sonarHecho();
   if(aSemanal) aviso(`Guardada como Semanal · 1 día a la semana: el ${DIAS_LARGO[e.fijo]}`, 3500);
