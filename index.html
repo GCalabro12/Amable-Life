@@ -2430,7 +2430,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.21';
+const VERSION = 'v6.22';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5449,11 +5449,12 @@ function flexHTML(){
     <button class="fx-nueva" onclick="cerrarFlex(); nuevoEvento(hoyK(), null, {todo: true})">＋ Añadir tarea flexible</button>`;
 }
 /* 6.20 (Gustavo: «la tarea sin hora del domingo no me aparece en Tareas flexibles»): debajo, las de los próximos días sin hacer (6.21: 30 días) */
+/* 6.22 (Gustavo): también con su casilla para marcarlas hechas (al marcarla sale de la lista, con Deshacer) */
 function flexProxHTML(){
   const hoy = hoyK(), L = [];
   for(let n = 1; n <= 30; n++){ const k = sumarDias(hoy, n); eventosDe(k).filter(e => esFlexible(e) && !hechoEv(e, k)).forEach(e => L.push({e, k, n})); }
   if(!L.length) return '';
-  return `<p class="fx-prox-t">Para los próximos días</p><div class="fx-lista">${L.map(({e, k, n}) => `<div class="fx-f fx-prox" style="--c:${colorEv(e)}"><div class="fx-t"><b onclick="cerrarFlex(); verEvento('${e.id}','${k}')">${esc(e.t)}</b><small>${n === 1 ? 'Mañana' : capi(DIAS_LARGO[diaSem(k)])} ${fechaDe(k).getDate()}</small></div></div>`).join('')}</div>`;
+  return `<p class="fx-prox-t">Para los próximos días</p><div class="fx-lista">${L.map(({e, k, n}) => `<div class="fx-f fx-prox" style="--c:${colorEv(e)}"><button class="fx-cas" onclick="flexTerminar('${e.id}','${k}')" aria-label="Marcar como hecha">${hechoEv(e, k) ? '✓' : ''}</button><div class="fx-t"><b onclick="cerrarFlex(); verEvento('${e.id}','${k}')">${esc(e.t)}</b><small>${n === 1 ? 'Mañana' : capi(DIAS_LARGO[diaSem(k)])} ${fechaDe(k).getDate()}</small></div></div>`).join('')}</div>`;
 }
 const minDe = iso => { const d = new Date(iso); return d.getHours() * 60 + d.getMinutes(); };
 function flexAbrir(btn){
