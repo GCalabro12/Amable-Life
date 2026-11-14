@@ -1204,6 +1204,11 @@ html:not(.claro) .aj-eliminar .aj-sub > summary{color:#f87171}
 .ev-area-et{display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-size:15px;font-weight:600;color:var(--suave)}
 .ev-area-et[hidden]{display:none}
 .ev-area-et b{font-weight:800;filter:brightness(.85)}
+.ep-bar .ep-area-et{margin:0 auto 0 0;font-size:14px;gap:4px;flex:none;max-width:52%}   /* 6.24: a la izquierda de la barra de la tarjeta */
+.ep-bar .ep-area-et .mini-flor{width:28px;height:28px}
+.ep-bar .ep-area-et > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ep-tit .ep-acol.ep-acol, .ep-tit p.ep-hab.ep-acol{color:var(--ac)}
+html.claro .ep-tit .ep-acol.ep-acol, html.claro .ep-tit p.ep-hab.ep-acol{color:color-mix(in srgb, var(--ac) 80%, #000)}
 .mini-flor{flex:none}
 .ev-reg{margin:12px 0 0;padding:12px;border-radius:16px;background:rgba(var(--bl),.04);border:1px solid var(--linea)}
 .reg-cab{display:flex;align-items:center;gap:8px;width:100%;margin:0;padding:0;border:0;background:none;font:inherit;text-align:left;color:var(--oro);cursor:pointer}
@@ -1313,6 +1318,7 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-flot.ver{opacity:1;transform:none}
 .ep-bar{display:flex;justify-content:flex-end;gap:2px;margin-bottom:2px}
 .ep-en-hoja .ep-bar{justify-content:flex-start;margin-right:44px}
+.ep-en-hoja .ep-bar .ep-area-et{margin-right:8px}
 .ep-ico{width:40px;height:40px;border-radius:50%;border:0;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0}
 .ep-focus{display:inline-flex;align-items:center;gap:5px;height:32px;align-self:center;margin:0 4px;padding:0 12px;border:1.5px solid #e0323a;border-radius:99px;background:rgba(224,50,58,.08);color:#dc2626;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .ep-focus:hover{background:rgba(224,50,58,.16)}
@@ -2432,7 +2438,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.23';
+const VERSION = 'v6.24';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -6317,8 +6323,13 @@ function popHTML(e, k, enHoja){
   const rec = recTxtEv(e);
   const desc = e.descH ? limpiarHTML(e.descH) : e.desc ? esc(e.desc).replace(/\n/g, '<br>') : '';
   const b = (t, ico, fn) => `<button type="button" class="ep-ico" title="${t}" aria-label="${t}" onclick="${fn}">${ico}</button>`;
-  return `<div class="ep-bar">${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}<button type="button" class="ep-focus" title="Ponerla la primera en tu bloque de Focus" onclick="popFocus('${e.id}','${k}')">${ICO_DIANA}Focus</button>${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
-    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab">${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Práctica importada de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}">${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
+  /* 6.24 (Gustavo): en las prácticas, a la izquierda del lápiz, la florecita con «Área Salud» (como en la ventana de editar),
+     y la línea «Práctica integral del área de…» y el nombre de la práctica en el color de su área */
+  const acol = hab && ars.length ? ars[0].color : '';
+  const nomA = ars.map(a => `<b style="color:${a.color}">${esc(a.nombre)}</b>`), listaA = nomA.length === 1 ? nomA[0] : nomA.slice(0, -1).join(', ') + ' y ' + nomA[nomA.length - 1];
+  const etA = acol ? `<span class="ep-area-et ev-area-et">${miniFlor(ars.map(a => a.id))}<span>${ars.length === 1 ? 'Área' : 'Áreas'} ${listaA}</span></span>` : '';
+  return `<div class="ep-bar">${etA}${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}<button type="button" class="ep-focus" title="Ponerla la primera en tu bloque de Focus" onclick="popFocus('${e.id}','${k}')">${ICO_DIANA}Focus</button>${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
+    <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab${acol ? ' ep-acol' : ''}"${acol ? ` style="--ac:${acol}"` : ''}>${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Práctica importada de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}${acol ? ' ep-acol' : ''}"${acol ? ` style="--ac:${acol}"` : ''}>${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
       <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}${hab ? habCuentaHTML(e, k) : ''}</div></div>
     <div class="ep-opc" id="ep-opc-hora"></div>
     <div id="ep-conf"></div>
