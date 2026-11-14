@@ -2441,7 +2441,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.33';
+const VERSION = 'v6.34';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -7648,6 +7648,7 @@ function hojaAlarma(e, k, txt, ultima, a){
       <div class="af-pos-l" id="af-pos-l" hidden>${POSPONER_MIN.map(m => `<button type="button" onclick="posponerAlarma('${e.id}','${k}',${m},${ultima ? 1 : 0})">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div>
       ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">${okAlarma(e)}</button>` : ''}
     </div>
+    ${delanteHTML()}
     <button type="button" class="af-nosuena" onclick="alarmaProblemas(this)">¿Problemas con la alarma?</button>
     </div>`;
   document.body.appendChild(d);
@@ -7667,6 +7668,15 @@ let horaAlarmaT = null;
 const ACC_ALARMA = [{action: 'enterado', title: 'Enterado'}, {action: 'pos5', title: 'Posponer 5 min'}];
 let alarmaAct = null;
 const faltaDelante = () => !esApp && ((hayAvisosWeb() && Notification.permission !== 'granted') || (hayFlotante() && !pipWin));
+/* 6.34 (Gustavo: «suena la alarma pero no se ve arriba; se tendría que poner arriba de todas las ventanas, no tengo forma de apagarlo»):
+   en el ordenador, si los avisos de Windows no están permitidos, la ventana de la alarma lo dice a la vista (antes estaba dentro de
+   «¿Problemas con la alarma?») con el botón para activarlos: con ellos, la próxima alarma sale encima de todo con Enterado y Posponer. */
+function delanteHTML(){
+  if(esApp || !ESCRITORIO.matches || typeof Notification === 'undefined' || Notification.permission === 'granted') return '';
+  const den = Notification.permission === 'denied';
+  return `<div class="af-ayuda af-delante-fijo"><p style="margin:0 0 8px"><b>¿No la veías porque estaba detrás de otras ventanas?</b> Activa los avisos de Windows y la próxima alarma saldrá <b>encima de todo</b>, en la esquina de la pantalla, con «Enterado» y «Posponer».</p>
+    <div class="af-ayuda-b"><button type="button" onclick="activarDesdeAlarma(this)">${den ? 'Están bloqueados: cómo activarlos' : 'Activar los avisos'}</button></div></div>`;
+}
 function ayudaDelante(b){
   const ya = document.querySelector('.af-delante'); if(ya){ ya.remove(); return; }
   abrirAudio();
