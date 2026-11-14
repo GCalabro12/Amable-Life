@@ -1518,7 +1518,12 @@ body.redimensionando iframe{pointer-events:none}
 .alarma-full.af-hab .af-ent:not(.af-gris), .alarma-full.af-hab .af-ok{background:#fff;color:#15803d}
 .af-img-c{position:relative;display:inline-block;margin-top:16px}
 .af-img{width:128px;height:128px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.35);display:block}
-.af-img-flor{display:grid;place-items:center;background:#fff}
+.af-prac{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px}
+.af-prac .af-img-c{margin-top:0}
+.af-flor svg{width:140px;height:140px;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.3))}
+.af-txt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;color:#15803d;text-align:center;padding:12px;line-height:1.15}
+.af-txt small{font-size:13px;font-weight:700;color:#3f6b4f}
+.af-txt b{font-size:21px;font-weight:900;overflow-wrap:anywhere}
 .af-ico-peq{position:absolute;top:-6px;right:-12px;width:50px;height:50px;border-radius:50%;background:#1f1640;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .af-ent-txt{margin:-4px 0 4px;font-size:13px;color:#cfc6ec;text-align:center}
 .af-sinson{display:block;margin:0 auto 14px;border:0;border-radius:99px;padding:10px 18px;background:#f7c35b;color:#2a1f52;font:inherit;font-weight:800;cursor:pointer;animation:alarmaMueve .6s ease-in-out infinite alternate}
@@ -1531,6 +1536,10 @@ body.redimensionando iframe{pointer-events:none}
 .af-pos-l{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .af-pos-l[hidden]{display:none}
 .af-nosuena + .af-nosuena{margin-top:8px}
+.af-prob{margin-top:18px}
+.af-prob-t{margin:0;font-size:17px;font-weight:700}
+.af-prob .af-nosuena{font-size:16px}
+.af-prob-x{display:block;width:100%;margin-top:22px}
 .pip-alarma{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:12px;text-align:center;color:#fff;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--c) 55%,#1b1236),#120d24 75%)}
 .pip-alarma h2{margin:0;font-size:20px;line-height:1.2;word-break:break-word}
 .pa-falta{margin:0;color:#f7c35b;font-weight:800;font-size:15px}
@@ -2415,7 +2424,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.18';
+const VERSION = 'v6.19';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -7368,11 +7377,22 @@ const ALARMA_VERDE = '#16a34a', ALARMA_ROJO = '#dc2626';
 const esPractica = e => !!(e && e.tipo === 'habito');
 const colAlarma = e => esPractica(e) ? ALARMA_VERDE : ALARMA_ROJO;
 const okAlarma = e => esPractica(e) ? 'Práctica terminada' : 'Tarea completada';
-const imgAlarma = e => !esPractica(e) ? '' : esMeta(e)
-  ? '<img class="af-img" src="img/meta-planta.jpg" alt="" aria-hidden="true">'
-  : `<span class="af-img af-img-flor">${ICO_FLOR_HAB.replace('width="12" height="12"', 'width="84" height="84"')}</span>`;
+const imgAlarma = e => !esPractica(e) ? '' : '<img class="af-img" src="img/meta-planta.jpg" alt="" aria-hidden="true">';
+/* 6.19 (Gustavo): las prácticas de Amable Life (no de Amable Meta): a la izquierda la flor, con el pétalo de su área encendido y
+   con un reborde punteado (los demás, apagados); a la derecha, en el círculo blanco, «Práctica del área» y el área */
+function florPracticaSVG(e){
+  const sel = new Set(areasEv(e).map(a => a.id)), F = areasFlor();
+  const pet = (a, i) => { const on = sel.has(a.id);
+    return `<g transform="rotate(${i * 45}) translate(0 -36)"><path d="${petalo(60, 26)}" fill="${a.color}" fill-opacity="${on || !sel.size ? 1 : .28}"${on ? ' stroke="#fff" stroke-width="4.5" stroke-dasharray="7 6" stroke-linecap="round"' : ''}/></g>`; };
+  return `<svg viewBox="-106 -106 212 212" aria-hidden="true"><defs><radialGradient id="lcF"><stop offset="0" stop-color="#ffe59a"/><stop offset=".55" stop-color="#f7b733"/><stop offset="1" stop-color="#c9741a"/></radialGradient></defs>`
+    + F.map((a, i) => sel.has(a.id) ? '' : pet(a, i)).join('') + F.map((a, i) => sel.has(a.id) ? pet(a, i) : '').join('')
+    + `<circle r="44" fill="url(#lcF)"/>${cuadrosCal(44)}</svg>`;
+}
+const pracTxt = e => { const L = areasEv(e); return L.length ? [L.length > 1 ? 'Práctica de las áreas' : 'Práctica del área', L.map(a => a.corto).join(' · ')] : ['Práctica', 'integral']; };
 const extraAlarma = (e, k, at) => ({ini: fechaDe(k).getTime() + (e.todo ? 0 : e.ini * 60000), todo: !!e.todo,
-  cuando: cuandoTxt(e, k, claveDia(new Date(at))), col: colAlarma(e), hab: esPractica(e), img: esPractica(e) ? (esMeta(e) ? 'meta' : 'flor') : '', okt: okAlarma(e)});
+  cuando: cuandoTxt(e, k, claveDia(new Date(at))), col: colAlarma(e), hab: esPractica(e), img: esPractica(e) ? (esMeta(e) ? 'meta' : 'flor') : '', okt: okAlarma(e),
+  // 6.19: para dibujar la flor en la app (los 8 colores en el orden de la flor y cuáles son de esta práctica) y el texto del círculo
+  ...(esPractica(e) && !esMeta(e) ? {cols: areasFlor().map(a => a.color), sel: areasFlor().map((a, i) => areasEv(e).some(x => x.id === a.id) ? i : -1).filter(i => i >= 0), t1: pracTxt(e)[0], t2: pracTxt(e)[1]} : {})});
 /* 4.58 (Gustavo): debajo de «Enterado», en pequeño, qué quita: solo este aviso (el de 1 hora antes, el de 5 minutos antes…) */
 function entTxt(e, a){
   if(a == null) return 'Solo quita este aviso pospuesto';
@@ -7389,7 +7409,8 @@ function hojaAlarma(e, k, txt, ultima, a){
   const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full' + (esPractica(e) ? ' af-hab' : ' af-tarea'); d.style.setProperty('--c', colAlarma(e)); d.dataset.cab = cabeceraEv(e);
   d.innerHTML = `<div class="af-in" role="alertdialog" aria-label="Recordatorio">
     <div class="af-marca"><svg viewBox="-100 -100 200 200" width="34" height="34" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1A')}</svg><b>Amable Life</b></div>
-    ${esPractica(e) ? `<div class="af-img-c">${imgAlarma(e)}<span class="af-ico af-ico-peq">${ICO_CAMPANA.replace('width="18" height="18"', 'width="34" height="34"')}</span></div>`
+    ${esPractica(e) && !esMeta(e) ? `<div class="af-prac"><span class="af-flor">${florPracticaSVG(e)}</span><div class="af-img-c"><span class="af-img af-txt"><small>${pracTxt(e)[0]}</small><b>${esc(pracTxt(e)[1])}</b></span><span class="af-ico af-ico-peq">${ICO_CAMPANA.replace('width="18" height="18"', 'width="34" height="34"')}</span></div></div>`
+      : esPractica(e) ? `<div class="af-img-c">${imgAlarma(e)}<span class="af-ico af-ico-peq">${ICO_CAMPANA.replace('width="18" height="18"', 'width="34" height="34"')}</span></div>`
       : `<div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="64" height="64"')}</div>`}
     <p class="af-hora" id="af-hora">${sonLas()}</p>
     <p class="af-falta">${esc(faltaTxt(e, k))}</p>
@@ -7402,8 +7423,7 @@ function hojaAlarma(e, k, txt, ultima, a){
       <div class="af-pos-l" id="af-pos-l" hidden>${POSPONER_MIN.map(m => `<button type="button" onclick="posponerAlarma('${e.id}','${k}',${m},${ultima ? 1 : 0})">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div>
       ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">${okAlarma(e)}</button>` : ''}
     </div>
-    <button type="button" class="af-nosuena" onclick="ayudaSonido(this)">¿No te suena la alarma?</button>
-    ${faltaDelante() ? '<button type="button" class="af-nosuena" onclick="ayudaDelante(this)">¿Estaba tapada por otras ventanas?</button>' : ''}
+    <button type="button" class="af-nosuena" onclick="alarmaProblemas(this)">¿Problemas con la alarma?</button>
     </div>`;
   document.body.appendChild(d);
   requestAnimationFrame(() => d.classList.add('ver'));
@@ -7480,6 +7500,23 @@ function ayudaSonido(b){
        <li>Si sigue sin sonar: en la barra de arriba de la app, menú <b>⋮</b> → <b>Información de la app</b> (o el candado de la dirección) → <b>Sonido</b> → <b>Permitir</b>.</li>`;
   b.insertAdjacentHTML('afterend', `<div class="af-ayuda"><ol>${pasos}</ol>
     <div class="af-ayuda-b"><button type="button" onclick="sonarAlarma(5)">Probar el sonido</button>${!esApp && enWindows() ? '<button type="button" onclick="abrirVolumenWindows()">Abrir el volumen de Windows</button>' : ''}</div></div>`);
+}
+/* 6.19 (Gustavo): abajo, un solo enlace «¿Problemas con la alarma?». Al tocarlo, la alarma se da por enterada (deja de sonar y
+   se quita el aviso), los botones se esconden y se elige qué ha pasado («No me sonaba» / «Estaba tapada por otras ventanas»);
+   si solo hay uno, se abre directamente su explicación. «Cerrar» quita la ventana. */
+function alarmaProblemas(b){
+  pararAlarma(); if(alarmaAct){ alarmaAct = null; alarmaPip(); cerrarNotifAlarma(); }
+  const d = $('#alarma-full'); if(!d) return;
+  const bots = d.querySelector('.af-bots'); if(bots) bots.hidden = true;
+  b.hidden = true;
+  const dos = faltaDelante(), caja = document.createElement('div');
+  caja.className = 'af-prob';
+  caja.innerHTML = `<p class="af-prob-t">La alarma ya está parada. ¿Qué te ha pasado?</p>
+    <button type="button" class="af-nosuena" onclick="ayudaSonido(this)">No me sonaba la alarma</button>
+    ${dos ? '<button type="button" class="af-nosuena" onclick="ayudaDelante(this)">Estaba tapada por otras ventanas</button>' : ''}
+    <button type="button" class="af-b af-ent af-gris af-prob-x" onclick="alarmaCerrar()">Cerrar</button>`;
+  b.after(caja);
+  if(!dos) ayudaSonido(caja.querySelector('.af-nosuena'));
 }
 function alarmaCerrar(rapido){
   pararAlarma();
@@ -7929,7 +7966,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.60';   // última app Android publicada
+const APK_ULTIMA = '2.61';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
