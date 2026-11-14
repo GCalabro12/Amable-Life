@@ -1513,6 +1513,13 @@ body.redimensionando iframe{pointer-events:none}
 .af-ent.af-gris{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.35)}
 .af-pos{background:#8b5cf6}
 .af-ent{background:#16a34a}
+/* 6.18: fondo verde (prácticas) o rojo (tareas), más intenso; en el verde, los botones verdes pasan a blanco con letra verde */
+.alarma-full.af-hab, .alarma-full.af-tarea{background:radial-gradient(120% 75% at 50% 18%,color-mix(in srgb,var(--c) 78%,#140f26) 0,color-mix(in srgb,var(--c) 35%,#140f26) 55%,#140f26 100%)}
+.alarma-full.af-hab .af-ent:not(.af-gris), .alarma-full.af-hab .af-ok{background:#fff;color:#15803d}
+.af-img-c{position:relative;display:inline-block;margin-top:16px}
+.af-img{width:128px;height:128px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.35);display:block}
+.af-img-flor{display:grid;place-items:center;background:#fff}
+.af-ico-peq{position:absolute;top:-6px;right:-12px;width:50px;height:50px;border-radius:50%;background:#1f1640;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .af-ent-txt{margin:-4px 0 4px;font-size:13px;color:#cfc6ec;text-align:center}
 .af-sinson{display:block;margin:0 auto 14px;border:0;border-radius:99px;padding:10px 18px;background:#f7c35b;color:#2a1f52;font:inherit;font-weight:800;cursor:pointer;animation:alarmaMueve .6s ease-in-out infinite alternate}
 .af-nosuena{display:block;margin:18px auto 0;border:0;background:none;color:#c9c2ea;font:inherit;font-size:15px;text-decoration:underline;cursor:pointer}
@@ -2408,7 +2415,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.17';
+const VERSION = 'v6.18';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -7355,8 +7362,17 @@ function cuandoTxt(e, k, ref){
   return e.todo ? `${qu} para ${dia ? dia.trim() : 'hoy'}` : `${qu} para realizar ${dia}a las ${hm(e.ini)}`;
 }
 /* lo que necesita la ventana del teléfono para escribir lo mismo (APK 2.49) */
+/* 6.18 (Gustavo): en la ventana de la alarma, las prácticas integrales con fondo verde, su imagen y «Práctica terminada»;
+   las tareas, con fondo rojo */
+const ALARMA_VERDE = '#16a34a', ALARMA_ROJO = '#dc2626';
+const esPractica = e => !!(e && e.tipo === 'habito');
+const colAlarma = e => esPractica(e) ? ALARMA_VERDE : ALARMA_ROJO;
+const okAlarma = e => esPractica(e) ? 'Práctica terminada' : 'Tarea completada';
+const imgAlarma = e => !esPractica(e) ? '' : esMeta(e)
+  ? '<img class="af-img" src="img/meta-planta.jpg" alt="" aria-hidden="true">'
+  : `<span class="af-img af-img-flor">${ICO_FLOR_HAB.replace('width="12" height="12"', 'width="84" height="84"')}</span>`;
 const extraAlarma = (e, k, at) => ({ini: fechaDe(k).getTime() + (e.todo ? 0 : e.ini * 60000), todo: !!e.todo,
-  cuando: cuandoTxt(e, k, claveDia(new Date(at))), col: colorEv(e)});
+  cuando: cuandoTxt(e, k, claveDia(new Date(at))), col: colAlarma(e), hab: esPractica(e), img: esPractica(e) ? (esMeta(e) ? 'meta' : 'flor') : '', okt: okAlarma(e)});
 /* 4.58 (Gustavo): debajo de «Enterado», en pequeño, qué quita: solo este aviso (el de 1 hora antes, el de 5 minutos antes…) */
 function entTxt(e, a){
   if(a == null) return 'Solo quita este aviso pospuesto';
@@ -7370,27 +7386,28 @@ const completaEn = a => a <= 5;
 function hojaAlarma(e, k, txt, ultima, a){
   // 4.25: antes llamaba a alarmaCerrar(), que paraba el sonido que se acababa de empezar (la ventana salía en silencio)
   const vieja = $('#alarma-full'); if(vieja){ vieja.id = ''; vieja.remove(); }
-  const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full'; d.style.setProperty('--c', colorEv(e)); d.dataset.cab = cabeceraEv(e);
+  const d = document.createElement('div'); d.id = 'alarma-full'; d.className = 'alarma-full' + (esPractica(e) ? ' af-hab' : ' af-tarea'); d.style.setProperty('--c', colAlarma(e)); d.dataset.cab = cabeceraEv(e);
   d.innerHTML = `<div class="af-in" role="alertdialog" aria-label="Recordatorio">
     <div class="af-marca"><svg viewBox="-100 -100 200 200" width="34" height="34" aria-hidden="true">${logoInterior().replace(/\b(lc|lsem)\b/g, '$1A')}</svg><b>Amable Life</b></div>
-    <div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="64" height="64"')}</div>
+    ${esPractica(e) ? `<div class="af-img-c">${imgAlarma(e)}<span class="af-ico af-ico-peq">${ICO_CAMPANA.replace('width="18" height="18"', 'width="34" height="34"')}</span></div>`
+      : `<div class="af-ico">${ICO_CAMPANA.replace('width="18" height="18"', 'width="64" height="64"')}</div>`}
     <p class="af-hora" id="af-hora">${sonLas()}</p>
     <p class="af-falta">${esc(faltaTxt(e, k))}</p>
-    <h1>${broteEv(e)}${esc(e.t)}</h1>
+    <h1>${esPractica(e) ? '' : broteEv(e)}${esc(e.t)}</h1>
     <p class="af-cuando">${esc(cuandoTxt(e, k, hoyK()))}</p>
     <div class="af-bots">
       <button type="button" class="af-b af-ent${ultima ? ' af-gris' : ''}" onclick="alarmaCerrar()">Enterado</button>
       <p class="af-ent-txt">${esc(entTxt(e, a))}</p>
       <button type="button" class="af-b af-pos" onclick="const l = document.getElementById('af-pos-l'); l.hidden = !l.hidden">Posponer</button>
       <div class="af-pos-l" id="af-pos-l" hidden>${POSPONER_MIN.map(m => `<button type="button" onclick="posponerAlarma('${e.id}','${k}',${m},${ultima ? 1 : 0})">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div>
-      ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">Tarea completada</button>` : ''}
+      ${ultima ? `<button type="button" class="af-b af-ok" onclick="alarmaCompletar('${e.id}','${k}')">${okAlarma(e)}</button>` : ''}
     </div>
     <button type="button" class="af-nosuena" onclick="ayudaSonido(this)">¿No te suena la alarma?</button>
     ${faltaDelante() ? '<button type="button" class="af-nosuena" onclick="ayudaDelante(this)">¿Estaba tapada por otras ventanas?</button>' : ''}
     </div>`;
   document.body.appendChild(d);
   requestAnimationFrame(() => d.classList.add('ver'));
-  alarmaAct = {id: e.id, k, ul: !!ultima, t: e.t, falta: faltaTxt(e, k), cuando: cuandoTxt(e, k, hoyK()), c: colorEv(e)};
+  alarmaAct = {id: e.id, k, ul: !!ultima, t: e.t, falta: faltaTxt(e, k), cuando: cuandoTxt(e, k, hoyK()), c: colAlarma(e), okt: okAlarma(e)};
   alarmaPip();
   clearInterval(horaAlarmaT);   // la hora sigue al día mientras la ventana está abierta
   horaAlarmaT = setInterval(() => { const h = document.getElementById('af-hora'); if(!h){ clearInterval(horaAlarmaT); return; } h.textContent = sonLas();
@@ -7440,7 +7457,7 @@ function alarmaPip(){
     <p class="pa-falta">${esc(x.falta)}</p><h2>${esc(x.t)}</h2><p class="pa-cuando">${esc(x.cuando)}</p>
     <button type="button" class="af-b af-ent${x.ul ? ' af-gris' : ''}" data-onclick="alarmaCerrar()">Enterado</button>
     <button type="button" class="af-b af-pos" data-onclick="posponerAlarma('${x.id}','${x.k}',5,${x.ul ? 1 : 0})">Posponer 5 min</button>
-    ${x.ul ? `<button type="button" class="af-b af-ok" data-onclick="alarmaCompletar('${x.id}','${x.k}')">Tarea completada</button>` : ''}</div>`);
+    ${x.ul ? `<button type="button" class="af-b af-ok" data-onclick="alarmaCompletar('${x.id}','${x.k}')">${x.okt || 'Tarea completada'}</button>` : ''}</div>`);
 }
 /* al quitar la alarma aquí, se quitan también sus avisos de la esquina */
 function cerrarNotifAlarma(){
@@ -7474,7 +7491,7 @@ function alarmaCerrar(rapido){
 function alarmaCompletar(id, k){
   alarmaCerrar();
   const e = AG_().eventos.find(x => x.id === id);
-  if(e && !hechoEv(e, k)){ alternarEv(id, k); aviso(`«${e.t}» completada`, 3000); }
+  if(e && !hechoEv(e, k)){ alternarEv(id, k); aviso(esPractica(e) ? `«${e.t}»: práctica terminada` : `«${e.t}» completada`, 3000); }
 }
 /* Posponer: en la app de Android lo programa el teléfono (suena aunque cierres la app); en el navegador se apunta en este
    aparato (`equilibra.pospuestos`) y lo vigila `revisarPospuestos` cada 30 s, también si recargas la página */
@@ -7912,7 +7929,7 @@ const MOV_TIPS = ['Levántate y estira los brazos hacia el techo.', 'Da una vuel
 // En el navegador, el APK se baja de esta misma web (desde GitHub, la pestaña de descarga se quedaba trabada al 100 %).
 // Dentro de la app, el enlace de GitHub se abre en el navegador del móvil. Subir Amable-Life.apk a la web con cada APK nueva.
 const APK = esApp ? 'https://raw.githubusercontent.com/GCalabro12/Amable-Life/main/Amable-Life.apk' : 'Amable-Life.apk';   // 4.17: el repositorio se llama Amable-Life
-const APK_ULTIMA = '2.59';   // última app Android publicada
+const APK_ULTIMA = '2.60';   // última app Android publicada
 const versionApp = () => { try{ return esApp ? String(AndroidEquilibra.version()) : ''; }catch(e){ return ''; } };
 const vMenor = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number);
   return (x[0]||0) < (y[0]||0) || ((x[0]||0) === (y[0]||0) && (x[1]||0) < (y[1]||0)); };
