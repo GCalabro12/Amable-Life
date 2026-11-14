@@ -1750,6 +1750,8 @@ html.claro .frec-sel,html.claro .frec-l select,html.claro .frec-l input,html.cla
 .cab-menu{width:42px;height:42px;border:0;border-radius:50%;background:none;color:var(--tinta);display:grid;place-items:center;cursor:pointer;padding:0;margin-right:-8px}
 .cab-menu:hover{background:rgba(var(--bl),.1)}
 @media (max-width:899px){ body.con-nav .cab-menu{display:none} }
+body.sin-cuenta #nav, body.sin-cuenta .cab-menu, body.sin-cuenta #cab-volver, body.sin-cuenta #cab-secc, body.sin-cuenta .cab .der{display:none !important}   /* 6.23: sin cuenta, solo la pantalla de entrar */
+#hoja:has(#hoja-union) .hoja-x, #hoja:has(#hoja-union) .hoja-asa{display:none}
 .ml{position:fixed;inset:0;z-index:45;background:rgba(8,5,20,0);transition:background .25s}
 .ml.ver{background:rgba(8,5,20,.55)}
 .ml-in{position:absolute;top:0;bottom:0;left:0;width:min(330px,86vw);background:linear-gradient(180deg,color-mix(in srgb,#8b5cf6 22%,var(--tarjeta)),var(--tarjeta) 55%);border-radius:0 22px 22px 0;overflow:auto;padding:14px 0 calc(16px + env(safe-area-inset-bottom));transform:translateX(-100%);transition:transform .25s ease;box-shadow:8px 0 30px rgba(0,0,0,.4)}
@@ -2430,7 +2432,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.22';
+const VERSION = 'v6.23';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -2759,6 +2761,8 @@ function ir(v, sinHist){
   if(v === 'dia') centrarBloque();
 }
 function render(){
+  if(cuentaObligada() && vista !== 'cuenta'){ vista = 'cuenta'; cuentaAlInicio = true; }
+  document.body.classList.toggle('sin-cuenta', cuentaObligada());
   const cabH = $('.cab'); if(cabH && cabH.offsetHeight) document.documentElement.style.setProperty('--cab-h', cabH.offsetHeight + 'px');
   const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, defhab:vDefHab, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad, premium:vPremium};
   app.innerHTML = (vistas[vista] || vInicio)();
@@ -4055,6 +4059,7 @@ function cerrarHoja(){ if($('#hoja[data-voz]')) vozParar(); if(typeof regCerrarP
 const cerrarPetalo = cerrarHoja;
 /* La cruz (y tocar fuera) cierra cada hoja como su propio botón de salir */
 function cerrarHojaX(){
+  if(document.getElementById('hoja-union')) return;   // 6.23: hay que elegir
   if(edicion) salirEdicion();
   else if(evEd) salirEvento();
   else if(avisoSalud) responderAviso(false);
@@ -8490,21 +8495,28 @@ async function iniciarNube(){
     nube.listo = true;
     firebase.auth().getRedirectResult().catch(() => {});
     firebase.auth().onAuthStateChanged(async u => {
+      const eraInicial = authInicial;
+      nube.authOk = true;   // 6.23: ya se sabe si hay sesión (sin ella, la app pide entrar)
       nube.usuario = u;
       // Cada persona tiene su propio documento: usuarios/{uid}/equilibra/datos (las reglas solo dejan entrar a su dueño)
       if(nube.escucha){ nube.escucha(); nube.escucha = null; }
       nube.ref = u ? firebase.firestore().collection('usuarios').doc(u.uid).collection('equilibra').doc('datos') : null;
-      if(u) await traerNube();
+      if(u){
+        // 6.23: si se entra ahora (no una sesión que ya estaba) y en este aparato había datos que no eran de esta cuenta, se pregunta
+        let uidAntes = ''; try{ uidAntes = localStorage.getItem('equilibra.nubeUid') || ''; }catch(e){}
+        if(!eraInicial && uidAntes !== u.uid && hayDatosLocales()) await elegirUnion(uidAntes);
+        else await traerNube();
+      }
       if(u && u.displayName && !D.nombre) guardarNombre(u.displayName);
       if(u) setTimeout(() => revisarRegistro(true), 1000);
       if(u) setTimeout(() => registrarUso(u), 1500);   // 4.88: país aproximado y días de uso (pantalla «Quién usa la app»)   // con la cuenta ya lista, el resumen diario puede salir
       if(authInicial){
         authInicial = false;
-        let saltada = false; try{ saltada = sessionStorage.getItem('equilibra.sinCuenta') === '1'; }catch(e){}
-        // sin cuenta y sin datos: primero la cuenta (4.17)
-        if(!u && !saltada && (['inicio', 'dia'].includes(vista) || vista === 'agenda' && !tieneDatos())){ cuentaAlInicio = true; cuentaModo = tieneDatos() ? 'entrar' : 'crear'; vista = 'cuenta'; }
+        if(!u) cuentaModo = hayDatosLocales() ? 'entrar' : 'crear';
       }
-      if(u && cuentaAlInicio){ cuentaAlInicio = false; if(vista === 'cuenta') vista = vistaInicial(); }
+      // 6.23 (Gustavo): sin cuenta no se puede usar la app; la pantalla de la cuenta no se puede saltar
+      if(!u){ cuentaAlInicio = true; if(vista !== 'cuenta'){ vista = 'cuenta'; cerrarHoja(); } render(); return; }
+      if(u && cuentaAlInicio){ cuentaAlInicio = false; if(vista === 'cuenta'){ vista = vistaInicial(); render(); window.scrollTo(0, 0); if(vista === 'agenda') agVerAhora(); return; } }
       if(['inicio','dia','salud','historial','ajustes','cuenta'].includes(vista)) render();
     });
   }catch(e){ console.warn('Amable Life: nube no disponible', e); }
@@ -8570,6 +8582,7 @@ async function traerNube(){
     const ahora = JSON.stringify(D);
     try{ localStorage.setItem(CLAVE, ahora); }catch(e){}
     nube.leido = Date.now(); nube.ok = Date.now();
+    try{ if(nube.usuario) localStorage.setItem('equilibra.nubeUid', nube.usuario.uid); }catch(e){}
     if(!r || ahora !== JSON.stringify(fusionar(vacio(), r))) await subirNube();
     enviarResumen();
     if(ahora !== antes) pintarDesdeNube();
@@ -8837,7 +8850,46 @@ async function eliminarCuenta(){
 const SAL_PIN = 'equilibra-';
 let authInicial = true, cuentaAlInicio = false;
 function ahoraNo(){ try{ sessionStorage.setItem('equilibra.sinCuenta', '1'); }catch(e){} cuentaAlInicio = false; ir(vistaInicial()); }
-const volverCuenta = () => cuentaAlInicio ? `<button class="link volver" onclick="ahoraNo()">Ahora no, entrar sin cuenta →</button>` : `<button class="link volver" onclick="ir('ajustes')">← Ajustes</button>`;
+const volverCuenta = () => cuentaAlInicio ? '' : `<button class="link volver" onclick="ir('ajustes')">← Ajustes</button>`;
+/* 6.23 (Gustavo, por el chat «0 Asistente de dirección»: «así como el calendario te obliga a entrar en alguna cuenta, así tienes que entrar»):
+   sin cuenta no se usa la app. Solo cuando Firebase ha contestado que no hay sesión (sin conexión y sin poder cargar Firebase, la app sigue). */
+const cuentaObligada = () => !!(nube.authOk && !nube.usuario);
+const hayDatosLocales = () => D.acciones.length > 0 || D.revisiones.length > 0 || ((D.agenda || {}).eventos || []).length > 0;
+/* Al entrar en un aparato que tenía datos sin cuenta (o de otra cuenta): una copia vieja podía devolver a la cuenta lo ya borrado en otro aparato.
+   Si la cuenta ya tiene datos, se pregunta; lo de este aparato se guarda aparte (equilibra.copiaAntesDeEntrar) por si acaso. */
+let unionFin = null, unionR = null;
+async function elegirUnion(uidAntes){
+  let r = null;
+  try{ const doc = await nube.ref.get(); r = doc.exists ? doc.data() : null; }catch(e){ return traerNube(); }
+  const nr = r ? fusionar(vacio(), r) : null;
+  const cuentaConDatos = !!(nr && (nr.acciones.length || nr.revisiones.length || ((nr.agenda || {}).eventos || []).length));
+  if(uidAntes) return unionUsar(r);   // datos de otra persona en este aparato: nunca se juntan
+  if(!cuentaConDatos) return traerNube();   // cuenta nueva: lo de aquí sube a ella
+  unionR = r;
+  return new Promise(ok => {
+    unionFin = ok;
+    mostrarHoja(`<div id="hoja-union"><h3 style="margin:0 0 8px">Este aparato tenía datos guardados</h3>
+      <p class="peq" style="margin:0 0 14px">Aquí hay tareas o calendario de antes de entrar, y tu cuenta ya tiene los suyos. ¿Qué quieres hacer?</p>
+      <button class="btn prim ancho" onclick="unionElegir(true)">Usar lo de mi cuenta</button>
+      <p class="peq suave" style="margin:6px 2px 14px">Recomendado si ya usas Amable Life en otro aparato: así no vuelve nada que hayas borrado o cambiado allí. Lo de este aparato se guarda aparte por si acaso.</p>
+      <button class="btn sec ancho" onclick="unionElegir(false)">Juntar lo de este aparato con mi cuenta</button>
+      <p class="peq suave" style="margin:6px 2px 0">Lo que solo esté en este aparato se añade a tu cuenta.</p></div>`, 'var(--oro)');
+  });
+}
+async function unionUsar(r){
+  try{ localStorage.setItem('equilibra.copiaAntesDeEntrar', JSON.stringify({at: new Date().toISOString(), datos: D})); }catch(e){}
+  D = r ? fusionar(vacio(), r) : vacio();
+  try{ localStorage.setItem(CLAVE, JSON.stringify(D)); }catch(e){}
+  await traerNube();
+  rerenderDia();
+}
+async function unionElegir(usarCuenta){
+  const fin = unionFin, r = unionR; unionFin = null; unionR = null;
+  cerrarHoja();
+  if(usarCuenta) await unionUsar(r); else await traerNube();
+  aviso(usarCuenta ? 'Listo: ves lo de tu cuenta' : 'Listo: lo de este aparato se ha juntado con tu cuenta', 3500);
+  if(fin) fin();
+}
 let cuentaModo = 'entrar';
 function errorCuenta(e){
   const m = {
@@ -8856,7 +8908,7 @@ function vCuenta(){
   const campoPin = (id, ph, auto) => `<input type="password" id="${id}" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="${auto}" placeholder="${ph}" class="pin">`;
   let h = `${volverCuenta()}
     <h2 style="margin-top:6px">${cuentaAlInicio ? 'Bienvenido a Amable Life' : 'Tu cuenta'}</h2>
-    <p class="suave peq" style="margin:4px 0 0">Con una cuenta tus acciones se guardan en la nube y las ves en todos tus dispositivos.</p>
+    <p class="suave peq" style="margin:4px 0 0">${cuentaAlInicio ? 'Para usar Amable Life, entra en tu cuenta o crea una. Así tus tareas y tu calendario se guardan en la nube y los ves igual en el móvil y en el ordenador.' : 'Con una cuenta tus acciones se guardan en la nube y las ves en todos tus dispositivos.'}</p>
     <button class="btn google ancho" style="margin-top:16px" onclick="entrar()">Entrar con Google</button><p class="separador"><span>o con tu email</span></p>`;
   if(cuentaModo === 'crear'){
     h += `<div class="formulario">
