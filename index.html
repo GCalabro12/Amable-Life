@@ -989,6 +989,7 @@ nav.abajo button{font-size:11px}
 .rj-col{position:relative;border-left:1px solid rgba(var(--bl),.06);cursor:pointer}
 .rj-ev{cursor:pointer}
 .rj-tir{position:absolute;left:0;right:0;bottom:0;height:7px;cursor:ns-resize}
+.rj-tir.rj-tir-a{top:0;bottom:auto}   /* 6.32 (Gustavo): también se estira desde arriba (cambia la hora de empezar) */
 @media (hover:none){ .rj-tir{display:none} }
 .rj-ev.rj-mov{z-index:6;opacity:.92;box-shadow:0 10px 26px rgba(0,0,0,.45);transition:none}
 .rj-ev.rj-mov > span:not(.rj-hora){display:none}
@@ -2440,7 +2441,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.31';
+const VERSION = 'v6.32';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5413,7 +5414,7 @@ function rejillaHTML(dias){
       h += `<div class="rj-ahora" style="top:${y(m)}px"></div>`;
     }
     h += columnasEv(evsVer(k)).map(({e, c, n}) => { const alto = Math.max(20, (e.fin - e.ini) / 60 * AG_PX - 2);
-      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}${marcaCls(e)}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · práctica' + objDia(e, k) : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i></button>`; }).join('');
+      return `<button class="rj-ev ${hechoEv(e, k) ? 'ok' : ''} ${pasadoEv(e, k) ? 'pasado' : ''}${marcaCls(e)}" style="--c:${colorEv(e)};top:${y(e.ini) + 1}px;height:${alto}px;left:${c / n * 100}%;width:calc(${100 / n}% - 2px)" data-ev="${e.id}" data-k="${k}" onclick="verEvento('${e.id}','${k}', this)"><b>${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</b>${alto > 34 && (!sem || ESCRITORIO.matches) ? `<span>${hm(e.ini)} – ${hm(e.fin)}${e.tipo === 'habito' ? ' · práctica' + objDia(e, k) : ''}</span>` : ''}<i class="rj-tir" aria-hidden="true"></i><i class="rj-tir rj-tir-a" aria-hidden="true"></i></button>`; }).join('');
     return `<div class="rj-col" data-k="${k}" data-h0="${h0}" onclick="agClicRejilla(event,'${k}',${h0})">${h}</div>`;
   }).join('');
   // 4.78 (Gustavo): «Tareas flexibles» (las de hoy sin hora): un óvalo a la altura de la hora de ahora (baja con ella),
@@ -5514,8 +5515,8 @@ document.addEventListener('pointerdown', ev => {
   if(ev.button !== 0 || ev.pointerType === 'touch') return;
   const el = ev.target.closest && ev.target.closest('.rj-ev'); if(!el) return;
   const e = AG_().eventos.find(x => x.id === el.dataset.ev); if(!e || e.todo) return;
-  const estirar = !!ev.target.closest('.rj-tir');
-  rjArr = {el, e, k: el.dataset.k, estirar, x0: ev.clientX, y0: ev.clientY, ini: e.ini, fin: e.fin, nIni: e.ini, nFin: e.fin, movido: false, col: el.closest('.rj-col'), colN: el.closest('.rj-col')};
+  const estirar = !!ev.target.closest('.rj-tir'), arriba = !!ev.target.closest('.rj-tir-a');
+  rjArr = {el, e, k: el.dataset.k, estirar, arriba, x0: ev.clientX, y0: ev.clientY, ini: e.ini, fin: e.fin, nIni: e.ini, nFin: e.fin, movido: false, col: el.closest('.rj-col'), colN: el.closest('.rj-col')};
   ev.preventDefault();   // que no se seleccione el texto
 });
 document.addEventListener('pointermove', ev => {
@@ -5527,7 +5528,12 @@ document.addEventListener('pointermove', ev => {
     a.el.classList.add('rj-mov'); document.body.classList.add(a.estirar ? 'rj-estirando' : 'rj-moviendo');
   }
   const paso = Math.round(dy / AG_PX * 4) * 15;
-  if(a.estirar){
+  if(a.estirar && a.arriba){   // 6.32: desde el borde de arriba cambia la hora de empezar; la de terminar se queda
+    const max = a.e.tipo === 'habito' ? 120 : 24 * 60;
+    a.nFin = a.fin; a.nIni = Math.max(0, a.fin - max, Math.min(a.fin - 15, a.ini + paso));
+    a.el.style.transform = `translateY(${(a.nIni - a.ini) / 60 * AG_PX}px)`;
+    a.el.style.height = Math.max(20, (a.nFin - a.nIni) / 60 * AG_PX - 2) + 'px';
+  } else if(a.estirar){
     const max = a.e.tipo === 'habito' ? 120 : 24 * 60;
     a.nIni = a.ini; a.nFin = Math.min(24 * 60, a.ini + max, Math.max(a.ini + 15, a.fin + paso));
     a.el.style.height = Math.max(20, (a.nFin - a.ini) / 60 * AG_PX - 2) + 'px';
