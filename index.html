@@ -2440,7 +2440,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.29';
+const VERSION = 'v6.30';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -6078,9 +6078,9 @@ function pintarEvento(e){
       <div class="ev-dias">${DIAS_CORTO.map((x, i) => `<button data-d="${i}" class="${evEd.dias.includes(i) ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evDia(${i})">${x}</button>`).join('')}</div>
       <p class="peq frec-uno" id="frec-uno" hidden>Con un solo día se guardará como <b>Semanal · 1 día a la semana</b>. Para «Diario», elige al menos 2 días.</p></div>
       <div id="frec-semanal" ${evEd.frec === 'semanal' ? '' : 'hidden'}><label class="frec-l"><select id="frec-veces" onchange="evEd.veces = +this.value; pintarDias()">${[1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(evEd.veces || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}</select> <span id="frec-veces-t">${(evEd.veces || 3) === 1 ? 'día a la semana' : 'días a la semana, los que tú quieras'}</span></label>
-      <div id="frec-fijo" ${(evEd.veces || 3) === 1 ? '' : 'hidden'}><p class="peq suave frec-ayuda">¿Qué día quieres que te la recordemos?</p>
+      <div id="frec-fijo" ${(evEd.veces || 3) === 1 ? '' : 'hidden'}><p class="peq suave frec-ayuda">¿Qué día quieres que la coloquemos?</p>
       <div class="ev-dias ev-fijo">${DIAS_CORTO.map((x, i) => `<button data-f="${i}" class="${evEd.fijo === i ? 'sel' : ''}" aria-label="${DIAS_LARGO[i]}" onclick="evFijo(${i})">${x}</button>`).join('')}</div>
-      <p class="peq suave frec-ayuda" id="frec-fijo-n">${evEd.fijo == null ? 'Elige un día: ese día sale en tu calendario y te la recordamos.' : ''}</p></div></div>
+      <p class="peq suave frec-ayuda" id="frec-fijo-n">${evEd.fijo == null ? 'Elige un día: ese día sale en tu calendario.' : ''}</p></div></div>
       <div id="frec-intervalo" ${evEd.frec === 'intervalo' ? '' : 'hidden'}><label class="frec-l">Cada <input type="number" id="frec-cada" min="2" max="60" value="${evEd.cada || 2}" oninput="evEd.cada = Math.max(2, Math.min(60, +this.value || 2)); pintarDias()"> días</label></div>
       </div></div>${objHojaHTML()}</div>
     </div>
@@ -6104,7 +6104,7 @@ function pintarEvento(e){
     <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
       <div id="ev-prio-c" ${hab ? 'hidden' : ''}>${despHTML('prio', 'Prioridad', ICO_BANDERA('currentColor').replace('width="14" height="14"', 'width="18" height="18"'))}</div>
-      ${despHTML('rec', 'Recordatorio', ICO_CAMPANA)}
+      ${despHTML('rec', 'Recordatorio (alarma)', ICO_CAMPANA)}
       ${despHTML('snd', 'Sonido y duración', ICO_ALTAVOZ)}
       ${despHTML('area', 'Área', ICO_PETALO)}
     </div>
@@ -7256,7 +7256,7 @@ function pintarDias(){
   if(fj) fj.hidden = !uno;
   if(fvt) fvt.textContent = uno ? 'día a la semana' : 'días a la semana, los que tú quieras';
   document.querySelectorAll('.ev-fijo button').forEach(b => b.classList.toggle('sel', +b.dataset.f === evEd.fijo));
-  if(fn) fn.textContent = evEd.fijo == null ? 'Elige un día: ese día sale en tu calendario y te la recordamos.' : '';
+  if(fn) fn.textContent = evEd.fijo == null ? 'Elige un día: ese día sale en tu calendario.' : '';
   if(fu) fu.hidden = !((evEd.frec || 'diario') === 'diario' && evEd.dias.length === 1);
   evResumen();
 }
@@ -7284,20 +7284,14 @@ function guardarEvento(){
   const dia = valor('ev-dia') || e0.k, todo = $('#ev-todo').checked;
   let ini = minDeHora(valor('ev-ini')), fin = minDeHora(valor('ev-fin'));
   if(!todo){ if(ini == null){ aviso('Pon la hora de empezar'); return; } if(fin == null || fin <= ini) fin = Math.min(ini + 60, 1439); }
-  /* 6.28 (Gustavo): «las prácticas tienen que tener al menos un recordatorio semanal; es requisito». Con «Semanal · 1 día a la semana»
-     hay que elegir qué día (ese día sale y suena), y toda práctica necesita al menos un recordatorio. */
+  /* 6.28 (Gustavo): con «Semanal · 1 día a la semana» hay que elegir qué día se coloca (6.30: la alarma no es obligatoria) */
   if(e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo == null){
-    aviso('Elige qué día de la semana quieres que te la recordemos', 3500);
+    aviso('Elige qué día de la semana quieres que la coloquemos', 3500);
     const fp = $('#frec-panel'); if(fp && fp.hidden){ const fb = document.querySelector('#hoja .frec-btn, #hoja [onclick^="frecTocar"]'); if(fb) frecTocar(fb); }
     const fj = $('#frec-fijo'); if(fj){ fj.classList.add('falta'); fj.scrollIntoView({block: 'nearest'}); }
     return;
   }
-  if(e0.tipo === 'habito' && !avisosFinal(e0, todo, ini).length){
-    aviso('Las prácticas integrales necesitan al menos un recordatorio: elige cuándo te la recordamos', 3500);
-    if($('#dl-rec') && $('#dl-rec').hidden) despTocar('rec');
-    const dc = $('#dc-rec'); if(dc){ dc.classList.add('falta'); dc.scrollIntoView({block: 'nearest'}); }
-    return;
-  }
+  // 6.30 (Gustavo): en las prácticas no hace falta recordatorio (alarma); solo el día para colocarla
   const A = AG_(); let e = e0.id && A.eventos.find(x => x.id === e0.id);
   // 6.27: tarea que se repite y cambia de hora o de día → «¿Solo este día o todas?»
   if(e && e0.k && !e0.ambito && e0.tipo !== 'habito' && preguntaRep(e) && (e0.rep || 'no') === (e.rep || 'no')
