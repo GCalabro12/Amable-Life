@@ -2430,7 +2430,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.20';
+const VERSION = 'v6.21';
 const CLAVE = 'equilibra.datos';
 const CLAVE_SONIDO = 'equilibra.sonido';
 
@@ -5112,7 +5112,7 @@ const tituloAviso = (e, txt) => { const c = cabeceraEv(e); return c ? [c, e.t + 
 const SIN_TITULO = '(Sin título)';
 const COLOR_HAB = '#22c55e';   // 4.94 (Gustavo): los hábitos, siempre verdes
 const colorEv = e => e.tipo === 'habito' ? COLOR_HAB : e.prio && PRIO[e.prio] ? PRIO[e.prio].c : (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
-const horaEv = e => e.todo ? (esFlexible(e) ? 'Sin hora (tarea flexible)' : 'Todo el día') : `${hm(e.ini)} – ${hm(e.fin)}`;   // 6.20 (Gustavo): el mismo nombre que en «Editar»
+const horaEv = e => e.todo ? (esFlexible(e) ? 'Tarea flexible' : 'Todo el día') : `${hm(e.ini)} – ${hm(e.fin)}`;   // 6.20 (Gustavo): el mismo nombre que en «Editar»
 const fijoTxt = e => (e.veces || 3) === 1 && e.fijo != null && DIAS_LARGO[e.fijo] ? `: el ${DIAS_LARGO[e.fijo]}` : '';
 const txtHabito = e => { if(e.frec === 'semanal') return `${e.veces || 3} ${(e.veces || 3) === 1 ? 'día' : 'días'} a la semana${fijoTxt(e)}`; if(e.frec === 'intervalo') return `Cada ${e.cada || 2} días`; const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length === 5 && d.join() === '0,1,2,3,4' ? 'De lunes a viernes' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana`; };
 /* Números del día para Grow Panel: cuántos hay hoy, horas ocupadas (sin contar dos veces lo que se solapa) y hechos o ya pasados */
@@ -5310,14 +5310,14 @@ function vAgenda(){
   let tit, cuerpo, conHoy, fijo = '';   // fijo: la fila de los días, que se queda arriba con el mes al bajar por las horas
   if(agModo === 'dia'){
     tit = fechaLarga(agK) + (agK === hoy ? ' · hoy' : '') + (fPref.cal ? ` · ${calExtra(agK)}` : ''); conHoy = agK === hoy;
-    const todo = evsVer(agK).filter(e => e.todo && !(agK === hoy && esFlexible(e)));
+    const todo = evsVer(agK).filter(e => e.todo && !(agK === hoy && esFlexible(e)));   // (un día suelto que no es hoy: sus flexibles siguen aquí, si no, no se verían)
     cuerpo = `<button type="button" class="de-dia" onclick="verDiaEst(event,'${agK}',this)">${icoEst(16)} Cómo va el día</button>` + (todo.length ? `<div class="ag-grupo"><p class="ag-gt">Sin hora</p>${todo.map(e => filaEv(e, agK)).join('')}</div>` : '')
       + `<p class="peq suave ag-vacio">Toca una hora para añadir algo a esa hora.</p>` + rejillaHTML([agK]);
   } else if(CON_COLS.includes(agModo)){
     const todosD = colsDias(), sinFinde = todosD.filter(k => diaSem(k) < 5), dias = verFinde() || !sinFinde.length ? todosD : sinFinde;
     tit = rangoTxt(todosD[0], todosD[todosD.length - 1]);
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
-    const cols = `grid-template-columns:var(--eje,44px) repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !(k === hoy && esFlexible(e))));
+    const cols = `grid-template-columns:var(--eje,44px) repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !((k === hoy || (dias.includes(hoy) && k > hoy && k <= sumarDias(hoy, 30))) && esFlexible(e))));   // 6.21 (Gustavo): si se ve hoy, las flexibles de hoy y de los días siguientes no van en la fila de arriba: están en «Tareas flexibles»
     fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')"><i class="rj-l1"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></i>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
     cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div data-ksin="${dias[n]}">${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
@@ -5448,10 +5448,10 @@ function flexHTML(){
     ${flexProxHTML()}
     <button class="fx-nueva" onclick="cerrarFlex(); nuevoEvento(hoyK(), null, {todo: true})">＋ Añadir tarea flexible</button>`;
 }
-/* 6.20 (Gustavo: «la tarea sin hora del domingo no me aparece en Tareas flexibles»): debajo, las de los próximos 7 días sin hacer */
+/* 6.20 (Gustavo: «la tarea sin hora del domingo no me aparece en Tareas flexibles»): debajo, las de los próximos días sin hacer (6.21: 30 días) */
 function flexProxHTML(){
   const hoy = hoyK(), L = [];
-  for(let n = 1; n <= 7; n++){ const k = sumarDias(hoy, n); eventosDe(k).filter(e => esFlexible(e) && !hechoEv(e, k)).forEach(e => L.push({e, k, n})); }
+  for(let n = 1; n <= 30; n++){ const k = sumarDias(hoy, n); eventosDe(k).filter(e => esFlexible(e) && !hechoEv(e, k)).forEach(e => L.push({e, k, n})); }
   if(!L.length) return '';
   return `<p class="fx-prox-t">Para los próximos días</p><div class="fx-lista">${L.map(({e, k, n}) => `<div class="fx-f fx-prox" style="--c:${colorEv(e)}"><div class="fx-t"><b onclick="cerrarFlex(); verEvento('${e.id}','${k}')">${esc(e.t)}</b><small>${n === 1 ? 'Mañana' : capi(DIAS_LARGO[diaSem(k)])} ${fechaDe(k).getDate()}</small></div></div>`).join('')}</div>`;
 }
