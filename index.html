@@ -689,6 +689,7 @@ body.pip #toast{bottom:16px}
 .av-dim{opacity:.45}
 .av-cada{display:flex;align-items:center;gap:8px}
 .av-cada .desliz{flex:1;min-width:0}
+.av-cada select.av-hora{flex:none;width:auto;padding:6px 8px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit;cursor:pointer}
 .av-cada input[type=number]{flex:none;width:58px;padding:6px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit;text-align:center}
 .prox-lista{display:flex;flex-direction:column;gap:10px;margin:16px -16px 0}
 .prox{display:flex;align-items:center;gap:14px;padding:20px 16px;border:0;width:100%;text-align:left;color:var(--tinta);
@@ -757,7 +758,8 @@ html:not(.claro) .btn-avisos .off{color:#f87171}
 .hb-fila .check.cuadro{width:28px;height:28px;flex:none}
 .hb-t{flex:1;min-width:0;text-decoration:line-through;opacity:.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hb-a{flex:none;font-size:12px;color:var(--suave);display:inline-flex;align-items:center;gap:4px}
-.av-todos{padding-top:12px;border-top:1px solid rgba(var(--bl),.14)}
+.av-todos{padding-bottom:12px;border-bottom:1px solid rgba(var(--bl),.14);font-weight:700}
+.av-sub{padding-left:22px}
 .ahora-blk.fuera{border:0;background:rgba(139,92,246,.1)}
 .ahora-blk.drop-ok{background:rgba(247,195,91,.22);box-shadow:inset 0 0 0 3px var(--oro)}
 .ah-cab{display:flex;align-items:center;justify-content:center;gap:12px}
@@ -2442,7 +2444,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.39';
+const VERSION = 'v6.40';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -2488,7 +2490,7 @@ const SALUD_DEF = {aguaOn:true, aguaMin:45, aguaGoal:8, movOn:true, movMin:60, a
   meta:8000, pasosOn:true, voz:true, cada:500, bloqueOn:true, bloque:2000, caminarOn:true, caminarHecho:null, pasos:{}, mod:null};
 const nuevaSalud = (x = {}) => Object.assign({}, SALUD_DEF, {days:{}, pasos:{}}, x);
 /* Bloques de tiempo (venidos de Amable PC): días → bloque → hasta 3 actividades {t, d, acc} */
-const BLOQUES_DEF = {days:{}, startVoice:true, remindOn:true, remindMin:5, sleepOn:true, sleepDone:'', ultimo:null, mod:null};
+const BLOQUES_DEF = {days:{}, startVoice:true, remindOn:true, remindMin:5, sleepOn:true, sleepMin:1320, sleepDone:'', ultimo:null, mod:null};
 const nuevosBloques = (x = {}) => Object.assign({}, BLOQUES_DEF, {days:{}}, x);
 const vacio = () => ({v:2, niveles:{}, detalle:{}, comentarios:{}, nivelesMod:null, revisiones:[], acciones:[], borradas:[], salud: nuevaSalud(), bloques: nuevosBloques(), agenda: {eventos: []}});
 const nivelDeNota = n => n <= 4 ? 'mas' : n <= 7 ? 'una' : 'bien';
@@ -8152,6 +8154,10 @@ function reabrirSinPetalo(x){
   guardarBloques(); aviso('Tarea devuelta al bloque'); rerenderDia();
 }
 function ajBloque(clave, el){ B_()[clave] = el.checked; guardarBloques(); }
+// 6.40 (Gustavo): la hora de ir a dormir se puede cambiar (antes, siempre las 22:00)
+const horaDormir = () => { const v = Number(B_().sleepMin); return v >= 1140 && v <= 1425 ? v : 1320; };
+function ajBloqueDormir(el){ const v = Number(el.value); if(v >= 1140 && v <= 1425){ const B = B_(); B.sleepMin = v; if(minutosHoy() < v && B.sleepDone === claveDia(new Date())) B.sleepDone = ''; guardarBloques(); } }
+function opcDormir(){ const v = horaDormir(); let o = ''; for(let m = 1140; m <= 1425; m += 15) o += `<option value="${m}" ${m === v ? 'selected' : ''}>${hm(m)}</option>`; return o; }
 function ajBloqueMin(el){ const v = Math.round(Number(el.value)); if(v >= 1 && v <= 60){ B_().remindMin = v; guardarBloques(); } else el.value = B_().remindMin; }
 /* Al pasar de bloque, lo que quedó sin hacer se pasa al bloque nuevo (hasta 3 por bloque) */
 function arrastrar(c){
@@ -8198,12 +8204,12 @@ function bloquesTick(){
     const sig = actsDe(claveDia(new Date()), c).find(a => !hechaAct(a));
     if(sig){ hablar(`Recuerda: ahora estás con ${sig.t}.`, 'tareas'); if(!pausa.tareas) aviso(`Recuerda: ahora estás con ${sig.t}`, 6000); }
   }
-  // a las 22:00, a dormir
-  const k = claveDia(new Date());
-  if(B.sleepOn && !pausa.tareas && minutosHoy() >= 1320 && B.sleepDone !== k){
+  // a la hora de dormir (22:00 si no se cambia)
+  const k = claveDia(new Date()), hD = horaDormir();
+  if(B.sleepOn && !pausa.tareas && minutosHoy() >= hD && B.sleepDone !== k){
     B.sleepDone = k; guardarBloques();
-    if(!$('#hoja')) mostrarHoja(`<div class="aviso-salud"><div class="aviso-ico">🌙</div><h2>Hora de descansar</h2><p>Son las 22:00. Apaga las pantallas y vete a dormir. ¡Buenas noches!</p><button class="btn prim ancho" onclick="cerrarHoja()">Buenas noches</button></div>`, '#8b5cf6');
-    setTimeout(() => hablar('Son las diez de la noche. Es hora de apagar las pantallas e ir a dormir. ¡Buenas noches!', 'tareas'), 900);
+    if(!$('#hoja')) mostrarHoja(`<div class="aviso-salud"><div class="aviso-ico">🌙</div><h2>Hora de descansar</h2><p>Son las ${hm(hD)}. Apaga las pantallas y vete a dormir. ¡Buenas noches!</p><button class="btn prim ancho" onclick="cerrarHoja()">Buenas noches</button></div>`, '#8b5cf6');
+    setTimeout(() => hablar(`Son las ${hm(hD)}. Es hora de apagar las pantallas e ir a dormir. ¡Buenas noches!`, 'tareas'), 900);
   }
   if(vista === 'dia' && !$('#hoja') && !(document.activeElement && (document.activeElement.id === 'b-nueva' || document.activeElement.classList.contains('blk-barra')))) rerenderDia();
 }
@@ -8310,7 +8316,7 @@ function proximoAvisoQ(){
   const B = B_(), ahora = Date.now(), c = bloqueAhora(), hoy = new Date().setHours(0, 0, 0, 0), op = [];
   if(B.remindOn && c >= 0 && actsDe(hoyK(), c).some(a => !hechaAct(a))) op.push({t: recordarDesde + B.remindMin * 60000, q: 'rec'});
   if(B.startVoice){ const sig = BLOQUES.find(b => hoy + b.ini * 60000 > ahora); if(sig) op.push({t: hoy + sig.ini * 60000, q: 'blq', h: sig.ini}); }
-  if(B.sleepOn && minutosHoy() < 1320) op.push({t: hoy + 1320 * 60000, q: 'dormir'});
+  if(B.sleepOn && minutosHoy() < horaDormir()) op.push({t: hoy + horaDormir() * 60000, q: 'dormir'});
   if(!op.length) return null;
   const m = op.reduce((a, b) => b.t < a.t ? b : a); return Object.assign({}, m, {t: Math.max(ahora, m.t)});
 }
@@ -8322,7 +8328,7 @@ function txtAvisos(){
   const p = proximoAvisoQ(); if(p === null) return 'Avisos de Focus activados';
   const q = Math.round((p.t - Date.now()) / 1000);
   const cuando = q >= 3600 ? `en ${Math.floor(q / 3600)} h ${Math.floor(q % 3600 / 60)} min` : `en ${Math.floor(q / 60)}:${String(q % 60).padStart(2, '0')}`;
-  const que = p.q === 'rec' ? 'recordatorio de la tarea' : p.q === 'blq' ? `bloque de las ${hm(p.h)}` : 'a dormir (22:00)';
+  const que = p.q === 'rec' ? 'recordatorio de la tarea' : p.q === 'blq' ? `bloque de las ${hm(p.h)}` : `a dormir (${hm(horaDormir())})`;
   return `Avisos de Focus activados · ${que} ${cuando}`;
 }
 /* 4.51 (Gustavo): el botón gris de los avisos (donde estaba «Nueva tarea»): dice si están activados y cuándo es el próximo,
@@ -8331,13 +8337,14 @@ const botonAvisosHTML = () => `<button class="btn sec ancho btn-avisos" type="bu
 /* Los cuatro deslizables; el primero, el recordatorio de la tarea en la que estás (Gustavo) */
 function avisosFocusHTML(){
   const B = B_(), sw = (clave, txt) => `<label class="desliz"><input type="checkbox" ${B[clave] ? 'checked' : ''} onchange="ajBloque('${clave}', this)"><i></i><span>${txt}</span></label>`;
+  // 6.40 (Gustavo): el interruptor general arriba, una raya, y debajo los otros tres un poco metidos a la derecha, porque dependen de él
   return `<div class="av-lista">
-      <div class="av-lista ${pausa.tareas ? 'av-dim' : ''}">
+      <label class="desliz av-todos"><input type="checkbox" ${pausa.tareas ? '' : 'checked'} onchange="alternarPausa('tareas')"><i></i><span>Avisos de Focus ${pausa.tareas ? 'desactivados' : 'activados'}</span></label>
+      <div class="av-lista av-sub ${pausa.tareas ? 'av-dim' : ''}">
         <div class="av-cada">${sw('remindOn', 'Recordarme la tarea en la que estoy cada')}<input type="number" min="1" max="60" inputmode="numeric" aria-label="Minutos" value="${B.remindMin}" onchange="ajBloqueMin(this)"><span>min</span></div>
         ${sw('startVoice', 'Avisar con voz al empezar cada bloque')}
-        ${sw('sleepOn', 'A las 22:00, recordarme ir a dormir')}
+        <div class="av-cada">${sw('sleepOn', 'Recordarme ir a dormir a las')}<select class="av-hora" aria-label="Hora de ir a dormir" onchange="ajBloqueDormir(this)">${opcDormir()}</select></div>
       </div>
-      <label class="desliz av-todos"><input type="checkbox" ${pausa.tareas ? '' : 'checked'} onchange="alternarPausa('tareas')"><i></i><span>Avisos de Focus ${pausa.tareas ? 'desactivados' : 'activados'}</span></label>
     </div>`;
 }
 function abrirAvisos(){
