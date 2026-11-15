@@ -2441,7 +2441,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.35';
+const VERSION = 'v6.36';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -6461,7 +6461,7 @@ function popHTML(e, k, enHoja){
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
     ${esMeta(e) ? metaTarjetaHTML(e) : ''}
     ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}" data-k="${k}">${descDia(e, k, desc)}</div></div>` : ''}
-    ${hab ? (rec ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div>${rec}</div></div>` : '')
+    ${hab ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div><button type="button" class="ep-ed" title="Cambiar el recordatorio" onclick="popOpc('rec','${e.id}','${k}')">${rec || 'Sin recordatorio'}</button></div></div><div class="ep-opc" id="ep-opc-rec"></div>`   // 6.36: también se cambia en las prácticas
       : `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div><button type="button" class="ep-ed" title="Cambiar el recordatorio" onclick="popOpc('rec','${e.id}','${k}')">${rec || 'Sin recordatorio'}</button></div></div><div class="ep-opc" id="ep-opc-rec"></div>`}
     ${hab ? '' : `<div class="ep-fila">${prioIcoEv(e)}<div><button type="button" class="ep-ed" title="Cambiar la prioridad" onclick="popOpc('prio','${e.id}','${k}')">${prioTxt(e)}</button></div></div><div class="ep-opc" id="ep-opc-prio"></div>`}
     ${ars.length && !hab ? `<div class="ep-fila">${ICO_PETALO.replace('width="18" height="18"', 'width="20" height="20"')}<div>${ars.map(a => `${ico(a)} ${a.nombre}`).join(' · ')}</div></div>` : ''}`;
@@ -6549,6 +6549,13 @@ function popOpc(cual, id, k){
     const L = []; for(let m = 0; m < 1440; m += 15) if(cual === 'ini' || m > e.ini) L.push(m);
     if(cual === 'fin') L.push(1439);
     h = `<p class="ep-opc-t">${cual === 'ini' ? 'Empieza a las' : 'Termina a las'}</p><div class="ep-horas">${L.map(m => op(m === e[cual], `popSet('${id}','${k}','${cual}',${m})`, cual === 'fin' ? `${hm(m)}<small>${durTxtMin(m - e.ini)}</small>` : hm(m))).join('')}</div>`;
+  } else if(cual === 'rec' && e.tipo === 'habito'){   // 6.36 (Gustavo): el recordatorio de una práctica, ahí mismo: «A la hora» y horas del reloj
+    const b = baseAviso(e.todo, e.ini), H = e.horasAviso || [], alaHora = (e.avisos || []).includes(0) && !H.includes(b), L = [];
+    for(let m = 300; m <= 1380; m += 30) L.push(m);
+    const chk = s => `<i class="ep-chk">${s ? '✓' : ''}</i>`;
+    h = `<p class="ep-opc-t">Recordatorio (alarma) · puedes elegir varios</p>${op(alaHora, `popSet('${id}','${k}','recHab',-2)`, chk(alaHora) + 'A la hora')}
+      <div class="ep-horas">${L.map(m => op(H.includes(m), `popSet('${id}','${k}','recHab',${m})`, chk(H.includes(m)) + 'A las ' + hm(m))).join('')}</div>
+      ${alaHora || H.length ? op(false, `popSet('${id}','${k}','recHab',-1)`, chk(false) + 'Sin recordatorio') : ''}`;
   } else if(cual === 'rec'){
     const L = e.todo ? RECORD_DIA : RECORD_HORA, av = e.avisos || [];
     h = `<p class="ep-opc-t">Recordatorio (puedes elegir varios)</p>${L.map(o => op(av.includes(o.k), `popSet('${id}','${k}','rec',${o.k})`, `<i class="ep-chk">${av.includes(o.k) ? '✓' : ''}</i>${o.t}`)).join('')}
@@ -6595,6 +6602,13 @@ function popSet(id, k, campo, v){
   else if(campo === 'objN'){ e.obj = Object.assign({u: 'veces', p: 'dia'}, e.obj || {}, {n: v}); seguir = 'obj'; }
   else if(campo === 'objU'){ e.obj = Object.assign({n: 2, p: 'dia'}, e.obj || {}, {u: v}); seguir = 'obj'; }
   else if(campo === 'objP'){ e.obj = Object.assign({n: 2, u: 'veces'}, e.obj || {}, {p: v}); if(v === 'dia' && e.obj.n < 2) e.obj.n = 2; seguir = 'obj'; }
+  else if(campo === 'recHab'){   // 6.36: «A la hora» (-2), una hora del reloj (minutos) o ninguno (-1)
+    const b = baseAviso(e.todo, e.ini);
+    let H = (e.horasAviso || []).slice(), ala = (e.avisos || []).includes(0) && !H.includes(b);
+    if(v === -1){ H = []; ala = false; } else if(v === -2) ala = !ala; else H = H.includes(v) ? H.filter(x => x !== v) : [...H, v].sort((x, y) => x - y);
+    e.horasAviso = H; e.avisos = [...new Set([...(ala ? [0] : []), ...H.map(T => b - T)])].sort((x, y) => x - y);
+    seguir = 'rec';
+  }
   else if(campo === 'rec'){
     if(v < 0) e.avisos = [];
     else { const S = new Set(e.avisos || []); S.has(v) ? S.delete(v) : S.add(v); e.avisos = [...S].sort((a, b) => a - b); }
