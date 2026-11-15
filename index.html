@@ -689,6 +689,7 @@ body.pip #toast{bottom:16px}
 .av-dim{opacity:.45}
 .av-cada{display:flex;align-items:center;gap:8px}
 .av-cada .desliz{flex:1;min-width:0}
+.av-cada.av-junto .desliz{flex:0 1 auto}   /* 6.42 (Gustavo): la hora de dormir justo al lado de «a las» */
 .av-cada select.av-hora{flex:none;width:auto;padding:6px 8px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit;cursor:pointer}
 .av-cada input[type=number]{flex:none;width:58px;padding:6px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit;text-align:center}
 .prox-lista{display:flex;flex-direction:column;gap:10px;margin:16px -16px 0}
@@ -2448,7 +2449,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.41';
+const VERSION = 'v6.42';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -8347,7 +8348,7 @@ function avisosFocusHTML(){
       <div class="av-lista av-sub ${pausa.tareas ? 'av-dim' : ''}">
         <div class="av-cada">${sw('remindOn', 'Recordarme la tarea en la que estoy cada')}<input type="number" min="1" max="60" inputmode="numeric" aria-label="Minutos" value="${B.remindMin}" onchange="ajBloqueMin(this)"><span>min</span></div>
         ${sw('startVoice', 'Avisar con voz al empezar cada bloque')}
-        <div class="av-cada">${sw('sleepOn', 'Recordarme ir a dormir a las')}<select class="av-hora" aria-label="Hora de ir a dormir" onchange="ajBloqueDormir(this)">${opcDormir()}</select></div>
+        <div class="av-cada av-junto">${sw('sleepOn', 'Recordarme ir a dormir a las')}<select class="av-hora" aria-label="Hora de ir a dormir" onchange="ajBloqueDormir(this)">${opcDormir()}</select></div>
       </div>
     </div>`;
 }
