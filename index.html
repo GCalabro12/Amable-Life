@@ -871,6 +871,10 @@ body.pip .ah-anadir{display:none}
 .foco-top{justify-content:flex-end}
 .foco-top .btn-avisos{flex:1 1 auto;width:auto;min-width:0;margin:0;padding:9px 12px;font-size:14px;white-space:nowrap}
 .foco-top .btn-flot{margin-top:0}
+/* 6.41 (Gustavo): «Ventana flotante» a la derecha, en el mismo renglón que «Estoy focus con», para que se vea más */
+.foco-tit-fila{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.foco-tit-fila .foco-tit{min-width:0}
+.foco-tit-fila .btn-flot{margin-top:0}
 .ahora-blk.foco-b1 .foco-tit{white-space:nowrap;overflow:hidden}
 @media (min-width:900px){ body.v-inicio .envoltura{max-width:760px} body.v-inicio .envoltura:has(.foco-cols){max-width:1100px} }
 .foco-b3 .btn.sec.btn-bloque{border-color:rgba(var(--bl),.25)}
@@ -2444,7 +2448,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.40';
+const VERSION = 'v6.41';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -3182,11 +3186,11 @@ function seccionAhora(pip){
       <div class="aro-col"><span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span></div></div>
   </section>
   <section class="ahora-blk foco-b foco-b2" data-drop="ahora">
-    <h2 class="foco-tit">Estoy focus con</h2>
+    <div class="foco-tit-fila"><h2 class="foco-tit">Estoy focus con</h2>${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
     ${pend.length ? `<div class="prox-lista">${lista}</div>` : `<div class="ah-vacio ah-vacio2"><p class="ah-mov">Es hora de moverte: da una vuelta por la casa o la oficina.</p><p>Puedes traer una tarea del calendario pulsando en ella y luego en <b>«Focus»</b>.</p></div>`}
     ${acts.length < MAX_ACT ? `<button type="button" class="ah-anadir" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : ''}
   </section>
-  <div class="av-fila foco-top">${botonAvisosHTML()}${hayFlotante() ? `<button class="btn-flot" type="button" onclick="abrirFlotante()">Ventana flotante</button>` : ''}</div>
+  <div class="av-fila foco-top">${botonAvisosHTML()}</div>
   ${hechasBloqueHTML(c)}`;   // 5.71 (Gustavo): fuera el recuadro de «Añadir tarea»; ahora es un texto en negrita dentro de «Estoy focus con»
   return `<section class="ahora-blk" data-drop="ahora">
     <div class="ah-cab"><b class="ah-tit">FOCUS</b><span class="ah-sub">Trabajo en bloques de tiempo de 1,5 horas</span></div>
