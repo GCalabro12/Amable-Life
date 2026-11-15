@@ -658,6 +658,11 @@ body.pip .f-pact{margin-top:6px;padding:6px}
 /* Ventana flotante: solo el bloque de Focus, sin lo que abre hojas en la ventana principal */
 body.pip{padding:6px;overflow-x:hidden;overflow-y:auto}
 body.pip .ahora-blk{margin:0;zoom:.72}
+body.pip .prox.foco-1 .texto-p{white-space:normal;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+body.pip .ahora-blk > .foco-tit{margin-top:0}
+body.pip .ahora-blk > .prox-lista{margin-bottom:10px}
+body.pip .pip-focus{font-size:22px;letter-spacing:.06em;line-height:1;margin-bottom:2px}
+body.pip .cuenta-txt{white-space:nowrap}
 body.pip .btn.sec.btn-compro{display:none}
 .pip-cab{display:flex;align-items:center;gap:8px;margin:0 0 6px 2px;font-weight:800;font-size:16px;color:#f4f0fb}
 .pip-cab svg{width:24px;height:24px;flex:none}
@@ -2449,7 +2454,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.42';
+const VERSION = 'v6.43';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -2826,10 +2831,7 @@ function ajustarFoco(doc = document){
     doc.querySelectorAll('.foco-b1 .foco-tit').forEach(el => {   // 5.41: el título en un renglón; se achica si no cabe
       let fs = 24; el.style.fontSize = fs + 'px'; while(el.scrollWidth > el.clientWidth + 1 && fs > 14){ fs--; el.style.fontSize = fs + 'px'; } });
     return; }   // 5.39: en la app, letra grande y en varios renglones si hace falta
-  doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => {
-    let fs = doc === document ? 26 : 19; el.style.fontSize = fs + 'px';
-    while(el.scrollWidth > el.clientWidth + 1 && fs > (doc === document ? 15 : 13)){ fs--; el.style.fontSize = fs + 'px'; }
-  });
+  doc.querySelectorAll('.prox.foco-1 .texto-p').forEach(el => { el.style.fontSize = '19px'; });   // 6.43: hasta 2 renglones (CSS), sin achicar
 }
 addEventListener('resize', () => ajustarFoco());
 /* ---------- Ventana flotante (navegador de PC): solo Focus, siempre delante de todo ---------- */
@@ -3166,7 +3168,7 @@ function seccionAhora(pip){
         <div class="foco-l3">${compro}<button type="button" class="foco-hecha" onclick="alternarActAhora(${i})">✓ Hecha</button></div></div></div>`; }
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
       ${ok ? '<span class="asa-hueco"></span>' : ASA}${pip ? `<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>` : ''}
-      <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}${durAct(a)}</div>${!ok ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
+      <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${esc(a.t)}${durAct(a)}</div>${!ok && !pip ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
         ${!ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">${pip ? ICO_FIRMA + ' ' : ''}Me quiero comprometer</button>` : ''}</div>
       ${pip ? `${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button>`
         : `<div class="foco-acc"><div class="foco-ico">${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>
@@ -3193,16 +3195,19 @@ function seccionAhora(pip){
   </section>
   <div class="av-fila foco-top">${botonAvisosHTML()}</div>
   ${hechasBloqueHTML(c)}`;   // 5.71 (Gustavo): fuera el recuadro de «Añadir tarea»; ahora es un texto en negrita dentro de «Estoy focus con»
+  /* 6.43 (Gustavo, solo la ventana flotante): arriba del todo la tarea en la que estás; «FOCUS» encima de la cuenta atrás;
+     «min fin bloque» en un renglón; fuera «Trabajo en bloques de tiempo de 1,5 horas» */
+  const tareaPip = pend.length ? `<h2 class="foco-tit">Estoy focus con</h2><div class="prox-lista">${lista}</div>` : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`;
   return `<section class="ahora-blk" data-drop="ahora">
-    <div class="ah-cab"><b class="ah-tit">FOCUS</b><span class="ah-sub">Trabajo en bloques de tiempo de 1,5 horas</span></div>
+    ${pip ? tareaPip : `<div class="ah-cab"><b class="ah-tit">FOCUS</b><span class="ah-sub">Trabajo en bloques de tiempo de 1,5 horas</span></div>`}
     <div class="cuenta-fila"><canvas class="reloj-arena" data-ini="${b.ini}" data-fin="${b.fin}" width="66" height="104" aria-label="Reloj de arena del bloque"></canvas>
-      <div class="cuenta-col"><span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">min para acabar el bloque</span>
+      <div class="cuenta-col">${pip ? '<b class="ah-tit pip-focus">FOCUS</b>' : ''}<span class="cuenta-atras" data-fin="${b.fin}">${fmtCuenta(b.fin)}</span><span class="cuenta-txt">${pip ? 'min fin bloque' : 'min para acabar el bloque'}</span>
         <button class="tic-btn ${ticOn ? 'on' : ''}" id="btn-tic" onclick="alternarTic()" aria-pressed="${ticOn}">${ticOn ? '🔊' : '🔇'} Tic-tac</button></div>
       <div class="aro-col"><span class="disco aro grande" style="--p:${p}" data-ini="${b.ini}" data-fin="${b.fin}" aria-hidden="true">${FLECHA_ARO}<i class="aro-centro"></i></span>
         <span class="aro-blk">bloque <i>${hm(b.ini)} – ${hm(b.fin)}</i></span></div></div>
-    ${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
+    ${pip ? '' : `${pend.length ? '<h2 class="foco-tit">Estoy focus con</h2>' : ''}
     ${pend.length ? `<div class="prox-lista">${lista}</div>`
-      : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}
+      : `<p class="ah-vacio">Arrastra aquí una tarea pendiente de abajo</p>`}`}
     ${pip ? compromisoHTML(pend) : ''}
     ${acts.length < MAX_ACT ? `<button class="btn sec ancho btn-bloque" style="margin-top:12px" onclick="abrirNueva(null, true)">＋ Añadir tarea</button>` : ''}
   </section>${proximaHTML()}${hechasBloqueHTML(c)}`;
