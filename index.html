@@ -890,7 +890,9 @@ body.pip .ah-anadir{display:none}
 .foco-puntos.quietos i{animation:none;opacity:.3}
 @keyframes fPunto2{0%{opacity:.18}33.33%{opacity:1}100%{opacity:1}}
 @keyframes fPunto3{0%{opacity:.18}66.66%{opacity:1}100%{opacity:1}}
-.foco-teclea.tecleando::after{content:'';display:inline-block;width:2px;height:.95em;margin-left:2px;background:currentColor;vertical-align:-.12em;animation:fCursor .5s step-end infinite}
+/* 6.51 (Gustavo): el recuadro no cambia de tamaño mientras se escribe: lo que falta está transparente y el cursor no ocupa sitio */
+.ft-resto{color:transparent}
+.foco-teclea.tecleando .ft-vis::after{content:'';display:inline-block;width:0;height:.95em;box-shadow:0 0 0 1px currentColor;vertical-align:-.12em;animation:fCursor .5s step-end infinite}
 @keyframes fCursor{0%{opacity:1}50%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.foco-puntos i{animation:none!important}}
 .foco-tit-fila .foco-tit{min-width:0}
@@ -932,6 +934,10 @@ html:not(.claro){--marron:#d9a06a}
 .foco-l3{margin-top:8px}
 .foco-l2 .area-p{margin-top:0;min-width:0}
 .foco-l3 .compro-link{margin-top:0;min-width:0}
+.foco-l2.foco-una{justify-content:flex-start;flex-wrap:wrap;gap:6px 14px;margin-top:8px}
+.foco-una .area-p{flex:none}
+.foco-una .compro-link{margin-top:0}
+.foco-una .foco-hecha{margin-left:auto}
 .foco-g .foco-ico .lapiz{width:30px;height:30px}
 .prox.ok .texto-p{text-decoration:line-through;opacity:.6}
 .check.hecho{background:var(--c);color:#fff}
@@ -2468,7 +2474,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.50';
+const VERSION = 'v6.51';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -2851,7 +2857,8 @@ function teclear(doc = document){
   const t = el.dataset.t, letras = [...t];
   let st = tecleos.get(doc);
   if(!st || st.t !== t){ st = {t, ini: Date.now()}; tecleos.set(doc, st); }
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ el.textContent = t; return; }
+  const vis = el.querySelector('.ft-vis'), resto = el.querySelector('.ft-resto'); if(!vis || !resto) return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ vis.textContent = t; resto.textContent = ''; return; }
   if(el._tecleo) return; el._tecleo = true;
   const w = doc.defaultView || window;
   // 6.47 (Gustavo): se vuelve a escribir cada 3 segundos (escribe, se queda entera 3 s y empieza otra vez)
@@ -2859,7 +2866,7 @@ function teclear(doc = document){
   const paso = () => {
     if(!el.isConnected) return;
     const e = (Date.now() - st.ini) % ciclo, n = Math.min(letras.length, Math.floor(e / TECLEO_MS));
-    el.textContent = letras.slice(0, n).join('');
+    vis.textContent = letras.slice(0, n).join(''); resto.textContent = letras.slice(n).join('');   // 6.51: el resto, transparente, guarda el sitio
     el.classList.toggle('tecleando', n < letras.length);
     w.setTimeout(paso, n < letras.length ? TECLEO_MS : Math.max(TECLEO_MS, ciclo - e));
   };
@@ -3223,12 +3230,11 @@ function seccionAhora(pip){
     /* 5.40 (Gustavo): el nombre a todo lo ancho; debajo el área con editar y quitar a su altura; abajo del todo «Me quiero comprometer» y «✓ Hecha» */
     if(!pip){ const compro = !ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">Me quiero comprometer</button>` : '<span></span>';
       return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} foco-g ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
-      ${grande && !ok ? '<svg class="foco-hormigas" aria-hidden="true"><rect x="3" y="3" rx="11" ry="11"/></svg>' : ''}${ok ? '<span class="asa-hueco"></span>' : ASA}<div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${grande && !ok ? `<span class="foco-teclea" data-t="${esc(a.t)}" aria-label="${esc(a.t)}">${esc(a.t)}</span>` : esc(a.t)}${durAct(a)}</div>
-        <div class="foco-l2"><div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div><div class="foco-ico">${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div></div>
-        <div class="foco-l3">${compro}<button type="button" class="foco-hecha" onclick="alternarActAhora(${i})">✓ Hecha</button></div></div></div>`; }
+      ${grande && !ok ? '<svg class="foco-hormigas" aria-hidden="true"><rect x="3" y="3" rx="11" ry="11"/></svg>' : ''}${ok ? '<span class="asa-hueco"></span>' : ASA}<div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${grande && !ok ? `<span class="foco-teclea" data-t="${esc(a.t)}" aria-label="${esc(a.t)}"><span class="ft-vis">${esc(a.t)}</span><span class="ft-resto"></span></span>` : esc(a.t)}${durAct(a)}</div>
+        <div class="foco-l2 foco-una"><div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>${compro}<div class="foco-ico">${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div><button type="button" class="foco-hecha" onclick="alternarActAhora(${i})">✓ Hecha</button></div></div></div>`; }   // 6.51 (Gustavo): todo en un renglón
     return `<div class="prox ${grande ? 'foco-1' : 'foco-sig'} ${ok ? 'ok' : ''}" ${ok ? '' : `data-ordb="${i}"`} style="--c:${ar ? ar.color : '#f7c35b'};animation-delay:${i*70}ms">
       ${ok ? '<span class="asa-hueco"></span>' : ASA}${pip ? `<button class="check cuadro ${ok ? 'hecho' : ''}" aria-label="${ok ? 'Desmarcar' : 'Marcar como hecha'}" onclick="alternarActAhora(${i})">✓</button>` : ''}
-      <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${grande && !ok ? `<span class="foco-teclea" data-t="${esc(a.t)}" aria-label="${esc(a.t)}">${esc(a.t)}</span>` : esc(a.t)}${durAct(a)}</div>${!ok && !pip ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
+      <div class="cuerpo-p"><div class="texto-p">${bandAct(a)}${grande && !ok ? `<span class="foco-teclea" data-t="${esc(a.t)}" aria-label="${esc(a.t)}"><span class="ft-vis">${esc(a.t)}</span><span class="ft-resto"></span></span>` : esc(a.t)}${durAct(a)}</div>${!ok && !pip ? `<div class="area-p">${ar ? `${ico(ar)} ${ar.nombre}` : 'Sin asignar'}</div>` : ''}
         ${!ok && !(comp && comp.estado === 'activo' && compCasa(a, comp)) ? `<button type="button" class="compro-link" onclick="comprometerAct(${i})">${pip ? ICO_FIRMA + ' ' : ''}Me quiero comprometer</button>` : ''}</div>
       ${pip ? `${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button>`
         : `<div class="foco-acc"><div class="foco-ico">${lapiz(`editarBloque('${hoyK()}',${c},${i})`)}<button class="del" aria-label="Quitar del bloque" onclick="quitarActAhora(${i})">✕</button></div>
