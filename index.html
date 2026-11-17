@@ -2496,7 +2496,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.62';
+const VERSION = 'v6.63';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -3452,6 +3452,12 @@ function pendientesHoy(){
   Object.keys(dia).forEach(i => (dia[i] || []).forEach(a => { if(a && !hechaAct(a)) flex++; }));
   return {total: fijas + flex, fijas, flex};
 }
+/* 6.63 (Gustavo): en Grow Panel, «En Focus» (la tarea del bloque de ahora) y no «Siguiente»: la primera tarea sin hacer del bloque actual */
+function tareaFocusHoy(){
+  const c = bloqueAhora(); if(c < 0) return null;
+  const a = actsDe(hoyK(), c).find(x => x && !hechaAct(x));
+  return a ? sinMarca(a.t).trim() : null;
+}
 function resumenDia(k){
   const dia = (B_().days || {})[k] || {}, hechas = D.acciones.filter(a => a.hecha && a.hechaEn && claveDia(a.hechaEn) === k).length;
   let pendientesDia = 0, sinArchivar = 0;
@@ -3467,7 +3473,7 @@ function resumenDia(k){
     tareas_total: hechas + sinArchivar + pendientesDia + cal.length, pasos: p ? Math.round(p.steps || 0) : 0, ...agendaDia(k),
     // 4.56: para la tarjeta de Grow Panel. tareas_pendientes = todas las pendientes de tus áreas (solo se sabe la de hoy:
     // en un día pasado no se manda y Grow Panel usa tareas_total − tareas_hechas); áreas que piden acción, las de ahora
-    ...(k === hoyK() ? (() => { const ph = pendientesHoy(); return {tareas_pendientes: ph.total, tareas_fijas_pendientes: ph.fijas, tareas_flexibles_pendientes: ph.flex}; })() : {}), habitos_hechos: habitosHechos(k), tareas_saltadas: tareasSaltadas(k), areas_accion: areasAccion()};
+    ...(k === hoyK() ? (() => { const ph = pendientesHoy(); return {tareas_pendientes: ph.total, tareas_fijas_pendientes: ph.fijas, tareas_flexibles_pendientes: ph.flex, tarea_focus: tareaFocusHoy()}; })() : {}), habitos_hechos: habitosHechos(k), tareas_saltadas: tareasSaltadas(k), areas_accion: areasAccion()};
 }
 /* Pide algo al registro con la cuenta de Google (token de Firebase) y, si no vale (401) o no hay, con la clave de Grow Panel */
 async function fetchRegistro(ruta, opts){
@@ -3496,7 +3502,7 @@ function actualizarAjustesReg(pronto){
   })();
 }
 /* «Firma» de los números de un día: si no cambia, no hace falta volver a mandarlos (los pasos cuentan de 100 en 100) */
-const firmaReg = (k, r) => [k, r.bloques_con_tareas, r.tareas_hechas, r.tareas_total, r.tareas_fijas_pendientes, r.tareas_flexibles_pendientes, Math.floor((r.pasos || 0) / 100), r.eventos_hoy, r.horas_agenda_hoy, r.eventos_hechos, r.tareas_pendientes, r.habitos_hechos, r.areas_accion, r.tareas_saltadas].join('|');
+const firmaReg = (k, r) => [k, r.bloques_con_tareas, r.tareas_hechas, r.tareas_total, r.tareas_fijas_pendientes, r.tareas_flexibles_pendientes, r.tarea_focus, Math.floor((r.pasos || 0) / 100), r.eventos_hoy, r.horas_agenda_hoy, r.eventos_hechos, r.tareas_pendientes, r.habitos_hechos, r.areas_accion, r.tareas_saltadas].join('|');
 const todoCero = r => !r.bloques_con_tareas && !r.tareas_hechas && !r.tareas_total && !r.pasos && !r.eventos_hoy;
 let regUltimoIntento = 0;
 const regEnCurso = new Set();
