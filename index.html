@@ -1967,6 +1967,25 @@ html.claro .dia-est-pop{box-shadow:0 10px 28px rgba(40,20,90,.22)}
 .rj-l2{display:inline-flex;align-items:center;gap:4px;font-style:normal;font-size:11px;font-weight:700;color:var(--suave)}
 .rj-l2 .rj-n em{font-style:normal}
 .rj-cab button.hoy .rj-l1{border-color:var(--oro)}
+/* 6.55: cuadradito con flecha y número, a la izquierda del día de hoy */
+.rj-cab button{position:relative}
+.atras-chip{display:inline-flex;align-items:center;gap:1px;padding:2px 5px 2px 2px;border-radius:7px;background:#f59e0b;color:#2a1d05;font-style:normal;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.atras-chip strong{font-size:12px;font-weight:800;color:#2a1d05;line-height:1}
+.atras-chip svg{width:15px;height:15px}
+.atras-chip:hover{filter:brightness(1.08)}
+.rj-cab button .atras-chip{position:absolute;left:6px;top:8px}
+@media (max-width:899px){ .rj-cab button .atras-chip{left:2px;top:-4px;padding:1px 4px 1px 1px} .rj-cab button .atras-chip svg{width:13px;height:13px} .rj-cab button .atras-chip strong{font-size:11px} }
+.ag-cuerpo > .atras-chip,.atras-chip.solo{margin:2px 0 6px}
+#atras-pop{position:fixed;z-index:60;background:var(--tarjeta);color:var(--tinta);border-radius:18px;box-shadow:0 16px 44px rgba(0,0,0,.28);padding:12px;max-height:min(70vh,520px);overflow:auto}
+.atras-cab{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.atras-cab b{font-size:16px;font-weight:800;color:#b45309}
+.atras-cab span{font-size:12.5px;color:var(--suave)}
+.atras-f{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;width:100%;text-align:left;padding:9px 10px;margin:0 0 6px;border:1.5px solid var(--linea);border-radius:12px;background:rgba(var(--bl),.05);color:inherit;font:inherit;cursor:pointer}
+.atras-f:hover{border-color:#f59e0b;background:rgba(245,158,11,.12)}
+.atras-f b{font-size:14.5px}
+.atras-f i{font-style:normal;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:#f59e0b;color:#2a1d05;font-size:12.5px;font-weight:800;display:grid;place-items:center}
+.atras-f small{grid-column:1/-1;font-size:12px;color:var(--suave);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atras-vacio{margin:0;color:var(--suave)}
 .rj-cab button.hoy span{background:linear-gradient(135deg,var(--acento),var(--acento2));color:#fff}
 @media (max-width:899px){ .rj-cab.muchas .rj-l1{gap:1px;padding:1px 2px} .rj-cab.muchas .rj-l1 span{width:26px;height:26px;font-size:14px} .rj-cab.muchas .dia-est svg{width:11px;height:11px} .rj-cab.muchas .rj-l2{font-size:10px;gap:2px} .rj-cab.muchas .rj-n em{display:none} }
 .rj-todo{display:grid;grid-template-columns:var(--eje,44px) repeat(7,1fr);gap:2px;margin:2px 0 8px}
@@ -2474,7 +2493,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.54';
+const VERSION = 'v6.55';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5307,6 +5326,39 @@ function gcCambiar(k){
    pasa a «Tareas flexibles» de hoy (flexHoy), así que ya no sale también en «sin hora» de su día ni cuenta en ese día */
 const flexMovida = (e, k) => { const hoy = hoyK(); return k < hoy && k >= sumarDias(hoy, -14) && esFlexible(e) && !repite(e) && !hechoEv(e, k); };
 const evsVer = k => eventosDe(k).filter(e => (verHechas() || !hechoEv(e, k)) && !flexMovida(e, k));
+/* 6.55 (Gustavo): en el día de hoy, a la izquierda del número, un cuadradito con una flecha que dice cuántas tareas quedaron de días
+   anteriores (sin hacer, de los últimos 30 días; no cuentan los hábitos, las que se repiten ni las flexibles, que ya están en «Tareas flexibles»).
+   Sale se vean o no esos días, y solo desaparece cuando no queda ninguna (hechas o eliminadas). Al tocarlo, la lista de esos días. */
+function atrasadas(){
+  const hoy = hoyK(), r = [];
+  for(let n = 1; n <= 30; n++){ const k = sumarDias(hoy, -n);
+    const es = eventosDe(k).filter(e => e.tipo !== 'habito' && !repite(e) && !hechoEv(e, k) && !flexMovida(e, k));
+    if(es.length) r.push({k, es}); }
+  return r;   // del día más reciente al más antiguo
+}
+const atrasChip = () => {
+  const L = atrasadas(), n = L.reduce((a, x) => a + x.es.length, 0); if(!n) return '';
+  const t = `Quedaron ${n} ${n === 1 ? 'tarea' : 'tareas'} de días anteriores`;
+  return `<u class="atras-chip" role="button" tabindex="0" title="${t}" aria-label="${t}" onclick="event.stopPropagation(); atrasAbrir(this)">${ICO_IZQ}<strong>${n}</strong></u>`;
+};
+function atrasHTML(){
+  const L = atrasadas(), n = L.reduce((a, x) => a + x.es.length, 0);
+  if(!n) return '<p class="atras-vacio">No queda ninguna tarea de días anteriores.</p>';
+  return `<div class="atras-cab"><b>Quedaron ${n} ${n === 1 ? 'tarea' : 'tareas'} de días anteriores</b><span>Toca un día para ir a él y hacerlas o eliminarlas.</span></div>`
+    + L.map(({k, es}) => `<button type="button" class="atras-f" onclick="atrasIr('${k}')"><b>${capi(DIAS_LARGO[diaSem(k)])} ${fechaDe(k).getDate()} de ${MESES[fechaDe(k).getMonth()]}</b><i>${es.length}</i><small>${es.slice(0, 3).map(e => esc(e.t)).join(' · ')}${es.length > 3 ? ' …' : ''}</small></button>`).join('');
+}
+function atrasAbrir(btn){
+  let p = $('#atras-pop'); if(p){ cerrarAtras(); return; }
+  p = document.createElement('div'); p.id = 'atras-pop'; p.innerHTML = atrasHTML(); document.body.appendChild(p);
+  const r = btn.getBoundingClientRect(), w = Math.min(330, innerWidth - 24);
+  p.style.width = w + 'px'; p.style.left = Math.max(12, Math.min(innerWidth - w - 12, r.left)) + 'px';
+  const alto = p.offsetHeight, abajo = r.bottom + 8;
+  p.style.top = (abajo + alto < innerHeight - 70 ? abajo : Math.max(12, r.top - alto - 8)) + 'px';
+}
+function cerrarAtras(){ const p = $('#atras-pop'); if(p) p.remove(); }
+function atrasIr(k){ cerrarAtras(); agIrDia(k); }
+document.addEventListener('click', e => { const p = $('#atras-pop'); if(p && e.target.isConnected && !p.contains(e.target) && !e.target.closest('.atras-chip')) cerrarAtras(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') cerrarAtras(); });
 /* Mes pequeño (el de la izquierda en el ordenador y los doce del Año) */
 function mesPeq(m0, conSem){
   const hoy = hoyK(), primero = claveDia(m0), ini = inicioSem(primero), mes = primero.slice(0, 7), cs = conSem && fPref.numSem;
@@ -5414,14 +5466,14 @@ function vAgenda(){
   if(agModo === 'dia'){
     tit = fechaLarga(agK) + (agK === hoy ? ' · hoy' : '') + (fPref.cal ? ` · ${calExtra(agK)}` : ''); conHoy = agK === hoy;
     const todo = evsVer(agK).filter(e => e.todo && !(agK === hoy && esFlexible(e)));   // (un día suelto que no es hoy: sus flexibles siguen aquí, si no, no se verían)
-    cuerpo = `<button type="button" class="de-dia" onclick="verDiaEst(event,'${agK}',this)">${icoEst(16)} Cómo va el día</button>` + (todo.length ? `<div class="ag-grupo"><p class="ag-gt">Sin hora</p>${todo.map(e => filaEv(e, agK)).join('')}</div>` : '')
+    cuerpo = (agK === hoy ? atrasChip() : '') + `<button type="button" class="de-dia" onclick="verDiaEst(event,'${agK}',this)">${icoEst(16)} Cómo va el día</button>` + (todo.length ? `<div class="ag-grupo"><p class="ag-gt">Sin hora</p>${todo.map(e => filaEv(e, agK)).join('')}</div>` : '')
       + `<p class="peq suave ag-vacio">Toca una hora para añadir algo a esa hora.</p>` + rejillaHTML([agK]);
   } else if(CON_COLS.includes(agModo)){
     const todosD = colsDias(), sinFinde = todosD.filter(k => diaSem(k) < 5), dias = verFinde() || !sinFinde.length ? todosD : sinFinde;
     tit = rangoTxt(todosD[0], todosD[todosD.length - 1]);
     conHoy = hoy >= todosD[0] && hoy <= todosD[todosD.length - 1];
     const cols = `grid-template-columns:var(--eje,44px) repeat(${dias.length},1fr)`, todos = dias.map(k => evsVer(k).filter(e => e.todo && !((k === hoy || (dias.includes(hoy) && k > hoy && k <= sumarDias(hoy, 30))) && esFlexible(e))));   // 6.21 (Gustavo): si se ve hoy, las flexibles de hoy y de los días siguientes no van en la fila de arriba: están en «Tareas flexibles»
-    fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')"><i class="rj-l1"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></i>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
+    fijo = `<div class="rj-cab ${dias.length > 3 ? 'muchas' : ''}" style="${cols}"><span></span>${dias.map(k => `<button class="${k === hoy ? 'hoy' : ''}" onclick="if(!ESCRITORIO.matches) agIrDia('${k}')">${k === hoy ? atrasChip() : ''}<i class="rj-l1"><b data-l="${DIAS_3[diaSem(k)]}">${DIAS_CORTO[diaSem(k)]}</b><span>${fechaDe(k).getDate()}</span></i>${numDiaHTML(k)}${fPref.cal ? `<small class="cal-x">${calExtra(k)}</small>` : ''}</button>`).join('')}</div>`;
     cuerpo = (todos.some(x => x.length) ? `<div class="rj-todo" style="${cols}"><em>sin hora</em>${todos.map((es, n) => `<div data-ksin="${dias[n]}">${es.map(e => `<button class="${marcaCls(e)}" style="--c:${colorEv(e)}" data-ev="${e.id}" data-k="${dias[n]}" onclick="verEvento('${e.id}','${dias[n]}', this)">${broteEv(e)}${repIco(e)}${campEv(e)}${esc(e.t)}</button>`).join('')}</div>`).join('')}</div>` : '')
       + rejillaHTML(dias);
   } else if(agModo === 'semanas'){
