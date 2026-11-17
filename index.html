@@ -1143,6 +1143,9 @@ html:not(.claro) .perm-aviso{color:#fca5a5}
 .aj-ir{width:100%;border:0;border-bottom:1px solid rgba(var(--bl),.07);background:none;color:var(--tinta);font:inherit;font-weight:700;text-align:left}
 .aj-ir svg{color:var(--suave);flex:none}
 .ml-tema{padding:6px 22px 10px}
+.ml-sw{cursor:pointer}
+.ml-sw span:nth-of-type(1){flex:1;min-width:0}
+.ml-sw .desliz{margin:0;flex:none}
 .ml-secc{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px 12px 10px}
 .ml-secc button{display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;border-radius:12px;padding:8px 2px;color:var(--oro);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
 .ml-secc button:hover{background:rgba(var(--bl),.07)}
@@ -2493,7 +2496,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.55';
+const VERSION = 'v6.56';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -3039,7 +3042,6 @@ function dibujarArena(cv, dt){
   const dpr = window.devicePixelRatio || 1, W = 66, H = 104;
   if(cv.width !== Math.round(W * dpr)){ cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
   const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
-  let granos = cv._granos || [];
   const p = progresoBloque(+cv.dataset.ini, +cv.dataset.fin) / 100;
   const cx = W / 2, top = 10, neck = H / 2, bot = H - 10, half = 25, nw = 2.4;
   const vidrio = () => {
@@ -3065,19 +3067,19 @@ function dibujarArena(cv, dt){
   if(p < 1){ g.beginPath(); g.moveTo(0, yA); g.lineTo(cx - 12, yA); g.quadraticCurveTo(cx, yA + hueco * 2, cx + 12, yA); g.lineTo(W, yA); g.lineTo(W, neck + 1); g.lineTo(0, neck + 1); g.closePath(); g.fill(); }
   // abajo: el montón crece con p
   const yB = neck + distA(total - pp * K * .92), m = Math.min(4, (bot - yB) * .35), cima = yB - m;
+  /* 6.56 (Gustavo): en vez de un chorro continuo, cada segundo (al compás de la cuenta atrás) cae una bolita verde por el cuello y acaba
+     detrás del montoncito de arena roja, que se dibuja después y la tapa */
+  if(p > 0 && p < 1){
+    const ph = (((Date.now() - 20) % 1000) + 1000) % 1000 / 1000;   // 0 justo cuando cambia el segundo
+    const by = neck - 1 + 72 * ph * ph;
+    if(by < bot){
+      const bg = g.createRadialGradient(cx - .7, by - .7, .3, cx, by, 2.4); bg.addColorStop(0, '#bbf7d0'); bg.addColorStop(1, '#16a34a');
+      g.fillStyle = bg; g.beginPath(); g.arc(cx, by, 2.2, 0, 6.2832); g.fill();
+      g.strokeStyle = 'rgba(20,83,45,.55)'; g.lineWidth = .6; g.stroke();
+    }
+  }
   g.fillStyle = rojo;
   if(p > 0){ g.beginPath(); g.moveTo(0, bot); g.lineTo(0, yB + m); g.quadraticCurveTo(cx, yB - 3 * m, W, yB + m); g.lineTo(W, bot); g.closePath(); g.fill(); }
-  // el chorrito y los granos que caen
-  if(p > 0 && p < 1){
-    const suelo = cima + 1;
-    g.fillStyle = 'rgba(248,113,113,.6)'; g.fillRect(cx - .5, neck, 1, suelo - neck);
-    for(let k = 0; k < 2; k++) granos.push({x: cx + (Math.random() - .5) * 1.8, y: neck + Math.random() * 2, vy: .5 + Math.random() * .6, vx: (Math.random() - .5) * .08});
-    g.fillStyle = '#f87171';
-    granos = granos.filter(q => { q.vy += .14 * dt; q.y += q.vy * dt; q.x += q.vx * dt; if(q.y >= suelo + Math.abs(q.x - cx) * .4) return false; g.fillRect(q.x - .6, q.y - .6, 1.3, 1.3); return true; }).slice(-160);
-    // algún grano rebota al llegar al montón
-    if(Math.random() < .25){ g.fillStyle = 'rgba(248,113,113,.8)'; g.fillRect(cx + (Math.random() - .5) * 10, suelo - Math.random() * 3, 1.2, 1.2); }
-  } else granos = [];
-  cv._granos = granos;
   g.restore();
   // cristal y brillo
   vidrio(); g.strokeStyle = '#a0622a'; g.lineWidth = 1.8; g.stroke();   // 4.45 (Gustavo): el cristal con borde marrón, como las tapas (en blanco no se veía)
@@ -5327,16 +5329,23 @@ function gcCambiar(k){
 const flexMovida = (e, k) => { const hoy = hoyK(); return k < hoy && k >= sumarDias(hoy, -14) && esFlexible(e) && !repite(e) && !hechoEv(e, k); };
 const evsVer = k => eventosDe(k).filter(e => (verHechas() || !hechoEv(e, k)) && !flexMovida(e, k));
 /* 6.55 (Gustavo): en el día de hoy, a la izquierda del número, un cuadradito con una flecha que dice cuántas tareas quedaron de días
-   anteriores (sin hacer, de los últimos 30 días; no cuentan los hábitos, las que se repiten ni las flexibles, que ya están en «Tareas flexibles»).
+   anteriores (sin hacer, de los últimos 3 meses; no cuentan los hábitos, las que se repiten ni las flexibles, que ya están en «Tareas flexibles»).
    Sale se vean o no esos días, y solo desaparece cuando no queda ninguna (hechas o eliminadas). Al tocarlo, la lista de esos días. */
 function atrasadas(){
   const hoy = hoyK(), r = [];
-  for(let n = 1; n <= 30; n++){ const k = sumarDias(hoy, -n);
+  for(let n = 1; n <= 92; n++){ const k = sumarDias(hoy, -n);   // 6.56 (Gustavo): 3 meses hacia atrás
     const es = eventosDe(k).filter(e => e.tipo !== 'habito' && !repite(e) && !hechoEv(e, k) && !flexMovida(e, k));
     if(es.length) r.push({k, es}); }
   return r;   // del día más reciente al más antiguo
 }
+const atrasOn = () => { try{ return localStorage.getItem('equilibra.sinAtras') !== '1'; }catch(e){ return true; } };
+function atrasAlternar(el){
+  try{ localStorage.setItem('equilibra.sinAtras', el.checked ? '0' : '1'); }catch(e){}
+  cerrarAtras(); if(vista === 'agenda') render();
+  aviso(el.checked ? 'Te avisaré de las tareas que queden de días anteriores' : 'Aviso de tareas de días anteriores desactivado');
+}
 const atrasChip = () => {
+  if(!atrasOn()) return '';
   const L = atrasadas(), n = L.reduce((a, x) => a + x.es.length, 0); if(!n) return '';
   const t = `Quedaron ${n} ${n === 1 ? 'tarea' : 'tareas'} de días anteriores`;
   return `<u class="atras-chip" role="button" tabindex="0" title="${t}" aria-label="${t}" onclick="event.stopPropagation(); atrasAbrir(this)">${ICO_IZQ}<strong>${n}</strong></u>`;
@@ -6979,6 +6988,7 @@ function menuExtraHTML(fila){
     + fila(svgT('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>', 24), `Actualizaciones${nueva ? ' <span class="aj-nueva">nueva</span>' : ''}`, "cerrarMenu(); abrirSeccion('versiones')")
     + fila(ICO_CAL_AJ, 'Importar y exportar', "cerrarMenu(); abrirSeccion('calendario')")
     + (ESCRITORIO.matches ? fila(icoTeclado(), 'Atajos de teclado', 'cerrarMenu(); abrirAtajos()') : '')
+    + `<label class="ml-f ml-sw">${svgT('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M13.5 8.5 10 12l3.5 3.5"/>', 24)}<span>Aviso de tareas de días anteriores</span><span class="desliz" style="--c:#f59e0b"><input type="checkbox" ${atrasOn() ? 'checked' : ''} onchange="atrasAlternar(this)"><i></i></span></label>`
     + fila(svgT('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3"/><circle cx="12" cy="16.8" r=".7" fill="currentColor"/>', 24), 'Cómo funciona la app', "cerrarMenu(); abrirSeccion('ayuda')");
 }
 function menuHTML(){
