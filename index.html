@@ -2594,7 +2594,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.77';
+const VERSION = 'v6.78';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -2676,6 +2676,7 @@ function guardar(){
   enviarResumen();
   programarSubida();
   enviarRecordatorios();
+  enviarCorreosLuego();
 }
 const ahoraISO = () => new Date().toISOString();
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -6284,7 +6285,7 @@ function pintarDesp(id){
 function correoHTML(){
   const todo = $('#ev-todo') && $('#ev-todo').checked, mail = (nube.usuario && nube.usuario.email) || '', on = !!evEd.correo;
   return `<p class="snd-tit">Correo electrónico</p><button type="button" class="desp-op ${on ? 'sel' : ''}" onclick="correoAlt()"><span>${ICO_CORREO} Enviar un correo</span><i>${on ? '✓' : ''}</i></button>`
-    + (on ? `<p class="ev-correo-t">Se enviará a <b>${mail ? esc(mail) : 'tu correo electrónico'}</b> ${todo ? 'el mismo día, a las 8:00' : '1 hora antes de la tarea'}.<small>El envío por correo todavía no está activo: se guarda con la tarea y se enviará cuando lo activemos.</small></p>` : '');
+    + (on ? `<p class="ev-correo-t">Se enviará a <b>${mail ? esc(mail) : 'tu correo electrónico'}</b> ${todo ? 'el mismo día, a las 8:00' : '1 hora antes de la tarea'}.${!CORREO_URL ? '<small>El envío por correo todavía no está activo: se guarda con la tarea y se enviará cuando lo activemos.</small>' : !mail ? '<small>Entra con tu cuenta para recibirlo (menú → Tu cuenta).</small>' : ''}</p>` : '');
 }
 function correoAlt(){ evEd.correo = !evEd.correo; pintarDesp('rec'); }
 function durPersEv(inp){
@@ -8469,6 +8470,59 @@ function textoRecord(e, a, falta){
   const f = falta || a;
   return `A las ${hm(e.ini)} (${f < 55 ? `en ${f} min` : f <= 65 ? 'en 1 hora' : `en ${fmtDur(f)}`})`;
 }
+/* 6.78 (Gustavo: «vamos a poner la función, sí, enviando»): recordatorios por correo con el Worker «amable-life-correo» (Resend).
+   La app manda la lista de los próximos 8 días (POST /programar, con el token de Firebase); el servidor los envía a su hora y
+   SOLO al correo de la cuenta. Mientras CORREO_URL esté vacía no se manda nada (hasta que el Worker esté puesto). */
+const CORREO_URL = '';
+let correoT = null, correoEnCurso = false;
+function correosLista(){
+  const ahora = Date.now(), hoy = hoyK(), lista = [];
+  for(let n = 0; n <= 8; n++){
+    const k = sumarDias(hoy, n);
+    eventosDe(k).forEach(e => {
+      if(!e.correo || hechoEv(e, k)) return;
+      const base = fechaDe(k).getTime(), ini = base + (e.todo ? 0 : e.ini) * 60000, at = e.todo ? base + 480 * 60000 : ini - 60 * 60000;
+      if(at <= ahora - 60000) return;
+      const hab = e.tipo === 'habito', ar = areasEv(e)[0];
+      const po = PRIO_OPC.find(o => o.v === e.prio) || (e.prio && PRIO[e.prio] ? {t: PRIO[e.prio].t, c: PRIO[e.prio].c} : null);
+      lista.push({id: `${e.id}|${k}`, ev: e.id, k, at, ini, todo: !!e.todo, hab, tit: e.t || SIN_TITULO,
+        cuando: (hab ? 'Práctica integral' : 'Tarea') + (e.todo ? ' para todo el día' : ' para realizar a las ' + hm(e.ini)),
+        dia: capi(fechaLarga(k)), area: ar ? ar.nombre : '', areaCol: ar ? ar.color : '',
+        prio: po ? capi(po.t.replace(/^Prioridad /, '')) : '', prioCol: po ? po.c : '', col: colorEv(e), desc: (e.desc || '').slice(0, 800)});
+    });
+  }
+  return lista.sort((x, y) => x.at - y.at).slice(0, 100);
+}
+function enviarCorreosLuego(){ clearTimeout(correoT); correoT = setTimeout(enviarCorreos, 4000); }
+async function enviarCorreos(){
+  if(!CORREO_URL || correoEnCurso || !D || !D.agenda) return;
+  const u = nube.listo && window.firebase && firebase.auth().currentUser; if(!u || !u.email) return;
+  const lista = correosLista(), firma = u.uid + JSON.stringify(lista.map(x => [x.id, x.at, x.tit, x.cuando, x.desc, x.prio, x.area, x.col]));
+  let prev = null; try{ prev = JSON.parse(localStorage.getItem('equilibra.correoFirma') || 'null'); }catch(e){}
+  if(!prev && !lista.length) return;   // nunca ha pedido correos: nada que mandar
+  if(prev && prev.f === firma && Date.now() - prev.t < 6 * 3600e3) return;   // sin cambios (y cada 6 h otra vez, por si acaso)
+  correoEnCurso = true;
+  try{
+    const r = await fetch(CORREO_URL + '/programar', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + await u.getIdToken()}, body: JSON.stringify({lista})});
+    if(r.ok) localStorage.setItem('equilibra.correoFirma', JSON.stringify({f: firma, t: Date.now()}));
+  }catch(e){}
+  finally{ correoEnCurso = false; }
+}
+async function correoBorrarServidor(){
+  if(!CORREO_URL) return;
+  try{ const u = firebase.auth().currentUser; if(u) await fetch(CORREO_URL + '/programar', {method: 'DELETE', headers: {Authorization: 'Bearer ' + await u.getIdToken()}}); }catch(e){}
+}
+/* El botón «Abrir en Amable Life» del correo lleva #ev=<id>&k=<día>: abre la tarjeta de esa tarea */
+function abrirDesdeCorreo(intento){
+  const m = /[#&]ev=([^&]+)&k=(\d{4}-\d{2}-\d{2})/.exec(location.hash); if(!m) return;
+  intento = intento || 0;
+  const id = decodeURIComponent(m[1]), k = m[2], e = D && D.agenda && AG_().eventos.find(x => x.id === id);
+  if(document.getElementById('splash') || !e){ if(intento < 10) setTimeout(() => abrirDesdeCorreo(intento + 1), 1500); return; }
+  try{ history.replaceState(null, '', location.pathname + location.search); }catch(x){}
+  agK = k; ir('agenda');
+  setTimeout(() => { mostrarHoja(`<div class="ep ep-en-hoja">${popHTML(e, k, true)}</div>`, colorEv(e)); adjMiniaturas(document.getElementById('hoja')); }, 400);
+}
+window.addEventListener('load', () => setTimeout(abrirDesdeCorreo, 1500));
 function enviarRecordatorios(){
   if(!recordNativo() || !D || !D.agenda) return;
   const ahora = Date.now(), hoy = hoyK(), lista = [];
@@ -8762,7 +8816,7 @@ let recordarDesde = Date.now(), bloquesTickAbrir = true;   // la primera vuelta 
 function refrescarFocus(){ const h = hojaAbierta; hojaAbierta = null; rerenderDia(); hojaAbierta = h; }
 function bloquesTick(){
   const c = bloqueAhora(), B = B_();
-  avisarEventos(); enviarRecordatorios(); adjSubirPend();
+  avisarEventos(); enviarRecordatorios(); adjSubirPend(); enviarCorreos();
   if(apuntarBloquesConTareas()) guardar();
   revisarRegistro(bloquesTickAbrir); bloquesTickAbrir = false;
   if(!archivoT) archivarHechas();
@@ -9614,6 +9668,7 @@ async function eliminarCuenta(){
     else if(!esApp) await u.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());
   }catch(e){ msg(errorCuenta(e)); return; }
   msg('Eliminando…');
+  await correoBorrarServidor();
   if(nube.escucha){ nube.escucha(); nube.escucha = null; }
   try{ if(nube.ref) await nube.ref.delete(); }catch(e){ msg('No se han podido borrar tus datos de la nube. Prueba otra vez.'); escucharNube(); return; }
   try{ await u.delete(); }
