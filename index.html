@@ -513,6 +513,21 @@ html.en-app .voz-pie{padding-bottom:10px}
   border-radius:24px 24px 0 0;padding:16px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .3s ease;max-height:82vh;overflow:auto}
 .hoja.ver .hoja-in{transform:none}
 .ev-hecha-b{display:none;color:#15803d}
+/* 6.76: ventanas «Recordatorio personalizado» y «Periodicidad personalizada» */
+.rp-caja{width:min(400px,92vw)}
+.rp-caja .rp-fila{display:flex;align-items:center;gap:12px;margin:6px 0 4px;font-size:15px}
+.rp-caja .rp-fila input[type=number]{width:72px;padding:10px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit;text-align:center}
+.rp-caja .rp-fila select{padding:10px 12px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit}
+.rp-caja .rp-ver{margin:10px 0 0;font-size:13px;line-height:1.4;color:var(--suave)}
+.rp-sub{margin:20px 0 10px;font-size:14px;color:var(--suave)}
+.rpp-dias{display:flex;gap:8px}
+.rpp-dia{width:32px;height:32px;padding:0;border:0;border-radius:50%;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.rpp-dia.sel{background:var(--oro);color:#2a1d05}
+.rpp-op{display:flex;align-items:center;gap:12px;min-height:44px;font-size:15px;cursor:pointer}
+.rpp-op input[type=radio]{width:18px;height:18px;accent-color:var(--oro)}
+.rpp-op input[type=date],.rpp-op input[type=number]{padding:9px 10px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit}
+.rpp-op input[type=number]{width:70px;text-align:center}
+.rpp-op input:disabled{opacity:.5}
 /* 6.73: imágenes adjuntas en amarillo y su vista en grande */
 .ev-adj-w{margin:0 0 0 30px}
 .ev-adj{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -2568,7 +2583,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.75';
+const VERSION = 'v6.76';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5313,12 +5328,46 @@ function tocaEv(e, k){
     return (e.dias || []).includes(diaSem(k));
   }
   const r = e.rep || 'no';
+  if(r === 'pers') return tocaPers(e, k);
   if(r === 'dia') return true;
   if(r === 'lab') return diaSem(k) < 5;
   if(r === 'semana') return diaSem(k) === diaSem(e.dia);
   if(r === 'mes') return fechaDe(k).getDate() === fechaDe(e.dia).getDate();
   if(r === 'anio') return k.slice(5) === e.dia.slice(5);
   return k === e.dia;
+}
+/* 6.76 (Gustavo, ventana «Periodicidad personalizada» de Google): repetir cada N días / semanas / meses / años, los días de la semana que quieras y
+   terminar nunca, un día o tras N repeticiones. Campos: rep 'pers', repN, repU, repDias, repFin ('nunca' | 'el' | 'tras'), repFinDia, repFinN. */
+function coincidePers(e, k){
+  if(k < e.dia) return false;
+  const N = Math.max(1, e.repN || 1), U = e.repU || 'semana', d0 = fechaDe(e.dia), d = fechaDe(k);
+  if(U === 'dia') return Math.round((d - d0) / 864e5) % N === 0;
+  if(U === 'semana'){
+    const dias = e.repDias && e.repDias.length ? e.repDias : [diaSem(e.dia)]; if(!dias.includes(diaSem(k))) return false;
+    return Math.round((fechaDe(lunesDe(k)) - fechaDe(lunesDe(e.dia))) / (7 * 864e5)) % N === 0;
+  }
+  if(U === 'mes') return d.getDate() === d0.getDate() && ((d.getFullYear() - d0.getFullYear()) * 12 + d.getMonth() - d0.getMonth()) % N === 0;
+  if(U === 'anio') return k.slice(5) === e.dia.slice(5) && (d.getFullYear() - d0.getFullYear()) % N === 0;
+  return false;
+}
+const finPersCache = new Map();
+function finPers(e){   // el día de la última repetición (para «después de N repeticiones»), calculado una vez
+  const clave = [e.id, e.dia, e.repN, e.repU, (e.repDias || []).join(), e.repFinN].join('|'); if(finPersCache.has(clave)) return finPersCache.get(clave);
+  let k = e.dia, n = 0, r = null; for(let i = 0; i < 4000; i++){ if(coincidePers(e, k) && ++n >= e.repFinN){ r = k; break; } k = sumarDias(k, 1); }
+  finPersCache.set(clave, r); return r;
+}
+function tocaPers(e, k){
+  if(e.repFin === 'el' && e.repFinDia && k > e.repFinDia) return false;
+  if(e.repFin === 'tras' && e.repFinN){ const f = finPers(e); if(f && k > f) return false; }
+  return coincidePers(e, k);
+}
+function repPersTxt(o){
+  const N = Math.max(1, o.repN || 1), U = o.repU || 'semana', pl = ({dia: ['día', 'días'], semana: ['semana', 'semanas'], mes: ['mes', 'meses'], anio: ['año', 'años']})[U] || ['semana', 'semanas'];
+  let t = N === 1 ? `Cada ${pl[0]}` : `Cada ${N} ${pl[1]}`;
+  if(U === 'semana' && o.repDias && o.repDias.length){ const d = o.repDias.slice().sort((a, b) => a - b).map(x => DIAS_LARGO[x]); t += d.length === 1 ? ', el ' + d[0] : ', los ' + d.slice(0, -1).join(', ') + ' y ' + d[d.length - 1]; }
+  if(o.repFin === 'el' && o.repFinDia) t += ` · hasta el ${fechaLarga(o.repFinDia)}`;
+  if(o.repFin === 'tras' && o.repFinN) t += ` · ${o.repFinN} ${o.repFinN === 1 ? 'vez' : 'veces'}`;
+  return t;
 }
 const eventosDe = k => AG_().eventos.filter(e => tocaEv(e, k)).sort((a, b) => (b.todo - a.todo) || ((a.ini || 0) - (b.ini || 0)) || (a.t < b.t ? -1 : 1));
 const hechoEv = (e, k) => (e.hechos || []).includes(k) || !!(e.acc && !repite(e) && (D.acciones.find(x => x.id === e.acc) || {}).hecha);
@@ -6148,13 +6197,13 @@ let evEd = null;
 function nuevoEvento(k, ini, pre){
   const dia = k || agK || hoyK(), m = minutosHoy();
   const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
-  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], frec: 'diario', veces: 3, cada: 2, fijo: null, avisos: [], horasAviso: [], acc: (pre && pre.acc) || null, tzs: [], correo: false, adj: [], adjNuevas: [], adjQuitar: []};
+  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], frec: 'diario', veces: 3, cada: 2, fijo: null, avisos: [], horasAviso: [], acc: (pre && pre.acc) || null, tzs: [], correo: false, adj: [], adjNuevas: [], adjQuitar: [], repN: 1, repU: 'semana', repDias: [], repFin: 'nunca', repFinDia: '', repFinN: 13};
   pintarEvento({t: (pre && pre.t) || '', dia, todo: !!(pre && pre.todo), ini: base, fin: Math.min(base + ((pre && pre.dur) || 60), 1439)});
 }
 function editarEvento(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
   evEd = {id, k, tipo: e.tipo || 'tarea', rep: e.rep || 'no', prio: marcaDe(e.t) || e.prio || 0, areas: areasEv(e).map(a => a.id), dias: (e.dias || [diaSem(e.dia)]).slice(),
-    frec: e.frec || 'diario', veces: e.veces || 3, cada: e.cada || 2, fijo: e.fijo != null ? e.fijo : null, ...avisosEditar(e), acc: e.acc || null, tzs: (e.tzs && e.tzs.length ? e.tzs : e.tz ? [e.tz] : []).slice(), correo: !!(e.correo || (e.correos && e.correos.length)), adj: (e.adj || []).map(a => ({id: a.id, t: a.t})), adjNuevas: [], adjQuitar: [], armado: false};
+    frec: e.frec || 'diario', veces: e.veces || 3, cada: e.cada || 2, fijo: e.fijo != null ? e.fijo : null, ...avisosEditar(e), acc: e.acc || null, tzs: (e.tzs && e.tzs.length ? e.tzs : e.tz ? [e.tz] : []).slice(), correo: !!(e.correo || (e.correos && e.correos.length)), adj: (e.adj || []).map(a => ({id: a.id, t: a.t})), adjNuevas: [], adjQuitar: [], repN: e.repN || 1, repU: e.repU || 'semana', repDias: (e.repDias || []).slice(), repFin: e.repFin || 'nunca', repFinDia: e.repFinDia || '', repFinN: e.repFinN || 13, armado: false};
   pintarEvento(e);
 }
 const FLECHA_ABAJO = '<svg class="desp-f" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
@@ -6163,7 +6212,7 @@ const despHTML = (id, titulo, ico) => `<div class="desp" id="dc-${id}"><button t
 function opcionesRep(){
   const k = valor('ev-dia') || evEd.k, d = fechaDe(k);
   return [{k: 'no', t: 'No se repite'}, {k: 'dia', t: 'Cada día'}, {k: 'semana', t: `Cada semana, el ${DIAS_LARGO[diaSem(k)]}`}, {k: 'mes', t: `Cada mes, el día ${d.getDate()}`},
-    {k: 'anio', t: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`}, {k: 'lab', t: 'De lunes a viernes'}];
+    {k: 'anio', t: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`}, {k: 'lab', t: 'De lunes a viernes'}, {k: 'pers', t: evEd.rep === 'pers' ? repPersTxt(evEd) : 'Personalizar…'}];
 }
 const durEv = () => { const i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin')); return i != null && f != null && f > i ? f - i : 0; };
 const ICO_CALENDARIO = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2"/></svg>';
@@ -6263,16 +6312,20 @@ function recEtq(m, todo){
   return `${m} min antes`;
 }
 /* «Personalizado…»: un número y minutos / horas / días, con la fecha y hora a la que avisará, Guardar y Cancelar */
+/* 6.76 (Gustavo: «elimina lo que sale ahora… que te ponga todo en gris y en el medio esta ventana»): «Personalizado…» ya no abre un formulario dentro de la lista:
+   abre una ventana en el medio, con lo demás en gris (como la «Periodicidad personalizada» de Google). */
 function recPers(){
-  const l = $('#dl-rec'); if(!l) return;
-  const todo = !!($('#ev-todo') && $('#ev-todo').checked);
-  l.innerHTML = `<div class="rec-pers"><div class="rp-fila"><input type="number" id="rp-n" min="1" max="${todo ? 60 : 999}" value="${todo ? 3 : 30}" inputmode="numeric" oninput="recPersVista()">
-    <select id="rp-u" onchange="recPersVista()">${todo ? '<option value="1440">días antes (a las 9:00)</option><option value="10080">semanas antes (a las 9:00)</option>'
-      : '<option value="1">minutos antes</option><option value="60">horas antes</option><option value="1440">días antes</option>'}</select></div>
+  if(document.getElementById('rp-fondo')) return;
+  const todo = !!($('#ev-todo') && $('#ev-todo').checked), d = document.createElement('div'); d.id = 'rp-fondo'; d.className = 'tz-fondo';
+  d.innerHTML = `<div class="tz-caja rp-caja" role="dialog" aria-label="Recordatorio personalizado"><h3>Recordatorio personalizado</h3>
+    <div class="rp-fila"><span>Avisar</span><input type="number" id="rp-n" min="1" max="${todo ? 60 : 999}" value="${todo ? 3 : 30}" inputmode="numeric" oninput="recPersVista()">
+      <select id="rp-u" onchange="recPersVista()">${todo ? '<option value="1440">días antes (a las 9:00)</option><option value="10080">semanas antes (a las 9:00)</option>'
+        : '<option value="1">minutos antes</option><option value="60">horas antes</option><option value="1440">días antes</option>'}</select></div>
     <p class="rp-ver" id="rp-ver"></p>
-    <div class="ed-bots"><button type="button" class="btn prim" onclick="recPersGuardar()">Guardar</button><button type="button" class="btn sec" onclick="pintarDesp('rec')">Cancelar</button></div></div>`;
-  recPersVista(); const n = $('#rp-n'); if(n){ n.focus(); n.select(); }
+    <div class="tz-bots"><button type="button" class="tz-link" onclick="recPersCerrar()">Cancelar</button><button type="button" class="btn prim" onclick="recPersGuardar()">Hecho</button></div></div>`;
+  document.body.appendChild(d); recPersVista(); const n = $('#rp-n'); if(n){ n.focus(); n.select(); }
 }
+function recPersCerrar(){ const d = document.getElementById('rp-fondo'); if(d) d.remove(); }
 function recPersMin(){ const n = Math.max(0, Math.round(+valor('rp-n') || 0)), u = +(($('#rp-u') || {}).value || 1); return n * u; }
 function recPersVista(){
   const v = $('#rp-ver'); if(!v) return;
@@ -6284,8 +6337,46 @@ function recPersVista(){
 function recPersGuardar(){
   const m = recPersMin(); if(!m){ aviso('Escribe cuántos'); return; }
   if(!evEd.avisos.includes(m)) evEd.avisos = [...evEd.avisos, m];
-  pintarDesp('rec');
+  recPersCerrar(); pintarDesp('rec');
 }
+/* Repetir → Personalizar…: «Repetir cada N [día/semana/mes/año]», «Se repite el» (L M X J V S D) y «Termina» (Nunca / El [día] / Después de N repeticiones) */
+function repPersAbrir(){
+  if(document.getElementById('rpp-fondo')) return;
+  const k = valor('ev-dia') || evEd.k, ya = evEd.rep === 'pers';
+  const N = ya ? evEd.repN || 1 : 1, U = ya ? evEd.repU || 'semana' : 'semana', dias = ya && evEd.repDias.length ? evEd.repDias : [diaSem(k)];
+  const fin = ya ? evEd.repFin || 'nunca' : 'nunca', finDia = (ya && evEd.repFinDia) || sumarDias(k, 90), finN = ya ? evEd.repFinN || 13 : 13;
+  const d = document.createElement('div'); d.id = 'rpp-fondo'; d.className = 'tz-fondo';
+  d.innerHTML = `<div class="tz-caja rp-caja rpp-caja" role="dialog" aria-label="Periodicidad personalizada"><h3>Periodicidad personalizada</h3>
+    <div class="rp-fila"><span>Repetir cada</span><input type="number" id="rpp-n" min="1" max="99" value="${N}" inputmode="numeric" oninput="repPersUnidad()">
+      <select id="rpp-u" onchange="repPersUnidad()"><option value="dia" ${U === 'dia' ? 'selected' : ''}></option><option value="semana" ${U === 'semana' ? 'selected' : ''}></option><option value="mes" ${U === 'mes' ? 'selected' : ''}></option><option value="anio" ${U === 'anio' ? 'selected' : ''}></option></select></div>
+    <div id="rpp-dias-w" ${U === 'semana' ? '' : 'hidden'}><p class="rp-sub">Se repite el</p><div class="rpp-dias">${[0, 1, 2, 3, 4, 5, 6].map(i => `<button type="button" class="rpp-dia ${dias.includes(i) ? 'sel' : ''}" data-d="${i}" aria-label="${DIAS_LARGO[i]}" onclick="this.classList.toggle('sel')">${DIAS_CORTO[i]}</button>`).join('')}</div></div>
+    <p class="rp-sub">Termina</p>
+    <label class="rpp-op"><input type="radio" name="rpp-f" value="nunca" ${fin === 'nunca' ? 'checked' : ''} onchange="repPersFin()"><span>Nunca</span></label>
+    <label class="rpp-op"><input type="radio" name="rpp-f" value="el" ${fin === 'el' ? 'checked' : ''} onchange="repPersFin()"><span>El</span><input type="date" id="rpp-fd" value="${finDia}" ${fin === 'el' ? '' : 'disabled'}></label>
+    <label class="rpp-op"><input type="radio" name="rpp-f" value="tras" ${fin === 'tras' ? 'checked' : ''} onchange="repPersFin()"><span>Después de</span><input type="number" id="rpp-fn" min="1" max="999" value="${finN}" ${fin === 'tras' ? '' : 'disabled'}><span>repeticiones</span></label>
+    <div class="tz-bots"><button type="button" class="tz-link" onclick="repPersCerrar()">Cancelar</button><button type="button" class="btn prim" onclick="repPersHecho()">Hecho</button></div></div>`;
+  document.body.appendChild(d); repPersUnidad(); const n = $('#rpp-n'); if(n){ n.focus(); n.select(); }
+}
+function repPersUnidad(){
+  const n = Math.max(1, +valor('rpp-n') || 1), u = $('#rpp-u'); if(!u) return;
+  const t = {dia: ['día', 'días'], semana: ['semana', 'semanas'], mes: ['mes', 'meses'], anio: ['año', 'años']};
+  [...u.options].forEach(o => { o.textContent = t[o.value][n === 1 ? 0 : 1]; });
+  const w = $('#rpp-dias-w'); if(w) w.hidden = u.value !== 'semana';
+}
+function repPersFin(){
+  const f = (document.querySelector('input[name="rpp-f"]:checked') || {}).value;
+  const a = $('#rpp-fd'), b = $('#rpp-fn'); if(a) a.disabled = f !== 'el'; if(b) b.disabled = f !== 'tras';
+}
+function repPersCerrar(){ const d = document.getElementById('rpp-fondo'); if(d) d.remove(); }
+function repPersHecho(){
+  const k = valor('ev-dia') || evEd.k, U = valor('rpp-u') || 'semana', N = Math.max(1, Math.min(99, Math.round(+valor('rpp-n') || 1)));
+  let dias = [...document.querySelectorAll('#rpp-dias-w .rpp-dia.sel')].map(b => +b.dataset.d); if(U === 'semana' && !dias.length) dias = [diaSem(k)];
+  const fin = (document.querySelector('input[name="rpp-f"]:checked') || {}).value || 'nunca', fd = valor('rpp-fd'), fn = Math.max(1, Math.round(+valor('rpp-fn') || 1));
+  if(fin === 'el' && (!fd || fd < k)){ aviso('El día final no puede ser antes del primer día'); return; }
+  Object.assign(evEd, {rep: 'pers', repN: N, repU: U, repDias: U === 'semana' ? dias : [], repFin: fin, repFinDia: fin === 'el' ? fd : '', repFinN: fn});
+  repPersCerrar(); pintarDesp('rep');
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ const a = document.getElementById('rpp-fondo') || document.getElementById('rp-fondo'); if(a){ e.stopPropagation(); a.remove(); } } }, true);
 function despElegir(id, k){
   if(id === 'son'){   // vale para todos los recordatorios; al elegir, suena 4 s
     if(k === 'elegir'){ try{ AndroidEquilibra.elegirSonidoAlarma(); }catch(e){} return; }
@@ -6295,7 +6386,7 @@ function despElegir(id, k){
     try{ localStorage.setItem('equilibra.alarma', k); }catch(e){} sonarAlarma(4, k); pintarDesp(id); return;
   }
   if(id === 'sdur'){ try{ localStorage.setItem('equilibra.alarmaDur', String(k)); }catch(e){} pintarDesp(id); recordUlt = null; enviarRecordatorios(); return; }
-  if(id === 'rep'){ evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
+  if(id === 'rep'){ if(k === 'pers'){ despTocar(id); repPersAbrir(); return; } evEd.rep = k; pintarDesp(id); despTocar(id); return; }   // una sola: se cierra
   if(id === 'prio'){   // 5.38: una sola; tocar la elegida la quita (sin prioridad)
     let v = /^\d$/.test(String(k)) ? +k : k; if(evEd.prio === v) v = 0;
     const b = [...document.querySelectorAll('.ev-prios .ev-prio')][PRIO_OPC.findIndex(o => o.v === v)];
@@ -6848,7 +6939,7 @@ const ICO_LINEAS = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" 
 function repTxt(e){
   if(e.tipo === 'habito') return 'Práctica integral · ' + txtHabito(e).toLowerCase() + ((e.frec || 'diario') === 'diario' && (e.dias || []).length < 7 ? ': ' + (e.dias || []).slice().sort().map(d => DIAS_CORTO[d]).join(' · ') : '');
   const d = fechaDe(e.dia);
-  return {dia: 'Cada día', semana: `Cada semana, el ${DIAS_LARGO[diaSem(e.dia)]}`, mes: `Cada mes, el día ${d.getDate()}`, anio: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`, lab: 'De lunes a viernes'}[e.rep] || '';
+  return {dia: 'Cada día', semana: `Cada semana, el ${DIAS_LARGO[diaSem(e.dia)]}`, mes: `Cada mes, el día ${d.getDate()}`, anio: `Cada año, el ${d.getDate()} de ${MESES[d.getMonth()]}`, lab: 'De lunes a viernes', pers: repPersTxt(e)}[e.rep] || '';
 }
 /* 4.95 (Gustavo): en la tarjeta de un hábito, arriba, en verde y en mayúsculas, «HÁBITO DEL ÁREA DE PAREJA» con su pétalo (en lugar de la línea del área de abajo) */
 function habAreaTxt(ars){
@@ -7805,7 +7896,7 @@ function guardarEvento(){
   const antE = e ? {dia: unoK || e.dia, ini: e.ini, todo: e.todo} : null;
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), tzs: (evEd.tzs || []).slice(), tz: (evEd.tzs || [])[0] || null, correo: !!evEd.correo, correos: evEd.correo ? [60] : [], adj: adjFinal(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), tzs: (evEd.tzs || []).slice(), tz: (evEd.tzs || [])[0] || null, correo: !!evEd.correo, correos: evEd.correo ? [60] : [], adj: adjFinal(), ...(evEd.rep === 'pers' ? {repN: evEd.repN, repU: evEd.repU, repDias: evEd.repDias.slice(), repFin: evEd.repFin, repFinDia: evEd.repFin === 'el' ? evEd.repFinDia : '', repFinN: evEd.repFinN} : {repN: null, repU: null, repDias: null, repFin: null, repFinDia: null, repFinN: null}), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
   if(unoK){ e.rep = 'no'; e.acc = null; e.dia = unoDia; }   // 6.27: copia suelta de ese día (o del día que hayas puesto)
   if(serieT){ Object.assign(serieT, {todo: e.todo, ini: e.ini, fin: e.fin, mod: ahoraISO()}); }
   apuntarCambio(e, antE, e0.k || (antE && antE.dia));
@@ -10055,7 +10146,7 @@ function calICS(){
     if(e.todo) L.push('DTSTART;VALUE=DATE:' + icsFecha(dia), 'DTEND;VALUE=DATE:' + icsFecha(sumarDias(dia, 1)));
     else L.push('DTSTART:' + icsHora(dia, ini), 'DTEND:' + icsHora(dia, fin));
     const rr = e.tipo === 'habito' && e.frec === 'intervalo' ? 'FREQ=DAILY;INTERVAL=' + Math.max(2, e.cada || 2) : e.tipo === 'habito' && e.frec === 'semanal' ? 'FREQ=DAILY' : e.tipo === 'habito' ? 'FREQ=WEEKLY;BYDAY=' + (e.dias && e.dias.length ? e.dias : [diaSem(dia)]).slice().sort().map(d => BYDAY[d]).join(',')
-      : ({dia: 'FREQ=DAILY', semana: 'FREQ=WEEKLY;BYDAY=' + BYDAY[diaSem(dia)], mes: 'FREQ=MONTHLY;BYMONTHDAY=' + fechaDe(dia).getDate(), anio: 'FREQ=YEARLY', lab: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'})[e.rep] || '';
+      : ({dia: 'FREQ=DAILY', semana: 'FREQ=WEEKLY;BYDAY=' + BYDAY[diaSem(dia)], mes: 'FREQ=MONTHLY;BYMONTHDAY=' + fechaDe(dia).getDate(), anio: 'FREQ=YEARLY', lab: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', pers: 'FREQ=' + ({dia: 'DAILY', semana: 'WEEKLY', mes: 'MONTHLY', anio: 'YEARLY'})[e.repU || 'semana'] + ';INTERVAL=' + Math.max(1, e.repN || 1) + ((e.repU || 'semana') === 'semana' ? ';BYDAY=' + ((e.repDias && e.repDias.length ? e.repDias : [diaSem(dia)]).map(x => BYDAY[x]).join(',')) : '') + (e.repFin === 'el' && e.repFinDia ? ';UNTIL=' + e.repFinDia.replace(/-/g, '') : e.repFin === 'tras' && e.repFinN ? ';COUNT=' + e.repFinN : '')})[e.rep] || '';
     if(rr) L.push('RRULE:' + rr);
     if(e.tipo === 'habito') L.push('X-AMABLE-TIPO:habito');
     if(e.tipo === 'habito' && e.frec === 'semanal') L.push('X-AMABLE-VECES:' + (e.veces || 3));
