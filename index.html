@@ -1365,6 +1365,9 @@ html.claro .ep-flot{box-shadow:0 12px 36px rgba(40,20,90,.22)}
 .ep-focus:hover{background:rgba(224,50,58,.16)}
 .ep-ico:hover{background:rgba(var(--bl),.1)}
 .ep-fila{display:flex;gap:16px;align-items:flex-start;padding:7px 0;font-size:14.5px}
+.ep-asa{display:flex;justify-content:center;align-items:center;margin:-8px 0 4px;padding:2px 0;color:var(--suave);cursor:grab;border-radius:8px}
+.ep-asa:active{cursor:grabbing}
+.ep-fila-cuando .ep-cuando{margin:0}
 .ep-mas{background:color-mix(in srgb,#22c55e 22%,transparent)!important;font-weight:800}
 .obj-op{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;cursor:pointer}
 .obj-op input{margin-top:3px;accent-color:#22c55e}
@@ -2498,7 +2501,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.66';
+const VERSION = 'v6.67';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -4141,6 +4144,7 @@ function redimBorde(el, x, y){
   if(x < r.left + REDIM_B) b += 'w'; else if(x > r.right - REDIM_B) b += 'e';
   return b;
 }
+const sobreAsaVentana = ev => !!(ev.target && ev.target.closest && ev.target.closest('.ep-asa, .hoja-asa'));   // 6.67: los seis puntitos de arriba mueven la ventana, no la estiran
 // la ventana bajo el ratón, contando también sus esquinas redondeadas y 4 px por fuera del borde (la tarjeta va encima de la hoja)
 function redimPuede(ev){
   if(!ESCRITORIO.matches || !matchMedia('(hover: hover)').matches) return null;
@@ -4155,18 +4159,18 @@ document.addEventListener('mousemove', ev => {
   const el = redimPuede(ev) || null;
   document.querySelectorAll('[data-redim]').forEach(x => { if(x !== el){ x.style.cursor = ''; delete x.dataset.redim; } });
   if(!el) return;
-  const b = redimBorde(el, ev.clientX, ev.clientY);
+  const b = sobreAsaVentana(ev) ? '' : redimBorde(el, ev.clientX, ev.clientY);
   if(b){ el.dataset.redim = b; el.style.cursor = REDIM_CUR[b]; } else if(el.dataset.redim){ delete el.dataset.redim; el.style.cursor = ''; }
 });
 // el pointerdown va antes que el mousedown: si cae en un borde, que nadie más lo vea (no cierra la tarjeta ni la hoja)
 document.addEventListener('pointerdown', ev => {
   if(ev.pointerType !== 'mouse' || ev.button !== 0) return;
-  const el = redimPuede(ev); if(el && redimBorde(el, ev.clientX, ev.clientY)) ev.stopPropagation();
+  const el = redimPuede(ev); if(el && !sobreAsaVentana(ev) && redimBorde(el, ev.clientX, ev.clientY)) ev.stopPropagation();
 }, true);
 document.addEventListener('mousedown', ev => {
   if(ev.button !== 0) return;
   const el = redimPuede(ev); if(!el) return;
-  const b = redimBorde(el, ev.clientX, ev.clientY); if(!b) return;
+  const b = redimBorde(el, ev.clientX, ev.clientY); if(!b || sobreAsaVentana(ev)) return;
   ev.preventDefault(); ev.stopPropagation();
   const r = el.getBoundingClientRect(), sx = ev.clientX, sy = ev.clientY;
   if(popInfo && el.id === 'ev-pop') popInfo.hover = false;   // la tarjeta que salió con el ratón encima ya no se cierra al salir
@@ -6620,15 +6624,15 @@ function popHTML(e, k, enHoja){
   const acol = hab && ars.length ? ars[0].color : '';
   const nomA = ars.map(a => `<b style="color:${a.color}">${esc(a.nombre)}</b>`), listaA = nomA.length === 1 ? nomA[0] : nomA.slice(0, -1).join(', ') + ' y ' + nomA[nomA.length - 1];
   const etA = acol ? `<span class="ep-area-et ev-area-et">${miniFlor(ars.map(a => a.id))}<span>${ars.length === 1 ? 'Área' : 'Áreas'} ${listaA}</span></span>` : '';
-  return `<div class="ep-bar">${etA}${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}<button type="button" class="ep-focus" title="Ponerla la primera en tu bloque de Focus" onclick="popFocus('${e.id}','${k}')">${ICO_DIANA}Focus</button>${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
+  return `${enHoja ? '' : '<div class="ep-asa" title="Arrastra para mover la tarjeta" onmousedown="popArrastrar(event)"><svg viewBox="0 0 24 12" width="26" height="13" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.8"/><circle cx="12" cy="3" r="1.8"/><circle cx="19" cy="3" r="1.8"/><circle cx="5" cy="9" r="1.8"/><circle cx="12" cy="9" r="1.8"/><circle cx="19" cy="9" r="1.8"/></svg></div>'}<div class="ep-bar">${etA}${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}<button type="button" class="ep-focus" title="Ponerla la primera en tu bloque de Focus" onclick="popFocus('${e.id}','${k}')">${ICO_DIANA}Focus</button>${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab${acol ? ' ep-acol' : ''}"${acol ? ` style="--ac:${acol}"` : ''}>${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Práctica importada de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}${acol ? ' ep-acol' : ''}"${acol ? ` style="--ac:${acol}"` : ''}>${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
-      <p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p>${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}${hab ? habCuentaHTML(e, k) : ''}</div></div>
-    <div class="ep-opc" id="ep-opc-hora"></div>
+      ${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}${hab ? habCuentaHTML(e, k) : ''}</div></div>
     <div id="ep-conf"></div>
     <div class="ep-bots">${objDe(e) && !ok ? (objHecho(e, k) ? `<span class="ep-obj-ok">✓ Objetivo ${objPer(objDe(e)) === 'semana' ? 'de la semana' : 'del mes'} cumplido</span>`
       : `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}${objPer(objDe(e)) === 'dia' ? '' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</button>`) : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : 'ep-prin'}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Práctica hecha · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar como hecha' : 'Marcar como hecho')}</button>
       ${!ok && e.tipo !== 'habito' ? `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','manana')">Pasar a mañana</button>
       ${esFlexible(e) ? '' : `<button type="button" class="ep-hecho" onclick="popMover('${e.id}','${k}','flex')">Pasar a flexible</button>`}` : ''}</div>
+    <div class="ep-fila ep-fila-cuando">${ICO_RELOJ.replace('width="12" height="12"', 'width="20" height="20"')}<div><p class="ep-cuando">${popCuandoHTML(e, k, hab)}</p></div></div><div class="ep-opc" id="ep-opc-hora"></div>   <!-- 6.67 (Gustavo): el día y la hora, debajo de los botones y con un relojito -->
     ${esMeta(e) ? metaTarjetaHTML(e) : ''}
     ${desc ? `<div class="ep-fila">${ICO_LINEAS}<div class="rt ep-desc" data-ev="${e.id}" data-k="${k}">${descDia(e, k, desc)}</div></div>` : ''}
     ${hab ? `<div class="ep-fila">${ICO_CAMPANA.replace('width="18" height="18"', 'width="20" height="20"')}<div><button type="button" class="ep-ed" title="Cambiar el recordatorio" onclick="popOpc('rec','${e.id}','${k}')">${rec || 'Sin recordatorio'}</button></div></div><div class="ep-opc" id="ep-opc-rec"></div>`   // 6.36: también se cambia en las prácticas
@@ -6654,6 +6658,18 @@ function verEvento(id, k, el, hover){
   requestAnimationFrame(() => p.classList.add('ver'));
 }
 function cerrarPop(){ const p = $('#ev-pop'); if(p) p.remove(); popInfo = null; }
+/* 6.67 (Gustavo): la tarjeta de la tarea se mueve con los seis puntitos de arriba, a cualquier parte de la pantalla, y se queda donde la sueltas */
+function popArrastrar(ev){
+  const p = ev.target.closest('#ev-pop'); if(!p || ev.button !== 0) return;
+  ev.preventDefault(); clearTimeout(popCierreT); if(popInfo) popInfo.hover = false;
+  const r = p.getBoundingClientRect(), sx = ev.clientX, sy = ev.clientY;
+  const mover = e => {
+    p.style.left = Math.max(0, Math.min(innerWidth - r.width, r.left + e.clientX - sx)) + 'px';
+    p.style.top = Math.max(0, Math.min(innerHeight - 60, r.top + e.clientY - sy)) + 'px';
+  };
+  const soltar = () => { removeEventListener('mousemove', mover); removeEventListener('mouseup', soltar); document.body.classList.remove('moviendo'); };
+  document.body.classList.add('moviendo'); addEventListener('mousemove', mover); addEventListener('mouseup', soltar);
+}
 function popCerrarTodo(){ cerrarPop(); if($('#hoja .ep')) cerrarHoja(); }
 function popEditar(id, k){ popCerrarTodo(); setTimeout(() => editarEvento(id, k), $('#hoja') ? 320 : 0); }
 function popHecho(id, k){ popCerrarTodo(); alternarEv(id, k); }
@@ -6836,6 +6852,13 @@ document.addEventListener('mouseout', e => {
 });
 document.addEventListener('mousedown', e => { if(popInfo && !e.target.closest('#ev-pop') && !e.target.closest('[data-ev]')) cerrarPop(); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && popInfo) cerrarPop(); });
+/* 6.67 (Gustavo): con un clic, la tarjeta de la tarea; con dos clics, la ventana de editar (en el ordenador) */
+document.addEventListener('dblclick', ev => {
+  if(!ESCRITORIO.matches || !ev.target.closest) return;
+  if(ev.target.closest('#ev-pop, #ev-ctx, .ep, #hoja, #menu-lat, #alarma-full')) return;
+  const el = ev.target.closest('[data-ev]'); if(!el || !el.dataset.k) return;
+  ev.preventDefault(); popEditar(el.dataset.ev, el.dataset.k);
+});
 addEventListener('scroll', () => { if(popInfo) cerrarPop(); }, {passive: true});
 /* ---------- Importar los hábitos de Metas Amables (Gustavo, 3.79) ----------
    Se entra con el nombre y la contraseña de Metas Amables (su servidor ya deja llamar desde aquí) y se leen sus «metas sencillas»
