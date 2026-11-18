@@ -513,6 +513,24 @@ html.en-app .voz-pie{padding-bottom:10px}
   border-radius:24px 24px 0 0;padding:16px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .3s ease;max-height:82vh;overflow:auto}
 .hoja.ver .hoja-in{transform:none}
 .ev-hecha-b{display:none;color:#15803d}
+/* 6.69: zona horaria del evento */
+.ev-tz{margin:2px 0 6px}
+.ev-tz-b{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;margin-left:-10px;border:0;border-radius:10px;background:none;color:var(--tinta);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.ev-tz-b:hover{background:rgba(var(--bl),.08)}
+.ev-tz-l{display:flex;gap:10px;align-items:baseline;margin:2px 0 0 1px;font-size:14px}
+.ev-tz-l b{min-width:96px;font-weight:800}
+.ev-tz-l span{color:var(--suave)}
+.tz-loc{color:#2563eb}
+html:not(.claro) .tz-loc{color:#60a5fa}
+.ep-tz .ev-tz-l{font-size:13.5px}
+.tz-fondo{position:fixed;inset:0;z-index:70;background:rgba(8,5,20,.5);display:grid;place-items:center}
+.tz-caja{width:min(440px,92vw);background:var(--tarjeta);color:var(--tinta);border-radius:22px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.tz-caja h3{margin:0 0 16px;font-size:20px}
+.tz-et{display:block;margin-bottom:6px;font-size:13px;color:var(--suave)}
+#tz-sel{width:100%;padding:11px 12px;border:1.5px solid var(--linea);border-radius:12px;background:rgba(var(--bl),.06);color:var(--tinta);font:inherit;font-size:15px}
+.tz-bots{display:flex;align-items:center;justify-content:flex-end;gap:16px;margin-top:22px}
+.tz-link{border:0;background:none;color:#2563eb;font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:6px 4px}
+html:not(.claro) .tz-link{color:#60a5fa}
 @media (min-width:900px){ .ev-hecha-b{display:block} }
 .hoja-in:has(.ev-hoja){max-height:95vh;max-height:95dvh}
 @media (min-width:900px){
@@ -2501,7 +2519,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.68';
+const VERSION = 'v6.69';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5337,7 +5355,7 @@ function gcDias(n, ev){
 function gcCambiarHechas(){ gcPref.verHechas = !verHechas(); try{ localStorage.setItem('equilibra.vistaCal', JSON.stringify(gcPref)); }catch(e){} render(); gcPop('gc-vistas'); }
 /* La vista del calendario se recuerda (Gustavo): la última que usaste; si no hay ninguna guardada, Semana */
 const MODOS_CAL = ['dia', 'semana', 'mes', 'anio', 'agenda', '7dias', '3dias', 'rango', 'semanas'];
-agModo = MODOS_CAL.includes(gcPref.modo) ? gcPref.modo : 'semana';
+agModo = MODOS_CAL.includes(gcPref.modo) ? gcPref.modo : '3dias';   // 6.69 (Gustavo): de entrada, el calendario de 3 días
 if(gcPref.n >= 2 && gcPref.n <= 7) agN = gcPref.n;
 if(gcPref.w >= 2 && gcPref.w <= 6) agW = gcPref.w;
 function recordarVista(){
@@ -6081,13 +6099,13 @@ let evEd = null;
 function nuevoEvento(k, ini, pre){
   const dia = k || agK || hoyK(), m = minutosHoy();
   const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
-  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], frec: 'diario', veces: 3, cada: 2, fijo: null, avisos: [], horasAviso: [], acc: (pre && pre.acc) || null};
+  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], frec: 'diario', veces: 3, cada: 2, fijo: null, avisos: [], horasAviso: [], acc: (pre && pre.acc) || null, tz: ''};
   pintarEvento({t: (pre && pre.t) || '', dia, todo: !!(pre && pre.todo), ini: base, fin: Math.min(base + ((pre && pre.dur) || 60), 1439)});
 }
 function editarEvento(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
   evEd = {id, k, tipo: e.tipo || 'tarea', rep: e.rep || 'no', prio: marcaDe(e.t) || e.prio || 0, areas: areasEv(e).map(a => a.id), dias: (e.dias || [diaSem(e.dia)]).slice(),
-    frec: e.frec || 'diario', veces: e.veces || 3, cada: e.cada || 2, fijo: e.fijo != null ? e.fijo : null, ...avisosEditar(e), acc: e.acc || null, armado: false};
+    frec: e.frec || 'diario', veces: e.veces || 3, cada: e.cada || 2, fijo: e.fijo != null ? e.fijo : null, ...avisosEditar(e), acc: e.acc || null, tz: e.tz || '', armado: false};
   pintarEvento(e);
 }
 const FLECHA_ABAJO = '<svg class="desp-f" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
@@ -6290,6 +6308,7 @@ function pintarEvento(e){
           <div class="hl-w"><button type="button" class="hora-btn" id="ev-fin-b" onclick="horaLista('fin', event)"></button><div class="desp-lista hl" id="ev-hl-fin" hidden></div></div>
         </span>
       </div>
+      <div class="ev-tz" id="ev-tz"></div>
       <div class="ev-fila2"><label class="ev-chk"><input type="checkbox" id="ev-todo" ${todo ? 'checked' : ''} onchange="evTodo(this.checked)"><span>Sin hora (tarea flexible)</span></label>
       <div id="ev-rep-c" class="ev-rep" ${hab ? 'hidden' : ''}>${despHTML('rep', 'Repetir', ICO_REP)}</div></div>
     </div></div></div>
@@ -6325,7 +6344,55 @@ function evResumen(){
   const bi = $('#ev-ini-b'), bf = $('#ev-fin-b');
   if(bi && i != null) bi.textContent = hm(i);
   if(bf && f != null) bf.textContent = hm(f);
+  evTzPintar();
 }
+/* ---------- Zona horaria del evento (6.69, Gustavo: «añade lo de zona horaria debajo del día»; como Google Calendar) ----------
+   Debajo del día, «Zona horaria». Al tocarla se elige otra; entonces salen dos líneas: «Local» en azul (las horas de este aparato) y, debajo,
+   la zona elegida con la hora que es allí. Las horas que escribes son las de aquí (Local); la zona elegida enseña cuánto es allí. */
+const ZONAS_EV = [['Europe/Madrid', 'España'], ['Atlantic/Canary', 'Canarias'], ['Europe/Lisbon', 'Portugal'], ['Europe/London', 'Reino Unido'], ['Europe/Paris', 'Francia'],
+  ['Europe/Berlin', 'Alemania'], ['Europe/Rome', 'Italia'], ['Europe/Athens', 'Grecia'], ['Europe/Moscow', 'Rusia (Moscú)'], ['Asia/Dubai', 'Emiratos Árabes'], ['Asia/Kolkata', 'India'],
+  ['Asia/Bangkok', 'Tailandia'], ['Asia/Shanghai', 'China'], ['Asia/Tokyo', 'Japón'], ['Australia/Sydney', 'Australia (Sídney)'], ['Pacific/Auckland', 'Nueva Zelanda'],
+  ['America/Mexico_City', 'México'], ['America/Bogota', 'Colombia'], ['America/Lima', 'Perú'], ['America/Santiago', 'Chile'], ['America/Argentina/Buenos_Aires', 'Argentina'],
+  ['America/Sao_Paulo', 'Brasil (São Paulo)'], ['America/Montevideo', 'Uruguay'], ['America/New_York', 'Nueva York'], ['America/Chicago', 'Chicago'], ['America/Denver', 'Denver'],
+  ['America/Los_Angeles', 'Los Ángeles'], ['Pacific/Honolulu', 'Hawái']];
+const zonaLocal = () => { try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){ return ''; } };
+const zonaNombre = z => (ZONAS_EV.find(x => x[0] === z) || [z, (z || '').split('/').pop().replace(/_/g, ' ')])[1];
+function gmtDe(d, z){ try{ const o = {timeZoneName: 'shortOffset'}; if(z) o.timeZone = z; const t = new Intl.DateTimeFormat('es-ES', o).formatToParts(d).find(x => x.type === 'timeZoneName'); return t ? t.value : ''; }catch(e){ return ''; } }
+function enZona(k, min, z){
+  const d = fechaDe(k); d.setHours(Math.floor(min / 60), min % 60, 0, 0);
+  const f = new Intl.DateTimeFormat('es-ES', {timeZone: z, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'});
+  const q = {}; f.formatToParts(d).forEach(x => { q[x.type] = x.value; });
+  return {min: (+q.hour) * 60 + (+q.minute), dd: Math.round((fechaDe(`${q.year}-${q.month}-${q.day}`) - fechaDe(k)) / 86400000), gmt: gmtDe(d, z), d};
+}
+function tzLineasHTML(k, i, f, z){
+  if(!z || z === zonaLocal() || i == null || f == null) return '';
+  try{
+    const a = enZona(k, i, z), b = enZona(k, f, z), loc = gmtDe(a.d, ''), dd = a.dd === 0 ? '' : a.dd > 0 ? ' (+1 día)' : ' (día anterior)';
+    return `<div class="ev-tz-l"><b class="tz-loc">Local</b><span>${hm(i)} – ${hm(f)} · ${loc}</span></div><div class="ev-tz-l"><b>${esc(zonaNombre(z))}</b><span>${hm(a.min)} – ${hm(b.min)}${dd} · ${a.gmt}</span></div>`;
+  }catch(e){ return ''; }
+}
+function evTzPintar(){
+  const c = $('#ev-tz'); if(!c || !evEd) return;
+  const k = valor('ev-dia') || evEd.k, todo = $('#ev-todo') && $('#ev-todo').checked, i = minDeHora(valor('ev-ini')), f = minDeHora(valor('ev-fin'));
+  c.innerHTML = `<button type="button" class="ev-tz-b" onclick="evTzAbrir()">${svgT('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>', 18)}<span>Zona horaria</span></button>`
+    + (todo ? '' : tzLineasHTML(k, i, f, evEd.tz));
+}
+function evTzAbrir(){
+  if(document.getElementById('tz-dlg')) return;
+  const k = valor('ev-dia') || evEd.k, ref = fechaDe(k), loc = zonaLocal();
+  const op = (z, t) => `<option value="${z}" ${((evEd.tz || '') === z) ? 'selected' : ''}>${esc(t)}</option>`;
+  const d = document.createElement('div'); d.id = 'tz-dlg'; d.className = 'tz-fondo';
+  d.innerHTML = `<div class="tz-caja" role="dialog" aria-label="Zona horaria del evento"><h3>Zona horaria del evento</h3>
+    <label class="tz-et" for="tz-sel">Enseñar también la hora en</label>
+    <select id="tz-sel">${op('', 'Solo la hora local (' + gmtDe(ref, '') + ')')}${ZONAS_EV.filter(x => x[0] !== loc).map(([z, t]) => op(z, t + ' (' + gmtDe(ref, z) + ')')).join('')}</select>
+    <div class="tz-bots"><button type="button" class="tz-link" onclick="evTzLocal()">Usar zona horaria actual</button><button type="button" class="tz-link" onclick="evTzCerrar()">Cancelar</button><button type="button" class="btn prim" onclick="evTzAceptar()">Aceptar</button></div></div>`;
+  d.addEventListener('mousedown', e => { if(e.target === d) evTzCerrar(); });
+  document.body.appendChild(d); const sel = $('#tz-sel'); if(sel) sel.focus();
+}
+function evTzCerrar(){ const d = document.getElementById('tz-dlg'); if(d) d.remove(); }
+function evTzLocal(){ evEd.tz = ''; evTzCerrar(); evTzPintar(); }
+function evTzAceptar(){ const sel = $('#tz-sel'); evEd.tz = sel && sel.value !== zonaLocal() ? sel.value : ''; evTzCerrar(); evTzPintar(); }
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.getElementById('tz-dlg')){ e.stopPropagation(); evTzCerrar(); } }, true);
 /* Texto con formato de la descripción: solo se guarda lo permitido (negrita, cursiva, subrayado, color, listas, enlaces) */
 /* 6.27 (Gustavo: «el texto importado se ve con <b>, <br>…»): algunas descripciones importadas (TickTick, .ics) traían HTML
    guardado como texto. Se pasa a descripción con formato (descH) y el texto queda limpio. No cambia «mod»: cada aparato lo
@@ -6627,7 +6694,7 @@ function popHTML(e, k, enHoja){
   const etA = acol ? `<span class="ep-area-et ev-area-et">${miniFlor(ars.map(a => a.id))}<span>${ars.length === 1 ? 'Área' : 'Áreas'} ${listaA}</span></span>` : '';
   return `${enHoja ? '' : '<div class="ep-asa" title="Arrastra para mover la tarjeta" onmousedown="popArrastrar(event)"><svg viewBox="0 0 24 12" width="26" height="13" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.8"/><circle cx="12" cy="3" r="1.8"/><circle cx="19" cy="3" r="1.8"/><circle cx="5" cy="9" r="1.8"/><circle cx="12" cy="9" r="1.8"/><circle cx="19" cy="9" r="1.8"/></svg></div>'}<div class="ep-bar">${etA}${b('Editar', ICO_EP_LAPIZ, `popEditar('${e.id}','${k}')`)}${b('Borrar', ICO_PAPELERA, `popBorrar('${e.id}','${k}')`)}${b('Duplicar', ICO_COPIA, `popDuplicar('${e.id}','${k}')`)}<button type="button" class="ep-focus" title="Ponerla la primera en tu bloque de Focus" onclick="popFocus('${e.id}','${k}')">${ICO_DIANA}Focus</button>${enHoja ? '' : b('Cerrar', ICO_CRUZ, 'cerrarPop()')}</div>
     <div class="ep-fila ep-tit"><i class="ep-cuad" style="background:${colorEv(e)}"></i><div>${hab ? `<p class="ep-hab${acol ? ' ep-acol' : ''}"${acol ? ` style="--ac:${acol}"` : ''}>${ars.map(a => ico(a)).join('')}<span>${esMeta(e) ? 'Práctica importada de Amable Meta' : habAreaTxt(ars)}</span></p>` : ''}<h3 class="${ok ? 'ok' : ''}${acol ? ' ep-acol' : ''}"${acol ? ` style="--ac:${acol}"` : ''}>${iconoTarjeta(e)}${e.metaReg ? esc(e.t) : `<span class="ep-t-ed" title="Cambiar el nombre" onclick="popTitulo(this,'${e.id}','${k}')">${esc(e.t)}</span>`}</h3>
-      ${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}${hab ? habCuentaHTML(e, k) : ''}</div></div>
+      ${e.tz && !e.todo && e.tipo !== 'habito' ? `<div class="ep-tz">${tzLineasHTML(k, e.ini, e.fin, e.tz)}</div>` : ''}${rep ? `<p class="${hab ? '' : 'ep-rep'}">${!hab ? ICO_REPITE.replace('class="campanita repite"', '') : ''}${hab && !esMeta(e) ? `<button type="button" class="ep-ed" title="Cambiar la frecuencia" onclick="popOpc('frec','${e.id}','${k}')">${rep}</button>` : hab ? rep : seRepiteTxt(e) || rep}</p>` : ''}${hab && !esMeta(e) ? `<p>Objetivo: <button type="button" class="ep-ed" title="Cambiar el objetivo" onclick="popOpc('obj','${e.id}','${k}')">${esc(objTxtO(objDe(e)))}</button></p>` : objDe(e) ? `<p>Objetivo: ${esc(objTxtO(objDe(e)))}</p>` : ''}${hab ? habCuentaHTML(e, k) : ''}</div></div>
     <div id="ep-conf"></div>
     <div class="ep-bots">${objDe(e) && !ok ? (objHecho(e, k) ? `<span class="ep-obj-ok">✓ Objetivo ${objPer(objDe(e)) === 'semana' ? 'de la semana' : 'del mes'} cumplido</span>`
       : `<button type="button" class="ep-hecho ep-mas" onclick="habSumar('${e.id}','${k}')">＋1 · llevas ${objProg(e, k)} de ${objDe(e).n} ${esc(objDe(e).u)}${objPer(objDe(e)) === 'dia' ? '' : ' ' + OBJ_PER[objPer(objDe(e))][1]}</button>`) : ''}<button type="button" class="ep-hecho ${ok ? 'sel' : 'ep-prin'}" onclick="popHecho('${e.id}','${k}')">${ok ? (hab ? '✓ Práctica hecha · desmarcar' : '✓ Hecho · desmarcar') : (hab ? 'Marcar como hecha' : 'Marcar como hecho')}</button>
@@ -7550,7 +7617,7 @@ function guardarEvento(){
   const antE = e ? {dia: unoK || e.dia, ini: e.ini, todo: e.todo} : null;
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), tz: evEd.tz || null, avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
   if(unoK){ e.rep = 'no'; e.acc = null; e.dia = unoDia; }   // 6.27: copia suelta de ese día (o del día que hayas puesto)
   if(serieT){ Object.assign(serieT, {todo: e.todo, ini: e.ini, fin: e.fin, mod: ahoraISO()}); }
   apuntarCambio(e, antE, e0.k || (antE && antE.dia));
