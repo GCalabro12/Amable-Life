@@ -540,6 +540,7 @@ html.en-app .voz-pie{padding-bottom:10px}
 #rp-rep.off{opacity:.4;pointer-events:none}
 .rp-caja h3 + .rp-sw{margin-top:10px;padding-top:0;border-top:0}
 #rp-rep .rp-fila{margin-top:12px}
+.rpp-mes{margin-top:14px;padding:10px 12px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit;max-width:100%}
 /* 6.73: imágenes adjuntas en amarillo y su vista en grande */
 .ev-adj-w{margin:0 0 0 30px}
 .ev-adj{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -2595,7 +2596,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.79';
+const VERSION = 'v6.80';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5359,13 +5360,18 @@ function coincidePers(e, k){
     const dias = e.repDias && e.repDias.length ? e.repDias : [diaSem(e.dia)]; if(!dias.includes(diaSem(k))) return false;
     return Math.round((fechaDe(lunesDe(k)) - fechaDe(lunesDe(e.dia))) / (7 * 864e5)) % N === 0;
   }
-  if(U === 'mes') return d.getDate() === d0.getDate() && ((d.getFullYear() - d0.getFullYear()) * 12 + d.getMonth() - d0.getMonth()) % N === 0;
+  if(U === 'mes'){
+    if(((d.getFullYear() - d0.getFullYear()) * 12 + d.getMonth() - d0.getMonth()) % N !== 0) return false;
+    if(e.repMes === 'sem') return d.getDay() === d0.getDay() && Math.ceil(d.getDate() / 7) === Math.ceil(d0.getDate() / 7);
+    if(e.repMes === 'ult') return d.getDay() === d0.getDay() && d.getDate() + 7 > new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    return d.getDate() === d0.getDate();
+  }
   if(U === 'anio') return k.slice(5) === e.dia.slice(5) && (d.getFullYear() - d0.getFullYear()) % N === 0;
   return false;
 }
 const finPersCache = new Map();
 function finPers(e){   // el día de la última repetición (para «después de N repeticiones»), calculado una vez
-  const clave = [e.id, e.dia, e.repN, e.repU, (e.repDias || []).join(), e.repFinN].join('|'); if(finPersCache.has(clave)) return finPersCache.get(clave);
+  const clave = [e.id, e.dia, e.repN, e.repU, e.repMes, (e.repDias || []).join(), e.repFinN].join('|'); if(finPersCache.has(clave)) return finPersCache.get(clave);
   let k = e.dia, n = 0, r = null; for(let i = 0; i < 4000; i++){ if(coincidePers(e, k) && ++n >= e.repFinN){ r = k; break; } k = sumarDias(k, 1); }
   finPersCache.set(clave, r); return r;
 }
@@ -5374,9 +5380,21 @@ function tocaPers(e, k){
   if(e.repFin === 'tras' && e.repFinN){ const f = finPers(e); if(f && k > f) return false; }
   return coincidePers(e, k);
 }
+const ORDINAL = ['primer', 'segundo', 'tercer', 'cuarto', 'quinto'];
+function mesOpcTxt(m, k){   // «el día 18» · «el tercer miércoles» · «el último miércoles»
+  const d = fechaDe(k), ds = DIAS_LARGO[diaSem(k)];
+  return m === 'sem' ? `el ${ORDINAL[Math.ceil(d.getDate() / 7) - 1]} ${ds}` : m === 'ult' ? `el último ${ds}` : `el día ${d.getDate()}`;
+}
+function mesOpciones(k){
+  const d = fechaDe(k), l = ['dia', 'sem'];
+  if(d.getDate() + 7 > new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()) l.push('ult');
+  return l;
+}
 function repPersTxt(o){
   const N = Math.max(1, o.repN || 1), U = o.repU || 'semana', pl = ({dia: ['día', 'días'], semana: ['semana', 'semanas'], mes: ['mes', 'meses'], anio: ['año', 'años']})[U] || ['semana', 'semanas'];
   let t = N === 1 ? `Cada ${pl[0]}` : `Cada ${N} ${pl[1]}`;
+  const dk = o.dia || (o === evEd ? (valor('ev-dia') || evEd.k) : '');
+  if(U === 'mes' && dk) t += ', ' + mesOpcTxt(o.repMes || 'dia', dk);
   if(U === 'semana' && o.repDias && o.repDias.length){ const d = o.repDias.slice().sort((a, b) => a - b).map(x => DIAS_LARGO[x]); t += d.length === 1 ? ', el ' + d[0] : ', los ' + d.slice(0, -1).join(', ') + ' y ' + d[d.length - 1]; }
   if(o.repFin === 'el' && o.repFinDia) t += ` · hasta el ${fechaLarga(o.repFinDia)}`;
   if(o.repFin === 'tras' && o.repFinN) t += ` · ${o.repFinN} ${o.repFinN === 1 ? 'vez' : 'veces'}`;
@@ -6210,13 +6228,13 @@ let evEd = null;
 function nuevoEvento(k, ini, pre){
   const dia = k || agK || hoyK(), m = minutosHoy();
   const base = ini != null ? ini : dia === hoyK() ? Math.min(1380, Math.ceil((m + 1) / 30) * 30) : 540;
-  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], frec: 'diario', veces: 3, cada: 2, fijo: null, avisos: [], horasAviso: [], acc: (pre && pre.acc) || null, tzs: [], correo: false, adj: [], adjNuevas: [], adjQuitar: [], repN: 1, repU: 'semana', repDias: [], repFin: 'nunca', repFinDia: '', repFinN: 13};
+  evEd = {id: null, k: dia, tipo: 'tarea', rep: 'no', prio: (pre && pre.prio) || 1, areas: pre && pre.area ? [pre.area] : [], dias: [diaSem(dia)], frec: 'diario', veces: 3, cada: 2, fijo: null, avisos: [], horasAviso: [], acc: (pre && pre.acc) || null, tzs: [], correo: false, adj: [], adjNuevas: [], adjQuitar: [], repN: 1, repU: 'semana', repMes: 'dia', repDias: [], repFin: 'nunca', repFinDia: '', repFinN: 13};
   pintarEvento({t: (pre && pre.t) || '', dia, todo: !!(pre && pre.todo), ini: base, fin: Math.min(base + ((pre && pre.dur) || 60), 1439)});
 }
 function editarEvento(id, k){
   const e = AG_().eventos.find(x => x.id === id); if(!e) return;
   evEd = {id, k, tipo: e.tipo || 'tarea', rep: e.rep || 'no', prio: marcaDe(e.t) || e.prio || 0, areas: areasEv(e).map(a => a.id), dias: (e.dias || [diaSem(e.dia)]).slice(),
-    frec: e.frec || 'diario', veces: e.veces || 3, cada: e.cada || 2, fijo: e.fijo != null ? e.fijo : null, ...avisosEditar(e), acc: e.acc || null, tzs: (e.tzs && e.tzs.length ? e.tzs : e.tz ? [e.tz] : []).slice(), correo: !!(e.correo || (e.correos && e.correos.length)), adj: (e.adj || []).map(a => ({id: a.id, t: a.t})), adjNuevas: [], adjQuitar: [], repN: e.repN || 1, repU: e.repU || 'semana', repDias: (e.repDias || []).slice(), repFin: e.repFin || 'nunca', repFinDia: e.repFinDia || '', repFinN: e.repFinN || 13, armado: false};
+    frec: e.frec || 'diario', veces: e.veces || 3, cada: e.cada || 2, fijo: e.fijo != null ? e.fijo : null, ...avisosEditar(e), acc: e.acc || null, tzs: (e.tzs && e.tzs.length ? e.tzs : e.tz ? [e.tz] : []).slice(), correo: !!(e.correo || (e.correos && e.correos.length)), adj: (e.adj || []).map(a => ({id: a.id, t: a.t})), adjNuevas: [], adjQuitar: [], repN: e.repN || 1, repU: e.repU || 'semana', repMes: e.repMes || 'dia', repDias: (e.repDias || []).slice(), repFin: e.repFin || 'nunca', repFinDia: e.repFinDia || '', repFinN: e.repFinN || 13, armado: false};
   pintarEvento(e);
 }
 const FLECHA_ABAJO = '<svg class="desp-f" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
@@ -6365,8 +6383,8 @@ function recPersGuardar(){
    «Periodicidad personalizada» (repetir cada, se repite el, termina) va también en la ventana del recordatorio personalizado. */
 function repComoPers(o, k){   // la repetición que ya tiene la tarea, en el formato de la ventana
   const r = o.rep || 'no', d = diaSem(k);
-  if(r === 'pers') return {on: true, N: o.repN || 1, U: o.repU || 'semana', dias: o.repDias && o.repDias.length ? o.repDias.slice() : [d], fin: o.repFin || 'nunca', finDia: o.repFinDia || '', finN: o.repFinN || 13};
-  const v = {on: r !== 'no', N: 1, U: 'semana', dias: [d], fin: 'nunca', finDia: '', finN: 13};
+  if(r === 'pers') return {on: true, N: o.repN || 1, U: o.repU || 'semana', mes: o.repMes || 'dia', dias: o.repDias && o.repDias.length ? o.repDias.slice() : [d], fin: o.repFin || 'nunca', finDia: o.repFinDia || '', finN: o.repFinN || 13};
+  const v = {on: r !== 'no', N: 1, U: 'semana', mes: 'dia', dias: [d], fin: 'nunca', finDia: '', finN: 13};
   if(r === 'dia') v.U = 'dia'; else if(r === 'mes') v.U = 'mes'; else if(r === 'anio') v.U = 'anio'; else if(r === 'lab') v.dias = [0, 1, 2, 3, 4];
   return v;
 }
@@ -6374,6 +6392,7 @@ function periodHTML(v, k){
   const finDia = v.finDia || sumarDias(k, 90);
   return `<div class="rp-fila"><span>Repetir cada</span><input type="number" id="rpp-n" min="1" max="99" value="${v.N}" inputmode="numeric" oninput="repPersUnidad()">
       <select id="rpp-u" onchange="repPersUnidad()"><option value="dia" ${v.U === 'dia' ? 'selected' : ''}></option><option value="semana" ${v.U === 'semana' ? 'selected' : ''}></option><option value="mes" ${v.U === 'mes' ? 'selected' : ''}></option><option value="anio" ${v.U === 'anio' ? 'selected' : ''}></option></select></div>
+    <div id="rpp-mes-w" ${v.U === 'mes' ? '' : 'hidden'}><select id="rpp-mes" class="rpp-mes">${mesOpciones(k).map(m => `<option value="${m}" ${(v.mes || 'dia') === m ? 'selected' : ''}>Cada mes ${mesOpcTxt(m, k)}</option>`).join('')}</select></div>
     <div id="rpp-dias-w" ${v.U === 'semana' ? '' : 'hidden'}><p class="rp-sub">Se repite el</p><div class="rpp-dias">${[0, 1, 2, 3, 4, 5, 6].map(i => `<button type="button" class="rpp-dia ${v.dias.includes(i) ? 'sel' : ''}" data-d="${i}" aria-label="${DIAS_LARGO[i]}" onclick="this.classList.toggle('sel')">${DIAS_CORTO[i]}</button>`).join('')}</div></div>
     <p class="rp-sub">Termina</p>
     <label class="rpp-op"><input type="radio" name="rpp-f" value="nunca" ${v.fin === 'nunca' ? 'checked' : ''} onchange="repPersFin()"><span>Nunca</span></label>
@@ -6385,7 +6404,7 @@ function periodLeer(k){   // lo elegido en la ventana; null si algo no vale
   let dias = [...document.querySelectorAll('#rpp-dias-w .rpp-dia.sel')].map(b => +b.dataset.d); if(U === 'semana' && !dias.length) dias = [diaSem(k)];
   const fin = (document.querySelector('input[name="rpp-f"]:checked') || {}).value || 'nunca', fd = valor('rpp-fd'), fn = Math.max(1, Math.round(+valor('rpp-fn') || 1));
   if(fin === 'el' && (!fd || fd < k)){ aviso('El día final no puede ser antes del primer día'); return null; }
-  return {repN: N, repU: U, repDias: U === 'semana' ? dias : [], repFin: fin, repFinDia: fin === 'el' ? fd : '', repFinN: fn};
+  return {repN: N, repU: U, repMes: U === 'mes' ? valor('rpp-mes') || 'dia' : 'dia', repDias: U === 'semana' ? dias : [], repFin: fin, repFinDia: fin === 'el' ? fd : '', repFinN: fn};
 }
 /* Repetir → Personalizar…: la misma ventana, sin la parte del aviso */
 function repPersAbrir(){
@@ -6402,6 +6421,7 @@ function repPersUnidad(){
   const t = {dia: ['día', 'días'], semana: ['semana', 'semanas'], mes: ['mes', 'meses'], anio: ['año', 'años']};
   [...u.options].forEach(o => { o.textContent = t[o.value][n === 1 ? 0 : 1]; });
   const w = $('#rpp-dias-w'); if(w) w.hidden = u.value !== 'semana';
+  const wm = $('#rpp-mes-w'); if(wm) wm.hidden = u.value !== 'mes';
 }
 function repPersFin(){
   const f = (document.querySelector('input[name="rpp-f"]:checked') || {}).value;
@@ -7933,7 +7953,7 @@ function guardarEvento(){
   const antE = e ? {dia: unoK || e.dia, ini: e.ini, todo: e.todo} : null;
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), tzs: (evEd.tzs || []).slice(), tz: (evEd.tzs || [])[0] || null, correo: !!evEd.correo, correos: evEd.correo ? [60] : [], adj: adjFinal(), ...(evEd.rep === 'pers' ? {repN: evEd.repN, repU: evEd.repU, repDias: evEd.repDias.slice(), repFin: evEd.repFin, repFinDia: evEd.repFin === 'el' ? evEd.repFinDia : '', repFinN: evEd.repFinN} : {repN: null, repU: null, repDias: null, repFin: null, repFinDia: null, repFinN: null}), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), tzs: (evEd.tzs || []).slice(), tz: (evEd.tzs || [])[0] || null, correo: !!evEd.correo, correos: evEd.correo ? [60] : [], adj: adjFinal(), ...(evEd.rep === 'pers' ? {repN: evEd.repN, repU: evEd.repU, repMes: evEd.repU === 'mes' ? evEd.repMes || 'dia' : null, repDias: evEd.repDias.slice(), repFin: evEd.repFin, repFinDia: evEd.repFin === 'el' ? evEd.repFinDia : '', repFinN: evEd.repFinN} : {repN: null, repU: null, repMes: null, repDias: null, repFin: null, repFinDia: null, repFinN: null}), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
   if(unoK){ e.rep = 'no'; e.acc = null; e.dia = unoDia; }   // 6.27: copia suelta de ese día (o del día que hayas puesto)
   if(serieT){ Object.assign(serieT, {todo: e.todo, ini: e.ini, fin: e.fin, mod: ahoraISO()}); }
   apuntarCambio(e, antE, e0.k || (antE && antE.dia));
@@ -10237,7 +10257,7 @@ function calICS(){
     if(e.todo) L.push('DTSTART;VALUE=DATE:' + icsFecha(dia), 'DTEND;VALUE=DATE:' + icsFecha(sumarDias(dia, 1)));
     else L.push('DTSTART:' + icsHora(dia, ini), 'DTEND:' + icsHora(dia, fin));
     const rr = e.tipo === 'habito' && e.frec === 'intervalo' ? 'FREQ=DAILY;INTERVAL=' + Math.max(2, e.cada || 2) : e.tipo === 'habito' && e.frec === 'semanal' ? 'FREQ=DAILY' : e.tipo === 'habito' ? 'FREQ=WEEKLY;BYDAY=' + (e.dias && e.dias.length ? e.dias : [diaSem(dia)]).slice().sort().map(d => BYDAY[d]).join(',')
-      : ({dia: 'FREQ=DAILY', semana: 'FREQ=WEEKLY;BYDAY=' + BYDAY[diaSem(dia)], mes: 'FREQ=MONTHLY;BYMONTHDAY=' + fechaDe(dia).getDate(), anio: 'FREQ=YEARLY', lab: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', pers: 'FREQ=' + ({dia: 'DAILY', semana: 'WEEKLY', mes: 'MONTHLY', anio: 'YEARLY'})[e.repU || 'semana'] + ';INTERVAL=' + Math.max(1, e.repN || 1) + ((e.repU || 'semana') === 'semana' ? ';BYDAY=' + ((e.repDias && e.repDias.length ? e.repDias : [diaSem(dia)]).map(x => BYDAY[x]).join(',')) : '') + (e.repFin === 'el' && e.repFinDia ? ';UNTIL=' + e.repFinDia.replace(/-/g, '') : e.repFin === 'tras' && e.repFinN ? ';COUNT=' + e.repFinN : '')})[e.rep] || '';
+      : ({dia: 'FREQ=DAILY', semana: 'FREQ=WEEKLY;BYDAY=' + BYDAY[diaSem(dia)], mes: 'FREQ=MONTHLY;BYMONTHDAY=' + fechaDe(dia).getDate(), anio: 'FREQ=YEARLY', lab: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', pers: 'FREQ=' + ({dia: 'DAILY', semana: 'WEEKLY', mes: 'MONTHLY', anio: 'YEARLY'})[e.repU || 'semana'] + ';INTERVAL=' + Math.max(1, e.repN || 1) + ((e.repU || 'semana') === 'semana' ? ';BYDAY=' + ((e.repDias && e.repDias.length ? e.repDias : [diaSem(dia)]).map(x => BYDAY[x]).join(',')) : '') + (e.repU === 'mes' && e.repMes === 'sem' ? ';BYDAY=' + Math.ceil(fechaDe(dia).getDate() / 7) + BYDAY[diaSem(dia)] : e.repU === 'mes' && e.repMes === 'ult' ? ';BYDAY=-1' + BYDAY[diaSem(dia)] : '') + (e.repFin === 'el' && e.repFinDia ? ';UNTIL=' + e.repFinDia.replace(/-/g, '') : e.repFin === 'tras' && e.repFinN ? ';COUNT=' + e.repFinN : '')})[e.rep] || '';
     if(rr) L.push('RRULE:' + rr);
     if(e.tipo === 'habito') L.push('X-AMABLE-TIPO:habito');
     if(e.tipo === 'habito' && e.frec === 'semanal') L.push('X-AMABLE-VECES:' + (e.veces || 3));
