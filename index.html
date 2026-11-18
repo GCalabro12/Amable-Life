@@ -528,6 +528,17 @@ html.en-app .voz-pie{padding-bottom:10px}
 .rpp-op input[type=date],.rpp-op input[type=number]{padding:9px 10px;border:0;border-radius:10px;background:rgba(var(--bl),.1);color:var(--tinta);font:inherit}
 .rpp-op input[type=number]{width:70px;text-align:center}
 .rpp-op input:disabled{opacity:.5}
+/* 6.77: «Se repite» dentro del recordatorio personalizado */
+.rp-caja{max-height:90vh;overflow:auto}
+.rp-sw{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 0;padding-top:16px;border-top:1px solid rgba(var(--bl),.14);font-size:15px;font-weight:700;cursor:pointer}
+.rp-sw input{position:absolute;opacity:0;width:1px;height:1px}
+.rp-sw i{position:relative;flex:none;width:42px;height:24px;border-radius:12px;background:rgba(var(--bl),.25);transition:background .2s}
+.rp-sw i::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
+.rp-sw input:checked + i{background:var(--oro)}
+.rp-sw input:checked + i::after{left:21px}
+.rp-sw input:focus-visible + i{outline:2px solid var(--oro);outline-offset:2px}
+#rp-rep.off{opacity:.4;pointer-events:none}
+#rp-rep .rp-fila{margin-top:12px}
 /* 6.73: imágenes adjuntas en amarillo y su vista en grande */
 .ev-adj-w{margin:0 0 0 30px}
 .ev-adj{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -2583,7 +2594,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.76';
+const VERSION = 'v6.77';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -6316,16 +6327,24 @@ function recEtq(m, todo){
    abre una ventana en el medio, con lo demás en gris (como la «Periodicidad personalizada» de Google). */
 function recPers(){
   if(document.getElementById('rp-fondo')) return;
+  if(document.getElementById('rpp-fondo')) return;
   const todo = !!($('#ev-todo') && $('#ev-todo').checked), d = document.createElement('div'); d.id = 'rp-fondo'; d.className = 'tz-fondo';
+  const k = valor('ev-dia') || evEd.k, hab = evEd.tipo === 'habito', v = repComoPers(evEd, k); d.dataset.antes = v.on ? '1' : '';
   d.innerHTML = `<div class="tz-caja rp-caja" role="dialog" aria-label="Recordatorio personalizado"><h3>Recordatorio personalizado</h3>
     <div class="rp-fila"><span>Avisar</span><input type="number" id="rp-n" min="1" max="${todo ? 60 : 999}" value="${todo ? 3 : 30}" inputmode="numeric" oninput="recPersVista()">
       <select id="rp-u" onchange="recPersVista()">${todo ? '<option value="1440">días antes (a las 9:00)</option><option value="10080">semanas antes (a las 9:00)</option>'
         : '<option value="1">minutos antes</option><option value="60">horas antes</option><option value="1440">días antes</option>'}</select></div>
     <p class="rp-ver" id="rp-ver"></p>
+    ${hab ? '' : `<label class="rp-sw"><span>Se repite</span><input type="checkbox" id="rp-rep-on" ${v.on ? 'checked' : ''} onchange="recPersRep()"><i aria-hidden="true"></i></label>
+    <div id="rp-rep" class="${v.on ? '' : 'off'}">${periodHTML(v, k)}</div>`}
     <div class="tz-bots"><button type="button" class="tz-link" onclick="recPersCerrar()">Cancelar</button><button type="button" class="btn prim" onclick="recPersGuardar()">Hecho</button></div></div>`;
-  document.body.appendChild(d); recPersVista(); const n = $('#rp-n'); if(n){ n.focus(); n.select(); }
+  document.body.appendChild(d); recPersVista(); if(!hab){ repPersUnidad(); recPersRep(); } const n = $('#rp-n'); if(n){ n.focus(); n.select(); }
 }
 function recPersCerrar(){ const d = document.getElementById('rp-fondo'); if(d) d.remove(); }
+function recPersRep(){   // «Se repite»: apagado, lo de Google se ve pero en gris
+  const on = !!($('#rp-rep-on') && $('#rp-rep-on').checked), w = $('#rp-rep'); if(!w) return;
+  w.classList.toggle('off', !on); w.querySelectorAll('input,select,button').forEach(x => { x.tabIndex = on ? 0 : -1; });
+}
 function recPersMin(){ const n = Math.max(0, Math.round(+valor('rp-n') || 0)), u = +(($('#rp-u') || {}).value || 1); return n * u; }
 function recPersVista(){
   const v = $('#rp-ver'); if(!v) return;
@@ -6336,24 +6355,46 @@ function recPersVista(){
 }
 function recPersGuardar(){
   const m = recPersMin(); if(!m){ aviso('Escribe cuántos'); return; }
+  const f = document.getElementById('rp-fondo'), sw = $('#rp-rep-on'), k = valor('ev-dia') || evEd.k;
+  if(sw && sw.checked){ const v = periodLeer(k); if(!v) return; Object.assign(evEd, {rep: 'pers'}, v); }
+  else if(sw && f && f.dataset.antes) evEd.rep = 'no';
   if(!evEd.avisos.includes(m)) evEd.avisos = [...evEd.avisos, m];
-  recPersCerrar(); pintarDesp('rec');
+  recPersCerrar(); pintarDesp('rec'); if(sw) pintarDesp('rep');
 }
 /* Repetir → Personalizar…: «Repetir cada N [día/semana/mes/año]», «Se repite el» (L M X J V S D) y «Termina» (Nunca / El [día] / Después de N repeticiones) */
+/* 6.77 (Gustavo: «el recordatorio personalizado me tiene que poner la misma ventana que sale en Google, con todas esas opciones»): la parte de la
+   «Periodicidad personalizada» (repetir cada, se repite el, termina) va también en la ventana del recordatorio personalizado. */
+function repComoPers(o, k){   // la repetición que ya tiene la tarea, en el formato de la ventana
+  const r = o.rep || 'no', d = diaSem(k);
+  if(r === 'pers') return {on: true, N: o.repN || 1, U: o.repU || 'semana', dias: o.repDias && o.repDias.length ? o.repDias.slice() : [d], fin: o.repFin || 'nunca', finDia: o.repFinDia || '', finN: o.repFinN || 13};
+  const v = {on: r !== 'no', N: 1, U: 'semana', dias: [d], fin: 'nunca', finDia: '', finN: 13};
+  if(r === 'dia') v.U = 'dia'; else if(r === 'mes') v.U = 'mes'; else if(r === 'anio') v.U = 'anio'; else if(r === 'lab') v.dias = [0, 1, 2, 3, 4];
+  return v;
+}
+function periodHTML(v, k){
+  const finDia = v.finDia || sumarDias(k, 90);
+  return `<div class="rp-fila"><span>Repetir cada</span><input type="number" id="rpp-n" min="1" max="99" value="${v.N}" inputmode="numeric" oninput="repPersUnidad()">
+      <select id="rpp-u" onchange="repPersUnidad()"><option value="dia" ${v.U === 'dia' ? 'selected' : ''}></option><option value="semana" ${v.U === 'semana' ? 'selected' : ''}></option><option value="mes" ${v.U === 'mes' ? 'selected' : ''}></option><option value="anio" ${v.U === 'anio' ? 'selected' : ''}></option></select></div>
+    <div id="rpp-dias-w" ${v.U === 'semana' ? '' : 'hidden'}><p class="rp-sub">Se repite el</p><div class="rpp-dias">${[0, 1, 2, 3, 4, 5, 6].map(i => `<button type="button" class="rpp-dia ${v.dias.includes(i) ? 'sel' : ''}" data-d="${i}" aria-label="${DIAS_LARGO[i]}" onclick="this.classList.toggle('sel')">${DIAS_CORTO[i]}</button>`).join('')}</div></div>
+    <p class="rp-sub">Termina</p>
+    <label class="rpp-op"><input type="radio" name="rpp-f" value="nunca" ${v.fin === 'nunca' ? 'checked' : ''} onchange="repPersFin()"><span>Nunca</span></label>
+    <label class="rpp-op"><input type="radio" name="rpp-f" value="el" ${v.fin === 'el' ? 'checked' : ''} onchange="repPersFin()"><span>El</span><input type="date" id="rpp-fd" value="${finDia}" ${v.fin === 'el' ? '' : 'disabled'}></label>
+    <label class="rpp-op"><input type="radio" name="rpp-f" value="tras" ${v.fin === 'tras' ? 'checked' : ''} onchange="repPersFin()"><span>Después de</span><input type="number" id="rpp-fn" min="1" max="999" value="${v.finN}" ${v.fin === 'tras' ? '' : 'disabled'}><span>repeticiones</span></label>`;
+}
+function periodLeer(k){   // lo elegido en la ventana; null si algo no vale
+  const U = valor('rpp-u') || 'semana', N = Math.max(1, Math.min(99, Math.round(+valor('rpp-n') || 1)));
+  let dias = [...document.querySelectorAll('#rpp-dias-w .rpp-dia.sel')].map(b => +b.dataset.d); if(U === 'semana' && !dias.length) dias = [diaSem(k)];
+  const fin = (document.querySelector('input[name="rpp-f"]:checked') || {}).value || 'nunca', fd = valor('rpp-fd'), fn = Math.max(1, Math.round(+valor('rpp-fn') || 1));
+  if(fin === 'el' && (!fd || fd < k)){ aviso('El día final no puede ser antes del primer día'); return null; }
+  return {repN: N, repU: U, repDias: U === 'semana' ? dias : [], repFin: fin, repFinDia: fin === 'el' ? fd : '', repFinN: fn};
+}
+/* Repetir → Personalizar…: la misma ventana, sin la parte del aviso */
 function repPersAbrir(){
-  if(document.getElementById('rpp-fondo')) return;
-  const k = valor('ev-dia') || evEd.k, ya = evEd.rep === 'pers';
-  const N = ya ? evEd.repN || 1 : 1, U = ya ? evEd.repU || 'semana' : 'semana', dias = ya && evEd.repDias.length ? evEd.repDias : [diaSem(k)];
-  const fin = ya ? evEd.repFin || 'nunca' : 'nunca', finDia = (ya && evEd.repFinDia) || sumarDias(k, 90), finN = ya ? evEd.repFinN || 13 : 13;
+  if(document.getElementById('rpp-fondo') || document.getElementById('rp-fondo')) return;
+  const k = valor('ev-dia') || evEd.k, v = repComoPers(evEd, k); if(!v.on) v.dias = [diaSem(k)];
   const d = document.createElement('div'); d.id = 'rpp-fondo'; d.className = 'tz-fondo';
   d.innerHTML = `<div class="tz-caja rp-caja rpp-caja" role="dialog" aria-label="Periodicidad personalizada"><h3>Periodicidad personalizada</h3>
-    <div class="rp-fila"><span>Repetir cada</span><input type="number" id="rpp-n" min="1" max="99" value="${N}" inputmode="numeric" oninput="repPersUnidad()">
-      <select id="rpp-u" onchange="repPersUnidad()"><option value="dia" ${U === 'dia' ? 'selected' : ''}></option><option value="semana" ${U === 'semana' ? 'selected' : ''}></option><option value="mes" ${U === 'mes' ? 'selected' : ''}></option><option value="anio" ${U === 'anio' ? 'selected' : ''}></option></select></div>
-    <div id="rpp-dias-w" ${U === 'semana' ? '' : 'hidden'}><p class="rp-sub">Se repite el</p><div class="rpp-dias">${[0, 1, 2, 3, 4, 5, 6].map(i => `<button type="button" class="rpp-dia ${dias.includes(i) ? 'sel' : ''}" data-d="${i}" aria-label="${DIAS_LARGO[i]}" onclick="this.classList.toggle('sel')">${DIAS_CORTO[i]}</button>`).join('')}</div></div>
-    <p class="rp-sub">Termina</p>
-    <label class="rpp-op"><input type="radio" name="rpp-f" value="nunca" ${fin === 'nunca' ? 'checked' : ''} onchange="repPersFin()"><span>Nunca</span></label>
-    <label class="rpp-op"><input type="radio" name="rpp-f" value="el" ${fin === 'el' ? 'checked' : ''} onchange="repPersFin()"><span>El</span><input type="date" id="rpp-fd" value="${finDia}" ${fin === 'el' ? '' : 'disabled'}></label>
-    <label class="rpp-op"><input type="radio" name="rpp-f" value="tras" ${fin === 'tras' ? 'checked' : ''} onchange="repPersFin()"><span>Después de</span><input type="number" id="rpp-fn" min="1" max="999" value="${finN}" ${fin === 'tras' ? '' : 'disabled'}><span>repeticiones</span></label>
+    ${periodHTML(v, k)}
     <div class="tz-bots"><button type="button" class="tz-link" onclick="repPersCerrar()">Cancelar</button><button type="button" class="btn prim" onclick="repPersHecho()">Hecho</button></div></div>`;
   document.body.appendChild(d); repPersUnidad(); const n = $('#rpp-n'); if(n){ n.focus(); n.select(); }
 }
@@ -6369,11 +6410,8 @@ function repPersFin(){
 }
 function repPersCerrar(){ const d = document.getElementById('rpp-fondo'); if(d) d.remove(); }
 function repPersHecho(){
-  const k = valor('ev-dia') || evEd.k, U = valor('rpp-u') || 'semana', N = Math.max(1, Math.min(99, Math.round(+valor('rpp-n') || 1)));
-  let dias = [...document.querySelectorAll('#rpp-dias-w .rpp-dia.sel')].map(b => +b.dataset.d); if(U === 'semana' && !dias.length) dias = [diaSem(k)];
-  const fin = (document.querySelector('input[name="rpp-f"]:checked') || {}).value || 'nunca', fd = valor('rpp-fd'), fn = Math.max(1, Math.round(+valor('rpp-fn') || 1));
-  if(fin === 'el' && (!fd || fd < k)){ aviso('El día final no puede ser antes del primer día'); return; }
-  Object.assign(evEd, {rep: 'pers', repN: N, repU: U, repDias: U === 'semana' ? dias : [], repFin: fin, repFinDia: fin === 'el' ? fd : '', repFinN: fn});
+  const k = valor('ev-dia') || evEd.k, v = periodLeer(k); if(!v) return;
+  Object.assign(evEd, {rep: 'pers'}, v);
   repPersCerrar(); pintarDesp('rep');
 }
 document.addEventListener('keydown', e => { if(e.key === 'Escape'){ const a = document.getElementById('rpp-fondo') || document.getElementById('rp-fondo'); if(a){ e.stopPropagation(); a.remove(); } } }, true);
