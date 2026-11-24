@@ -638,6 +638,30 @@ html:not(.claro) .tz-link{color:#60a5fa}
 }
 .ev-sep{display:none}
 .ec-calor{margin:0 0 14px}
+.ev-marca-ed{border:0;background:none;color:var(--suave);font:inherit;font-size:13px;font-weight:700;text-decoration:underline;cursor:pointer;padding:4px 6px;margin-left:2px;flex:none}
+.ev-marca-ed:hover{color:var(--tinta)}
+.ev-marca-ed.m{display:block;margin:6px 4px 0}
+@media (max-width:899px){ .ev-tabs .ev-marca-ed{display:none} }
+.ev-tipo:has(.ev-prios[style*="none"]) .ev-marca-ed{display:none}
+#ev-marca-pan{margin:8px 0 4px}
+.marca-pan{border:1.5px solid var(--linea);border-radius:14px;padding:10px 12px;background:rgba(var(--bl),.04);text-align:left}
+.marca-f{margin-bottom:8px}
+.marca-f b{font-size:14px;margin-right:6px;color:var(--tinta)}
+.marca-f small{font-size:12px;color:var(--suave)}
+.marca-ops{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.marca-ops button{width:40px;height:40px;border-radius:12px;border:2px solid transparent;background:rgba(var(--bl),.07);font-size:22px;cursor:pointer;display:grid;place-items:center;padding:0;line-height:1}
+.marca-ops button.sel{border-color:var(--oro);background:rgba(247,195,91,.2)}
+.pal{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;padding:8px 10px 10px;max-width:440px}
+.pal-c{aspect-ratio:1;border:0;border-radius:4px;cursor:pointer;padding:0;min-width:0}
+.pal-c:hover{transform:scale(1.15)}
+.pal-c.sel{outline:2.5px solid var(--tinta);outline-offset:1px}
+.col-pt{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+.calfs{display:flex;align-items:center;gap:10px;margin:4px 0 14px}
+.calfs input{flex:1;accent-color:#f59e0b;-webkit-appearance:auto;appearance:auto;height:auto;min-height:20px;background:none;cursor:pointer}
+.calfs small{font-size:13px;font-weight:700} .calfs big{font-size:21px;font-weight:700} .calfs b{min-width:50px;text-align:right;font-size:13px}
+.asp-ej{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.asp-ej span{border-radius:7px;padding:4px 8px;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 45%,var(--tarjeta));font-size:13px;font-weight:600;zoom:var(--cal-fs,1)}
+html.cal-fs .rj-ev > *, html.cal-fs .ag-dia-evs small, html.cal-fs .rj-todo button{zoom:var(--cal-fs)}
 .hc-w{display:flex;gap:4px;align-items:flex-start}
 .hc-etq{flex:none}
 .hc-scroll{flex:1;min-width:0;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
@@ -2649,7 +2673,7 @@ try{ if(localStorage.getItem('equilibra.tema') !== 'oscuro'){ document.documentE
 
 <script>
 'use strict';
-const VERSION = 'v6.94';
+const VERSION = 'v6.95';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5338,16 +5362,48 @@ const ICO_BANDERA = c => `<svg class="bandera" viewBox="0 0 24 24" width="14" he
 const prioDe = e => PRIO[e && e.prio] || PRIO[0];
 /* 5.16 (Gustavo, con la pregunta 9 del diario de Grow Panel): la bandera roja tiene dos tipos: «Prioritaria 🐸» (la tarea más importante del día)
    y «Prioritaria ⭐» (2 importantes). Se marcan con 🐸 o ⭐ al principio del nombre (el criterio de Grow Panel) y llevan prioridad alta (roja) */
-const marcaDe = t => { const x = String(t || '').trimStart(); return x.startsWith('🐸') ? 'rana' : x.startsWith('⭐') ? 'estrella' : null; };
-const sinMarca = t => String(t || '').trimStart().replace(/^(?:🐸|⭐)\uFE0F?\s*/u, '');
-const ponMarca = (t, m) => m ? (m === 'rana' ? '🐸 ' : '⭐ ') + sinMarca(t) : (marcaDe(t) ? sinMarca(t) : t);
+/* 6.95 (Gustavo): el icono de la tarea sapo y el de la estrella se pueden cambiar («editar» junto a las banderas, o Ajustes → Aspecto).
+   Se guarda en D.prefs (viaja por la nube). Se reconocen el de siempre, el elegido y los que se usaron antes (`usadas`) */
+const MARCA_DEF = {rana: '🐸', estrella: '⭐'};
+const MARCA_OPC = {rana: ['🐸', '🔥', '🏔️', '🐉', '🦁', '⚡', '🧗', '🥊', '💎', '🌋'], estrella: ['⭐', '🌟', '✨', '🏆', '🥇', '💫', '🚀', '💖', '🌈', '👑']};
+const marcaE = m => ((typeof D !== 'undefined' && D && D.prefs && D.prefs.marcas) || {})[m] || MARCA_DEF[m];
+const marcasDe = m => { const u = ((typeof D !== 'undefined' && D && D.prefs && D.prefs.usadas) || {})[m] || []; const L = [...new Set([MARCA_DEF[m], marcaE(m), ...u])]; return [...new Set([...L, ...L.map(e => e.replace(/\uFE0F/g, ''))])].filter(Boolean); };
+const marcaDe = t => { const x = String(t || '').trimStart(); if(!x) return null; for(const m of ['rana', 'estrella']) if(marcasDe(m).some(e => x.startsWith(e))) return m; return null; };
+const sinMarca = t => { const x = String(t || '').trimStart();
+  for(const m of ['rana', 'estrella']){ const e = marcasDe(m).filter(z => x.startsWith(z)).sort((a, b) => b.length - a.length)[0]; if(e) return x.slice(e.length).replace(/^\uFE0F?\s*/u, ''); }
+  return x; };
+const ponMarca = (t, m) => m ? marcaE(m) + ' ' + sinMarca(t) : (marcaDe(t) ? sinMarca(t) : t);
+function marcaPanHTML(){
+  const fila = m => `<div class="marca-f"><b>${m === 'rana' ? 'Tarea sapo' : 'Tarea estrella'}</b><small>${m === 'rana' ? 'la más difícil del día' : 'muy importante para hoy'}</small><div class="marca-ops">${MARCA_OPC[m].map(e => `<button type="button" class="${marcaE(m) === e ? 'sel' : ''}" aria-label="Usar ${e}" onclick="marcaElegir('${m}','${e}')">${e}</button>`).join('')}</div></div>`;
+  return `<div class="marca-pan">${fila('rana')}${fila('estrella')}<p class="peq suave" style="margin:0">Se cambia en todas tus tareas.</p></div>`;
+}
+function marcaEdAbrir(b){
+  const ya = document.getElementById('ev-marca-pan'); if(ya){ ya.remove(); return; }
+  const w = document.createElement('div'); w.id = 'ev-marca-pan'; w.innerHTML = marcaPanHTML();
+  const fila = b.closest('.ev-tipo'); if(fila) fila.after(w); else b.after(w);
+}
+function marcaElegir(m, e){
+  if(marcaE(m) === e) return;
+  const P = D.prefs = D.prefs || {}, us = P.usadas = P.usadas || {};
+  us[m] = [...new Set([...(us[m] || []), marcaE(m), e])];
+  P.marcas = Object.assign({}, P.marcas || {}, {[m]: e}); P.mod = ahoraISO();
+  const ahora = ahoraISO(), cambia = x => { const k = x.t != null ? 't' : x.texto != null ? 'texto' : null; if(k && marcaDe(x[k]) === m){ x[k] = e + ' ' + sinMarca(x[k]); x.mod = ahora; } };
+  AG_().eventos.forEach(cambia); (D.acciones || []).forEach(cambia);
+  guardar();
+  const t = $('#ev-t'); if(t && marcaDe(t.value) === m){ t.value = e + ' ' + sinMarca(t.value); if(typeof tituloEv === 'function') tituloEv(t); }
+  document.querySelectorAll('.ev-prios .ev-prio').forEach((b, i) => { if(PRIO_OPC[i]) b.innerHTML = prioBtnHTML(PRIO_OPC[i]); });
+  const pn = $('#ev-prio-info'); if(pn && evEd) pn.textContent = PRIO_NOTA[evEd.prio] || '';
+  const dv = $('#dv-prio'); if(dv && evEd) dv.innerHTML = despValor('prio');
+  document.querySelectorAll('.marca-pan').forEach(x => x.outerHTML = marcaPanHTML());
+  aviso(`${m === 'rana' ? 'Tarea sapo' : 'Tarea estrella'}: ahora ${e}`);
+}
 /* 5.19 (Gustavo): de arriba abajo, alta (tarea rana), alta (tarea estrella), media y baja; la rana y la estrella en lugar de la bandera,
    con una «i» que explica qué son (la rana, del libro de Brian Tracy «¡Tráguese ese sapo!») */
 const PRIO_INFO = {
   rana: 'La tarea sapo es la más difícil o pesada del día: la que más se te atraganta y más ganas tienes de dejar para luego. Hazla la primera, antes que nada. '
     + 'Lo cuenta Brian Tracy en «¡Tráguese ese sapo!»: si tienes que tragarte un sapo, trágatelo a primera hora; si tienes dos, empieza por el más feo; y no te quedes mucho rato mirándolo: ponte con ella. Solo una al día.',
   estrella: 'Las tareas estrella son muy importantes: las tienes que hacer este día y, si las haces, sentirás una gran satisfacción. Elige dos como mucho.'};
-const PRIO_NOTA = {rana: '🐸 Tarea sapo: la más difícil del día. Hazla la primera.', estrella: '⭐ Tarea estrella: muy importante para hoy; te dará una gran satisfacción.'};
+const PRIO_NOTA = {get rana(){ return marcaE('rana') + ' Tarea sapo: la más difícil del día. Hazla la primera.'; }, get estrella(){ return marcaE('estrella') + ' Tarea estrella: muy importante para hoy; te dará una gran satisfacción.'; }};
 /* 6.90 (Gustavo, vía el chat de Amable Meta): con la tarea sapo, desplegable opcional y cerrado «Cinco minutos de centramiento»:
    cuatro pasos para marcar (valentía, vínculo, estrategia y centro). Las marcas solo se recuerdan mientras la app está abierta */
 const CENTRA_PASOS = [
@@ -5397,7 +5453,7 @@ function evCentraChk(on){
   document.querySelectorAll('.ev-centra-chk input').forEach(x => x.checked = on);
   centraVer(); if(on){ const d = $('#ev-centra details'); if(d) d.open = true; }
 }
-const PRIO_OPC = [{v: 'rana', t: 'Prioridad alta (tarea sapo)', c: PRIO[3].c, e: '🐸'}, {v: 'estrella', t: 'Prioridad alta (tarea estrella)', c: PRIO[3].c, e: '⭐'}, {v: 2, t: 'Prioridad media', c: PRIO[2].c}, {v: 1, t: 'Prioridad baja', c: PRIO[1].c}];
+const PRIO_OPC = [{v: 'rana', t: 'Prioridad alta (tarea sapo)', c: PRIO[3].c, get e(){ return marcaE('rana'); }}, {v: 'estrella', t: 'Prioridad alta (tarea estrella)', c: PRIO[3].c, get e(){ return marcaE('estrella'); }}, {v: 2, t: 'Prioridad media', c: PRIO[2].c}, {v: 1, t: 'Prioridad baja', c: PRIO[1].c}];
 function prioInfo(el, v){
   const b = el.closest('button'), sig = b && b.nextElementSibling;
   if(sig && sig.classList.contains('prio-info')){ sig.remove(); popEncajar(); return; }
@@ -5410,7 +5466,7 @@ const prioTxt = e => { const m = marcaDe(e.t); return m ? (m === 'rana' ? 'Prior
 const marcaCls = e => { const m = e && e.tipo !== 'habito' && marcaDe(e.t); return m ? ' ev-' + m : ''; };
 const rangoPrio = e => ({rana: 5, estrella: 4})[marcaDe(e.t)] || e.prio || 0;
 const prioBtnHTML = o => o.e ? `<i class="prio-solo${o.v === 'estrella' ? ' est' : ''}">${o.e}</i>` : ICO_BANDERA(o.c);
-const prioIcoEv = e => { const m = marcaDe(e.t); return m ? `<i class="prio-solo${m === 'estrella' ? ' est' : ''}">${m === 'rana' ? '🐸' : '⭐'}</i>` : ICO_BANDERA(prioDe(e).c); };
+const prioIcoEv = e => { const m = marcaDe(e.t); return m ? `<i class="prio-solo${m === 'estrella' ? ' est' : ''}">${marcaE(m)}</i>` : ICO_BANDERA(prioDe(e).c); };
 function aplicarPrio(e, v){
   v = /^\d$/.test(String(v)) ? +v : v;
   if(v === 'rana' || v === 'estrella'){ e.prio = 3; e.t = ponMarca(e.t, v); avisoMarca(e, v); }
@@ -5419,8 +5475,8 @@ function aplicarPrio(e, v){
 }
 function avisoMarca(e, v){
   const otros = AG_().eventos.filter(x => x !== e && (!e.id || x.id !== e.id) && x.tipo !== 'habito' && x.dia === e.dia && !repite(x) && marcaDe(x.t) === v);
-  if(v === 'rana' && otros.length) aviso(`Ese día ya tienes otro 🐸: «${sinMarca(otros[0].t)}»`, 4500);
-  else if(v === 'estrella' && otros.length >= 2) aviso(`Ese día ya tienes ${otros.length} ⭐ (lo propuesto son 2)`, 4500);
+  if(v === 'rana' && otros.length) aviso(`Ese día ya tienes otro ${marcaE('rana')}: «${sinMarca(otros[0].t)}»`, 4500);
+  else if(v === 'estrella' && otros.length >= 2) aviso(`Ese día ya tienes ${otros.length} ${marcaE('estrella')} (lo propuesto son 2)`, 4500);
 }
 const fechaDe = k => { const [a, m, d] = k.split('-').map(Number); return new Date(a, m - 1, d); };
 const sumarDias = (k, n) => { const d = fechaDe(k); d.setDate(d.getDate() + n); return claveDia(d); };
@@ -5510,7 +5566,44 @@ const cabeceraEv = e => e && e.tipo === 'habito' ? ['Práctica integral', ...are
 const tituloAviso = (e, txt) => { const c = cabeceraEv(e); return c ? [c, e.t + '\n' + txt] : [e.t, txt]; };
 const SIN_TITULO = '(Sin título)';
 const COLOR_HAB = '#22c55e';   // 4.94 (Gustavo): los hábitos, siempre verdes
-const colorEv = e => e.tipo === 'habito' ? COLOR_HAB : e.prio && PRIO[e.prio] ? PRIO[e.prio].c : (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b';
+/* 6.95 (Gustavo): cada tarea puede tener su color (`e.color`); si no, el de Ajustes → Aspecto: según la prioridad (como siempre), según el área o uno para todas */
+const colorModo = () => (D.prefs && D.prefs.colorModo) || 'prio';
+const colorFijo = () => (D.prefs && D.prefs.colorFijo) || '#8b5cf6';
+const colorEv = e => e.color || (e.tipo === 'habito' ? COLOR_HAB
+  : colorModo() === 'fijo' ? colorFijo()
+  : colorModo() === 'area' && e.area && areaDe(e.area) ? areaDe(e.area).color
+  : e.prio && PRIO[e.prio] ? PRIO[e.prio].c : (e.area && areaDe(e.area)) ? areaDe(e.area).color : '#f7c35b');
+const hslHex = (h, s, l) => { s /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+  return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); };
+const PALETA = [36, 47, 58, 70, 82].map(l => [95, 55, 40, 25, 5, 345, 315, 280, 255, 225, 200, 172].map(h => hslHex(h, 72, l))).flat();
+const paletaHTML = (sel, fn) => `<div class="pal">${PALETA.map(c => `<button type="button" class="pal-c${c === sel ? ' sel' : ''}" style="background:${c}" aria-label="Color ${c}" onclick="${fn}('${c}')"></button>`).join('')}</div>`;
+const COLOR_MODOS = {prio: 'Según la prioridad', area: 'Según el área', fijo: 'Un color para todas'};
+function prefsPon(o){ D.prefs = Object.assign({}, D.prefs || {}, o, {mod: ahoraISO()}); guardar(); }
+const evColorValor = () => evEd && evEd.color ? `<i class="col-pt" style="background:${evEd.color}"></i>Propio` : 'Automático';
+const evColorListaHTML = () => `<button type="button" class="desp-op ${!evEd.color ? 'sel' : ''}" onclick="evColorElegir(null)"><span>Automático <small>(${COLOR_MODOS[colorModo()].toLowerCase()})</small></span><i>${!evEd.color ? '✓' : ''}</i></button>${paletaHTML(evEd.color, 'evColorElegir')}`;
+function evColorTocar(){ const l = $('#dl-color'); if(!l) return; if(l.hidden) l.innerHTML = evColorListaHTML(); l.hidden = !l.hidden; }
+function evColorElegir(c){ if(!evEd) return; evEd.color = c || null; const v = $('#dv-color'); if(v) v.innerHTML = evColorValor(); const l = $('#dl-color'); if(l) l.innerHTML = evColorListaHTML(); }
+/* tamaño de la letra de las tareas del calendario (en este aparato) */
+const calFs = () => { try{ const v = +localStorage.getItem('equilibra.calFs'); return v >= 80 && v <= 150 ? v : 100; }catch(e){ return 100; } };
+function aplicarCalFs(){ const v = calFs(), h = document.documentElement; h.style.setProperty('--cal-fs', v / 100); h.classList.toggle('cal-fs', v !== 100); }
+aplicarCalFs();
+function calFsPoner(v){ try{ localStorage.setItem('equilibra.calFs', String(v)); }catch(e){} aplicarCalFs(); const b = $('#calfs-v'); if(b) b.textContent = v + ' %'; }
+const ICO_ASPECTO = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 2-2s-.8-1.6-.8-2.6c0-1.1.9-1.9 2-1.9H18a3 3 0 0 0 3-3C21 6.7 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7" r="1.2" fill="currentColor"/></svg>';
+function aspectoAjHTML(){
+  const ej = [['Cita médica', PRIO[3] ? PRIO[3].c : '#ef4444'], ['Compra', PRIO[1] ? PRIO[1].c : '#60a5fa'], ['Fiesta', PRIO[2] ? PRIO[2].c : '#f7c35b']].map(([t, c]) => `<span style="--c:${colorModo() === 'fijo' ? colorFijo() : c}">${t}</span>`).join('');
+  return `<div class="asp-w fh">
+    <div class="fh-f"><span>Tamaño de la letra de las tareas del calendario</span></div>
+    <div class="calfs"><small>A</small><input type="range" min="80" max="150" step="10" value="${calFs()}" aria-label="Tamaño de la letra" oninput="calFsPoner(this.value)"><big>A</big><b id="calfs-v">${calFs()} %</b></div>
+    <div class="asp-ej">${ej}</div>
+    <div class="fh-f"><span>Color de las tareas</span><select class="frec-sel fh-sel" onchange="prefsPon({colorModo: this.value}); aspectoRepintar()">${Object.entries(COLOR_MODOS).map(([k, t]) => `<option value="${k}" ${colorModo() === k ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+    ${colorModo() === 'fijo' ? paletaHTML(colorFijo(), 'colorFijoPoner') : ''}
+    <p class="peq suave" style="margin:2px 0 14px">Además, en cada tarea puedes elegir su propio color: al crearla o editarla, en «Color».</p>
+    <div class="fh-f"><span>Iconos de la tarea sapo y de la tarea estrella</span></div>
+    ${marcaPanHTML()}
+  </div>`;
+}
+function aspectoRepintar(){ const w = document.querySelector('.asp-w'); if(w) w.outerHTML = aspectoAjHTML(); }
+function colorFijoPoner(c){ prefsPon({colorFijo: c, colorModo: 'fijo'}); aspectoRepintar(); }
 const horaEv = e => e.todo ? (esFlexible(e) ? 'Tarea flexible' : 'Todo el día') : `${hm(e.ini)} – ${hm(e.fin)}`;   // 6.20 (Gustavo): el mismo nombre que en «Editar»
 const fijoTxt = e => (e.veces || 3) === 1 && e.fijo != null && DIAS_LARGO[e.fijo] ? `: el ${DIAS_LARGO[e.fijo]}` : '';
 const txtHabito = e => { if(e.frec === 'semanal') return `${e.veces || 3} ${(e.veces || 3) === 1 ? 'día' : 'días'} a la semana${fijoTxt(e)}`; if(e.frec === 'intervalo') return `Cada ${e.cada || 2} días`; const d = (e.dias || []).slice().sort(); return d.length === 7 ? 'Cada día' : d.length === 5 && d.join() === '0,1,2,3,4' ? 'De lunes a viernes' : `${d.length} ${d.length === 1 ? 'vez' : 'veces'} a la semana`; };
@@ -6393,7 +6486,7 @@ function despValor(id){
   if(id === 'snd') return `${despValor('son')} · ${durAlarmaTxt()}`;
   if(id === 'son') return (alarmaNativa() ? 'Sonido del teléfono' : (ALARMAS.find(a => a.k === alarmaTipo()) || ALARMAS[0]).t) + (alarmaGradual() ? ' · gradual' : '');
   if(id === 'sdur') return durAlarmaTxt();
-  if(id === 'prio') return ({rana: '🐸 Alta (sapo)', estrella: '⭐ Alta (estrella)', 2: 'Media', 1: 'Baja'})[evEd.prio] || 'Sin prioridad';
+  if(id === 'prio') return ({rana: marcaE('rana') + ' Alta (sapo)', estrella: marcaE('estrella') + ' Alta (estrella)', 2: 'Media', 1: 'Baja'})[evEd.prio] || 'Sin prioridad';
   if(id === 'dur'){ const d = durEv(); return d ? fmtDur(d) : '—'; }
   if(id === 'rep') return (opcionesRep().find(o => o.k === (evEd.rep || 'no')) || {t: 'No se repite'}).t;
   if(id === 'rec' && evEd.tipo === 'habito'){ const l = [...(evEd.avisos.includes(0) ? ['A la hora'] : []), ...(evEd.horasAviso || []).slice().sort((a, b) => a - b).map(T => 'A las ' + hm(T))]; return l.length ? l.join(', ') : 'Sin recordatorio'; }
@@ -6594,9 +6687,10 @@ function pintarEvento(e){
   hojaAbierta = null;
   const hab = evEd.tipo === 'habito', todo = !!e.todo;
   if(evEd.centra == null){ const e1 = evEd.id && AG_().eventos.find(x => x.id === evEd.id); evEd.centra = e1 ? e1.centra !== false : true; }   // 6.91; 6.93: activado de entrada
+  if(evEd.color === undefined){ const e1 = evEd.id && AG_().eventos.find(x => x.id === evEd.id); evEd.color = (e1 && e1.color) || null; }   // 6.95
   mostrarHoja(`<div class="ev-hoja"><div class="ev-cols" style="--ev-izq:${evSepPct()}%"><div class="ev-col">
     <div class="ev-tipo ev-tabs"><button class="${hab ? '' : 'sel'}" data-ayuda="${AYUDA_TIPO.tarea}" onclick="evTipo('tarea')">Tarea</button><button class="${hab ? 'sel' : ''}" data-ayuda="${AYUDA_TIPO.habito}" onclick="evTipo('habito')">Práctica integral</button>
-      <span class="ev-prios"${hab ? ' style="display:none"' : ''}>${PRIO_OPC.map(o => `<button type="button" class="ev-prio ${evEd.prio === o.v ? 'sel' : ''}" style="--c:${o.c}" title="${o.t}" aria-label="${o.t}" onclick="evPrioB('${o.v}', this)">${prioBtnHTML(o)}</button>`).join('')}</span><button type="button" class="ev-focus" title="Llevar a Focus" aria-label="Llevar esta tarea a Focus" onclick="evFocus()">${ICO_FOCUS_COLOR}</button><span class="ev-area-et" id="ev-area-et"></span></div>
+      <span class="ev-prios"${hab ? ' style="display:none"' : ''}>${PRIO_OPC.map(o => `<button type="button" class="ev-prio ${evEd.prio === o.v ? 'sel' : ''}" style="--c:${o.c}" title="${o.t}" aria-label="${o.t}" onclick="evPrioB('${o.v}', this)">${prioBtnHTML(o)}</button>`).join('')}</span><button type="button" class="ev-marca-ed" title="Cambiar los iconos de la tarea sapo y de la estrella" onclick="marcaEdAbrir(this)">editar</button><button type="button" class="ev-focus" title="Llevar a Focus" aria-label="Llevar esta tarea a Focus" onclick="evFocus()">${ICO_FOCUS_COLOR}</button><span class="ev-area-et" id="ev-area-et"></span></div>
     <p class="ev-tipo-ayuda" id="ev-tipo-ayuda">${hab ? AYUDA_TIPO.habito : AYUDA_TIPO.tarea}</p>
     <p class="prio-nota" id="ev-prio-info"${hab ? ' style="display:none"' : ''}>${PRIO_NOTA[evEd.prio] || ''}</p>
     <div class="campo-voz ev-titulo"><textarea id="ev-t" rows="1" maxlength="120" placeholder="Añade un título" aria-label="Título" oninput="tituloEv(this)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"></textarea>${centraChkHTML()}${botonMic()}</div>
@@ -6642,10 +6736,11 @@ function pintarEvento(e){
     </div><div class="ev-sep" title="Arrastra para cambiar el ancho de las columnas" onpointerdown="evSepArr(event)" ondblclick="evSepPon(58)"></div><div class="ev-col" id="ev-col-der"><div id="ev-der-hab"></div>
     <div class="desps" id="ev-dur-c" ${todo ? 'hidden' : ''}>${despHTML('dur', 'Duración', ICO_RELOJ.replace('width="12" height="12"', 'width="18" height="18"'))}</div>
     <div class="desps">
-      <div id="ev-prio-c" ${hab ? 'hidden' : ''}>${despHTML('prio', 'Prioridad', ICO_BANDERA('currentColor').replace('width="14" height="14"', 'width="18" height="18"'))}</div>
+      <div id="ev-prio-c" ${hab ? 'hidden' : ''}>${despHTML('prio', 'Prioridad', ICO_BANDERA('currentColor').replace('width="14" height="14"', 'width="18" height="18"'))}<button type="button" class="ev-marca-ed m" onclick="marcaEdAbrir(this)">Cambiar los iconos de sapo y estrella</button></div>
       ${despHTML('rec', 'Añadir recordatorio', ICO_CAMPANA)}
       ${despHTML('snd', 'Sonido y duración', ICO_ALTAVOZ)}
       ${despHTML('area', 'Área', ICO_PETALO)}
+      <div class="desp" id="dc-color"><button type="button" class="desp-btn" onclick="evColorTocar()">${ICO_ASPECTO.replace('width="24" height="24"', 'width="20" height="20"')}<span class="desp-t">Color</span><span class="desp-v" id="dv-color">${evColorValor()}</span>${FLECHA_ABAJO}</button><div class="desp-lista" id="dl-color" hidden></div></div>
     </div>
     ${evEd.id ? `<button class="btn sec ancho ev-hecho-fila" style="margin-top:6px" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar como hecho' : `✓ Hecho el ${fechaDe(evEd.k).getDate()} de ${MESES[fechaDe(evEd.k).getMonth()]}`}</button>` : ''}
     <div class="ed-bots"><button class="btn prim" onclick="guardarEvento()">Guardar</button>${evEd.id ? '<button class="btn peligro" id="ev-borrar" onclick="borrarEvento()">Borrar</button>' : ''}${evEd.id ? `<button class="btn sec ev-hecha-b" onclick="alternarEv('${evEd.id}','${evEd.k}', true)">${hechoEv(AG_().eventos.find(x => x.id === evEd.id) || {}, evEd.k) ? 'Desmarcar' : '✓ Hecha'}</button>` : ''}<button class="btn sec ev-cancelar" onclick="salirEvento()">Cancelar</button></div>
@@ -8084,7 +8179,7 @@ function guardarEvento(){
   const antE = e ? {dia: unoK || e.dia, ini: e.ini, todo: e.todo} : null;
   if(!e){ e = {id: uid(), creada: ahoraISO(), saltar: [], hechos: []}; A.eventos.push(e); }
   Object.assign(e, {t, tipo: e0.tipo, dia, dias: e0.tipo === 'habito' ? e0.dias.slice().sort() : [], frec: e0.tipo === 'habito' ? (e0.frec || 'diario') : null, veces: e0.veces || 3, cada: Math.max(2, e0.cada || 2), todo, ini: todo ? null : ini, fin: todo ? null : fin,
-    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), tzs: (evEd.tzs || []).slice(), tz: (evEd.tzs || [])[0] || null, correo: !!evEd.correo, correos: evEd.correo ? [60] : [], adj: adjFinal(), centra: !!e0.centra, ...(evEd.rep === 'pers' ? {repN: evEd.repN, repU: evEd.repU, repMes: evEd.repU === 'mes' ? evEd.repMes || 'dia' : null, repDias: evEd.repDias.slice(), repFin: evEd.repFin, repFinDia: evEd.repFin === 'el' ? evEd.repFinDia : '', repFinN: evEd.repFinN} : {repN: null, repU: null, repMes: null, repDias: null, repFin: null, repFinDia: null, repFinN: null}), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
+    area: e0.areas[0] || null, areas: e0.areas.slice(), rep: e0.tipo === 'habito' ? 'no' : (e0.rep || 'no'), prio: e0.tipo === 'habito' ? 0 : marcaDe(t) || typeof e0.prio === 'string' ? 3 : (e0.prio || 0), desc: rtTexto(), descH: rtHTML(), tzs: (evEd.tzs || []).slice(), tz: (evEd.tzs || [])[0] || null, correo: !!evEd.correo, correos: evEd.correo ? [60] : [], adj: adjFinal(), centra: !!e0.centra, color: e0.color || null, ...(evEd.rep === 'pers' ? {repN: evEd.repN, repU: evEd.repU, repMes: evEd.repU === 'mes' ? evEd.repMes || 'dia' : null, repDias: evEd.repDias.slice(), repFin: evEd.repFin, repFinDia: evEd.repFin === 'el' ? evEd.repFinDia : '', repFinN: evEd.repFinN} : {repN: null, repU: null, repMes: null, repDias: null, repFin: null, repFinDia: null, repFinN: null}), avisos: avisosFinal(e0, todo, ini), horasAviso: e0.tipo === 'habito' ? (e0.horasAviso || []).slice().sort((a, b) => a - b) : [], acc: e0.acc || null, obj: e0.tipo === 'habito' ? objLeer() : null, fijo: e0.tipo === 'habito' && e0.frec === 'semanal' && (e0.veces || 3) === 1 && e0.fijo != null ? e0.fijo : null, mod: ahoraISO()});
   if(!e0.id && e0.centraN && e0.centraN.length){ e.centraOk = {[dia]: e0.centraN.slice().sort()}; }   // 6.91: marcas hechas antes de guardar
   if(unoK){ e.rep = 'no'; e.acc = null; e.dia = unoDia; }   // 6.27: copia suelta de ese día (o del día que hayas puesto)
   if(serieT){ Object.assign(serieT, {todo: e.todo, ini: e.ini, fin: e.fin, mod: ahoraISO()}); }
@@ -9553,6 +9648,9 @@ function fusionar(local, remoto){
   const cl = local.compromiso, cm = remoto.compromiso;
   if(cl || cm) r.compromiso = (cm && (!cl || (cm.mod || '') > (cl.mod || ''))) ? cm : cl;
   if(al || ar) r.appAndroid = (ar && (!al || (ar.visto || '') > (al.visto || ''))) ? ar : al;
+  const ql = local.prefs, qr = remoto.prefs;   // 6.95: aspecto (color, iconos de sapo y estrella); los iconos usados se juntan
+  if(ql || qr){ const g = (qr && (!ql || (qr.mod || '') > (ql.mod || ''))) ? qr : ql, us = m => [...new Set([...(((ql || {}).usadas || {})[m] || []), ...(((qr || {}).usadas || {})[m] || [])])];
+    r.prefs = Object.assign({}, g, {usadas: {rana: us('rana'), estrella: us('estrella')}}); }
   return r;
 }
 /* Gustavo (4.04, «no se actualizan tareas en mi móvil»): al abrir, lo de la nube se unía con lo de aquí pero el Calendario
@@ -10272,7 +10370,7 @@ function vEstad(){
 })();
 /* 4.40 (Gustavo): en Ajustes quedan solo estas filas; Suscripción, Actualizaciones, Importar y exportar y Cómo funciona
    están en el menú de tres rayas (se abren en su ventana con abrirSeccion); Estadísticas ya estaba en el menú */
-const AJ_DENTRO = ['sonidos', 'fecha', 'datos'];   // 4.50 (Gustavo): Tu cuenta ya está en el menú
+const AJ_DENTRO = ['sonidos', 'aspecto', 'fecha', 'datos'];   // 4.50 (Gustavo): Tu cuenta ya está en el menú
 let temasAjCache = null;
 function abrirSeccion(k){
   if(k === 'premium'){ ir('premium'); return; }
@@ -10349,6 +10447,7 @@ function vAjustes(){
     {k: 'fecha', ico: ICO_RELOJ.replace('width="12" height="12"', 'width="24" height="24"'), t: 'Fecha y hora',
       sub: `${fPref.h12 ? '12 horas' : '24 horas'} · la semana empieza el ${fPref.dom ? 'domingo' : 'lunes'}${fPref.cal ? ' · ' + (CAL_EXTRA.find(c => c[0] === fPref.cal) || ['', ''])[1].toLowerCase() : ''}`,
       html: () => fechaAjHTML()},
+    {k: 'aspecto', ico: ICO_ASPECTO, t: 'Aspecto de las tareas', sub: `letra al ${calFs()} % · ${COLOR_MODOS[colorModo()].toLowerCase()}`, html: () => aspectoAjHTML()},   // 6.95
     {k: 'calendario', ico: ICO_CAL_AJ, t: 'Importar y exportar',
       sub: 'Google Calendar, Outlook y Apple (.ics) · Excel (.csv)',
       html: () => calAjustesHTML()},
