@@ -2672,6 +2672,51 @@ html.con-tema #pullR{background:var(--tarjeta)}
 html.con-tema .ag-fijo,html.con-fondo .ag-fijo{background:color-mix(in srgb,var(--fondo) 97%,transparent)}
 html.con-fondo header.cab,html.con-fondo body.ancho .gc-top{background:var(--banda);backdrop-filter:none}
 html.con-fondo header.cab::after,html.con-fondo body.ancho .gc-top::after{content:'';position:absolute;left:0;right:0;top:100%;height:12px;pointer-events:none;background:var(--ola) repeat-x;background-size:240px 12px}
+/* ---------- 7.01 Listas ---------- */
+.gc-acc-f{display:flex;gap:8px;align-items:center}
+.gc-acc-f .gc-crear{padding:0 16px 0 12px !important;gap:8px !important}
+body.v-listas .envoltura{max-width:980px}
+.li-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 4px}
+.li-top h2{font-size:24px;flex:1;display:flex;align-items:center;gap:8px}
+.li-top h2 svg{color:var(--oro)}
+.li-ayuda{margin:0 0 12px;font-size:12.5px;color:var(--suave)}
+.li-grid{columns:2;column-gap:12px}
+@media (min-width:760px){ .li-grid{column-gap:18px} }
+.li-c{break-inside:avoid;display:inline-block;width:100%;margin:0 0 12px;border-radius:16px;background:var(--lc);color:#2b2530;padding:10px 10px 8px;box-shadow:0 2px 8px rgba(40,20,60,.12)}
+.li-cab{display:flex;align-items:center;gap:4px}
+.li-t{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:16px;font-weight:800;color:#2b2530;padding:4px 2px;border-radius:8px;overflow-wrap:anywhere;cursor:text}
+.li-t:empty::before{content:attr(data-ph);color:#8a7f92}
+.li-t:focus{outline:none;background:rgba(255,255,255,.55)}
+.li-m{border:0;background:none;color:#5b4f63;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none}
+.li-m:hover{background:rgba(0,0,0,.07)}
+.li-items{list-style:none;margin:4px 0 0;padding:0}
+.li-items li{display:flex;align-items:center;gap:7px;padding:3px 0}
+.li-chk{width:20px;height:20px;flex:none;border-radius:6px;border:2px solid rgba(43,37,48,.45);background:rgba(255,255,255,.6);display:grid;place-items:center;font-size:13px;font-weight:900;color:#fff;cursor:pointer;padding:0;line-height:1}
+.li-items li.ok .li-chk{background:#16a34a;border-color:#16a34a}
+.li-it{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:14px;line-height:1.3;color:#2b2530;padding:2px 0;overflow-wrap:anywhere;cursor:text}
+@media (hover:none){ .li-x{display:none} }
+.li-items li{align-items:flex-start} .li-chk{margin-top:1px}
+.li-it:focus{outline:none;background:rgba(255,255,255,.55);border-radius:6px}
+.li-items li.ok .li-it{text-decoration:line-through;opacity:.55}
+.li-x{border:0;background:none;color:#6b5f73;opacity:.35;cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
+.li-items li:hover .li-x{opacity:.9}
+.li-add{width:100%;border:0;border-top:1px dashed rgba(43,37,48,.25);background:none;font:inherit;font-size:13.5px;color:#2b2530;padding:7px 2px 3px;margin-top:4px}
+.li-add::placeholder{color:#6b5f73}
+.li-add:focus{outline:none}
+.li-ej{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#6b5f73;margin:0 0 2px 2px}
+.li-menu{margin:6px 0 4px;padding:8px;border-radius:12px;background:rgba(255,255,255,.75)}
+.li-cols{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.li-cols button{width:26px;height:26px;border-radius:50%;border:2px solid rgba(0,0,0,.12);cursor:pointer;padding:0}
+.li-cols button.sel{border-color:#2b2530;box-shadow:0 0 0 2px #fff inset}
+.li-menu .li-op{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;color:#2b2530;font:inherit;font-size:14px;font-weight:700;padding:7px 4px;border-radius:8px;cursor:pointer;text-align:left}
+.li-menu .li-op:hover{background:rgba(0,0,0,.06)}
+.li-menu .li-op.peligro{color:#c2185b}
+.li-vacio{color:var(--suave);text-align:center;margin:30px 0}
+.posit{position:fixed;z-index:45;width:230px;max-height:60vh;overflow:auto;border-radius:6px 6px 14px 6px;background:var(--lc);color:#2b2530;box-shadow:0 12px 30px rgba(0,0,0,.28),0 2px 4px rgba(0,0,0,.12);transform:rotate(-1.2deg)}
+.posit-cab{display:flex;align-items:center;gap:4px;padding:8px 8px 4px 12px;cursor:grab;touch-action:none;background:rgba(0,0,0,.05)}
+.posit-cab b{flex:1;font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.posit-cab button{border:0;background:none;color:#5b4f63;cursor:pointer;font-size:18px;line-height:1;padding:2px 4px}
+.posit .li-items{padding:4px 12px 10px}
 #tema-deco{position:fixed;left:0;right:0;bottom:0;height:150px;z-index:-1;pointer-events:none}
 #tema-deco svg{display:block;width:100%;height:100%}
 body.con-nav #tema-deco{bottom:calc(56px + env(safe-area-inset-bottom));height:120px}
@@ -2741,7 +2786,7 @@ try{ const h = document.documentElement, t = localStorage.getItem('equilibra.pal
 
 <script>
 'use strict';
-const VERSION = 'v7.00';
+const VERSION = 'v7.01';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -3077,9 +3122,9 @@ function render(){
   if(cuentaObligada() && vista !== 'cuenta'){ vista = 'cuenta'; cuentaAlInicio = true; }
   document.body.classList.toggle('sin-cuenta', cuentaObligada());
   const cabH = $('.cab'); if(cabH && cabH.offsetHeight) document.documentElement.style.setProperty('--cab-h', cabH.offsetHeight + 'px');
-  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, defhab:vDefHab, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad, premium:vPremium};
+  const vistas = {inicio:vInicio, dia:vDia, agenda:vAgenda, salud:vSalud, evaluar:vEvaluar, plan:vPlan, defhab:vDefHab, historial:vHistorial, detalle:vDetalle, ajustes:vAjustes, cuenta:vCuenta, estad:vEstad, premium:vPremium, listas:vListas};
   app.innerHTML = (vistas[vista] || vInicio)();
-  const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad','premium'].includes(vista);
+  const conNav = ['inicio','dia','agenda','salud','historial','detalle','ajustes','estad','premium','listas'].includes(vista);
   guardarHist();
   const bv = $('#cab-volver'); if(bv) bv.hidden = !vistaHist.some(x => x !== vista) && vista === 'agenda';
   const cv = $('#cab-vista'); if(cv) cv.innerHTML = vista === 'agenda' && !ESCRITORIO.matches ? cabVistaHTML() : '';
@@ -3091,6 +3136,7 @@ function render(){
   document.body.classList.toggle('v-premium', vista === 'premium');
   document.body.classList.toggle('h12', !!fPref.h12);
   document.body.classList.toggle('v-estad', vista === 'estad');
+  document.body.classList.toggle('v-listas', vista === 'listas');
   document.body.classList.toggle('v-dia', vista === 'dia');
   document.body.classList.toggle('v-salud', vista === 'salud');
   document.body.classList.toggle('v-inicio', vista === 'inicio');
@@ -6392,7 +6438,7 @@ function gcLado(){
   const h = +new Intl.DateTimeFormat('es-ES', Object.assign({hour: '2-digit', hour12: false}, fPref.zona ? {timeZone: fPref.zona} : {})).format(new Date()).slice(0, 2);
   // 5.81 (Gustavo): «Crear» arriba del todo y debajo Gaia, «Asistente IA»; luego Calendario · Áreas · Focus · Cuerpo
   return `<aside class="gc-lado"><div class="gc-acc">
-    <button class="gc-crear" onclick="nuevoEvento()" data-atajo="la tecla C|para crear una tarea o una práctica integral">${ICO_MAS}Crear</button>
+    <div class="gc-acc-f"><button class="gc-crear" onclick="nuevoEvento()" data-atajo="la tecla C|para crear una tarea o una práctica integral">${ICO_MAS}Crear</button><button class="gc-crear gc-listas" onclick="ir('listas')" title="Tus listas">${ICO_LISTAS}Listas</button></div>
     <button class="gc-gaia" onclick="abrirVoz()" aria-label="Gaia, tu asistente: pregúntale qué tienes hoy">${caraGaia('gaia-mini')}<span>Asistente IA</span></button></div>
     ${menuSeccionesHTML('gc-secc')}
     <div><div class="gc-mini-cab"><b>${capi(MESES[m0.getMonth()])} de ${m0.getFullYear()}</b>
@@ -7755,6 +7801,7 @@ function menuHTML(){
     <div class="ml-g">
       <div class="ml-tema"><div class="seg-tema"><button class="${temaClaro() ? 'sel' : ''}" onclick="ponerTema('claro'); abrirMenu()">${ICO_SOL} Día</button><button class="${temaClaro() ? '' : 'sel'}" onclick="ponerTema('oscuro'); abrirMenu()">${ICO_LUNA} Noche</button></div></div>
       ${MENU_SECC.filter(([v]) => v === 'estad').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}
+      ${fila(ICO_LISTAS, 'Listas', "cerrarMenu(); ir('listas')", vista === 'listas')}
       ${fila(mIco('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/>'), 'Tu cuenta', 'cerrarMenu(); abrirCuenta()')}${esAdmin() ? fila(mIco('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.9-3.4 3.4-5.2 6.5-5.2s5.6 1.8 6.5 5.2"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.6c2.6.1 4.4 1.7 5 4.4"/>'), 'Solo admin', 'cerrarMenu(); abrirUsuarios(true)') : ''}${MENU_SECC.filter(([v]) => v === 'ajustes').map(([v, t, ico]) => fila(ico, t, `cerrarMenu(); ir('${v}')`, vista === v)).join('')}</div>
     <div class="ml-g">${menuExtraHTML(fila)}</div>
     <div class="ml-g ml-g-sinc">${fila(mIco('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>'), `Sincronizar${txtNube() ? `<small class="ml-sinc${nube.error ? ' mal' : ''}">${txtNube()}</small>` : ''}`, 'menuActualizar()')}</div>
@@ -9739,6 +9786,7 @@ function fusionar(local, remoto){
   const cl = local.compromiso, cm = remoto.compromiso;
   if(cl || cm) r.compromiso = (cm && (!cl || (cm.mod || '') > (cl.mod || ''))) ? cm : cl;
   if(al || ar) r.appAndroid = (ar && (!al || (ar.visto || '') > (al.visto || ''))) ? ar : al;
+  r.listas = unir(local.listas || [], remoto.listas || [], 'mod'); if(local.listasEj || remoto.listasEj) r.listasEj = true;   // 7.01
   const ql = local.prefs, qr = remoto.prefs;   // 6.95: aspecto (color, iconos de sapo y estrella); los iconos usados se juntan
   if(ql || qr){ const g = (qr && (!ql || (qr.mod || '') > (ql.mod || ''))) ? qr : ql, us = m => [...new Set([...(((ql || {}).usadas || {})[m] || []), ...(((qr || {}).usadas || {})[m] || [])])];
     r.prefs = Object.assign({}, g, {usadas: {rana: us('rana'), estrella: us('estrella')}}); }
@@ -10535,6 +10583,83 @@ const DECO = {
     return decoSvg(W, g);
   }
 };
+/* ---------- 7.01 Listas (Gustavo, con capturas de otra app: «listas a 2 columnas… con checklists… cambiar colores, títulos y 4 de ejemplo… y que se haga un pósit») ----------
+   D.listas = [{id, t, color, items: [{id, t, ok}], creada, mod, ej}] (viaja por la nube; borrar = D.borradas). El pósit se recuerda en este aparato. */
+const ICO_LISTAS = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M7.5 9l1.5 1.5L12 7.5M7.5 15l1.5 1.5 3-3M14 9.5h3M14 15.5h3"/></svg>';
+const LISTA_COL = ['#fff1a8', '#ffd3de', '#cfe6ff', '#d6f0c8', '#e6d8ff', '#ffdcc0', '#c6efe9', '#f2f0f5'];
+function listasDe(){
+  if(!Array.isArray(D.listas)) D.listas = [];
+  if(!D.listasEj){
+    D.listasEj = true; const n = ahoraISO();
+    const L = (t, color, items) => ({id: uid(), t, color, items: items.map(x => ({id: uid(), t: x, ok: false})), creada: n, mod: n, ej: true});
+    D.listas.push(L('Hacer la compra', LISTA_COL[0], ['Arroz', 'Pollo picado', 'Leche', 'Fruta del tiempo', 'Pan']),
+      L('Ideas de regalos para la familia', LISTA_COL[1], ['Un libro para mamá', 'Bufanda para papá', 'Juego de mesa para los sobrinos', 'Una planta para la abuela']),
+      L('Antes de un viaje', LISTA_COL[2], ['DNI y billetes', 'Cargador del móvil', 'Regar las plantas', 'Cerrar el gas y las ventanas']),
+      L('Libros y películas pendientes', LISTA_COL[3], ['El poder del ahora', 'Hábitos atómicos', 'Una película en familia el domingo']));
+    guardar();
+  }
+  const b = D.borradas || []; return D.listas.filter(l => !b.includes(l.id));
+}
+const listaDe = id => (D.listas || []).find(l => l.id === id);
+let listaMenuAb = null;
+function listaCardHTML(l){
+  return `<div class="li-c" style="--lc:${l.color}" data-id="${l.id}">${l.ej ? '<span class="li-ej">Ejemplo</span>' : ''}
+    <div class="li-cab"><div class="li-t" contenteditable="true" role="textbox" data-ph="Título de la lista" aria-label="Título" onblur="listaTit('${l.id}', this.innerText)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${esc(l.t)}</div><button class="li-m" aria-label="Opciones de la lista" onclick="listaMenu('${l.id}')"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div>
+    ${listaMenuAb === l.id ? `<div class="li-menu"><div class="li-cols">${LISTA_COL.map(c => `<button style="background:${c}" class="${c === l.color ? 'sel' : ''}" aria-label="Color" onclick="listaColor('${l.id}','${c}')"></button>`).join('')}</div>
+      <button class="li-op" onclick="positAlternar('${l.id}')">${positDe(l.id) ? 'Quitar el pósit de la pantalla' : 'Pegar como pósit en la pantalla'}</button>
+      <button class="li-op" onclick="listaDesmarcar('${l.id}')">Desmarcar todo</button>
+      <button class="li-op peligro" onclick="listaBorrar('${l.id}')">Eliminar la lista</button></div>` : ''}
+    ${listaItemsHTML(l)}
+    <input class="li-add" placeholder="＋ Añadir" aria-label="Añadir a la lista" onkeydown="if(event.key === 'Enter'){ listaAdd('${l.id}', this.value); }"></div>`;
+}
+const listaItemsHTML = l => `<ul class="li-items">${(l.items || []).map(it => `<li class="${it.ok ? 'ok' : ''}"><button class="li-chk" aria-label="${it.ok ? 'Desmarcar' : 'Marcar'}" onclick="listaChk('${l.id}','${it.id}')">${it.ok ? '✓' : ''}</button><div class="li-it" contenteditable="true" role="textbox" aria-label="Elemento" onblur="listaItemT('${l.id}','${it.id}', this.innerText)" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${esc(it.t)}</div><button class="li-x" aria-label="Quitar" onclick="listaQuitar('${l.id}','${it.id}')">×</button></li>`).join('')}</ul>`;
+function vListas(){
+  const L = listasDe();
+  return `<div class="li-top"><button class="link" onclick="ir('agenda')">${ICO_IZQ.replace('width="24" height="24"', 'width="18" height="18"')} Calendario</button></div>
+    <div class="li-top"><h2>${ICO_LISTAS}Listas</h2><button class="btn prim" onclick="listaNueva()">＋ Nueva lista</button></div>
+    <p class="li-ayuda">Toca el título o un elemento para cambiarlo (si lo dejas vacío, se quita). Con los tres puntos: color, pósit o eliminar.</p>
+    ${L.length ? `<div class="li-grid">${L.map(listaCardHTML).join('')}</div>` : '<p class="li-vacio">Aún no tienes listas. Crea una con «＋ Nueva lista».</p>'}`;
+}
+function listaCambio(l, foco){ l.mod = ahoraISO(); delete l.ej; guardar(); if(vista === 'listas') render(); pintarPosits();
+  if(foco) setTimeout(() => { const i = document.querySelector(`.li-c[data-id="${l.id}"] ${foco}`); if(i) i.focus(); }, 60); }
+function listaNueva(){ listasDe(); const n = ahoraISO(), l = {id: uid(), t: '', color: LISTA_COL[D.listas.length % LISTA_COL.length], items: [], creada: n, mod: n}; D.listas.unshift(l); listaCambio(l, '.li-t'); }
+function listaTit(id, t){ const l = listaDe(id); if(!l) return; t = String(t || '').trim().slice(0, 80); if(t === l.t) return; l.t = t; listaCambio(l); }
+function listaAdd(id, t){ const l = listaDe(id); t = String(t || '').trim().slice(0, 200); if(!l || !t) return; (l.items = l.items || []).push({id: uid(), t, ok: false}); listaCambio(l, '.li-add'); }
+function listaChk(id, iid){ const l = listaDe(id), it = l && (l.items || []).find(x => x.id === iid); if(!it) return; it.ok = !it.ok; listaCambio(l); }
+function listaItemT(id, iid, t){ const l = listaDe(id), it = l && (l.items || []).find(x => x.id === iid); if(!it) return; t = String(t || '').trim(); if(!t){ listaQuitar(id, iid); return; } if(t === it.t) return; it.t = t.slice(0, 200); listaCambio(l); }
+function listaQuitar(id, iid){ const l = listaDe(id); if(!l) return; l.items = (l.items || []).filter(x => x.id !== iid); listaCambio(l); }
+function listaDesmarcar(id){ const l = listaDe(id); if(!l) return; (l.items || []).forEach(x => x.ok = false); listaMenuAb = null; listaCambio(l); }
+function listaColor(id, c){ const l = listaDe(id); if(!l) return; l.color = c; listaCambio(l); }
+function listaMenu(id){ listaMenuAb = listaMenuAb === id ? null : id; render(); }
+function listaBorrar(id){
+  const l = listaDe(id); if(!l) return; listaMenuAb = null;
+  D.borradas = D.borradas || []; D.borradas.push(id); D.listas = D.listas.filter(x => x.id !== id); positQuitar(id); guardar(); render(); pintarPosits();
+  avisoDeshacer(`«${l.t || 'Lista'}» eliminada`, () => { D.borradas = D.borradas.filter(x => x !== id); l.mod = ahoraISO(); D.listas.unshift(l); guardar(); if(vista === 'listas') render(); }, 5000);
+}
+/* pósit: una lista pegada en la pantalla, que se mueve arrastrándola por arriba */
+const positsDe = () => { try{ return JSON.parse(localStorage.getItem('equilibra.posits') || '{}') || {}; }catch(e){ return {}; } };
+const positsPon = o => { try{ localStorage.setItem('equilibra.posits', JSON.stringify(o)); }catch(e){} };
+const positDe = id => !!positsDe()[id];
+function positQuitar(id){ const o = positsDe(); delete o[id]; positsPon(o); }
+function positAlternar(id){
+  const o = positsDe(); if(o[id]) delete o[id]; else { const n = Object.keys(o).length; o[id] = {x: Math.max(10, innerWidth - 260 - n * 24), y: 170 + n * 30}; }
+  positsPon(o); listaMenuAb = null; render(); pintarPosits();
+  if(o[id]) aviso('Pósit pegado en la pantalla: arrástralo por arriba para moverlo');
+}
+function pintarPosits(){
+  let c = document.getElementById('posits'); if(!c){ c = document.createElement('div'); c.id = 'posits'; document.body.appendChild(c); }
+  const o = positsDe(), b = D.borradas || [];
+  c.innerHTML = Object.keys(o).map(id => { const l = listaDe(id); if(!l || b.includes(id)) return ''; const p = o[id];
+    return `<div class="posit" style="--lc:${l.color};left:${Math.min(p.x, innerWidth - 240)}px;top:${Math.min(p.y, innerHeight - 120)}px" data-id="${id}"><div class="posit-cab" onpointerdown="positArr(event,'${id}')"><b>${esc(l.t || 'Lista')}</b><button aria-label="Quitar el pósit" onpointerdown="event.stopPropagation()" onclick="positAlternar('${id}')">×</button></div>${listaItemsHTML(l).replace(/<button class="li-x"[^>]*>×<\/button>/g, '').replace(/ contenteditable="true"/g, '')}</div>`; }).join('');
+}
+function positArr(ev, id){
+  const el = ev.currentTarget.parentNode, r = el.getBoundingClientRect(), dx = ev.clientX - r.left, dy = ev.clientY - r.top;
+  try{ ev.currentTarget.setPointerCapture(ev.pointerId); }catch(e){}
+  const mov = e => { el.style.left = Math.max(0, Math.min(innerWidth - 60, e.clientX - dx)) + 'px'; el.style.top = Math.max(0, Math.min(innerHeight - 40, e.clientY - dy)) + 'px'; };
+  const fin = () => { removeEventListener('pointermove', mov); removeEventListener('pointerup', fin); const o = positsDe(); if(o[id]){ o[id] = {x: parseFloat(el.style.left), y: parseFloat(el.style.top)}; positsPon(o); } };
+  addEventListener('pointermove', mov); addEventListener('pointerup', fin);
+}
+setTimeout(pintarPosits, 0);
 function pintarDeco(){
   let d = document.getElementById('tema-deco'); const k = fondoAct();
   if(!k || !DECO[k]){ if(d) d.remove(); return; }
