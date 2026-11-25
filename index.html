@@ -1594,8 +1594,8 @@ html:not(.claro) .pa-obj{color:#4ade80!important}
 .centra-res textarea{width:100%;min-height:84px;resize:vertical;border:1px solid var(--linea);border-radius:10px;background:rgba(var(--bl),.06);color:var(--tinta);font:inherit;font-size:14px;line-height:1.4;padding:8px 10px}
 .centra-res textarea:focus{outline:none;border-color:#16a34a}
 .centra-aviso{font-size:11.5px;color:var(--suave);font-style:italic}
-.centra-resp{display:block;box-sizing:border-box;width:calc(100% - 52px);margin:0 12px 8px 40px;height:28px;border:0;border-bottom:1.5px solid var(--linea);border-radius:0;background:transparent;color:var(--tinta);font:inherit;font-size:14px;padding:2px}
-.centra-resp:focus{outline:none;border-bottom-color:#16a34a}
+.centra .centra-resp{display:block;box-sizing:border-box;width:calc(100% - 24px);margin:0 12px 10px 12px;min-height:34px;resize:none;overflow:hidden;border:1px solid var(--linea);border-radius:12px;background:rgba(var(--bl),.06);color:var(--tinta);font:inherit;font-size:14px;line-height:1.4;padding:7px 12px}
+.centra .centra-resp:focus{outline:none;border-color:#16a34a}
 .prio-nota:empty{display:none}
 /* 5.38 (Gustavo, en el móvil: «los iconos están todos arriba como atados; no caben ni se entiende» y la ventana no salía centrada):
    en el móvil la prioridad va abajo, en una fila «Prioridad» con su desplegable; arriba solo Tarea y Hábito. En el ordenador, igual que antes */
@@ -2841,7 +2841,7 @@ try{ const h = document.documentElement, t = localStorage.getItem('equilibra.pal
 
 <script>
 'use strict';
-const VERSION = 'v7.15';
+const VERSION = 'v7.16';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5609,10 +5609,12 @@ function centraMarcas(id, k){
 }
 const centraHTML = (id, k) => { const ok = centraMarcas(id, k);
   const lab = (q, i) => `<label class="centra-p"><input type="checkbox" ${ok.includes(i) ? 'checked' : ''} onchange="centraMarca('${id || ''}', '${k || ''}', ${i}, this)"><span><b>${q}</b></span></label>`;
-  const resp = i => `<input class="centra-resp" type="text" value="${esc(centraResGet(id, k, i))}" aria-label="Tu respuesta" onchange="centraResPon('${id || ''}', '${k || ''}', ${i}, this.value)">`;
+  const resp = i => { const v = centraResGet(id, k, i); return `<textarea class="centra-resp" rows="${Math.max(1, Math.ceil(String(v).length / 30))}" aria-label="Tu respuesta" oninput="centraCrece(this)" onchange="centraResPon('${id || ''}', '${k || ''}', ${i}, this.value)">${esc(v)}</textarea>`; };
   return `<details class="centra"${ok.length < CENTRA_PASOS.length ? ' open' : ''} ontoggle="if(typeof popEncajar === 'function') popEncajar()"><summary><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg><span>Centramiento pre-tarea difícil</span></summary>`
   + `<p class="centra-int">Si ves que te falta energía para hacer esta tarea, tómate 1 minuto. Puedes usar el audio, escribir o pensar. <button type="button" class="centra-mic" aria-label="Leer las preguntas en voz alta" title="Leer las preguntas en voz alta" onclick="centraLeer(this)">${MIC}</button></p>`
   + CENTRA_PASOS.map(([, q], i) => lab(q, i) + (i < 3 ? resp(i) : '')).join('') + `</details>`; };
+/* 7.16 (Gustavo): el campo crece hacia abajo según se escribe */
+function centraCrece(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
 /* 7.13: una respuesta por pregunta, debajo de cada una; se guardan por día (cada día empieza vacío, aunque la tarea se repita) */
 const centraResGet = (id, k, i) => { const arr = !id ? (evEd && evEd.centraResN) : (((AG_().eventos.find(x => x.id === id) || {}).centraRes || {})[k]); return Array.isArray(arr) && arr[i] ? arr[i] : ''; };
 function centraResPon(id, k, i, v){
