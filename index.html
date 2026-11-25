@@ -1591,7 +1591,10 @@ html:not(.claro) .pa-obj{color:#4ade80!important}
 @keyframes micPulso{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}50%{box-shadow:0 0 0 6px rgba(22,163,74,0)}}
 @media (prefers-reduced-motion:reduce){ .centra-mic.leyendo{animation:none} }
 .centra-p.leyendo{background:rgba(22,163,74,.16);box-shadow:inset 4px 0 0 #16a34a;border-radius:8px}
-.centra-audio{display:flex;align-items:center;gap:10px;margin:2px 12px 8px}
+.centra-audio{display:flex;align-items:center;gap:22px;margin:4px 12px 10px}
+.centra-mic .ico-off{display:none}
+.centra-mic.leyendo .ico-off{display:block}
+.centra-mic.leyendo .ico-on{display:none}
 .centra-audio .centra-mic{margin:0;flex:none}
 .centra-barra{flex:1;min-width:0;height:8px;border-radius:99px;background:rgba(var(--bl),.12)}
 .centra-barra i{position:relative;display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#16a34a,#7dff3a)}
@@ -2850,7 +2853,7 @@ try{ const h = document.documentElement, t = localStorage.getItem('equilibra.pal
 
 <script>
 'use strict';
-const VERSION = 'v7.23';
+const VERSION = 'v7.24';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5620,7 +5623,7 @@ const centraHTML = (id, k) => { const ok = centraMarcas(id, k);
   const lab = (q, i) => `<label class="centra-p"><input type="checkbox" ${ok.includes(i) ? 'checked' : ''} onchange="centraMarca('${id || ''}', '${k || ''}', ${i}, this)"><span><b>${q}</b></span></label>`;
   const resp = i => { const v = centraResGet(id, k, i); return `<textarea class="centra-resp" rows="${Math.max(1, Math.ceil(String(v).length / 30))}" aria-label="Tu respuesta" placeholder="${i === 0 ? 'sí puedo' : ''}" oninput="centraCrece(this)" onchange="centraResPon('${id || ''}', '${k || ''}', ${i}, this.value)">${esc(v)}</textarea>`; };
   return `<details class="centra"${ok.length < CENTRA_PASOS.length ? ' open' : ''} ontoggle="if(typeof popEncajar === 'function') popEncajar()"><summary><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg><span>Centramiento pre-tarea difícil</span></summary>`
-  + `<p class="centra-int">Si ves que te falta energía para hacer esta tarea, tómate 1 minuto. Puedes usar el audio, escribir o pensar.</p><div class="centra-audio"><button type="button" class="centra-mic" aria-label="Leer las preguntas en voz alta" title="Leer las preguntas en voz alta" onclick="centraLeer(this)">${MIC}</button><div class="centra-barra" aria-hidden="true"><i></i></div></div>`
+  + `<p class="centra-int">Si ves que te falta energía para hacer esta tarea, tómate 1 minuto. Puedes usar el audio, escribir o pensar.</p><div class="centra-audio"><button type="button" class="centra-mic" aria-label="Escuchar las preguntas o parar" title="Escuchar las preguntas" onclick="centraLeer(this)"><svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg><svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M3 3l18 18"/></svg></button><div class="centra-barra" aria-hidden="true"><i></i></div></div>`
   + CENTRA_PASOS.map(([, q], i) => lab(q, i) + (i < 3 ? resp(i) : '')).join('') + `</details>`; };
 /* 7.16 (Gustavo): el campo crece hacia abajo según se escribe */
 function centraCrece(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
