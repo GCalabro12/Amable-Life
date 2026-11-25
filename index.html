@@ -639,8 +639,10 @@ html:not(.claro) .tz-link{color:#60a5fa}
 .ev-sep{display:none}
 .ec-calor{margin:0 0 14px}
 /* 7.04 diana del centramiento y confeti */
-.diana-ev{display:inline-grid;place-items:center;vertical-align:-3px;margin-right:3px;color:#16a34a;cursor:pointer;border-radius:50%;line-height:0}
-.diana-ev svg{width:15px;height:15px}
+.diana-ev{display:inline-grid;place-items:center;vertical-align:-3px;margin-right:3px;color:#00c64f;cursor:pointer;border-radius:50%;line-height:0;filter:drop-shadow(0 0 3px rgba(0,198,79,.6))}
+.diana-ev svg{width:16px;height:16px}
+.rj-ev .diana-ev{position:absolute;top:4px;right:4px;margin:0;vertical-align:baseline;z-index:2}
+.rj-ev:has(.diana-ev){padding-right:24px}
 .diana-ev:not(.hecho) svg{animation:dianaLate 3.2s ease-in-out infinite}
 @keyframes dianaLate{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 @media (prefers-reduced-motion:reduce){ .diana-ev svg{animation:none !important} }
@@ -2809,7 +2811,7 @@ try{ const h = document.documentElement, t = localStorage.getItem('equilibra.pal
 
 <script>
 'use strict';
-const VERSION = 'v7.05';
+const VERSION = 'v7.06';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -5544,10 +5546,10 @@ const PRIO_NOTA = {get rana(){ return marcaE('rana') + ' Tarea difícil: la que 
 /* 6.90 (Gustavo, vía el chat de Amable Meta): con la tarea sapo, desplegable opcional y cerrado «Cinco minutos de centramiento»:
    cuatro pasos para marcar (valentía, vínculo, estrategia y centro). Las marcas solo se recuerdan mientras la app está abierta */
 const CENTRA_PASOS = [
-  ['Valentía', '¿Por qué rechazo esta tarea? ¿Qué me va a aportar hacerla?'],
-  ['Vínculo', '¿A quién me va a acercar esta tarea? ¿Cómo mejorará mis relaciones?'],
-  ['Estrategia', '¿Cuál es el primer paso pequeño? ¿Cuándo y dónde lo doy?'],
-  ['Centro', 'Cierra los ojos y agradece a tu parte valiente, amante y estratega por juntarse para hacer la tarea.']];
+  ['Valentía', '¿Por qué rechazo esta tarea?'],
+  ['Vínculo', '¿A quién me va a acercar esta tarea?'],
+  ['Estrategia', '¿Cuál es el primer paso pequeño que voy a dar ahora?'],
+  ['Centro', 'Cierra los ojos y agradece a tu parte valiente, amante y estratega, diciéndoles que esta tarea te va a aportar.']];
 /* 6.91 (Gustavo): se llama «Centramiento para tareas difíciles»; se activa con la casilla de al lado de la rana (`e.centra`)
    y sale dentro de la descripción. Las marcas se guardan en la tarea, por día (`e.centraOk[día] = [0..3]`), y viajan por la nube */
 function centraMarcas(id, k){
@@ -5567,7 +5569,7 @@ function cerrarCentraPop(){ const p = $('#centra-pop'); if(p){ p.remove(); if(vi
 function centraPop(ev, id, k, el, hover){
   if(ev){ ev.stopPropagation(); ev.preventDefault(); }
   const ya = $('#centra-pop'); if(ya){ const mismo = ya.dataset.id === id; ya.remove(); if(mismo && ev) return; }
-  if(typeof cerrarPop === 'function') cerrarPop();
+  if(typeof cerrarPop === 'function') cerrarPop(); clearTimeout(popT);
   const p = document.createElement('div'); p.id = 'centra-pop'; p.dataset.id = id; p.innerHTML = centraHTML(id, k); document.body.appendChild(p);
   const d = p.querySelector('details'); if(d) d.open = true;
   const r = el.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight;
@@ -7658,7 +7660,7 @@ document.addEventListener('mouseover', e => {
   if(el.contains(e.relatedTarget)) return;
   clearTimeout(popT); clearTimeout(popCierreT);
   if(popInfo && !popInfo.hover) return;   // una abierta con clic se queda hasta cerrarla
-  popT = setTimeout(() => { if(!$('#hoja') && document.body.contains(el)) verEvento(el.dataset.ev, el.dataset.k, el, true); }, 1000);
+  popT = setTimeout(() => { if(!$('#hoja') && !$('#centra-pop') && !el.querySelector('.diana-ev:hover') && document.body.contains(el)) verEvento(el.dataset.ev, el.dataset.k, el, true); }, 1000);
 });
 document.addEventListener('mouseout', e => {
   const el = e.target.closest && e.target.closest('[data-ev]'); if(!el || el.contains(e.relatedTarget)) return;
