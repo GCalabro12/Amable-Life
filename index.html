@@ -2781,7 +2781,7 @@ body.v-listas .envoltura{max-width:980px}
 .pip-lista summary::after{content:'';width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);flex:none;margin:0 4px 0 2px;transition:transform .15s}
 .pip-lista[open] summary::after{transform:translateY(3px) rotate(-135deg)}
 .pip-lista .li-items{margin:0 0 4px}
-.pip-lista .li-it{cursor:default}
+.pip-lista .li-it{cursor:text}
 .pip-add{width:100%;border:0;border-top:1px dashed rgba(43,37,48,.25);background:none;font:inherit;font-size:13px;color:#2b2530;padding:6px 2px 4px;margin:0 0 6px}
 .pip-add:focus{outline:none}
 .pip-centra{display:inline-grid;place-items:center;flex:none;width:30px;height:30px;margin-left:auto;border:0;border-radius:50%;background:rgba(125,255,58,.16);color:#7dff3a;cursor:pointer;padding:0}
@@ -2875,7 +2875,7 @@ try{ const h = document.documentElement, t = localStorage.getItem('equilibra.pal
 
 <script>
 'use strict';
-const VERSION = 'v7.28';
+const VERSION = 'v7.29';
 const CLAVE = 'equilibra.datos';
 /* 6.25 (Gustavo): la G de Google de colores a la izquierda de «Entrar con Google» y «Unir con Google» */
 const ICO_GOOGLE = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
@@ -3338,16 +3338,27 @@ async function abrirFlotante(){
   d.addEventListener('toggle', e => { const x = e.target; if(x.classList && x.classList.contains('pip-lista')){ x.open ? pipCerradas.delete(x.dataset.lid) : pipCerradas.add(x.dataset.lid); } }, true);
   d.addEventListener('change', e => { const el = e.target.closest('[data-onchange]'); if(el) Function('event', el.dataset.onchange).call(el, e); });
   d.addEventListener('input', e => { const el = e.target.closest('[data-oninput]'); if(el) Function('event', el.dataset.oninput).call(el, e); });
+  d.addEventListener('focusout', e => { const el = e.target.closest && e.target.closest('[data-onblur]'); if(el) Function('event', el.dataset.onblur).call(el, e); });
+  d.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.classList && e.target.classList.contains('li-it')){ e.preventDefault(); e.target.blur(); } });
   d.addEventListener('pointerdown', e => { const h = e.target.closest && e.target.closest('.pip-asa'); if(h && (e.button == null || e.button === 0)) pipArrastrar(e, h); });
-  pipWin.addEventListener('pagehide', () => { pipWin = null; });
+  pipWin.addEventListener('pagehide', () => { pipWin = null; if(!appCerrando) quitarPosits(); });  // 7.29: cerrar la ventana quita el pósit
   if(!pipToast){ pipToast = new MutationObserver(copiarToast); pipToast.observe($('#toast'), {attributes: true, childList: true, subtree: true, characterData: true}); }
   { const w = pipWin; w.setTimeout(() => { tickFlotante(); w.setInterval(tickFlotante, 1000); }, 1020 - Date.now() % 1000); }
   pintarFlotante(); animarArenaPip();
+}
+// 7.29: al cerrar la ventana flotante, las listas dejan de estar pegadas (se puede volver a pegar desde su menú)
+let appCerrando = false;
+window.addEventListener('pagehide', () => { appCerrando = true; });   // al recargar o cerrar Amable Life, no se quita nada
+function quitarPosits(){
+  const o = positsDe(); if(!Object.keys(o).length) return;
+  positsPon({}); listaMenuAb = null; render(); pintarPosits();
 }
 function pintarFlotante(){
   if(flotanteNativo()) enviarFlotante();
   if(!pipWin) return;
   const d = pipWin.document, c = bloqueAhora(), cabe = c >= 0 && actsDe(hoyK(), c).length < MAX_ACT;
+  // 7.29: mientras se escribe el nombre de un elemento de una lista, no se redibuja (si no, se perdería lo escrito)
+  if(d.activeElement && d.activeElement.classList.contains('li-it')) return;
   // lo que estés escribiendo no se pierde al redibujar
   const viejo = d.getElementById('pip-nueva'), escrito = viejo ? viejo.value : '', conFoco = !!viejo && d.activeElement === viejo;
   const fila = d.querySelector('.pip-petalos'), desliz = fila ? fila.scrollLeft : 0;
@@ -3397,7 +3408,7 @@ function pipListasHTML(){
   if(!L.length) return '';
   return `<div class="pip-div"><span>Listas</span><small>${L.length}</small></div><div class="pip-listas">${L.map(l => { const items = l.items || [], hechos = items.filter(x => x.ok).length;
     return `<details class="pip-lista" data-lid="${l.id}" style="--lc:${l.color}"${pipCerradas.has(l.id) ? '' : ' open'}><summary><b>${esc(l.t || 'Lista')}</b><small>${hechos}/${items.length}</small><button type="button" class="pip-x pip-quitar" aria-label="Quitar la lista de la ventana" title="Quitar la lista de la ventana" data-onclick="event.preventDefault(); positAlternar('${l.id}')">${ICO_CRUZ}</button></summary>
-      <ul class="li-items">${items.map(it => `<li class="${it.ok ? 'ok' : ''}" data-iid="${it.id}"><span class="pip-asa" title="Arrastra para cambiar de posición">${ICO_SEIS}</span><button type="button" class="li-chk" data-onclick="listaChk('${l.id}','${it.id}')" aria-label="${it.ok ? 'Desmarcar' : 'Marcar'}">${it.ok ? '✓' : ''}</button><span class="li-it">${esc(it.t)}</span><button type="button" class="pip-x" aria-label="Quitar elemento" title="Quitar" data-onclick="listaQuitar('${l.id}','${it.id}')">${ICO_CRUZ}</button></li>`).join('')}</ul>
+      <ul class="li-items">${items.map(it => `<li class="${it.ok ? 'ok' : ''}" data-iid="${it.id}"><span class="pip-asa" title="Arrastra para cambiar de posición">${ICO_SEIS}</span><button type="button" class="li-chk" data-onclick="listaChk('${l.id}','${it.id}')" aria-label="${it.ok ? 'Desmarcar' : 'Marcar'}">${it.ok ? '✓' : ''}</button><div class="li-it" contenteditable="true" role="textbox" aria-label="Elemento" data-onblur="listaItemT('${l.id}','${it.id}', this.innerText)">${esc(it.t)}</div><button type="button" class="pip-x" aria-label="Quitar elemento" title="Quitar" data-onclick="listaQuitar('${l.id}','${it.id}')">${ICO_CRUZ}</button></li>`).join('')}</ul>
       <input class="li-add pip-add" data-lid="${l.id}" placeholder="+ Añadir" aria-label="Añadir a la lista"></details>`; }).join('')}</div>`;
 }
 function pipArrastrar(ev, h){
